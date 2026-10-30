@@ -883,12 +883,8 @@ mod tests {
         let feel_of = |name| feel(Rhythm::named(name).unwrap());
         assert_eq!(feel_of("Salsa"), (Comping::Montuno, Bass::Tumbao));
         assert_eq!(feel_of("One drop").1, Bass::Reggae);
-        // No style uses the march: it plays like a classical style in 4/4.
-        let march = STYLES
-            .iter()
-            .find(|s| s.genre == crate::library::Genre::Classical && s.time.is_common())
-            .unwrap();
-        assert_eq!(feel_of("March"), (march.comping, march.bass));
+        // The march plays as the March style does: oom-pah in cut time.
+        assert_eq!(feel_of("March"), (Comping::Stride, Bass::RootFifth));
         for rhythm in RHYTHMS {
             let (comping, _) = feel(rhythm);
             let three = rhythm.time.steps_per_bar() == 12;
@@ -896,7 +892,11 @@ mod tests {
                 !three
                     || matches!(
                         comping,
-                        Comping::Waltz | Comping::Sway | Comping::Arp3 | Comping::Held
+                        Comping::Waltz
+                            | Comping::Sway
+                            | Comping::Arp3
+                            | Comping::Held
+                            | Comping::Afterbeat
                     ),
                 "{} is in three but plays {comping:?}",
                 rhythm.name

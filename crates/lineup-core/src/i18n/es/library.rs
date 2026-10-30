@@ -117,6 +117,18 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Un III mayor y un iv menor, los dos de fuera de la tonalidad: esperanzado y triste a la vez.",
     ),
     (
+        "A march in 6/8, as in Sousa's Washington Post: two beats to the bar, each made of three eighths, the bass drum on both and the snare in their long-short lilt.",
+        "Una marcha en 6/8, como The Washington Post de Sousa: dos pulsos por compás, cada uno de tres corcheas, el bombo en los dos y la caja en su vaivén largo-corto.",
+    ),
+    (
+        "A march in 6/8, the meter of Sousa's Washington Post and of the two-step it was danced to: two beats to the bar, the tuba on each and the horns' afterbeat on the last eighth of each, in a long-short lilt.",
+        "Una marcha en 6/8, el compás de The Washington Post de Sousa y del two-step con que se bailaba: dos pulsos por compás, la tuba en cada uno y el contratiempo de los vientos en la última corchea de cada uno, en un vaivén largo-corto.",
+    ),
+    (
+        "A military march in cut time, two strong beats to the bar: the tuba on 1 and 3, the horns' afterbeats on 2 and 4. II7, the dominant of the dominant, pushes the cadence.",
+        "Una marcha militar en compás partido, dos pulsos fuertes por compás: la tuba en 1 y 3, los contratiempos de los vientos en 2 y 4. II7, la dominante de la dominante, empuja la cadencia.",
+    ),
+    (
         "A minor key going round the circle of fifths, as many bossa novas and standards do.",
         "Una tonalidad menor que recorre el círculo de quintas, como muchas bossas novas y standards.",
     ),
@@ -173,6 +185,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Un blues más corto que ya va a la dominante en su segundo compás.",
     ),
     (
+        "A slow number for a big band: the saxophones hold the chords under the melody, and two diminished sevenths fill in the bass's steps by semitones, C sharp between C and D on the way up, E flat between E and D on the way down.",
+        "Un tema lento para big band: los saxofones sostienen los acordes bajo la melodía, y dos séptimas disminuidas rellenan por semitonos los pasos del bajo: {C#} entre {C} y {D} al subir, {Eb} entre {E} y {D} al bajar.",
+    ),
+    (
         "A slow progression where a secondary dominant (VI7) pulls toward ii.",
         "Una progresión lenta donde una dominante secundaria (VI7) tira hacia ii.",
     ),
@@ -185,6 +201,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Un 10/8 turco lento contado 3 + 2 + 2 + 3, en el makam hüseyni: {A}, {B}, {C}, {D}, {E}, {F#}, {G}, el modo dórico, sobre {A} menor, {E}m7 y {D}7.",
     ),
     (
+        "A slow, rocking Baroque dance in 6/8, loved by Bach and Handel: each beat long, short, short. In a minor key, with the Neapolitan chord, the major chord on the flat second (B flat in A minor), on its way to V7.",
+        "Una danza barroca lenta y mecida en 6/8, querida por Bach y Händel: cada pulso largo, corto, corto. En tono menor, con el acorde napolitano, el acorde mayor sobre el segundo grado bemol ({Bb} en {A} menor), camino de V7.",
+    ),
+    (
         "A slow, soft hip hop beat to study to.",
         "Un ritmo de hip hop lento y suave para estudiar.",
     ),
@@ -195,6 +215,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     (
         "A strummed guitar going out to V and IV and back home.",
         "Una guitarra rasgueada que sale hacia V y IV y vuelve a casa.",
+    ),
+    (
+        "A swing orchestra of the 1930s and 1940s, such as Count Basie's: a walking bass, the guitar strumming four to the bar, a sparse piano, and the horns (trumpets, saxophones and trombones) riffing together over a jazz blues. The diminished seventh on the raised fourth (F sharp diminished in C) leads from IV back to I, and VI7, ii7 and V7 turn the form around.",
+        "Una orquesta de swing de los años treinta y cuarenta, como la de Count Basie: un walking bass, la guitarra rasgueando cuatro por compás, un piano escueto y los vientos (trompetas, saxofones y trombones) haciendo riffs juntos sobre un blues de jazz. La séptima disminuida sobre el cuarto grado elevado ({F#} disminuido en {C}) lleva de IV de vuelta a I, y VI7, ii7 y V7 dan la vuelta a la forma.",
     ),
     (
         "A timbales run into the next bar.",
@@ -225,8 +249,11 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Acorde menor-mayor: major and minor triads, each keeping two notes of the one before. These are the three moves of neo-Riemannian theory (P, L and R), the chromatic chord changes of Wagner and Liszt.",
         "Acorde menor-mayor: tríadas mayores y menores, cada una conservando dos notas de la anterior. Son los tres movimientos de la teoría neorriemanniana (P, L y R), los cambios cromáticos de acordes de Wagner y Liszt.",
     ),
+    ("Afro-Cuban 6/8", "6/8 afrocubano"),
+    ("Afrobeat", "Afrobeat"),
     ("Afrobeats", "Afrobeats"),
     ("Aksak", "Aksak"),
+    ("Alegrías", "Alegrías"),
     ("Amazing Grace", "Amazing Grace"),
     (
         "An old Iberian dance whose chords Corelli, Vivaldi, Bach and Rachmaninoff all wrote variations on.",
@@ -237,16 +264,27 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Una orquesta que acompaña la canción en la métrica que tenga cada compás, para música cuya métrica cambia de compás en compás, como en La consagración de la primavera: en cada pulso en que se siente el compás, los cornos atacan el acorde y los timbales su fundamental, las cuerdas lo sostienen, y el bombo marca cada compás. La canción conserva sus métricas, su tempo y sus propias partes. Sus acordes oscilan entre I y el VII bemol del modo mixolidio.",
     ),
     (
+        "Angola's slow, close dance, grown in the 1980s out of semba and the zouk of the French Antilles: soft synth pads hold a minor-key loop, i, flat VI, flat III and flat VII, while the synth bass rolls in 3 + 3 + 2.",
+        "La danza lenta y abrazada de Angola, nacida en los años ochenta del semba y del zouk de las Antillas francesas: pads suaves de sintetizador sostienen un loop en menor, i, VI bemol, III bemol y VII bemol, mientras el bajo de sintetizador rueda en 3 + 3 + 2.",
+    ),
+    (
+        "Angolan kizomba, born in the 1980s from semba and the zouk of the French Antilles: slow and rolling, the bass drum on 1 and 3 with a pickup between them, a soft rim on 2 and 4, and the shaker leaning on 3 + 3 + 2.",
+        "La kizomba angoleña, nacida en los años ochenta del semba y del zouk de las Antillas francesas: lenta y ondulante, el bombo en 1 y 3 con una anacrusa entre ellos, un aro suave en 2 y 4, y el shaker apoyándose en 3 + 3 + 2.",
+    ),
+    (
         "Arpeggios and an octave bass in sixteenths, straight out of the 1980s.",
         "Arpegios y un bajo en octavas en semicorcheas, directo de los años ochenta.",
     ),
     ("Augmented climb", "Ascenso aumentado"),
     ("Augmented drift", "Deriva aumentada"),
+    ("Bailecito", "Bailecito"),
+    ("Baião", "Baião"),
     ("Balkan and Turkish", "Balcánica y turca"),
     (
         "Banjo, fiddle and mandolin, played fast: three chords and the bass on beats 1 and 3.",
         "Banjo, violín y mandolina, tocados rápido: tres acordes y el bajo en los pulsos 1 y 3.",
     ),
+    ("Baroque continuo", "Bajo continuo barroco"),
     (
         "Between ska and reggae, in the mid-1960s: slower than ska, and sweet.",
         "Entre el ska y el reggae, a mediados de los años sesenta: más lento que el ska, y dulce.",
@@ -255,6 +293,8 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Between ska and reggae, in the mid-1960s: slower, with the hi-hat between the beats.",
         "Entre el ska y el reggae, a mediados de los años sesenta: más lento, con el charles entre los pulsos.",
     ),
+    ("Big band ballad", "Balada de big band"),
+    ("Big band swing", "Swing de big band"),
     (
         "Big ninth chords chopped in rhythm over a half-time beat.",
         "Grandes acordes de novena cortados en ritmo sobre un ritmo a medio tiempo.",
@@ -289,8 +329,21 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Escobillas y un ride suave: la batería solo lleva el tiempo.",
     ),
     (
+        "Brushes behind a Harlem stride pianist: the hi-hat on 2 and 4 with the left hand's chords, and a soft sweep in swung eighths.",
+        "Escobillas detrás de un pianista de stride de Harlem: el charles en 2 y 4 con los acordes de la mano izquierda, y un barrido suave en corcheas con swing.",
+    ),
+    (
         "Brushes on the snare in sixteenths, like a train on the tracks.",
         "Escobillas en la caja en semicorcheas, como un tren sobre las vías.",
+    ),
+    (
+        "Brushes under a big band's ballad: the saxophones hold the chords while the drums only keep time.",
+        "Escobillas bajo una balada de big band: los saxofones sostienen los acordes mientras la batería solo lleva el tiempo.",
+    ),
+    ("Bulerías", "Bulerías"),
+    (
+        "Bulerías, the fastest and most playful of the twelve-beat forms: the guitar strikes the compás's accents, 12, 3, 6, 8 and 10, and its chords step down to the Phrygian tonic, G, F, E.",
+        "Bulerías, la más rápida y juguetona de las formas de doce tiempos: la guitarra marca los acentos del compás, 12, 3, 6, 8 y 10, y sus acordes bajan hasta la tónica frigia, {G}, {F}, {E}.",
     ),
     (
         "Bulgaria's 11/8, 2 + 2 + 3 + 2 + 2: five beats with the long one in the middle, the dance of Gankino horo.",
@@ -305,6 +358,9 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "La danza renga de Bulgaria en 5/8: un pulso corto y uno largo, 2 + 3, rápido y lento, una y otra vez.",
     ),
     ("Bučimiš", "Bučimiš"),
+    ("Cajun two-step", "Two-step cajún"),
+    ("Cakewalk", "Cakewalk"),
+    ("Calypso", "Calipso"),
     ("Candombe", "Candombe"),
     ("Canon in D", "Canon en {D}"),
     ("Carnaval cochabambino", "Carnaval cochabambino"),
@@ -345,8 +401,20 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "El bambuco de Colombia: el tiple mantiene el 6/8 mientras el bajo cae en el segundo y el tercer pulso de 3/4, nunca en el primero.",
     ),
     (
+        "Colombia's vallenato, from the Caribbean coast, in its paseo rhythm: the accordion over the caja and the guacharaca, three chords, the bass on the beats. The paseo is in 2/4; each bar here lasts two.",
+        "El vallenato de Colombia, de la costa caribe, en su ritmo de paseo: el acordeón sobre la caja y la guacharaca, tres acordes, el bajo en los pulsos. El paseo está en 2/4; cada compás aquí dura dos.",
+    ),
+    (
         "Colombian cumbia: chords on the offbeats, bass on the beats, and a scraper in eighths.",
         "Cumbia colombiana: acordes en los contratiempos, bajo en los pulsos y un raspador en corcheas.",
+    ),
+    (
+        "Congolese soukous, the dance music of Kinshasa: the snare gallops in sixteenths, the \"cavacha\", over a kick on every beat.",
+        "El soukous congoleño, la música bailable de Kinshasa: la caja galopa en semicorcheas, la «cavacha», sobre un bombo en cada pulso.",
+    ),
+    (
+        "Congolese soukous, the rumba of Kinshasa sped up: in the sebene, its dance section, the lead guitar picks bright sixteenth notes over I, IV and V while the snare gallops.",
+        "El soukous congoleño, la rumba de Kinshasa acelerada: en el sebene, su sección de baile, la guitarra solista puntea semicorcheas brillantes sobre I, IV y V mientras la caja galopa.",
     ),
     ("Country and folk", "Country y folk"),
     (
@@ -417,6 +485,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Eight bars in 12/8: four slow beats, each split in three. VI7 ii7 V7 is a turnaround borrowed from jazz.",
         "Ocho compases en 12/8: cuatro pulsos lentos, cada uno dividido en tres. VI7 ii7 V7 es un turnaround tomado del jazz.",
     ),
+    (
+        "Eight to the bar: a plain backbeat and the ride on every eighth, swung, under a boogie-woogie piano whose left hand never stops.",
+        "Ocho por compás: un backbeat sencillo y el ride en cada corchea, con swing, bajo un piano de boogie-woogie cuya mano izquierda nunca para.",
+    ),
     ("Electro", "Electro"),
     ("Electronic", "Electrónica"),
     ("Entries", "Entradas"),
@@ -424,6 +496,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Every chord of the key, each a fifth below the last: the circle of fifths inside one key.",
         "Cada acorde de la tonalidad, cada uno una quinta debajo del anterior: el círculo de quintas dentro de una tonalidad.",
     ),
+    ("Fado", "Fado"),
     (
         "Fast and in two: the tambora drum's rolls and a scraper that never stops.",
         "Rápido y en dos: los redobles de la tambora y un raspador que nunca para.",
@@ -441,12 +514,25 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Rápido, fuerte y brillante: acordes en cada corchea con el bajo justo debajo.",
     ),
     (
+        "Fela Kuti's Afrobeat, from 1970s Lagos, after Tony Allen's drumming: a busy hi-hat in sixteenths, ghost notes on the snare, a kick that dodges the beat, and claves keeping a time line under the long, funky vamp.",
+        "El afrobeat de Fela Kuti, de la Lagos de los años setenta, según la batería de Tony Allen: un charles muy ocupado en semicorcheas, notas fantasma en la caja, un bombo que esquiva el pulso y unas claves que llevan una línea de tiempo bajo el vamp largo y funky.",
+    ),
+    (
+        "Fela Kuti's Afrobeat, from 1970s Lagos: a long Dorian vamp on i7 and IV7, guitars locked in short repeating riffs, a funky bass, horns, and Tony Allen's drums.",
+        "El afrobeat de Fela Kuti, de la Lagos de los años setenta: un largo vamp dórico sobre i7 y IV7, guitarras trabadas en riffs cortos que se repiten, un bajo funky, vientos y la batería de Tony Allen.",
+    ),
+    ("Festejo", "Festejo"),
+    (
         "Fifteen eighths in seven beats, 2 + 2 + 2 + 2 + 3 + 2 + 2: one of the longest bars Bulgarian dancers count, with the long beat near the end.",
         "Quince corcheas en siete pulsos, 2 + 2 + 2 + 2 + 3 + 2 + 2: uno de los compases más largos que cuentan los bailarines búlgaros, con el pulso largo cerca del final.",
     ),
     (
         "Fifteen eighths to the bar, 2 + 2 + 2 + 2 + 3 + 2 + 2: seven beats, the long one fifth, over two chords.",
         "Quince corcheas por compás, 2 + 2 + 2 + 2 + 3 + 2 + 2: siete pulsos, el quinto largo, sobre dos acordes.",
+    ),
+    (
+        "Fingerpicking as Merle Travis played it: the thumb keeps an alternating bass, root and fifth by turns on every beat (here on the bass), while the fingers pick chord notes between them. III7, E7 in C, a dominant that does not go to its own tonic, moves to IV instead.",
+        "Fingerpicking como lo tocaba Merle Travis: el pulgar lleva un bajo alternado, fundamental y quinta por turnos en cada pulso (aquí en el bajo), mientras los dedos puntean notas del acorde entre ellas. III7, {E}7 en {C}, una dominante que no va a su propia tónica, pasa en cambio a IV.",
     ),
     ("Five-four", "Cinco por cuatro"),
     ("Five-four spy", "Espías en cinco por cuatro"),
@@ -466,6 +552,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Four on the floor, un poco más rápido, hecho para largas subidas y drops.",
     ),
     ("Fourths groove", "Groove de cuartas"),
+    ("Freylekhs", "Freylekhs"),
     (
         "From Corrientes: the guitar's bass and chords move in 3/4 while the accordion and the drums play 6/8, so every bar is three against two.",
         "De Corrientes: el bajo y los acordes de la guitarra se mueven en 3/4 mientras el acordeón y la percusión tocan en 6/8, así que cada compás es tres contra dos.",
@@ -498,9 +585,18 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "{G}7 cambiado por {Db}7: los dos tienen el mismo tritono, {F} y {B}, y ahora el bajo baja por semitonos, {D}, {Db}, {C}.",
     ),
     (
+        "Ghana's highlife, from the dance bands and guitar bands of the 1950s: picked guitar lines ringing over I, IV and V7, the bell's time line, and a bass in 3 + 3 + 2.",
+        "El highlife de Ghana, de las orquestas de baile y los grupos de guitarras de los años cincuenta: líneas punteadas de guitarra que resuenan sobre I, IV y V7, la línea de tiempo de la campana y un bajo en 3 + 3 + 2.",
+    ),
+    (
+        "Ghana's highlife: the bell's time line, 3 + 3 + 4 + 2 + 4 sixteenths, congas and a light kick, under bright, ringing guitars.",
+        "El highlife de Ghana: la línea de tiempo de la campana, 3 + 3 + 4 + 2 + 4 semicorcheas, congas y un bombo ligero, bajo guitarras brillantes y resonantes.",
+    ),
+    (
         "Greece's most loved dance, in 7/8: a long beat and two short ones, 3 + 2 + 2, slow, quick, quick.",
         "La danza más querida de Grecia, en 7/8: un pulso largo y dos cortos, 3 + 2 + 2, lento, rápido, rápido.",
     ),
+    ("Guaguancó", "Guaguancó"),
     (
         "Half-time drums with a big snare on beat 3, and chords chopped up over a deep sub bass.",
         "Batería a medio tiempo con una caja grande en el pulso 3, y acordes cortados sobre un sub bajo profundo.",
@@ -522,11 +618,16 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Palmas y el grave y el golpe de un cajón.",
     ),
     (
+        "Harlem stride, the piano of James P. Johnson and Fats Waller: fast and swung, the left hand leaping from a bass note on 1 and 3 to a chord on 2 and 4. I7 leads to IV, the diminished seventh on the raised fourth (F sharp diminished in C) climbs back to I, and the dominants circle home.",
+        "El stride de Harlem, el piano de James P. Johnson y Fats Waller: rápido y con swing, la mano izquierda salta de una nota grave en 1 y 3 a un acorde en 2 y 4. I7 lleva a IV, la séptima disminuida sobre el cuarto grado elevado ({F#} disminuido en {C}) sube de vuelta a I, y las dominantes vuelven a casa por el círculo.",
+    ),
+    (
         "Harmonic minor's major V gives trap its dark pull. The beat is half-time, so 140 BPM feels like 70.",
         "El V mayor de la menor armónica le da al trap su tirón oscuro. El ritmo es a medio tiempo, así que 140 BPM se sienten como 70.",
     ),
     ("Heroic cadence", "Cadencia heroica"),
     ("Hexachord pads", "Pads de hexacordios"),
+    ("Highlife", "Highlife"),
     ("Hip hop and lo-fi", "Hip hop y lo-fi"),
     ("Hip hop fill", "Relleno de hip hop"),
     (
@@ -537,6 +638,8 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Home reached by the back door: Fm7 and B flat 7, borrowed from C minor, instead of Dm7 and G7.",
         "La casa alcanzada por la puerta de atrás: {F}m7 y {Bb}7, tomados de {C} menor, en lugar de {D}m7 y {G}7.",
     ),
+    ("Honky-tonk", "Honky-tonk"),
+    ("Honky-tonk shuffle", "Shuffle honky-tonk"),
     ("House build", "Subida de house"),
     (
         "House music slowed down to reggaeton's tempo: four on the floor under a dembow snare.",
@@ -580,6 +683,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ),
     ("Kalamatianos", "Kalamatianós"),
     ("Karşılama", "Karşılama"),
+    ("Kizomba", "Kizomba"),
     ("Kopanitsa", "Kopanitsa"),
     ("Last voices", "Últimas voces"),
     (
@@ -601,6 +705,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     (
         "Light percussion that stays out of the guitar's way.",
         "Percusión ligera que no le estorba a la guitarra.",
+    ),
+    (
+        "Lisbon's fado, the song of saudade, in the fado menor: a minor key with only i, iv and V7. The classical guitar (the viola) plays the bass on each beat and the chord between, and the Portuguese guitar answers the singer. Each bar here lasts two bars of 2/4.",
+        "El fado de Lisboa, la canción de la saudade, en el fado menor: un tono menor con solo i, iv y V7. La guitarra clásica (la viola) toca el bajo en cada pulso y el acorde entre ellos, y la guitarra portuguesa responde al cantante. Cada compás aquí dura dos compases de 2/4.",
     ),
     ("Lo-fi descending", "Lo-fi descendente"),
     ("Lo-fi house", "Lo-fi house"),
@@ -638,6 +746,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Major chords borrowed from the minor key, bIII, bVI and bVII: the sound of garage rock and grunge.",
         "Acordes mayores tomados de la tonalidad menor, bIII, bVI y bVII: el sonido del garage rock y del grunge.",
     ),
+    ("Mambo", "Mambo"),
     ("Marchinha", "Marchinha"),
     ("Maxixe", "Maxixe"),
     (
@@ -648,6 +757,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Mayor 4, a whole tone and two fourths: open sus chords that keep two notes and move one, over a neo-soul beat.",
         "Mayor 4, un tono y dos cuartas: acordes sus abiertos que conservan dos notas y mueven una, sobre un ritmo de neo soul.",
     ),
+    ("Mazurka", "Mazurca"),
     (
         "Menor 1, three notes a semitone apart, struck as clusters that creep up a semitone at a time, over a techno beat.",
         "Menor 1, tres notas a un semitono una de otra, tocadas como clusters que suben de a un semitono, sobre un ritmo de techno.",
@@ -665,12 +775,16 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Acordes de novena menor y de séptima mayor: el deep house es suave, cálido y menor.",
     ),
     ("Minor plagal", "Plagal menor"),
+    ("Minuet", "Minué"),
     ("Mixolydian rock", "Rock mixolidio"),
     ("Modal jazz", "Jazz modal"),
     (
         "Montevideo's candombe: the stick on the drum's wooden shell plays the clave, 3 + 3 + 2 twice, under the piano, repique and chico drums.",
         "El candombe de Montevideo: el palo sobre la madera del tambor toca la clave, 3 + 3 + 2 dos veces, bajo los tambores piano, repique y chico.",
     ),
+    ("Murga", "Murga"),
+    ("Musette", "Musette"),
+    ("Musette waltz", "Vals musette"),
     (
         "Named after its sound: the two quick notes and one long, \"cha-cha-chá\", on beat 4 and the next beat 1.",
         "Lleva el nombre de su sonido: las dos notas rápidas y una larga, «cha-cha-chá», en el pulso 4 y el 1 siguiente.",
@@ -687,6 +801,38 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     (
         "No drums at all: two major ninth chords held for as long as they last, music to float in.",
         "Sin batería: dos acordes de novena mayor sostenidos todo lo que duran, música para flotar.",
+    ),
+    (
+        "No drums: a chord on every beat of a stately 3/4, the first the strongest.",
+        "Sin batería: un acorde en cada pulso de un 3/4 majestuoso, el primero el más fuerte.",
+    ),
+    (
+        "No drums: a fingerpicking guitar, the fingers between the thumb's alternating bass notes, which the bass doubles.",
+        "Sin batería: una guitarra de fingerpicking, los dedos entre las notas del bajo alternado del pulgar, que el bajo dobla.",
+    ),
+    (
+        "No drums: a harpsichord's chords over a cello leaping in octaves in eighth notes.",
+        "Sin batería: los acordes de un clave sobre un violonchelo que salta en octavas en corcheas.",
+    ),
+    (
+        "No drums: a ragtime pianist alone, the left hand striding from a bass note on each beat to a chord after it.",
+        "Sin batería: un pianista de ragtime solo, la mano izquierda saltando de una nota grave en cada pulso a un acorde después de ella.",
+    ),
+    (
+        "No drums: a slow 6/8, each beat long, short, short.",
+        "Sin batería: un 6/8 lento, cada pulso largo, corto, corto.",
+    ),
+    (
+        "No drums: every bar in the polonaise rhythm, an eighth and two sixteenths, then four eighths.",
+        "Sin batería: cada compás en el ritmo de la polonesa, una corchea y dos semicorcheas, luego cuatro corcheas.",
+    ),
+    (
+        "No drums: the bass on beat 1 and the weight on beat 3, as in Chopin's mazurkas.",
+        "Sin batería: el bajo en el pulso 1 y el peso en el pulso 3, como en las mazurcas de Chopin.",
+    ),
+    (
+        "No drums: the fado's guitars, the bass on each beat and the chord between, with the Portuguese guitar picking above them.",
+        "Sin batería: las guitarras del fado, el bajo en cada pulso y el acorde entre ellos, con la guitarra portuguesa punteando por encima.",
     ),
     (
         "Nothing on beat 1: kick and rim fall together on beat 3.",
@@ -723,6 +869,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("P: the row", "P: la serie"),
     ("Paidushko", "Paidushko"),
     ("Pasillo", "Pasillo"),
+    ("Pasodoble", "Pasodoble"),
     (
         "Peru's courtship dance for guitar and cajón: the zamba's minor-key chords at a brisker pace, with the cajón slapping across the beat.",
         "La danza de cortejo del Perú para guitarra y cajón: los acordes en menor de la zamba a un paso más vivo, con el cajón golpeando a través del pulso.",
@@ -731,6 +878,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Peru's courtship dance on the cajón: a low tone, slaps that cross into 3/4, and the quijada's rattle.",
         "La danza de cortejo del Perú en el cajón: un tono grave, golpes que cruzan hacia el 3/4, y el traqueteo de la quijada.",
     ),
+    ("Peruvian waltz", "Vals peruano"),
     ("Philly soul", "Philly soul"),
     (
         "Piano chords on every beat, a busy bass and a snare on all four beats: 1960s Detroit.",
@@ -742,14 +890,17 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ),
     ("Pointillism", "Puntillismo"),
     ("Polca", "Polca"),
+    ("Polonaise", "Polonesa"),
     ("Pop", "Pop"),
     ("Pop minor", "Pop menor"),
     ("Pop punk", "Pop punk"),
     ("Power chords", "Power chords"),
     ("Quiet storm", "Quiet storm"),
     ("R: backwards", "R: al revés"),
+    ("Ragtime band", "Banda de ragtime"),
     ("Raks aksağı", "Raks aksağı"),
     ("Ranchera", "Ranchera"),
+    ("Rasguido doble", "Rasguido doble"),
     ("Reggae and ska", "Reggae y ska"),
     ("RI: both", "RI: las dos"),
     (
@@ -800,6 +951,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "La danza de Santiago del Estero: el bombo toca 6/8 en el parche y 3/4 en el aro al mismo tiempo, el dos contra tres del que vive todo el género.",
     ),
     (
+        "Scott Joplin's piano music, straight and not fast: the left hand plays a bass note on every beat, the root and the fifth below by turns, and the chord between them. I7 turns towards IV, the minor iv is borrowed from the minor key, and the strain comes home round the circle of dominants, VI7, II7, V7. Ragtime is written in 2/4; each bar here lasts two.",
+        "La música para piano de Scott Joplin, recta y no rápida: la mano izquierda toca una nota grave en cada pulso, la fundamental y la quinta de abajo por turnos, y el acorde entre ellas. I7 se vuelve hacia IV, el iv menor se toma prestado del tono menor, y la sección vuelve a casa por el círculo de dominantes, VI7, II7, V7. El ragtime se escribe en 2/4; cada compás aquí dura dos.",
+    ),
+    (
         "Seventh chords around the circle of fifths, with the octave bass and open hats of the 1970s.",
         "Acordes de séptima alrededor del círculo de quintas, con el bajo en octavas y los charles abiertos de los años setenta.",
     ),
@@ -808,6 +963,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Acordes de séptima que bajan por la escala hasta casa, un compás cada uno.",
     ),
     ("Sevillanas", "Sevillanas"),
+    ("Siciliano", "Siciliana"),
     (
         "Single notes leaping across three octaves, each with its own length and loudness from the row: points of sound, as in Webern.",
         "Notas sueltas que saltan por tres octavas, cada una con su propia duración e intensidad tomadas de la serie: puntos de sonido, como en Webern.",
@@ -816,6 +972,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Six eighth notes to the bar in two groups of three: the bounce of Irish jigs.",
         "Seis corcheas por compás en dos grupos de tres: el rebote de las jigas irlandesas.",
     ),
+    ("Six-eight march", "Marcha en 6/8"),
     (
         "Sixteenths on the hi-hat, ghost notes on the snare, and a kick that never sits still.",
         "Semicorcheas en el charles, notas fantasma en la caja y un bombo que nunca se queda quieto.",
@@ -829,15 +986,32 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Golpes de caja que se duplican hacia el drop.",
     ),
     ("Snare roll", "Redoble de caja"),
+    ("Soca", "Soca"),
+    (
+        "Soca, the \"soul of calypso\" from 1970s Trinidad: calypso with the drive of soul and disco, a kick on every beat, octaves in the bass and stabbed chords, for carnival.",
+        "La soca, el «soul del calipso» de la Trinidad de los años setenta: calipso con el empuje del soul y de la música disco, un bombo en cada pulso, octavas en el bajo y acordes picados, para el carnaval.",
+    ),
+    (
+        "Soca, the \"soul of calypso\" from 1970s Trinidad: faster, with a kick on every beat and the iron's syncopations, for the carnival's road marches.",
+        "La soca, el «soul del calipso» de la Trinidad de los años setenta: más rápida, con un bombo en cada pulso y las síncopas del iron, para las road marches del carnaval.",
+    ),
+    ("Soleá", "Soleá"),
+    (
+        "Soleá, the mother of flamenco's songs: slow and solemn, in the twelve-beat compás, a compás for each chord of the Andalusian cadence down to the Phrygian tonic, A minor, G, F, E.",
+        "La soleá, la madre de los cantes flamencos: lenta y solemne, en el compás de doce tiempos, un compás por cada acorde de la cadencia andaluza que baja a la tónica frigia, {A} menor, {G}, {F}, {E}.",
+    ),
     ("Son", "Son"),
     ("Son jalisciense", "Son jalisciense"),
     ("Son montuno minor", "Son montuno menor"),
+    ("Soukous", "Soukous"),
     ("Soul, funk and R&B", "Soul, funk y R&B"),
     ("Southern soul", "Southern soul"),
     (
         "Starting on IV keeps the music floating: home only arrives in the second bar.",
         "Empezar en IV mantiene la música flotando: la casa recién llega en el segundo compás.",
     ),
+    ("Stride", "Stride"),
+    ("Stride piano", "Piano stride"),
     (
         "Strummed chords and a bass alternating root and fifth: boom-chick.",
         "Acordes rasgueados y un bajo que alterna fundamental y quinta: bum-chic.",
@@ -867,6 +1041,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("Tangos flamencos", "Tangos flamencos"),
     ("Tarantella", "Tarantela"),
     (
+        "Texas dance halls of the 1930s and 1940s, Bob Wills's band: the snare brushed in swung eighths, louder on 2 and 4, the bass drum on 1 and 3.",
+        "Los salones de baile de Texas de los años treinta y cuarenta, la orquesta de Bob Wills: la caja con escobillas en corcheas con swing, más fuerte en 2 y 4, el bombo en 1 y 3.",
+    ),
+    (
         "The \"boom\" of the kick and the \"bap\" of the snare: 1990s hip hop.",
         "El «bum» del bombo y el «bap» de la caja: el hip hop de los años noventa.",
     ),
@@ -885,6 +1063,26 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     (
         "The 5/8 of Tsakonia, 3 + 2, slow, quick, the paidushko's beats the other way round: the bass on the long beat and on the short one, over a minor key's i and iv.",
         "El 5/8 de Tsakonia, 3 + 2, lento, rápido, los pulsos del paidushko al revés: el bajo en el pulso largo y en el corto, sobre i y iv de una tonalidad menor.",
+    ),
+    (
+        "The 6/8 of Cuba's drums of African origin, as in the bembé: a bell plays the seven-stroke pattern, twelve eighths long, that the whole band listens to, over four slow beats. Afro-Cuban jazz took it up.",
+        "El 6/8 de los tambores cubanos de origen africano, como en el bembé: una campana toca el patrón de siete golpes, de doce corcheas de largo, que toda la banda escucha, sobre cuatro pulsos lentos. El jazz afrocubano lo adoptó.",
+    ),
+    (
+        "The 6/8 of Cuba's drums of African origin, which Afro-Cuban jazz took up: the bell's seven strokes over twelve eighths and four slow beats, under a Dorian minor rocking between i7 and ii7 before the major chord a tone below the tonic.",
+        "El 6/8 de los tambores cubanos de origen africano, que adoptó el jazz afrocubano: los siete golpes de la campana sobre doce corcheas y cuatro pulsos lentos, bajo un menor dórico que se mece entre i7 y ii7 antes del acorde mayor un tono por debajo de la tónica.",
+    ),
+    (
+        "The Afro-Peruvian festejo, a fast dance of the coast: the cajón plays 6/8 while the guitar's chords fall in 3/4, three against two, over I, IV and V7.",
+        "El festejo afroperuano, una danza rápida de la costa: el cajón toca en 6/8 mientras los acordes de la guitarra caen en 3/4, tres contra dos, sobre I, IV y V7.",
+    ),
+    (
+        "The Afro-Peruvian festejo, fast and syncopated: the cajón and the cowbell in 6/8, while the guitar's chords fall in 3/4, three against two.",
+        "El festejo afroperuano, rápido y sincopado: el cajón y el cencerro en 6/8, mientras los acordes de la guitarra caen en 3/4, tres contra dos.",
+    ),
+    (
+        "The alegrías of Cádiz, the bright one among the twelve-beat forms: a major key, I and V7 a compás each, at a lively pace.",
+        "Las alegrías de Cádiz, la luminosa entre las formas de doce tiempos: un tono mayor, I y V7 un compás cada uno, a paso vivo.",
     ),
     (
         "The Andean huayno of Peru and Bolivia: a bombo on the beat, a tap off it, and the charango's steady strum; 2/4, written as pairs of bars.",
@@ -915,6 +1113,22 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "El backbeat: bombo en 1 y 3, caja en 2 y 4, charles en cada corchea.",
     ),
     (
+        "The bailecito of the Argentine northwest and Bolivia, a lively handkerchief dance in 6/8 that also sways in 3/4, its tune often sung in parallel thirds, over I, IV and V7.",
+        "El bailecito del noroeste argentino y de Bolivia, una animada danza de pañuelos en 6/8 que también se mece en 3/4, su melodía a menudo cantada en terceras paralelas, sobre I, IV y V7.",
+    ),
+    (
+        "The bailecito of the Argentine northwest and Bolivia: a lively 6/8 that also sways in 3/4, for charangos, guitars and the bombo.",
+        "El bailecito del noroeste argentino y de Bolivia: un 6/8 animado que también se mece en 3/4, para charangos, guitarras y bombo.",
+    ),
+    (
+        "The baião of Brazil's northeast, Luiz Gonzaga's dance: the accordion and the bass in 3 + 3 + 2 sixteenths, the zabumba drum's long-short on the beat, and a triangle. The baião is in 2/4; each bar here lasts two.",
+        "El baião del nordeste de Brasil, la danza de Luiz Gonzaga: el acordeón y el bajo en 3 + 3 + 2 semicorcheas, el largo-corto de la zabumba en el pulso y un triángulo. El baião está en 2/4; cada compás aquí dura dos.",
+    ),
+    (
+        "The baião of Brazil's northeast, Luiz Gonzaga's dance: the zabumba drum's long-short on the beat, its stick between the beats, and a triangle that never stops. The baião is in 2/4; each bar here lasts two.",
+        "El baião del nordeste de Brasil, la danza de Luiz Gonzaga: el largo-corto de la zabumba en el pulso, su baqueta entre los pulsos y un triángulo que nunca para. El baião está en 2/4; cada compás aquí dura dos.",
+    ),
+    (
         "The ballroom tango of the 1940s, walking the whole circle of fifths in a minor key before V7 brings it home.",
         "El tango de salón de los años cuarenta, que recorre todo el círculo de quintas en una tonalidad menor antes de que V7 lo lleve a casa.",
     ),
@@ -927,10 +1141,18 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "El bombo de una orquesta en el primer pulso de cada compás, y suave en cada otro pulso en que se siente el compás, sea cual sea su métrica: en 2/4 y 3/4 una vez por compás, en 9/8 en 1, 4 y 7. Sigue a la música cuya métrica cambia de compás en compás.",
     ),
     (
+        "The basso continuo of Baroque music: a harpsichord fills in the chords, in parts that never move in parallel fifths or octaves, over a cello leaping in octaves in eighth notes, as in Bach's Air. III7 and II7 are secondary dominants, the V7 of vi and of V.",
+        "El bajo continuo de la música barroca: un clave completa los acordes, en voces que nunca se mueven en quintas ni octavas paralelas, sobre un violonchelo que salta en octavas en corcheas, como en el Aria de Bach. III7 y II7 son dominantes secundarias, el V7 de vi y de V.",
+    ),
+    (
         "The beat stutters before the next bar.",
         "El ritmo tartamudea antes del compás siguiente.",
     ),
     ("The Big Bang Theory theme", "Tema de The Big Bang Theory"),
+    (
+        "The big-band mambo of Pérez Prado and Tito Puente, grown from the son's last and wildest section: the piano repeats its montuno and the bass its tumbao over the son's vamp, I, IV, V7, IV, while the horns riff.",
+        "El mambo de big band de Pérez Prado y Tito Puente, nacido de la última y más desenfrenada sección del son: el piano repite su montuno y el bajo su tumbao sobre el vamp del son, I, IV, V7, IV, mientras los vientos hacen riffs.",
+    ),
     (
         "The blues as a 1940s swing band played it: sixth chords, and a turnaround through VI7, ii7 and V7.",
         "El blues como lo tocaba una banda de swing de los años cuarenta: acordes de sexta, y un turnaround por VI7, ii7 y V7.",
@@ -946,6 +1168,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     (
         "The caja, a small hand drum, under a slow song of the Andean north-west of Argentina.",
         "La caja, un pequeño tambor de mano, bajo una canción lenta del noroeste andino de la Argentina.",
+    ),
+    (
+        "The Cajun two-step of Louisiana: an accordion and a fiddle over the triangle, the bass on the beats and the chords between, I, IV and V7 as the accordion's buttons give them. The dance is in 2/4; each bar here lasts two.",
+        "El two-step cajún de Luisiana: un acordeón y un violín sobre el triángulo, el bajo en los pulsos y los acordes entre ellos, I, IV y V7 tal como los dan los botones del acordeón. La danza está en 2/4; cada compás aquí dura dos.",
     ),
     (
         "The carnavalito as the Gloria of the Misa Criolla plays it, a bar of 2/4 for each two beats: the minor chord and its dominant, a beat each, then the relative major's IV, V and I (bVI, bVII and bIII of the minor key).",
@@ -984,12 +1210,24 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "La chacarera trunca, con sus frases cortadas antes del final de su segundo compás, en un 3/4 rápido: la tónica menor y su séptima de dominante, con un iv.",
     ),
     (
+        "The court dance of the 1700s, stately in 3/4, a chord on every beat. Its phrases come in fours: the first ends on V, a half cadence like a question, and the second answers with V7 to I.",
+        "La danza cortesana del siglo XVIII, majestuosa en 3/4, un acorde en cada pulso. Sus frases van de cuatro en cuatro: la primera termina en V, una semicadencia como una pregunta, y la segunda responde con V7 a I.",
+    ),
+    (
         "The Cuban dance that travelled to Spain, Argentina and the opera stage: long, short, long, long.",
         "La danza cubana que viajó a España, a la Argentina y a los escenarios de ópera: largo, corto, largo, largo.",
     ),
     (
         "The Cuban son of the 1920s, salsa's parent: the clave across two bars, here 2 + 3 (its bar of two hits first), the bongo's steady \"hammer\" and maracas in eighths, and no drum kit.",
         "El son cubano de los años veinte, padre de la salsa: la clave a lo largo de dos compases, aquí 2 + 3 (su compás de dos golpes primero), el «martillo» constante del bongó y maracas en corcheas, sin batería.",
+    ),
+    (
+        "The Cuban street rumba, for voices and drums: the rumba clave and three conga drums talking to each other, the lowest keeping time and the highest, the quinto, improvising. Its chorus, the coro, sings over I and V7, held here.",
+        "La rumba cubana de la calle, para voces y tambores: la clave de rumba y tres congas que conversan, la más grave llevando el tiempo y la más aguda, el quinto, improvisando. Su coro canta sobre I y V7, sostenidos aquí.",
+    ),
+    (
+        "The Cuban street rumba: the rumba clave, whose third stroke comes a step later than the son clave's, under the conversation of the conga drums.",
+        "La rumba cubana de la calle: la clave de rumba, cuyo tercer golpe llega un paso más tarde que el de la clave de son, bajo la conversación de las congas.",
     ),
     (
         "The dance of the Seville fair, in three: a bright major key, danced in pairs.",
@@ -1014,6 +1252,14 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     (
         "The drum machines of early-1980s electro: a broken kick, sixteenths on the hat, a cowbell.",
         "Las cajas de ritmos del electro de principios de los ochenta: un bombo quebrado, semicorcheas en el charles, un cencerro.",
+    ),
+    (
+        "The drummer of a ragtime band around 1900, when the cakewalk was the dance craze: the bass drum on every beat, the snare between them with the piano's chords, and the rim filling in the cakewalk's short-long-short. Ragtime is written in 2/4; each bar here lasts two.",
+        "El baterista de una banda de ragtime hacia 1900, cuando el cakewalk era el baile de moda: el bombo en cada pulso, la caja entre ellos con los acordes del piano, y el aro rellenando el corto-largo-corto del cakewalk. El ragtime se escribe en 2/4; cada compás aquí dura dos.",
+    ),
+    (
+        "The drummer of a swing big band in the 1930s and 1940s: the ride and the hi-hat as in a small group, the bass drum \"feathered\" softly on every beat, the snare kicking the horns' figures, and a crash every four bars where the phrase starts again.",
+        "El baterista de una big band de swing de los años treinta y cuarenta: el ride y el charles como en un grupo pequeño, el bombo «emplumado», suave en cada pulso, la caja marcando las figuras de los vientos, y un platillo crash cada cuatro compases, donde vuelve a empezar la frase.",
     ),
     (
         "The estilo of the Pampas, the gaucho's slow song to the guitar, in 3/4, with no drums: the guitar's chords, the minor tonic, its iv and its V7, under a voice that takes its time.",
@@ -1042,6 +1288,14 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     (
         "The four chords behind hundreds of hits: home, the dominant, the sad relative minor, and the subdominant.",
         "Los cuatro acordes detrás de cientos de éxitos: la casa, la dominante, la triste relativa menor y la subdominante.",
+    ),
+    (
+        "The freylekhs, the joyful circle dance of klezmer weddings, in freygish, the mode of the Ahava Rabbah prayer: Phrygian with a major third, so the tonic chord is major and the chord a semitone above it (F over E) leads home. The band leans on the bulgar's 3 + 3 + 2.",
+        "El freylekhs, la alegre danza en rueda de las bodas klezmer, en freygish, el modo de la oración Ahavá Rabá: frigio con tercera mayor, así que el acorde de tónica es mayor y el acorde un semitono por encima ({F} sobre {E}) lleva a casa. La banda se apoya en el 3 + 3 + 2 del bulgar.",
+    ),
+    (
+        "The freylekhs, the joyful circle dance of klezmer weddings: the bass drum plays the bulgar's 3 + 3 + 2 in eighths, and the snare fills the eighths between.",
+        "El freylekhs, la alegre danza en rueda de las bodas klezmer: el bombo toca el 3 + 3 + 2 del bulgar en corcheas, y la caja rellena las corcheas entre ellos.",
     ),
     (
         "The gaucho's dance of stamping boots: one chord and its dominant, the bass in 3/4, and all the interest in the feet.",
@@ -1080,8 +1334,16 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "El acorde II mayor del modo lidio: el sonido del vuelo y del asombro en las bandas sonoras.",
     ),
     (
+        "The mambo of 1950s Havana, Mexico City and New York: the timbales' sticks on the drum's shell, the bongo player's bell on every beat, and the conga's tumbao.",
+        "El mambo de La Habana, Ciudad de México y Nueva York en los años cincuenta: los palos del timbalero en el casco del tambor, la campana del bongosero en cada pulso y el tumbao de la conga.",
+    ),
+    (
         "The marcato: every beat played short and hard, piano and bass together, with the harmonic minor's major V7.",
         "El marcato: cada pulso tocado corto y fuerte, piano y contrabajo juntos, con el V7 mayor de la menor armónica.",
+    ),
+    (
+        "The marcha camión of Montevideo's carnival murgas, named after the trucks that carried them through the city: bombo, platillo (here a hi-hat) and redoblante (a snare), under a choir. Its time is 2/4; each bar here lasts two.",
+        "La marcha camión de las murgas del carnaval de Montevideo, llamada así por los camiones que las llevaban por la ciudad: bombo, platillo (aquí un charles) y redoblante (una caja), bajo un coro. Su compás es 2/4; cada compás aquí dura dos.",
     ),
     (
         "The mariachi son of Jalisco, which the jarabe strings together: 6/8 and 3/4 in turn, the guitarrón on the two beats of one bar and the three of the next, the vihuela and guitar strumming between them.",
@@ -1113,12 +1375,28 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "El iv menor prestado de la tonalidad menor, como un suspiro: la manera favorita del cine de decir «hace mucho tiempo».",
     ),
     (
+        "The murga of Montevideo's carnival: a choir singing in parts, often in satire, over the marcha camión of bombo, platillo and redoblante.",
+        "La murga del carnaval de Montevideo: un coro que canta a varias voces, a menudo en sátira, sobre la marcha camión de bombo, platillo y redoblante.",
+    ),
+    (
         "The music of the Venezuelan and Colombian plains: harp arpeggios in a fast 3/4, three chords, and maracas that never stop.",
         "La música de los llanos de Venezuela y Colombia: arpegios de arpa en un 3/4 rápido, tres acordes y maracas que nunca paran.",
     ),
     (
         "The new tango of the 1950s: one voice slides down A, G sharp, G, F sharp under a held A minor chord, a line cliché.",
         "El tango nuevo de los años cincuenta: una voz baja {A}, {G#}, {G}, {F#} bajo un acorde sostenido de {A} menor, un cliché de línea.",
+    ),
+    (
+        "The paseo of Colombia's vallenato: the caja, a small drum played with the hands, and the guacharaca, a ridged stick scraped with a fork, under the accordion.",
+        "El paseo del vallenato colombiano: la caja, un tambor pequeño tocado con las manos, y la guacharaca, un palo estriado raspado con un trinche, bajo el acordeón.",
+    ),
+    (
+        "The pasodoble of bullfights and Spanish village bands: a march in 2/4, the tuba on the beats and the band's chords between them, in a minor key that walks down the Andalusian cadence, Am G F E7.",
+        "El pasodoble de los toros y de las bandas de pueblo españolas: una marcha en 2/4, la tuba en los pulsos y los acordes de la banda entre ellos, en un tono menor que baja por la cadencia andaluza, {A}m {G} {F} {E}7.",
+    ),
+    (
+        "The pasodoble of bullfights and village bands: a march in 2/4, the bass drum on the beats, a cymbal on the first, and the snare between them.",
+        "El pasodoble de los toros y de las bandas de pueblo: una marcha en 2/4, el bombo en los pulsos, un platillo en el primero y la caja entre ellos.",
     ),
     (
         "The passing diminished chord (#iv°7) climbs from IV back to I, as church pianists do.",
@@ -1135,6 +1413,14 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     (
         "The Phrygian mode with a major chord on its tonic, E F G F: the Spanish guitar.",
         "El modo frigio con un acorde mayor sobre su tónica, {E} {F} {G} {F}: la guitarra española.",
+    ),
+    (
+        "The piano blues of 1930s Chicago and Kansas City: the left hand rolls up and down each chord eight to the bar while the right plays the chord in long-short pairs. The twelve bars take the quick change, IV7 in bar 2.",
+        "El blues de piano de Chicago y Kansas City en los años treinta: la mano izquierda sube y baja por cada acorde ocho por compás mientras la derecha toca el acorde en pares largo-corto. Los doce compases toman el cambio rápido, IV7 en el compás 2.",
+    ),
+    (
+        "The Polish dance Chopin wrote dozens of: in 3/4, the bass on beat 1 but the weight on beat 3, where the chord is held. A minor key turns to VI, its brightest chord, before iv and V7 bring it home.",
+        "La danza polaca de la que Chopin escribió decenas: en 3/4, el bajo en el pulso 1 pero el peso en el pulso 3, donde se sostiene el acorde. Un tono menor se vuelve hacia VI, su acorde más luminoso, antes de que iv y V7 lo traigan a casa.",
     ),
     (
         "The polka in 2/4, as it is written: oom-pa, one strong beat and one light one. Taking turns with the waltz, it makes the bars of a zwiefacher.",
@@ -1157,12 +1443,28 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "La progresión de los años cincuenta, en un swing lento con el bajo en cada pulso.",
     ),
     (
+        "The proud Polish processional dance in 3/4, as in Chopin's Military Polonaise: every bar keeps the polonaise rhythm, an eighth and two sixteenths, then four eighths.",
+        "La orgullosa danza procesional polaca en 3/4, como en la Polonesa militar de Chopin: cada compás mantiene el ritmo de la polonesa, una corchea y dos semicorcheas, luego cuatro corcheas.",
+    ),
+    (
         "The quick waltz of Colombia and Ecuador: the bass on 1, the tiple and guitar on the \"and\" of 2 and on 3, so the second beat comes late.",
         "El vals rápido de Colombia y Ecuador: el bajo en el 1, el tiple y la guitarra en el «y» del 2 y en el 3, así que el segundo pulso llega tarde.",
     ),
     (
         "The quickest of the old dances of the Pampas: two chords, bright and major, in a 6/8 that keeps tipping into 3/4.",
         "La más rápida de las antiguas danzas de la pampa: dos acordes, brillantes y mayores, en un 6/8 que se vuelca una y otra vez al 3/4.",
+    ),
+    (
+        "The ragtime progression, a chain of dominant sevenths round the circle of fifths, E7, A7, D7, G7 and home to C, each the V7 of the next. A ragtime band plays it: the tuba on the beats, the piano's chords between them, and a banjo strumming across them. Ragtime is written in 2/4; each bar here lasts two.",
+        "La progresión del ragtime, una cadena de séptimas de dominante por el círculo de quintas, {E}7, {A}7, {D}7, {G}7 y de vuelta a {C}, cada una el V7 de la siguiente. La toca una banda de ragtime: la tuba en los pulsos, los acordes del piano entre ellos y un banjo que rasguea a través de ellos. El ragtime se escribe en 2/4; cada compás aquí dura dos.",
+    ),
+    (
+        "The rasguido doble of Corrientes and Chaco, \"a tango played badly\": a lively dance in two whose guitar strums the habanera's long-short, the bass strings on the beat and the muted treble strings after it. Its time is 2/4; each bar here lasts two.",
+        "El rasguido doble de Corrientes y Chaco, «un tango mal tocado»: una danza animada en dos cuya guitarra rasguea el largo-corto de la habanera, los bordones en el pulso y las cuerdas agudas apagadas después. Su compás es 2/4; cada compás aquí dura dos.",
+    ),
+    (
+        "The rasguido doble of Corrientes and Chaco, made popular by \"El rancho 'e la Cambicha\": accordion and guitar in a lively two, the guitar strumming the habanera's long, short, long, long that it shares with the milonga. Each bar here lasts two bars of 2/4.",
+        "El rasguido doble de Corrientes y Chaco, popularizado por «El rancho 'e la Cambicha»: acordeón y guitarra en un dos animado, la guitarra rasgueando el largo, corto, largo, largo de la habanera que comparte con la milonga. Cada compás aquí dura dos compases de 2/4.",
     ),
     (
         "The row as a tune in eighth notes, then backwards: the simplest way to hear it.",
@@ -1191,6 +1493,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     (
         "The scraper's long-short-short, and congas between the beats.",
         "El largo-corto-corto del raspador, y congas entre los pulsos.",
+    ),
+    (
+        "The shuffle of 1950s honky-tonk bars, Hank Williams's country: a shuffling piano, the bass on 1 and 3, and three chords, I7 turning towards IV.",
+        "El shuffle de los bares honky-tonk de los años cincuenta, el country de Hank Williams: un piano en shuffle, el bajo en 1 y 3, y tres acordes, I7 volviéndose hacia IV.",
     ),
     (
         "The skank: short chords on every offbeat, while the drums leave beat one empty.",
@@ -1241,6 +1547,14 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "El vals de tango en tonalidad menor: rápido, sentido en uno, y nostálgico.",
     ),
     (
+        "The Texas dance-hall swing of Bob Wills and his Texas Playboys: a two-beat bass, a swing guitar, and sixth chords that come home through the dominants, VI7, II7, V7.",
+        "El swing de los salones de baile de Texas de Bob Wills y sus Texas Playboys: un bajo a dos tiempos, una guitarra de swing y acordes de sexta que vuelven a casa por las dominantes, VI7, II7, V7.",
+    ),
+    (
+        "The Texas shuffle of honky-tonk bars: the snare shuffles long-short and cracks on 2 and 4.",
+        "El shuffle texano de los bares honky-tonk: la caja hace shuffle largo-corto y restalla en 2 y 4.",
+    ),
+    (
         "The Turkish \"dancing aksak\", 9/8 the other way round: a five and a four, 2 + 3 + 2 + 2, the darbuka's low düm on the first and third beats.",
         "El «aksak bailable» turco, 9/8 al revés: un cinco y un cuatro, 2 + 3 + 2 + 2, el düm grave de la darbuka en el primer y el tercer pulso.",
     ),
@@ -1269,6 +1583,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "El devr-i hindî turco, 7/8 contado 3 + 2 + 2: düm, tek, tek en las tres corcheas del pulso largo, y después düm y tek en los dos cortos.",
     ),
     (
+        "The twelve beats of soleá, alegrías and bulerías, counted from 12 as flamenco does: 12 1 2, 3 4 5, 6 7, 8 9, 10 11, the palmas loudest on 12, 3, 6, 8 and 10. Written here as 3 + 3 + 2 + 2 + 2 eighths.",
+        "Los doce tiempos de la soleá, las alegrías y las bulerías, contados desde el 12 como hace el flamenco: 12 1 2, 3 4 5, 6 7, 8 9, 10 11, las palmas más fuertes en 12, 3, 6, 8 y 10. Escrito aquí como 3 + 3 + 2 + 2 + 2 corcheas.",
+    ),
+    (
         "The twelve-bar blues sped up, with a boogie bass under it: the 1950s.",
         "El blues de doce compases acelerado, con un bajo de boogie debajo: los años cincuenta.",
     ),
@@ -1279,6 +1597,26 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     (
         "The twelve-bar blues with straight rock eighths and a boogie bass, the way British bands played it in the 1960s.",
         "El blues de doce compases con corcheas derechas de rock y un bajo de boogie, como lo tocaban las bandas británicas en los años sesenta.",
+    ),
+    (
+        "The two-step of Louisiana's Cajun dance halls: the triangle (the \"tit fer\") ringing every eighth, louder off the beat, over the bass drum on the beats. The dance is in 2/4; each bar here lasts two.",
+        "El two-step de los salones de baile cajunes de Luisiana: el triángulo (el «tit fer») sonando en cada corchea, más fuerte a contratiempo, sobre el bombo en los pulsos. La danza está en 2/4; cada compás aquí dura dos.",
+    ),
+    (
+        "The vals criollo of Lima, quick and syncopated, for two guitars and a cajón. In a minor key the tonic turns into a dominant seventh (A7 in A minor) to lead to iv, as Latin American waltzes love to do.",
+        "El vals criollo de Lima, rápido y sincopado, para dos guitarras y cajón. En tono menor la tónica se convierte en séptima de dominante ({A}7 en {A} menor) para llevar a iv, como tanto les gusta a los valses latinoamericanos.",
+    ),
+    (
+        "The vals criollo of Lima, the waltz of Chabuca Granda: quick, with the cajón's bass on beat 1 and its slaps between the beats, under two guitars.",
+        "El vals criollo de Lima, el vals de Chabuca Granda: rápido, con el grave del cajón en el pulso 1 y sus golpes entre los pulsos, bajo dos guitarras.",
+    ),
+    (
+        "The valse musette of the Paris dance halls (the bals musette): a fast waltz felt in one, for accordion, guitar and brushes.",
+        "El vals musette de los salones de baile de París (los bals musette): un vals rápido sentido en uno, para acordeón, guitarra y escobillas.",
+    ),
+    (
+        "The valse musette of the Paris dance halls, on the accordion: a fast waltz felt in one, its chords linked by a chromatic passing chord, C, C sharp diminished, D minor.",
+        "El vals musette de los salones de baile de París, en el acordeón: un vals rápido sentido en uno, sus acordes unidos por un acorde de paso cromático, {C}, {C#} disminuido, {D} menor.",
     ),
     (
         "The Venezuelan and Colombian plains: maracas in 3/4, the bass in 6/8, and the cuatro strumming across both.",
@@ -1318,8 +1656,17 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("Total serialism", "Serialismo integral"),
     ("Trance anthem", "Himno trance"),
     ("Trap", "Trap"),
+    ("Travis picking", "Travis picking"),
     ("Triad chorale", "Coral de tríadas"),
     ("Triads, two notes kept", "Tríadas, dos notas fijas"),
+    (
+        "Trinidad's calypso, the song of Lord Kitchener and the Mighty Sparrow: three bright chords, a strummed guitar, and a bass in 3 + 3 + 2 bouncing between root and fifth.",
+        "El calipso de Trinidad, la canción de Lord Kitchener y Mighty Sparrow: tres acordes luminosos, una guitarra rasgueada y un bajo en 3 + 3 + 2 que rebota entre la fundamental y la quinta.",
+    ),
+    (
+        "Trinidad's calypso: the bass drum in 3 + 3 + 2 eighths, rim clicks after the beats, and the iron, a brake drum struck with a metal rod, in long-short-short.",
+        "El calipso de Trinidad: el bombo en 3 + 3 + 2 corcheas, golpes de aro después de los pulsos, y el iron, un tambor de freno golpeado con una varilla de metal, en largo-corto-corto.",
+    ),
     ("Tritone sub", "Sustituto de tritono"),
     ("Tsakonikos", "Tsakonikós"),
     (
@@ -1327,6 +1674,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Doce compases en una tonalidad menor, con un oscuro acorde de sexto grado bemol antes del turnaround.",
     ),
     ("Twelve-bar blues", "Blues de doce compases"),
+    ("Twelve-beat compás", "Compás de doce tiempos"),
     (
         "Twelve-eight: four slow beats, each split in three, for the blues ballad.",
         "Doce por ocho: cuatro pulsos lentos, cada uno dividido en tres, para la balada de blues.",
@@ -1367,6 +1715,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("UK garage", "UK garage"),
     ("Upside down", "Dado vuelta"),
     ("Upside down, a tritone away", "Dado vuelta, a un tritono"),
+    ("Vallenato", "Vallenato"),
     ("Viennese points", "Puntos vieneses"),
     ("Voice 2", "Voz 2"),
     ("Voice 3", "Voz 3"),
@@ -1375,6 +1724,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Warm jazz chords climbing the scale over a house beat.",
         "Cálidos acordes de jazz que suben por la escala sobre un ritmo house.",
     ),
+    ("Western swing", "Western swing"),
     ("Whole-tone haze", "Bruma de tonos enteros"),
     ("Yaraví", "Yaraví"),
 ];

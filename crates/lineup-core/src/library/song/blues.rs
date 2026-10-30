@@ -45,7 +45,7 @@ pub(super) const ROLLING_BOOGIE: Song = Song {
     bass: Bass::Boogie,
     rhythm: "Shuffle",
     band: PIANO,
-    style: "Twelve-bar blues",
+    style: "Boogie-woogie",
     parts: &[Part::new(
         "Chorus",
         "G5:2 Bb5:2 G5:2 F5:2 Eb5:2 C5:2 -:4 | C5:4 Eb5:2 C5:2 F5:4 -:4 | \

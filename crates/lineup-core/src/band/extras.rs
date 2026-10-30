@@ -60,6 +60,7 @@ const DRAWBAR_ORGAN: u8 = 16;
 const PERCUSSIVE_ORGAN: u8 = 17;
 const ROCK_ORGAN: u8 = 18;
 const CHURCH_ORGAN: u8 = 19;
+const BANJO: u8 = 105;
 
 const fn guitar(part: GuitarPart, program: u8) -> Option<Extra<GuitarPart>> {
     Some(Extra {
@@ -189,12 +190,23 @@ const BY_STYLE: &[(&str, Extras)] = &[
     ),
     // Jazz: the swing band's guitar, a ballad with strings.
     ("Swing", with_guitar(GuitarPart::FourToTheBar, JAZZ_GUITAR)),
+    // Freddie Green's guitar in Count Basie's band: four even chords to
+    // the bar, felt more than heard.
+    (
+        "Big band swing",
+        with_guitar(GuitarPart::FourToTheBar, JAZZ_GUITAR),
+    ),
     (
         "Jazz ballad",
         Extras {
             strings: pad(SLOW_STRINGS),
             ..NONE
         },
+    ),
+    // A ragtime band's banjo strums across the beat in 3 + 3 + 2.
+    (
+        "Cakewalk",
+        with_guitar(GuitarPart::Strum(Comping::Dembow), BANJO),
     ),
     // Soul: the Motown chop and strings, the funk scratch.
     (
@@ -206,6 +218,15 @@ const BY_STYLE: &[(&str, Extras)] = &[
         },
     ),
     ("Funk", with_guitar(SCRATCH, MUTED_GUITAR)),
+    // Afrobeat: a guitar riffing in short sixteenths, an organ under it.
+    (
+        "Afrobeat",
+        Extras {
+            guitar: guitar(SCRATCH, CLEAN_GUITAR),
+            organ: pad(DRAWBAR_ORGAN),
+            ..NONE
+        },
+    ),
     (
         "Neo soul",
         Extras {
@@ -282,6 +303,10 @@ const BY_STYLE: &[(&str, Extras)] = &[
     ("Vidala", FOLKLORE),
     ("Carnavalito", FOLKLORE),
     ("Huayno", FOLKLORE),
+    ("Peruvian waltz", FOLKLORE),
+    ("Festejo", FOLKLORE),
+    ("Bailecito", FOLKLORE),
+    ("Rasguido doble", FOLKLORE),
     (
         "Rumba flamenca",
         with_guitar(GuitarPart::Strum(Comping::Rumba), NYLON_GUITAR),
@@ -294,6 +319,8 @@ const BY_STYLE: &[(&str, Extras)] = &[
         "Ska",
         with_guitar(GuitarPart::Strum(Comping::Offbeat), CLEAN_GUITAR),
     ),
+    // Calypso's strummed guitar.
+    ("Calypso", with_guitar(STRUMMED, STEEL_GUITAR)),
     // Folk and country: the steel-string guitar.
     ("Country train", with_guitar(EIGHTHS, STEEL_GUITAR)),
     ("Folk", with_guitar(STRUMMED, STEEL_GUITAR)),
@@ -307,6 +334,25 @@ const BY_STYLE: &[(&str, Extras)] = &[
         with_guitar(GuitarPart::StylesRhythm, STEEL_GUITAR),
     ),
     ("Bluegrass", with_guitar(CHOP, STEEL_GUITAR)),
+    (
+        "Western swing",
+        with_guitar(GuitarPart::FourToTheBar, JAZZ_GUITAR),
+    ),
+    ("Honky-tonk shuffle", with_guitar(CHOP, STEEL_GUITAR)),
+    (
+        "Cajun two-step",
+        with_guitar(GuitarPart::Strum(Comping::Afterbeat), STEEL_GUITAR),
+    ),
+    // The musette's accordion has a guitar strumming the waltz.
+    (
+        "Musette",
+        with_guitar(GuitarPart::Strum(Comping::Waltz), NYLON_GUITAR),
+    ),
+    // The fado's Portuguese guitar picks above the classical guitar.
+    (
+        "Fado",
+        with_guitar(GuitarPart::Strum(Comping::ArpUpDown), STEEL_GUITAR),
+    ),
     // Classical: strings, the church organ of a chorale.
     (
         "Epic toms",

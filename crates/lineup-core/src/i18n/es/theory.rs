@@ -392,6 +392,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "después de una armonía, . es un golpe, .. un sostenido y ... un silencio: no más puntos.",
     ),
     (
+        "afterbeats, the \"pah\" after each beat",
+        "contratiempos, el «pa» después de cada pulso",
+    ),
+    (
         "afterbeats, the \"pah\" of a brass band's oom-pah",
         "contratiempos, el «pa» del «um-pa» de una banda de vientos",
     ),
@@ -1869,6 +1873,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     (
         "Two whole tones: do re mi, and three notes of the whole-tone scale of Debussy.",
         "Dos tonos: do re mi, y tres notas de la escala de tonos enteros de Debussy.",
+    ),
+    (
+        "two-bar riffs, as in a big band's shout chorus",
+        "riffs de dos compases, como en el shout chorus de una big band",
     ),
     ("Two-four polka", "Polca en dos por cuatro"),
     ("Two-step", "Two-step"),
