@@ -8,7 +8,7 @@ use lineup_core::library::apply::StyleParts;
 use super::{LineupApp, view};
 use crate::i18n::{self, Language, tr, tr_str, trf};
 use crate::library_browser::{
-    StyleEditorRequest, grouped_presets, set_grouped_presets, simple_chords, style_parts_checkboxes,
+    StyleEditorRequest, grouped_presets, set_grouped_presets, style_parts_checkboxes,
 };
 use crate::theme;
 use crate::widgets::{self, Opening};
@@ -323,18 +323,16 @@ impl LineupApp {
                 ui.strong(tr("Apply by default"));
                 ui.horizontal_wrapped(|ui| {
                     ui.spacing_mut().item_spacing = vec2(6.0, 6.0);
-                    let simple = simple_chords(parts);
-                    let drums = parts.rhythm;
-                    for (label, value, visible) in [
-                        ("Drums", &mut parts.rhythm, true),
-                        ("Chord and bass parts", &mut parts.matching_style, drums),
-                        ("Instruments", &mut parts.instruments, !simple),
-                        ("Chords", &mut parts.progression, !simple),
-                        ("Meter", &mut parts.time_signature, true),
-                        ("Tempo", &mut parts.tempo, true),
-                        ("Swing", &mut parts.swing, true),
+                    for (label, value) in [
+                        ("Drums", &mut parts.rhythm),
+                        ("Chord and bass parts", &mut parts.matching_style),
+                        ("Instruments", &mut parts.instruments),
+                        ("Chords", &mut parts.progression),
+                        ("Meter", &mut parts.time_signature),
+                        ("Tempo", &mut parts.tempo),
+                        ("Swing", &mut parts.swing),
                     ] {
-                        if visible && theme::light_button(ui, tr(label), *value, None).clicked() {
+                        if theme::light_button(ui, tr(label), *value, None).clicked() {
                             *value = !*value;
                         }
                     }

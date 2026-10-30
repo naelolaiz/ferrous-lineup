@@ -409,7 +409,7 @@ impl PlaylistView {
     }
 
     pub fn library_parts(&self) -> lineup_core::library::apply::StyleParts {
-        self.library.parts.for_preset()
+        self.library.parts
     }
 
     pub fn library_parts_mut(&mut self) -> &mut lineup_core::library::apply::StyleParts {

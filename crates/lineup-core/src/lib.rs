@@ -51,7 +51,7 @@ pub mod tools;
 // Re-export the main types so other crates can write `lineup_core::Note`
 // instead of `lineup_core::pitch::Note`.
 pub use arrangement::{Arrangement, Pass, Play};
-pub use band::{Band, BandStyle, Player, band_styles};
+pub use band::{Band, BandDrums, BandStyle, Player, band_styles};
 pub use chord_sheet::{ChordMarker, HarmonyName};
 pub use diff::{Change, diff};
 pub use effects::{Compressor, Delay, Effects, Equalizer};
