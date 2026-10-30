@@ -9,12 +9,22 @@ name: Release
 #   and a macOS .dmg.
 # - Pushing a tag that starts with `v` (v0.2.0) also publishes them on a
 #   GitHub Release for that tag.
+# - A manual run on main with a tag filled in (v0.4.1) does the same, and
+#   makes the tag itself, on the commit it built: a release for whoever
+#   can run workflows but not push tags.
+# - Notes in packaging/release-notes/<tag>.md, when there are any, open
+#   the release's description, before GitHub's list of changes.
 on:
   push:
     branches: [main]
     tags: ["v*"]
   pull_request:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: "Publish a release with this tag (v0.4.1), made on the commit built. Empty: only build."
+        required: false
+        default: ""
 
 # Only reading the code is allowed by default. The job that publishes the
 # release asks for more below.
@@ -22,13 +32,16 @@ permissions:
   contents: read
 
 # A newer push to the same branch cancels the build that is still running
-# for the older one. Tags are never cancelled.
+# for the older one. Releases are never cancelled.
 concurrency:
-  group: release-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref_type != 'tag' }}
+  group: release-${{ github.ref }}-${{ inputs.tag }}
+  cancel-in-progress: ${{ github.ref_type != 'tag' && !inputs.tag }}
 
 env:
   CARGO_TERM_COLOR: always
+  # The release this run publishes, if any: the tag pushed, or the tag
+  # asked for in a manual run. Empty otherwise.
+  RELEASE_TAG: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}
 
 jobs:
   build:
@@ -99,8 +112,8 @@ jobs:
           # the label names the pull request's latest commit instead.
           COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
-          if [[ "$GITHUB_REF_TYPE" == tag ]]; then
-            label="$GITHUB_REF_NAME"
+          if [[ -n "$RELEASE_TAG" ]]; then
+            label="$RELEASE_TAG"
           else
             label="${COMMIT::7}"
           fi
@@ -131,8 +144,8 @@ jobs:
           COPYFILE_DISABLE: 1
           COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
-          if [[ "$GITHUB_REF_TYPE" == tag ]]; then
-            label="$GITHUB_REF_NAME"
+          if [[ -n "$RELEASE_TAG" ]]; then
+            label="$RELEASE_TAG"
           else
             label="${COMMIT::7}"
           fi
@@ -300,7 +313,7 @@ jobs:
 
   release:
     name: Publish the release
-    if: github.ref_type == 'tag'
+    if: github.ref_type == 'tag' || (github.event_name == 'workflow_dispatch' && inputs.tag != '')
     needs: build
     runs-on: ubuntu-latest
     permissions:
@@ -308,11 +321,24 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      # A tag pushed by hand only gets a warning, since it exists already.
+      # A tag this run would make must match, and only main is released.
       - name: Compare the tag with the version in Cargo.toml
         run: |
           version=$(sed -n '/^\[workspace.package\]/,/^\[/ s/^version = "\(.*\)"/\1/p' Cargo.toml)
-          if [[ "v$version" != "$GITHUB_REF_NAME" ]]; then
-            echo "::warning::The tag is $GITHUB_REF_NAME, but Cargo.toml says version $version."
+          if [[ "$GITHUB_REF_TYPE" == tag ]]; then
+            if [[ "v$version" != "$RELEASE_TAG" ]]; then
+              echo "::warning::The tag is $RELEASE_TAG, but Cargo.toml says version $version."
+            fi
+          else
+            if [[ "v$version" != "$RELEASE_TAG" ]]; then
+              echo "::error::The tag asked for is $RELEASE_TAG, but Cargo.toml says version $version."
+              exit 1
+            fi
+            if [[ "$GITHUB_REF" != refs/heads/main ]]; then
+              echo "::error::Releases are made from main, and this run is on $GITHUB_REF_NAME."
+              exit 1
+            fi
           fi
 
       # Each artifact lands in a folder of its own name. `skip-decompress`
@@ -338,20 +364,30 @@ jobs:
           ls -l
 
       # A tag with a dash (v0.2.0-beta.1) makes a pre-release. Running the
-      # workflow again for a tag replaces the files of its release.
+      # workflow again for a tag replaces the files of its release. A tag
+      # pushed must exist already (--verify-tag); a tag asked for in a
+      # manual run is made here, on the commit this run built. A tag made
+      # with the workflow's own token starts no other workflow, so this
+      # run is the only one that publishes it.
       - name: Create the release and upload the packages
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.ref_name }}
+          TAG: ${{ env.RELEASE_TAG }}
         run: |
           if gh release view "$TAG" > /dev/null 2>&1; then
             gh release upload "$TAG" release/* --clobber
           else
             flags=()
             if [[ "$TAG" == *-* ]]; then flags+=(--prerelease); fi
+            if [[ "$GITHUB_REF_TYPE" == tag ]]; then
+              flags+=(--verify-tag)
+            else
+              flags+=(--target "$GITHUB_SHA")
+            fi
+            notes="packaging/release-notes/$TAG.md"
+            if [[ -f "$notes" ]]; then flags+=(--notes-file "$notes"); fi
             gh release create "$TAG" release/* \
               --title "Ferrous Lineup $TAG" \
               --generate-notes \
-              --verify-tag \
               "${flags[@]}"
           fi
