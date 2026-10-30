@@ -328,6 +328,22 @@ pub struct Muted {
     pub tracks: Vec<String>,
 }
 
+/// Whose drums the band plays. They can come from another style than
+/// its chord and bass parts, each taken from the Library on its own.
+#[derive(Debug, Clone, Default, PartialEq)]
+pub enum BandDrums {
+    /// Those of the style the band plays the chords and the bass in, or
+    /// of the saved style it plays them from.
+    #[default]
+    Style,
+    /// Those of another style.
+    Of(&'static BandStyle),
+    /// Those of a saved style.
+    Saved(Box<crate::library::UserStyle>),
+    /// None: the song's own drums play.
+    Song,
+}
+
 /// The band of a song: its style, how far it plays, and what it knows
 /// about the parts it wrote.
 #[derive(Debug, Clone, PartialEq)]
@@ -339,7 +355,11 @@ pub struct Band {
     pub instrument_style: &'static BandStyle,
     /// The exact library style supplying the comping, when one was picked.
     pub harmony_style: Option<&'static Style>,
+    /// The chords and the bass played as plain accents on the beats: how
+    /// songs saved so play. The Library no longer chooses it.
     pub accents_only: bool,
+    /// Whose drums play, when not those of `style` or `custom_rhythm`.
+    pub drums: BandDrums,
     /// The step the band plays up to: the end of the last bar written
     /// on the chord sheet, or of a bar typed after it.
     pub(crate) end: usize,
@@ -381,6 +401,7 @@ impl Band {
             instrument_style: style,
             harmony_style: None,
             accents_only: false,
+            drums: BandDrums::Style,
             end: 0,
             channels: [None; Player::COUNT],
             written: [None; Player::COUNT],
@@ -442,15 +463,17 @@ impl Band {
                 .custom_instruments
                 .as_ref()
                 .map_or_else(|| self.instrument_style.players(), |style| style.players());
+            let drums = self.has_drums() || self.sections_drum();
+            players.retain(|player| *player != Player::Drums || drums);
             for player in style.players() {
-                if self.accents_only && player != Player::Drums {
+                if player == Player::Drums || self.accents_only {
                     continue;
                 }
                 if !players.contains(&player) {
                     players.push(player);
                 }
             }
-            if self.sections_drum() && !players.contains(&Player::Drums) {
+            if drums && !players.contains(&Player::Drums) {
                 players.push(Player::Drums);
             }
             if self.has_soloist() && !players.contains(&Player::Soloist) {
@@ -463,7 +486,7 @@ impl Band {
         }
         let mut players = self.instrument_style.players();
         players.retain(|player| *player != Player::Drums);
-        if self.style.rhythm.is_some() || self.sections_drum() {
+        if self.has_drums() || self.sections_drum() {
             players.push(Player::Drums);
         }
         if self.has_soloist() {
@@ -473,6 +496,57 @@ impl Band {
             players.push(Player::Horns);
         }
         players
+    }
+
+    /// The built-in style whose drums play: its own, or another's.
+    /// `None` when a saved style's drums play, or the song's own.
+    pub fn drums_style(&self) -> Option<&'static BandStyle> {
+        match &self.drums {
+            BandDrums::Style if self.custom_rhythm.is_none() => Some(self.style),
+            BandDrums::Of(style) => Some(style),
+            _ => None,
+        }
+    }
+
+    /// The saved style whose drum lanes play, if one does.
+    pub fn saved_drums(&self) -> Option<&crate::library::UserStyle> {
+        match &self.drums {
+            BandDrums::Style => self.custom_rhythm.as_deref(),
+            BandDrums::Saved(style) => Some(style),
+            _ => None,
+        }
+    }
+
+    /// The name of the style whose drums play, or `None` when the song's
+    /// own drums play.
+    pub fn drums_name(&self) -> Option<&str> {
+        match (self.drums_style(), self.saved_drums()) {
+            (Some(style), _) => Some(style.name),
+            (None, Some(style)) => Some(&style.name),
+            (None, None) => None,
+        }
+    }
+
+    /// Whose drums play said the simplest way: those of the style its
+    /// chord and bass parts come from, when they are.
+    fn tidy_drums(&mut self) {
+        let same = match &self.drums {
+            BandDrums::Of(style) => self.custom_rhythm.is_none() && *style == self.style,
+            BandDrums::Saved(style) => self.custom_rhythm.as_ref() == Some(style),
+            _ => false,
+        };
+        if same {
+            self.drums = BandDrums::Style;
+        }
+    }
+
+    /// Whether the band plays drums of its own (sections aside).
+    fn has_drums(&self) -> bool {
+        self.drums_style()
+            .is_some_and(|style| style.rhythm.is_some())
+            || self
+                .saved_drums()
+                .is_some_and(|style| style.lanes.iter().any(|lane| lane.player == Player::Drums))
     }
 
     /// Whether a section's style has drums.
@@ -567,6 +641,9 @@ pub(crate) struct BandFile {
     pub harmony_style: Option<String>,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub accents_only: bool,
+    /// Whose drums play, when not the style's.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub drums: Option<DrumsFile>,
     pub end: usize,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub piano: Option<usize>,
@@ -614,6 +691,16 @@ pub(crate) struct BandFile {
     pub styles: Vec<StyleMarkerFile>,
 }
 
+/// Whose drums a band plays, as it is saved, when not its style's.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub(crate) enum DrumsFile {
+    /// A built-in style's, by name.
+    Of(String),
+    Saved(Box<crate::library::UserStyle>),
+    /// None: the song's own.
+    Song,
+}
+
 fn none_written(written: &[Option<u64>; 3]) -> bool {
     written.iter().all(Option::is_none)
 }
@@ -629,6 +716,12 @@ impl From<&Band> for BandFile {
                 .then(|| band.instrument_style.name.to_string()),
             harmony_style: band.harmony_style.map(|style| style.name.to_string()),
             accents_only: band.accents_only,
+            drums: match &band.drums {
+                BandDrums::Style => None,
+                BandDrums::Of(style) => Some(DrumsFile::Of(style.name.to_string())),
+                BandDrums::Saved(style) => Some(DrumsFile::Saved(style.clone())),
+                BandDrums::Song => Some(DrumsFile::Song),
+            },
             end: band.end,
             piano: band.channel(Player::Piano),
             bass: band.channel(Player::Bass),
@@ -684,6 +777,22 @@ impl BandFile {
         };
         let [piano, bass, drums] = self.written;
         let [guitar, strings, organ] = self.written_too;
+        let drums_from = match self.drums {
+            None => BandDrums::Style,
+            Some(DrumsFile::Of(name)) => {
+                BandDrums::Of(BandStyle::named(&name).ok_or_else(|| {
+                    trf(
+                        "its band plays the drums of \"{}\", a style this version does not know",
+                        &[&name],
+                    )
+                })?)
+            }
+            Some(DrumsFile::Saved(style)) => {
+                style.validate()?;
+                BandDrums::Saved(style)
+            }
+            Some(DrumsFile::Song) => BandDrums::Song,
+        };
         for style in [&self.custom_rhythm, &self.custom_instruments]
             .into_iter()
             .flatten()
@@ -697,6 +806,7 @@ impl BandFile {
             instrument_style,
             harmony_style,
             accents_only: self.accents_only,
+            drums: drums_from,
             end: self.end,
             channels: [
                 channel(self.piano)?,
@@ -1107,6 +1217,7 @@ impl Project {
                 && band.instrument_style == style
                 && band.harmony_style.is_none()
                 && !band.accents_only
+                && band.drums == BandDrums::Style
                 && band.custom_rhythm.is_none()
                 && band.custom_instruments.is_none()
         }) {
@@ -1122,7 +1233,7 @@ impl Project {
             band.end = song_end;
             band.since = self.channels.len();
             if !self.playlist.chord_markers.is_empty() && !style.follows_the_song() {
-                band.muted = self.mute_the_songs_own();
+                band.muted = self.mute_the_songs_own(true);
             }
             self.band = Some(band);
         } else if let Some(band) = &mut self.band {
@@ -1132,6 +1243,7 @@ impl Project {
             band.instrument_style = style;
             band.harmony_style = None;
             band.accents_only = false;
+            band.drums = BandDrums::Style;
         }
         let empty = self.playlist.chord_markers.is_empty() && self.song_length() == 0;
         let other_meter =
@@ -1152,51 +1264,68 @@ impl Project {
         self.write_band();
     }
 
-    /// Applies the selected components without coupling the rhythm, sounds,
-    /// meter or progression. Starts a band when both its playing patterns and
-    /// instruments are requested; timing is still controlled by its own options.
+    /// Applies the selected components, each on its own: the drums, the
+    /// chord and bass parts, the sounds, the meter, the tempo, the swing
+    /// and the progression. What is left out stays as the song has it.
     pub fn apply_band_parts(
         &mut self,
         style: &'static BandStyle,
         harmony: Option<&'static Style>,
         parts: apply::StyleParts,
     ) {
-        let parts = parts.for_preset().following(style.follows_the_song());
-        // The band comes in with its instruments, on tracks of its own,
-        // playing plain accents if its patterns were not picked. A style
-        // that follows the song comes in alongside it with its patterns
-        // or its instruments, either, and plays as it does: it never
-        // plays the song's own parts.
+        let parts = parts.following(style.follows_the_song());
+        // The band comes in to play the style's chord and bass parts with
+        // its instruments, on tracks of its own; without the style's
+        // drums, the song's own go on playing. A style that follows the
+        // song comes in alongside it with its patterns or its
+        // instruments, either, and plays as it does: it never plays the
+        // song's own parts.
         let follows = style.follows_the_song();
         let joins = if follows {
-            parts.rhythm || parts.instruments
+            parts.rhythm || parts.matching_style || parts.instruments
         } else {
-            parts.instruments
+            parts.instruments && parts.matching_style
         };
         if self.band.is_none() && joins {
             let mut band = Band::new(style);
-            band.accents_only = !parts.rhythm && !follows;
+            if !parts.rhythm && !follows {
+                band.drums = BandDrums::Song;
+            }
             band.end = self.song_length();
             band.since = self.channels.len();
             if self.playlist.chord_markers.is_empty() && band.end > 0 {
                 self.write_heard_chords();
             }
             if !self.playlist.chord_markers.is_empty() && !style.follows_the_song() {
-                band.muted = self.mute_the_songs_own();
+                band.muted = self.mute_the_songs_own(parts.rhythm);
             }
             self.band = Some(band);
         }
         let Some(band) = &mut self.band else { return };
-        if parts.rhythm {
+        if parts.matching_style {
+            // The drums the band played stay.
+            if !parts.rhythm && band.drums == BandDrums::Style {
+                band.drums = match band.custom_rhythm.take() {
+                    Some(saved) => BandDrums::Saved(saved),
+                    None => BandDrums::Of(band.style),
+                };
+            }
             band.custom_rhythm = None;
             band.style = style;
             band.harmony_style = harmony;
-            band.accents_only = !parts.matching_style;
+            band.accents_only = false;
         }
+        let mut drums_come = false;
+        if parts.rhythm {
+            drums_come = band.drums == BandDrums::Song;
+            band.drums = BandDrums::Of(style);
+        }
+        band.tidy_drums();
         if parts.instruments {
             band.custom_instruments = None;
             band.instrument_style = style;
         }
+        self.drums_come(drums_come);
         let time = self.meter();
         if parts.time_signature {
             crate::remeter::remeter(self, harmony.map_or(style.time, |style| style.time));
@@ -1227,7 +1356,7 @@ impl Project {
         // in another meter, after the band and the tempo changed: so it
         // is applied to a copy, and an error changes nothing.
         let mut project = self.clone();
-        project.apply_valid_user_style(style, parts.for_preset())?;
+        project.apply_valid_user_style(style, parts)?;
         *self = project;
         Ok(())
     }
@@ -1237,9 +1366,10 @@ impl Project {
         style: &crate::library::UserStyle,
         parts: apply::StyleParts,
     ) -> Result<(), String> {
-        // Only the style's playing patterns need a band to play them: its
-        // tempo, meter, swing or chords alone change the song as it is.
-        if self.band.is_none() && parts.rhythm {
+        // Only the style's chord and bass parts need a band to play them:
+        // its tempo, meter, swing or chords alone change the song as it
+        // is. Without the style's drums, the song's own go on playing.
+        if self.band.is_none() && parts.matching_style {
             // The players the style has no lanes for play as the band
             // usually does in its time signature (a waltz for 3/4).
             let Some(base) =
@@ -1252,13 +1382,16 @@ impl Project {
                 ));
             };
             let mut band = Band::new(base);
+            if !parts.rhythm {
+                band.drums = BandDrums::Song;
+            }
             band.end = self.song_length();
             band.since = self.channels.len();
             if self.playlist.chord_markers.is_empty() && band.end > 0 {
                 self.write_heard_chords();
             }
             if !self.playlist.chord_markers.is_empty() {
-                band.muted = self.mute_the_songs_own();
+                band.muted = self.mute_the_songs_own(parts.rhythm);
             }
             self.band = Some(band);
         }
@@ -1304,16 +1437,30 @@ impl Project {
                 self.set_chords(bar.start, bar.end(), &markers);
             }
         }
+        let mut drums_come = false;
         if let Some(band) = &mut self.band {
-            if parts.rhythm {
+            if parts.matching_style {
+                // The drums the band played stay.
+                if !parts.rhythm && band.drums == BandDrums::Style {
+                    band.drums = match band.custom_rhythm.take() {
+                        Some(saved) => BandDrums::Saved(saved),
+                        None => BandDrums::Of(band.style),
+                    };
+                }
                 band.custom_rhythm = Some(Box::new(style.clone()));
-                band.accents_only = !parts.matching_style;
+                band.accents_only = false;
                 band.harmony_style = None;
             }
+            if parts.rhythm {
+                drums_come = band.drums == BandDrums::Song;
+                band.drums = BandDrums::Saved(Box::new(style.clone()));
+            }
+            band.tidy_drums();
             if parts.instruments {
                 band.custom_instruments = Some(Box::new(style.clone()));
             }
         }
+        self.drums_come(drums_come);
         self.band_channels(parts.instruments);
         self.write_band();
         Ok(())
@@ -1719,7 +1866,12 @@ impl Project {
                 );
             }
         }
-        if let Some(rhythm) = band.style.rhythm {
+        let drums = match band.drums {
+            BandDrums::Of(style) => Some(style),
+            BandDrums::Song => None,
+            _ => Some(band.style),
+        };
+        if let Some(rhythm) = drums.and_then(|style| style.rhythm) {
             for drum in rhythm.drums() {
                 apply::drum_channel(self, drum);
             }
@@ -1727,16 +1879,36 @@ impl Project {
         if let Some(band) = &mut self.band {
             band.channels = channels;
         }
-        for (style, sounds) in [
-            (band.custom_instruments.as_deref(), use_instruments),
-            (band.custom_rhythm.as_deref(), false),
+        let saved_drums = match &band.drums {
+            BandDrums::Saved(style) => Some(style.as_ref()),
+            _ => None,
+        };
+        // The lanes each style plays: a saved style's drums only when the
+        // band plays them.
+        for (style, sounds, its_drums, the_rest) in [
+            (
+                band.custom_instruments.as_deref(),
+                use_instruments,
+                true,
+                true,
+            ),
+            (
+                band.custom_rhythm.as_deref(),
+                false,
+                band.drums == BandDrums::Style,
+                !band.accents_only,
+            ),
+            (saved_drums, false, true, false),
         ] {
             if let Some(style) = style {
                 for lane in &style.lanes {
-                    if band.accents_only && !sounds && lane.player != Player::Drums {
-                        continue;
+                    let plays = match lane.player {
+                        Player::Drums => its_drums,
+                        _ => the_rest || sounds,
+                    };
+                    if plays {
+                        self.user_style_channel(lane, sounds);
                     }
-                    self.user_style_channel(lane, sounds);
                 }
             }
         }
@@ -1832,7 +2004,7 @@ impl Project {
     /// the channels the library writes chords and the bass on, unless
     /// they are locked, and the tracks that hold only drums. Returns what
     /// it muted.
-    fn mute_the_songs_own(&mut self) -> Muted {
+    fn mute_the_songs_own(&mut self, drums: bool) -> Muted {
         let mut muted = Muted::default();
         for index in 0..self.channels.len() {
             if self.accompanies(index) && !self.channels[index].muted && !self.is_locked(index) {
@@ -1840,6 +2012,28 @@ impl Project {
                 self.channels[index].muted = true;
             }
         }
+        if drums {
+            muted.tracks = self.mute_the_songs_drums();
+        }
+        muted
+    }
+
+    /// Mutes the song's own drum tracks when the band's drums `come` in
+    /// their place.
+    fn drums_come(&mut self, come: bool) {
+        if !come {
+            return;
+        }
+        let tracks = self.mute_the_songs_drums();
+        if let Some(band) = &mut self.band {
+            band.muted.tracks.extend(tracks);
+        }
+    }
+
+    /// Mutes the song's own tracks that play only drums, for the band's
+    /// drums to play in their place. Returns their names.
+    fn mute_the_songs_drums(&mut self) -> Vec<String> {
+        let mut muted = Vec::new();
         let is_drum = |channel: &Channel| {
             matches!(channel.kind, ChannelKind::Sampler(SampleSource::Builtin(_)))
         };
@@ -1860,7 +2054,7 @@ impl Project {
             let state = &mut self.playlist.tracks[track];
             if only_drums && !state.muted {
                 state.muted = true;
-                muted.tracks.push(state.name.clone());
+                muted.push(state.name.clone());
             }
         }
         muted
@@ -1896,6 +2090,14 @@ impl Project {
             // there were horns plays as it was written.
             if band.horns {
                 print.bytes(b"horns");
+            }
+            // Only bands whose drums come from elsewhere count them.
+            if band.drums != BandDrums::Style {
+                print.bytes(b"drums");
+                print.bytes(format!("{:?}", band.drums_name()).as_bytes());
+                if let BandDrums::Saved(style) = &band.drums {
+                    print.bytes(format!("{style:?}").as_bytes());
+                }
             }
             // Only songs with section styles count them, so a song saved
             // before there were any plays as it was written.
@@ -2311,8 +2513,12 @@ impl Project {
                 || (!matches!(player, Player::Soloist | Player::Horns)
                     && style.lanes.iter().any(|lane| lane.player != Player::Drums))
         };
-        if let Some(style) = &band.custom_rhythm
-            && (!band.accents_only || player == Player::Drums)
+        // The drums can come from another style than the rest.
+        let saved = match player {
+            Player::Drums => band.saved_drums(),
+            _ => band.custom_rhythm.as_deref().filter(|_| !band.accents_only),
+        };
+        if let Some(style) = saved
             && in_style(style)
         {
             let mut notes = Vec::new();
@@ -2350,14 +2556,17 @@ impl Project {
             }
         } else {
             match (player, band.channel(player)) {
-                (Player::Drums, _) => self.drum_part(
-                    band.style,
-                    &score.bars,
-                    &score.chunks,
-                    score.end,
-                    score.held,
-                    &score.breaks,
-                ),
+                (Player::Drums, _) => match band.drums_style() {
+                    Some(style) => self.drum_part(
+                        style,
+                        &score.bars,
+                        &score.chunks,
+                        score.end,
+                        score.held,
+                        &score.breaks,
+                    ),
+                    None => Vec::new(),
+                },
                 (_, Some(channel)) => {
                     let mut notes = notes;
                     let role = match player {
@@ -3696,7 +3905,7 @@ mod tests {
             progression: false,
             tempo: false,
             swing: false,
-            matching_style: true,
+            matching_style: false,
         }
     }
 
@@ -3717,9 +3926,12 @@ mod tests {
                 ..no_parts()
             },
         );
-        assert_eq!(project.band().unwrap().style.name, "Rachenitsa");
+        // Its drums alone: the band plays them with its own chord and
+        // bass parts.
+        assert_eq!(project.band().unwrap().style.name, "Rock ride");
+        assert_eq!(project.band().unwrap().drums_name(), Some("Rachenitsa"));
         assert_eq!(project.band().unwrap().instrument_style.name, "Rock ride");
-        assert!(project.band().unwrap().accents_only);
+        assert!(!project.band().unwrap().accents_only);
         for (index, channel) in sounds.iter().enumerate() {
             assert_eq!(&project.channels()[index], channel);
         }
@@ -3768,51 +3980,92 @@ mod tests {
     }
 
     #[test]
-    fn plain_accents_work_for_both_builtin_and_saved_style_presets() {
-        let style = Style::named("Four chords").unwrap();
+    fn drums_and_chord_parts_come_on_their_own_from_builtin_and_saved_styles() {
+        let style = Style::named("Bossa nova").unwrap();
+        let drums_only = apply::StyleParts {
+            rhythm: true,
+            ..no_parts()
+        };
+        let chords_only = apply::StyleParts {
+            matching_style: true,
+            ..no_parts()
+        };
         for custom in [false, true] {
             let mut project = band("Rock ride", &["C", "Am", "F", "G"]);
             let keys = project.player_channel(Player::Piano).unwrap();
             project.channel_mut(keys).unwrap().program = Some(80);
             let chords = project.playlist.chord_markers.clone();
             let sounds = project.channels().to_vec();
-            let parts = apply::StyleParts {
-                rhythm: true,
-                instruments: true,
-                matching_style: false,
-                ..no_parts()
-            };
-            if custom {
-                let mut saved = crate::library::UserStyle::from_builtin(style);
-                // Make the custom performance easy to distinguish from beat-group accents.
-                for lane in saved
-                    .lanes
-                    .iter_mut()
-                    .filter(|lane| lane.player != Player::Drums)
-                {
-                    lane.notes.truncate(1);
-                    for note in &mut lane.notes {
-                        note.start = 3;
-                        note.length = 1;
-                    }
-                }
-                project.apply_user_style(&saved, parts).unwrap();
-            } else {
-                project.apply_band_parts(BandStyle::of_style(style).unwrap(), Some(style), parts);
-            }
-            assert!(project.band().unwrap().accents_only);
-            assert_eq!(project.band().unwrap().instrument_style.name, "Rock ride");
-            assert_eq!(project.channels(), sounds);
-            assert_eq!(project.playlist.chord_markers, chords);
             let piano = part(&project, Player::Piano);
-            assert!(piano.iter().any(|note| note.0 == 8));
-            assert!(piano.iter().all(|note| note.0 % 8 == 0));
+            let drums = part(&project, Player::Drums);
+            let saved = crate::library::UserStyle::from_builtin(style);
+            let apply = |project: &mut Project, parts| {
+                if custom {
+                    project.apply_user_style(&saved, parts).unwrap();
+                } else {
+                    let band_style = BandStyle::of_style(style).unwrap();
+                    project.apply_band_parts(band_style, Some(style), parts);
+                }
+            };
+            // The style's drums, the band's own chord and bass parts.
+            apply(&mut project, drums_only);
+            assert!(!project.band().unwrap().accents_only);
+            assert_eq!(project.band().unwrap().instrument_style.name, "Rock ride");
+            // The new drums may need channels of their own.
+            assert_eq!(project.channels()[..sounds.len()], sounds[..]);
+            assert_eq!(project.playlist.chord_markers, chords);
+            assert_eq!(part(&project, Player::Piano), piano);
+            let new_drums = part(&project, Player::Drums);
+            assert_ne!(new_drums, drums);
             let text = crate::file::to_text(&project).unwrap();
             let mut reopened = crate::file::from_text(&text).unwrap();
             assert_eq!(reopened, project);
             reopened.follow_chord_sheet();
             assert_eq!(part(&reopened, Player::Piano), piano);
+            assert_eq!(part(&reopened, Player::Drums), new_drums);
+            // Then its chord and bass parts: the drums stay.
+            apply(&mut project, chords_only);
+            assert_ne!(part(&project, Player::Piano), piano);
+            assert_eq!(part(&project, Player::Drums), new_drums);
+            assert_eq!(project.band().unwrap().drums, BandDrums::Style);
+            assert_eq!(
+                crate::file::format_for(&project),
+                if custom { 22 } else { 20 }
+            );
         }
+    }
+
+    #[test]
+    fn a_styles_chord_parts_can_come_without_its_drums() {
+        let mut project = band("Rock ride", &["C", "Am", "F", "G"]);
+        let drums = part(&project, Player::Drums);
+        let piano = part(&project, Player::Piano);
+        project.apply_band_parts(
+            BandStyle::named("Bossa nova").unwrap(),
+            None,
+            apply::StyleParts {
+                matching_style: true,
+                ..no_parts()
+            },
+        );
+        let band = project.band().unwrap();
+        assert_eq!(band.style.name, "Bossa nova");
+        assert_eq!(band.drums_name(), Some("Rock ride"));
+        assert_eq!(part(&project, Player::Drums), drums);
+        assert_ne!(part(&project, Player::Piano), piano);
+        assert_eq!(crate::file::format_for(&project), 29);
+        let text = crate::file::to_text(&project).unwrap();
+        assert_eq!(crate::file::from_text(&text).unwrap(), project);
+        // The drums of the style the chord parts come from: as one again.
+        project.apply_band_parts(
+            BandStyle::named("Bossa nova").unwrap(),
+            None,
+            apply::StyleParts {
+                rhythm: true,
+                ..no_parts()
+            },
+        );
+        assert_eq!(project.band().unwrap().drums, BandDrums::Style);
     }
 
     #[test]
@@ -3881,7 +4134,7 @@ mod tests {
         history.record("change rhythm", before.clone());
         let changed = project.clone();
         let text = crate::file::to_text(&project).unwrap();
-        assert_eq!(crate::file::format_for(&project), 20);
+        assert_eq!(crate::file::format_for(&project), 29);
         let mut loaded = crate::file::from_text(&text).unwrap();
         assert_eq!(loaded, changed);
         assert!(!loaded.follow_chord_sheet());
@@ -3921,6 +4174,7 @@ mod tests {
             apply::StyleParts {
                 rhythm: true,
                 instruments: true,
+                matching_style: true,
                 ..no_parts()
             },
         );
@@ -3958,6 +4212,7 @@ mod tests {
                 apply::StyleParts {
                     rhythm: true,
                     instruments: true,
+                    matching_style: true,
                     ..no_parts()
                 },
             );
@@ -3993,6 +4248,7 @@ mod tests {
                 apply::StyleParts {
                     rhythm: true,
                     instruments: true,
+                    matching_style: true,
                     ..no_parts()
                 },
             );
@@ -4157,7 +4413,7 @@ mod tests {
             rhythm: false,
             ..apply::StyleParts::default()
         };
-        project.apply_band_parts(style, Some(harmony), parts.following(true).for_preset());
+        project.apply_band_parts(style, Some(harmony), parts.following(true));
         assert!(!project.band().unwrap().accents_only);
         assert_eq!(
             project.channels()[..before.channels().len()],
@@ -4245,7 +4501,7 @@ mod tests {
     }
 
     #[test]
-    fn copying_only_the_voices_brings_a_band_that_plays_plain_accents() {
+    fn a_band_brought_without_drums_leaves_them_to_the_song() {
         let song = SONGS.iter().find(|song| song.name == "El Choclo").unwrap();
         let mut project = song_demo(song);
         let before = project.clone();
@@ -4257,16 +4513,48 @@ mod tests {
             tempo: false,
             ..apply::StyleParts::default()
         };
-        project.apply_band_parts(style, Some(harmony), parts.for_preset());
+        project.apply_band_parts(style, Some(harmony), parts);
         let band = project.band().expect("the band comes in");
-        assert!(band.accents_only);
+        assert_eq!(band.drums, BandDrums::Song);
+        assert!(!band.accents_only);
         assert!(!part(&project, Player::Piano).is_empty());
+        assert!(part(&project, Player::Drums).is_empty());
+        assert!(project.band().unwrap().muted().tracks.is_empty());
         for (channel, was) in before.channels().iter().enumerate() {
             let now = &project.channels()[channel];
             assert_eq!((&now.name, now.program), (&was.name, was.program));
         }
         let count = before.patterns().len();
         assert_eq!(own_notes(&project, count), own_notes(&before, count));
+        // The drums come later, in place of the song's.
+        project.apply_band_parts(
+            style,
+            Some(harmony),
+            apply::StyleParts {
+                rhythm: true,
+                ..no_parts()
+            },
+        );
+        assert_eq!(project.band().unwrap().drums, BandDrums::Style);
+        assert!(!part(&project, Player::Drums).is_empty());
+    }
+
+    #[test]
+    fn copying_only_the_voices_brings_no_band() {
+        let song = SONGS.iter().find(|song| song.name == "El Choclo").unwrap();
+        let mut project = song_demo(song);
+        let before = project.clone();
+        let harmony = Style::named("Emotional pop").unwrap();
+        let style = BandStyle::of_style(harmony).unwrap();
+        project.apply_band_parts(
+            style,
+            Some(harmony),
+            apply::StyleParts {
+                instruments: true,
+                ..no_parts()
+            },
+        );
+        assert_eq!(project, before);
     }
 
     #[test]

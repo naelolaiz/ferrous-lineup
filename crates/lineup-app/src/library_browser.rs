@@ -64,7 +64,7 @@ impl Tried {
         Self {
             user_style: band.custom_rhythm.as_ref().map(|style| style.id()),
             style: band.harmony_style.filter(|_| band.custom_rhythm.is_none()),
-            rhythm: band.style.rhythm.filter(|_| band.custom_rhythm.is_none()),
+            rhythm: band.drums_style().and_then(|style| style.rhythm),
             ..Self::default()
         }
     }
@@ -841,13 +841,13 @@ fn preset_label(
                 });
             ui.separator();
             ui.horizontal(|ui| {
-                let effective = draft.for_preset();
-                let can_apply = effective.rhythm
-                    || effective.instruments
-                    || effective.time_signature
-                    || effective.tempo
-                    || effective.swing
-                    || (effective.progression && preset.has_progression());
+                let can_apply = draft.rhythm
+                    || draft.matching_style
+                    || draft.instruments
+                    || draft.time_signature
+                    || draft.tempo
+                    || draft.swing
+                    || (draft.progression && preset.has_progression());
                 if ui
                     .add_enabled(can_apply, egui::Button::new(tr("Apply")))
                     .clicked()
@@ -941,41 +941,28 @@ fn with_source(
     });
 }
 
-/// Whether the preset's drums come with simple chords: its chord and
-/// bass parts left behind, and the song's instruments and chords kept.
-pub(crate) fn simple_chords(parts: &StyleParts) -> bool {
-    parts.rhythm && !parts.matching_style
-}
-
-/// The preset's drums, under them whether its chord and bass parts come
-/// too, and under those what `with_them` draws: the options that can
-/// only come with them.
+/// The preset's drums, its chord and bass parts and its sounds, each
+/// taken on its own: unticked, the song keeps its own. `instruments` is
+/// what the sounds' box says.
 pub(crate) fn playing_ui(
     ui: &mut Ui,
     parts: &mut StyleParts,
     now: Option<&[String; SongPart::ALL.len()]>,
-    with_them: impl FnOnce(&mut Ui, &mut StyleParts),
+    instruments: &str,
 ) {
     with_source(ui, now, SongPart::Drums, |ui| {
-        ui.checkbox(&mut parts.rhythm, tr("Drums")).on_hover_text(tr(
-            "Copy the preset’s drums, and with the box below, how it plays the chords and the bass.",
-        ));
+        ui.checkbox(&mut parts.rhythm, tr("Drums"))
+            .on_hover_text(tr("Copy the preset’s drums. Off, the song keeps its own."));
     });
-    ui.indent("chord-and-bass-parts", |ui| {
-        with_source(ui, now, SongPart::Patterns, |ui| {
-            ui.add_enabled(
-                parts.rhythm,
-                egui::Checkbox::new(&mut parts.matching_style, tr("Its chord and bass parts")),
-            )
+    with_source(ui, now, SongPart::Patterns, |ui| {
+        ui.checkbox(&mut parts.matching_style, tr("Chord and bass parts"))
             .on_hover_text(tr(
-                "Copy how the preset plays the chords and the bass: its piano, bass, guitar and other parts. Unticked, the piano and bass play each chord simply on the beats, and your instruments and chords stay.",
-            ))
-            .on_disabled_hover_text(tr("They come with the drums: tick Drums to copy them."));
-        });
-        ui.indent("with-chord-and-bass-parts", |ui| with_them(ui, parts));
-        if simple_chords(parts) {
-            ui.weak(tr("Simple chords on the beats, with your instruments and chords."));
-        }
+                "Copy how the preset plays the chords and the bass: its piano, bass, guitar and other parts. Off, the song keeps its own.",
+            ));
+    });
+    with_source(ui, now, SongPart::Instruments, |ui| {
+        ui.checkbox(&mut parts.instruments, tr_str(instruments))
+            .on_hover_text(tr("Copy the preset’s sounds and band players."));
     });
 }
 
@@ -986,35 +973,28 @@ fn copy_parts_ui(
     follows: bool,
     now: Option<&[String; SongPart::ALL.len()]>,
 ) {
-    playing_ui(ui, parts, now, |ui, parts| {
-        let simple = simple_chords(parts);
-        with_source(ui, now, SongPart::Instruments, |ui| {
-            instrument_option(ui, parts, tr("Voices / instruments"), !simple);
-        });
-        // Simple chords play the song's own chords. Whether to copy a
-        // progression is kept for when the chord and bass parts come
-        // again.
-        let mut progression = has_progression && parts.progression && !simple;
-        with_source(ui, now, SongPart::Chords, |ui| {
-            let response = ui
-                .add_enabled(
-                    has_progression && !simple,
-                    egui::Checkbox::new(&mut progression, tr("Chord progression")),
-                )
-                .on_hover_text(tr("Replace the song’s chords with this preset’s chart. The melody is kept. Leave this off to keep the song’s harmony while changing its playing style or instruments: each style you try then plays the chords already there, and in a new trial pattern, those of the first style you tried."))
-                .on_disabled_hover_text(if simple {
-                    tr("Simple chords play the song’s own chords.")
-                } else {
-                    tr("This preset has no chord progression. Your current chords are kept.")
-                });
-            if response.changed() {
-                parts.progression = progression;
-            }
-        });
-        if progression {
-            ui.weak(tr("Replaces existing chords. The melody is kept."));
+    playing_ui(ui, parts, now, "Voices / instruments");
+    ui.add_space(2.0);
+    ui.strong(tr("Harmony"));
+    // Whether to copy a progression is kept for a preset that has one.
+    let mut progression = has_progression && parts.progression;
+    with_source(ui, now, SongPart::Chords, |ui| {
+        let response = ui
+            .add_enabled(
+                has_progression,
+                egui::Checkbox::new(&mut progression, tr("Chord progression")),
+            )
+            .on_hover_text(tr("Replace the song’s chords with this preset’s chart. The melody is kept. Leave this off to keep the song’s harmony while changing its playing style or instruments: each style you try then plays the chords already there, and in a new trial pattern, those of the first style you tried."))
+            .on_disabled_hover_text(tr(
+                "This preset has no chord progression. Your current chords are kept.",
+            ));
+        if response.changed() {
+            parts.progression = progression;
         }
     });
+    if progression {
+        ui.weak(tr("Replaces existing chords. The melody is kept."));
+    }
     ui.add_space(2.0);
     ui.strong(tr("Timing"));
     if follows {
@@ -1040,23 +1020,6 @@ fn copy_parts_ui(
         ui.checkbox(&mut parts.swing, tr("Swing"))
             .on_hover_text(tr("Use the preset’s swing amount."));
     });
-}
-
-/// The option to copy the preset's sounds. While it cannot come (with
-/// simple chords, unless `enabled`), the box shows it unticked, and the
-/// choice is kept for when it can.
-pub(crate) fn instrument_option(ui: &mut Ui, parts: &mut StyleParts, label: &str, enabled: bool) {
-    let mut instruments = parts.instruments && enabled;
-    let response = ui
-        .add_enabled(
-            enabled,
-            egui::Checkbox::new(&mut instruments, tr_str(label)),
-        )
-        .on_hover_text(tr("Copy the preset’s sounds and band players."))
-        .on_disabled_hover_text(tr("Simple chords keep your instruments."));
-    if response.changed() {
-        parts.instruments = instruments;
-    }
 }
 
 /// The twelve-tone styles, under the harmony styles, opened when `open`
