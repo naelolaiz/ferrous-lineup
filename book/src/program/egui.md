@@ -739,6 +739,18 @@ if let Demo::Song(_) = demo {
 }
 ```
 
+The app itself opens on neither. Its starting song is a beat, but the
+first thing to see is the playlist and the Library, so `LineupApp::new`
+closes the rack when no file was named on the command line:
+
+```rust
+// The starting song opens on the playlist and the Library, with no
+// window over them: F6 shows its beat in the channel rack.
+if starting_song {
+    app.rack_open = false;
+}
+```
+
 ### Windows the size of what they show
 
 egui remembers each window's size, and saves it with the rest of its

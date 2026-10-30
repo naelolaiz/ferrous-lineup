@@ -106,7 +106,7 @@ Forte number: sets-rows-micromodes.md#pitch-class-sets
 Four-part writing: voice-leading.md
 Function: chord-functions.md#home-away-and-tension
 General MIDI: sounds.md#an-instrument-for-each-channel, midi.md#sending-to-a-synthesizer, exporting.md#a-midi-file
-GeneralUser GS: sounds.md#the-first-play
+GeneralUser GS: sounds.md#when-the-app-opens
 Ghost notes: piano-roll.md#seeing-the-other-parts
 Ground bass: concert-hall.md#baroque
 Grouped beats: rhythm-and-meter.md#odd-meters

@@ -86,7 +86,11 @@ the optimizations, which audio code needs to keep up. While you work on
 the code, `cargo run` alone builds faster, and keeps the console where
 messages and panics show.
 
-![Ferrous Lineup as it opens: the Library on the left, the demo song on the playlist, the channel rack over it with Kick, Clap, Hat, Snare and the Lineup Osc, and the harmony keys of C major along the bottom.](images/getting-started-window.png)
+![Ferrous Lineup as it opens: the Library on the left, the demo song on the playlist, and the harmony keys of C major along the bottom.](images/getting-started-window.png)
+
+The first time, a window over it offers real instrument sounds;
+[SoundFonts and General MIDI](sound/soundfonts.md#the-offer-and-the-download)
+says what it does.
 
 The manual's [The main
 window](https://naelolaiz.github.io/ferrous-lineup/manual/main-window.html)
