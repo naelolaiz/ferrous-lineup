@@ -13,10 +13,11 @@ the AppStream data from `packaging/`.
 ## Before pushing the stable package
 
 The tag must exist first, because the checksum is of GitHub's archive of
-that tag, not of the working tree:
+that tag, not of the working tree. It is either pushed (`git tag v0.4.1
+&& git push origin v0.4.1`) or made by the Release workflow, run by hand
+on main with the tag written in its **tag** field. Then:
 
 ```sh
-git tag v0.4.1 && git push origin v0.4.1
 cd packaging/aur
 updpkgsums
 makepkg --printsrcinfo > .SRCINFO
