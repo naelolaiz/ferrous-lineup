@@ -24,6 +24,7 @@ pub const CLAVINET: u8 = 7;
 pub const CELESTA: u8 = 8;
 pub const VIBRAPHONE: u8 = 11;
 pub const MARIMBA: u8 = 12;
+pub const XYLOPHONE: u8 = 13;
 pub const DRAWBAR_ORGAN: u8 = 16;
 pub const CHURCH_ORGAN: u8 = 19;
 pub const ACCORDION: u8 = 21;

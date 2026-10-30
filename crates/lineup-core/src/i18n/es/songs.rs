@@ -578,6 +578,11 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("Alone", "Solo"),
     ("Alouette", "Alouette"),
     ("Altos", "Contraltos"),
+    (
+        "Amado Régis's samba-tango, which Carmen Miranda recorded in 1937: the samba is sung in Portuguese and the tango in Spanish. In this arrangement a xylophone plays the tune over nylon-string guitar, bass guitar, drums and shaker. The samba is in A minor, on A minor 7 and E7#9, the dominant with a raised ninth, G natural against G sharp; then B minor 11 and E7 take turns. The tango turns to A major, the parallel major, rocking between A major 7 and E9; its second phrase moves between E9 and B minor 7 over E, and B7b5, the dominant of E with a lowered fifth, leads on. The last phrase heads for D major (IV) through E minor 7 and A13. The coda darkens it to D minor 7, the iv borrowed from A minor; C sharp minor 7 and F sharp 13 lead to E9, and the song ends on A minor 7, the samba's chord.",
+        "La samba-tango de Amado Régis que Carmen Miranda grabó en 1937: la samba se canta en portugués y el tango en castellano. En este arreglo un xilófono toca la melodía sobre guitarra clásica, bajo eléctrico, batería y sonajero. La samba está en {A} menor, sobre {A} menor 7 y {E}7#9, la dominante con la novena aumentada, {G} natural contra {G#}; luego se turnan {B} menor 11 y {E}7. El tango pasa a {A} mayor, la homónima mayor, y se mece entre {A} mayor 7 y {E}9; su segunda frase va y viene entre {E}9 y {B} menor 7 sobre {E}, y {B}7b5, la dominante de {E} con la quinta rebajada, lleva adelante. La última frase se dirige a {D} mayor (IV) por {E} menor 7 y {A}13. La coda la oscurece con {D} menor 7, el iv prestado de {A} menor; {C#} menor 7 y {F#}13 llevan a {E}9, y la canción termina en {A} menor 7, el acorde de la samba.",
+    ),
+    ("Amado Régis, 1937", "Amado Régis, 1937"),
     ("Ambient", "Ambient"),
     (
         "American fiddle tune, 1830s",
@@ -2004,6 +2009,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "No el arreglo gospel de 1967 sino el himno del que nació, en su compás original de tres. Cada nota larga cae en un primer tiempo y las tres cortas anteriores, «O happy», llenan el compás anterior. «Happy day» en el estribillo es una redonda que queda colgada sobre la barra de compás.",
     ),
     ("O Happy Day", "O Happy Day"),
+    ("O Samba e o Tango", "O Samba e o Tango"),
     ("Oboe again", "Oboe otra vez"),
     ("Oboe d'amore", "Oboe d'amore"),
     ("Oboe figure", "Figura del oboe"),
@@ -2255,6 +2261,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Los marineros cantaban shanties, canciones de trabajo, para tirar juntos de los cabos. Esta es dórica: menor, pero con un {B} natural, la sexta elevada, en el sexto compás.",
     ),
     ("Sakura Sakura", "Sakura Sakura"),
+    ("Samba and tango", "Samba y tango"),
     (
         "Samba is bossa nova's loud parent: the same jazz chords, with a whole percussion section. A7 (VI7) is a secondary dominant that leads to D minor.",
         "La samba es la madre ruidosa de la bossa nova: los mismos acordes de jazz, con toda una sección de percusión. {A}7 (VI7) es una dominante secundaria que lleva a {D} menor.",
@@ -2414,6 +2421,8 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("Take the \"A\" Train", "Take the «A» Train"),
     ("Tango brasileiro", "Tango brasileiro"),
     ("Tango del telar", "Tango del telar"),
+    ("Tango, second phrase", "Tango, segunda frase"),
+    ("Tango, third phrase", "Tango, tercera frase"),
     ("Tarantella napoletana", "Tarantela napolitana"),
     ("Te quiero dijiste", "Te quiero dijiste"),
     ("Tea for Two", "Tea for Two"),

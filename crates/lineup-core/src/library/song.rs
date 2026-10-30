@@ -1003,6 +1003,7 @@ pub static SONGS: &[Song] = &[
     latin::RODA_YOYO,
     latin::DONA_ADELAIDE,
     latin::GAROTA_DE_IPANEMA,
+    latin::O_SAMBA_E_O_TANGO,
     folklore_arranged::QUE_NADIE_SEPA_MI_SUFRIR,
     tango::HABANERA,
     tango::TANGO_DEL_TELAR,

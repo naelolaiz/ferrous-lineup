@@ -1770,3 +1770,299 @@ pub(super) const GAROTA_DE_IPANEMA: Song = Song {
             leads to E flat minor and a chain of chords home: B7 (bVII7), F minor 7 (iii7), \
             B flat 7 (VI7), E flat minor 7 (ii7), A flat 7 (V7).",
 };
+
+// Copyright: O samba e o tango (Amado Régis, recorded by Carmen Miranda in 1937) is still
+// under copyright; it is added here at the request of the project's owner.
+// Source: an arrangement for xylophone, nylon-string guitar, five-string bass guitar, drums
+// and shaker (51 bars, half note = 80), from the score the project's owner gave, written
+// out note for note: the xylophone, which plays the sung tune, an octave above its written
+// notes, as a xylophone sounds; the guitar and the bass an octave below theirs. The
+// arrangement's arpeggio signs are rolled chords here, their notes two thirds of a step
+// apart. The chord chart names what the guitar and bass play: the score's Am is A minor 7,
+// the guitar always adding G; it prints E7(#9) over the opening A minor 7, "C°" over B7b5
+// (B, F, A, D sharp), and in bars 39 to 48 A6, E7, F#7(13), F#7(b13), Bm7 and Am, names that
+// do not fit the notes under them. The words are left out.
+pub(super) const O_SAMBA_E_O_TANGO: Song = Song {
+    name: "O Samba e o Tango",
+    origin: "Amado Régis, 1937",
+    feel: "Samba and tango",
+    genre: Genre::Latin,
+    tonic: A,
+    mode: NaturalMinor,
+    time: COMMON,
+    // Half note = 80.
+    tempo: 160.0,
+    comping: Comping::Held,
+    bass: Bass::None,
+    rhythm: "",
+    band: Band::new(gm::XYLOPHONE, gm::NYLON_GUITAR, gm::FINGER_BASS),
+    style: "",
+    parts: &[
+        Part::new(
+            "Intro",
+            "-:16 | -:6 !ff E5:2 E5 E5:1 -:3 Eb5:2",
+            "Am7 | Am7",
+        )
+        .with_left("!mf E4:16 | _:8 - & (3 -:1 !mf C4 _ _:14 | _:8 - & (3 -:2 !mf G3 _ _:12 | \
+            _:8 - & -:2 !mf A2:14 | _:8 -")
+        .with_lines(&[line(
+            "Bass",
+            gm::FINGER_BASS,
+            "-:16 | -",
+        )]),
+        Part::new(
+            "Samba",
+            "!ff E5:2 A5:12 -:2 | -:6 E5:2. D5 E5:1 -:3 C5:2 | _:6 -:10 | - B5:4 C6:2 | \
+            _:6 B5:2 A5 G5 - A5 | _:6 G5:2 F5 E5 - G5 | _:12 -:4 | D5:2 -:4 D5:2 D5 D5 - D5 | \
+            _:8 -:4 D5:2 B4 | _ B4 - E5:4 D5 B4:2 | _:8 - | -:10 B5:4 B5:2 | \
+            _:4 -:2 A5 G5 F5 - G5 | _:4 -:2 G5 F5 E5 - D5 | -:4 C5:8 -:4",
+            "Am7 | E7#9 | Am7 | Am7 | Am7 | Am7 | Bm11 | E7 | Bm11 | E7 | Bm11 | E7 | Bm11 | E7 | \
+            Am7",
+        )
+        .with_left("-:2 !mf G3+C4+E4:4 G3+C4+E4:2 -:4 G3+C4+E4:2 G3+C4+E4 | \
+            G#3+D4+G4:4 G#3+D4+G4:2 G#3+D4+G4 - G#3+D4+G4:4 G#3+D4+G4:2 | \
+            - G3+C4+E4:4 G3+C4+E4:2 -:4 G3+C4+E4:2 G3+C4+E4 | \
+            G3+C4+E4:4 G3+C4+E4:2 G3+C4+E4 - G3+C4+E4:4 G3+C4+E4:2 | \
+            - G3+C4+E4:4 G3+C4+E4:2 -:4 G3+C4+E4:2 G3+C4+E4 | \
+            G3+C4+E4:4 G3+C4+E4:2 G3+C4+E4 - G3+C4+E4:4 G3+C4+E4:2 | \
+            A3+D4+E4 A3+D4+E4:4 A3+D4+E4:2 A3+D4+E4:4 A3+D4+E4:2 A3+D4+E4 | \
+            G#3+D4+E4:4 G#3+D4+E4:2 G#3+D4+E4 G#3+D4+E4 G#3+D4+E4:4 G#3+D4+E4:2 | \
+            A3+D4+E4 A3+D4+E4:4 A3+D4+E4:2 A3+D4+E4:4 A3+D4+E4:2 A3+D4+E4 | \
+            G#3+D4+E4:4 G#3+D4+E4:2 G#3+D4+E4 G#3+D4+E4 G#3+D4+E4:4 G#3+D4+E4:2 | \
+            A3+D4+E4 A3+D4+E4:4 A3+D4+E4:2 A3+D4+E4:4 A3+D4+E4:2 A3+D4+E4 | \
+            G#3+D4+E4:4 G#3+D4+E4:2 G#3+D4+E4 G#3+D4+E4 G#3+D4+E4:4 G#3+D4+E4:2 | \
+            A3+D4+E4 A3+D4+E4:4 A3+D4+E4:2 A3+D4+E4:4 A3+D4+E4:2 A3+D4+E4 | \
+            G#3+D4+E4:4 G#3+D4+E4:2 G#3+D4+E4 G#3+D4+E4 G#3+D4+E4:4 G#3+D4+E4:2 | \
+            - G3+C4+E4:4 G3+C4+E4:2 -:4 G3+C4+E4:2 G3+C4+E4")
+        .with_lines(&[line(
+            "Bass",
+            gm::FINGER_BASS,
+            "!mf A2:8 E2 | E2 B2 | A2 E2 | A2 E2 | A2 E2 | A2 E2 | B2 E2 | E2 E2 | B2 E2 | E2 E2 | \
+            B2 E2 | E2 E2 | B2 E2 | E1 E2 | A2 E2",
+        )])
+        .with_drums(&[
+            (Drum::Kick, "x:1 -:5 x:1 - x -:7 | x:1 -:5 x:1 - x -:7 | x:1 -:5 x:1 - x -:7 | \
+             x:1 -:5 x:1 - x -:7 | x:1 -:5 x:1 - x -:7 | x:1 -:5 x:1 - x -:7 | \
+             x:1 -:5 x:1 - x -:7 | x:1 -:5 x:1 - x -:7 | x:1 -:5 x:1 - x -:7 | \
+             x:1 -:5 x:1 - x -:7 | x:1 -:5 x:1 - x -:7 | x:1 -:5 x:1 - x -:7 | \
+             x:1 -:5 x:1 - x -:7 | x:1 -:5 x:1 - x -:7 | x:1 -:5 x:1 - x -:7"),
+            (Drum::Snare, "-:2 x:1 -:3 x:1 -:5 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:5 x:1 - | \
+             -:2 x:1 -:3 x:1 -:5 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:5 x:1 - | \
+             -:2 x:1 -:3 x:1 -:5 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:5 x:1 - | \
+             -:2 x:1 -:3 x:1 -:5 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:5 x:1 - | \
+             -:2 x:1 -:3 x:1 -:5 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:5 x:1 - | \
+             -:2 x:1 -:3 x:1 -:5 x:1 -:3 | -:2 x:1 -:3 x:1 -:5 x:1 -:3 | \
+             -:2 x:1 -:3 x:1 -:5 x:1 -:3 | -:2 x:1 -:3 x:1 -:5 x:1 -:3 | \
+             -:2 x:1 -:3 x:1 -:5 x:1 -:3"),
+            (Drum::Ride, "x:1 -:15 | -:16 | x:1 -:15 | x:1 -:15 | x:1 -:15 | -:16 | \
+             x:1 - x - x - x - x - x - x - x - | -:16 | x:1 - x - x - x - x - x - x - x - | -:16 | \
+             x:1 - x - x - x - x - x - x - x - | x - x - x - x - x - x - x - x - | \
+             x - x - x - x - x - x - x - x - | x - x - x - x - x - x - x - x - | x -:15"),
+            (Drum::Shaker, "!p x:1 - x - x - x - x - x - x - x - | x - x - x - x - x - x - x - x - | \
+             !mp x - x - x - x - x - x - x - x - | x - x - x - x - x - x - x - x - | \
+             !p x - x - x - x - x - x - x - x - | x - x - x - x - x - x - x - x - | \
+             x - x - x - x - x - x - x - x - | x - x - x - x - x - x - x - x - | \
+             x - x - x - x - x - x - x - x - | x - x - x - x - x - x - x - x - | \
+             x - x - x - x - x - x - x - x - | x - x - x - x - x - x - x - x - | \
+             x - x - x - x - x - x - x - x - | x - x - x - x - x - x - x - x - | \
+             x - x - x - x - x - x - x - x -"),
+        ]),
+        Part::new(
+            "First ending",
+            "-:6 !ff E5:2 E5 E5:1 -:3 Eb5:2",
+            "E7#9",
+        )
+        .with_left("!mf G#3+D4+G4:4 G#3+D4+G4:2 G#3+D4+G4 - G#3+D4+G4:4 G#3+D4+G4:2")
+        .with_lines(&[line(
+            "Bass",
+            gm::FINGER_BASS,
+            "!mf E2:8 B2",
+        )])
+        .with_drums(&[
+            (Drum::Kick, "x:1 -:5 x:1 - x -:7"),
+            (Drum::Snare, "x:1 -:3 x:1 -:3 x:1 -:5 x:1 -"),
+            (Drum::Shaker, "!p x:1 - x - x - x - x - x - x - x -"),
+        ]),
+        Part::new(
+            "Second ending",
+            "-:16",
+            "E7#9",
+        )
+        .with_left("!mf G#3+D4+G4:4 G#3+D4+G4:2 G#3+D4+G4 - G#3+D4+G4:4 G#3+D4+G4:2")
+        .with_lines(&[line(
+            "Bass",
+            gm::FINGER_BASS,
+            "!mf E2:8 B2",
+        )])
+        .with_drums(&[
+            (Drum::Kick, "x:1 -:5 x:1 - x -:7"),
+            (Drum::Snare, "x:1 -:3 x:1 -:3 x:1 -:5 x:1 -"),
+            (Drum::Shaker, "!p x:1 - x - x - x - x - x - x - x -"),
+        ]),
+        Part::new(
+            "Tango",
+            "!ff E5:4 C#5 B4:2 - C#5:4 | D5:2 -:4 D5:2 D5 E5:4 E5:2 | _ C#5:4 -:6 B4:2 C#5 | \
+            D5:4 -:2 D5 D5 E5:4 E5:2 | _ C#5:4 -:10 | -:16",
+            "Amaj7 | E9 | Amaj7 | E9 | Amaj7 | B7b5 Bm7",
+        )
+        .in_key(A, Major)
+        .with_left("-:2 !mf G#3+C#4+E4:4 G#3+C#4+E4:2 -:4 G#3+C#4+E4:2 G#3+C#4+E4 | \
+            G#3+D4+F#4:4 G#3+D4+F#4:2 G#3+D4+F#4 - G#3+D4+F#4:4 G#3+D4+F#4:2 | \
+            - G#3+C#4+E4:4 G#3+C#4+E4:2 -:4 G#3+C#4+E4:2 G#3+C#4+E4 | \
+            G#3+D4+F#4:4 G#3+D4+F#4:2 G#3+D4+F#4 - G#3+D4+F#4:4 G#3+D4+F#4:2 | \
+            - G#3+C#4+E4:4 G#3+C#4+E4:2 -:4 G#3+C#4+E4:2 G#3+C#4+E4 | B2:8 B2+A3+D4+F#4 & -:16 | \
+            - | - | - | - | (3 -:1 !mf F3 _ _:6 -:8 & -:16 | - | - | - | - | \
+            (3 -:2 !mf A3 _ _:4 -:8 & -:16 | - | - | - | - | -:2 !mf D#4:6 -:8")
+        .with_lines(&[line(
+            "Bass",
+            gm::FINGER_BASS,
+            "!mf A2:8 E2 | E2 B2 | A2 E2 | E2 B2 | A2 E2 | -:16",
+        )])
+        .with_drums(&[
+            (Drum::Kick, "-:16 | - | x:1 -:5 x:1 - x -:7 | x:1 -:5 x:1 - x -:7 | x:1 -:5 x:1 - x -:7 | -:16"),
+            (Drum::Snare, "-:16 | - | -:2 x:1 -:3 x:1 -:5 x:1 -:3 | -:2 x:1 -:3 x:1 -:5 x:1 -:3 | -:16 | -"),
+            (Drum::Ride, "-:16 | - | x:1 -:15 | x:1 -:15 | -:16 | -"),
+            (Drum::Shaker, "-:16 | - | !p x:1 - x - x - x - x - x - x - x - | x - x - x - x - x - x - x - x - | \
+             x - x - x - x - x - x - x - x - | -:16"),
+        ]),
+        Part::new(
+            "Tango, second phrase",
+            "-:16 | - | !ff F#5:4 D5 - C#5:2 D5 | E5 -:4 E5:2 E5 F#5:4 F#5:2 | \
+            _ D5:4 -:6 C#5:2 D5 | E5 -:4 E5:2 E5 F#5:4 F#5:2 | _ D5:4 A5 F#5 G#5:2 | \
+            -:8 F#5:4 -:2 E5 | - C#5:4 -:10 | -:16",
+            "E9 | Bm7/E | E9 | Bm7/E | E9 | Bm7/E | E9 | B7b5 E9 | Amaj7 | E9",
+        )
+        .in_key(A, Major)
+        .with_left("!mf G#3+D4+F#4:4 G#3+D4+F#4:2 G#3+D4+F#4 - G#3+D4+F#4:4 G#3+D4+F#4:2 | \
+            - A3+D4+F#4:4 A3+D4+F#4:2 -:4 A3+D4+F#4:2 A3+D4+F#4 | \
+            G#3+D4+F#4:4 G#3+D4+F#4:2 G#3+D4+F#4 - G#3+D4+F#4:4 G#3+D4+F#4:2 | \
+            - A3+D4+F#4:4 A3+D4+F#4:2 -:4 A3+D4+F#4:2 A3+D4+F#4 | \
+            G#3+D4+F#4:4 G#3+D4+F#4:2 G#3+D4+F#4 - G#3+D4+F#4:4 G#3+D4+F#4:2 | \
+            - A3+D4+F#4:4 A3+D4+F#4:2 -:4 A3+D4+F#4:2 A3+D4+F#4 | \
+            G#3+D4+F#4:4 G#3+D4+F#4:2 G#3+D4+F#4 - G#3+D4+F#4:4 G#3+D4+F#4:2 | \
+            B2:8 B2+G#3+D4+F#4 | -:2 G#3+C#4+E4:4 G#3+C#4+E4:2 -:4 G#3+C#4+E4:2 G#3+C#4+E4 | \
+            G#3+D4+F#4:4 G#3+D4+F#4:2 G#3+D4+F#4 - G#3+D4+F#4:4 G#3+D4+F#4:2 & -:16 | - | - | - | \
+            - | - | - | (3 -:1 !mf F3 _ _:6 -:8 | -:16 | - & -:16 | - | - | - | - | - | - | \
+            (3 -:2 !mf A3 _ _:4 -:8 | -:16 | - & -:16 | - | - | - | - | - | - | \
+            -:2 !mf D#4:6 -:8 | -:16 | -")
+        .with_lines(&[line(
+            "Bass",
+            gm::FINGER_BASS,
+            "!mf E2:8 B2 | E2 E2 | E2 B2 | E2 E3 | E2 B1 | E2 E3 | E2 B1 | -:16 | A1:8 E1 | E2 B1",
+        )])
+        .with_drums(&[
+            (Drum::Kick, "x:1 -:5 x:1 - x -:7 | x:1 -:5 x:1 - x -:7 | x:1 -:5 x:1 - x -:7 | \
+             x:1 -:5 x:1 - x -:7 | x:1 -:5 x:1 - x -:7 | x:1 -:5 x:1 - x -:7 | \
+             x:1 -:5 x:1 - x -:7 | -:16 | x:1 -:5 x:1 - x -:7 | x:1 -:5 x:1 - x -:7"),
+            (Drum::Snare, "-:2 x:1 -:3 x:1 -:5 x:1 -:3 | -:2 x:1 -:3 x:1 -:5 x:1 -:3 | \
+             -:2 x:1 -:3 x:1 -:5 x:1 -:3 | -:2 x:1 -:3 x:1 -:5 x:1 -:3 | \
+             -:2 x:1 -:3 x:1 -:5 x:1 -:3 | -:2 x:1 -:3 x:1 -:5 x:1 -:3 | \
+             -:2 x:1 -:3 x:1 -:5 x:1 -:3 | -:16 | -:2 x:1 -:3 x:1 -:5 x:1 -:3 | \
+             -:2 x:1 -:3 x:1 -:5 x:1 -:3"),
+            (Drum::Ride, "x:1 - x - x - x - x - x - x - x - | x - x - x - x - x - x - x - x - | \
+             x - x - x - x - x - x - x - x - | x - x - x - x - x - x - x - x - | \
+             x - x - x - x - x - x - x - x - | x - x - x - x - x - x - x - x - | \
+             x - x - x - x - x - x - x - x - | -:16 | - | -"),
+            (Drum::Shaker, "!p x:1 - x - x - x - x - x - x - x - | x - x - x - x - x - x - x - x - | \
+             x - x - x - x - x - x - x - x - | x - x - x - x - x - x - x - x - | \
+             x - x - x - x - x - x - x - x - | x - x - x - x - x - x - x - x - | \
+             x - x - x - x - x - x - x - x - | -:16 | x:1 - x - x - x - x - x - x - x - | \
+             x - x - x - x - x - x - x - x -"),
+        ]),
+        Part::new(
+            "Tango, third phrase",
+            "!ff E5:4 C#5 B4:2 - C#5:4 | D5:2 -:4 D5:2 D5 E5:4 E5:2 | _ C#5:4 -:6 E5:2 E5 | \
+            B5:4 B5:2 B5 - B5:4 B5:2 | - G5:4 G5 -:6 | -:16",
+            "Amaj7 | E9 | Amaj7 | A9/G | Em7 | A13/D A13/D A7#5/D A7/D",
+        )
+        .in_key(A, Major)
+        .with_left("-:2 !mf G#3+C#4+E4:4 G#3+C#4+E4:2 -:4 G#3+C#4+E4:2 G#3+C#4+E4 | \
+            G#3+D4+F#4:4 G#3+D4+F#4:2 G#3+D4+F#4 - G#3+D4+F#4:4 G#3+D4+F#4:2 | \
+            - G#3+C#4+E4:4 G#3+C#4+E4:2 -:4 G#3+C#4+E4:2 G#3+C#4+E4 | \
+            C#4+E4+B4:4 C#4+E4+B4:2 C#4+E4+B4 - C#4+E4+B4:4 C#4+E#4+B4:2 | \
+            - B3+D4+G4:4 B3+D4+G4:2 -:4 B3+D4+G4:2 B3+D4+G4 | \
+            D3+G3+C#4+F#4 - D3+G3+C#4+F#4:4 D3+G3+C#4+F4 D3+G3+C#4+E4")
+        .with_lines(&[line(
+            "Bass",
+            gm::FINGER_BASS,
+            "!mf A1:8 E1 | E2 B1 | A2 E2 | G2 B1 | E1 E2 | D1 D2:4 D2",
+        )])
+        .with_drums(&[
+            (Drum::Kick, "x:1 -:5 x:1 - x -:7 | x:1 -:5 x:1 - x -:7 | x:1 -:5 x:1 - x -:7 | \
+             x:1 -:5 x:1 - x -:7 | x:1 -:5 x:1 - x -:7 | x:1 -:5 x:1 - x -:7"),
+            (Drum::Snare, "-:2 x:1 -:3 x:1 -:5 x:1 -:3 | -:2 x:1 -:3 x:1 -:5 x:1 -:3 | -:16 | \
+             -:2 x:1 -:3 x:1 -:5 x:1 -:3 | -:2 x:1 -:3 x:1 -:5 x:1 -:3 | \
+             -:2 x:1 -:3 x:1 -:5 x:1 -:3"),
+            (Drum::Ride, "x:1 -:15 | x:1 -:15 | -:16 | - | - | -"),
+            (Drum::Shaker, "!p x:1 - x - x - x - x - x - x - x - | x - x - x - x - x - x - x - x - | \
+             x - x - x - x - x - x - x -:3 | -:16 | - | -"),
+        ]),
+        Part::new(
+            "Coda",
+            "-:16 | - | - | - | - | - | - | -",
+            "Dmaj7 | Dmaj7/E | Dm7 | Dm7 | C#m7 | F#13 F#13 F#7#5 F#7 | E9/B E9 | E9",
+        )
+        .in_key(A, Major)
+        .with_left("-:2 !mf A3+C#4+F#4:4 A3+C#4+F#4:2 -:4 A3+C#4+F#4:2 A3+C#4+F#4 | \
+            G3+C#4+F#4:4 A3+C#4+F#4:2 A3+C#4+F#4 - A3+C#4+F#4:4 A3+C#4+F#4:2 | \
+            - A3+C4+F4:4 A3+C4+F4:2 -:4 A3+C4+F4:2 A3+C4+F4 | \
+            - A3+C4+F4:4 A3+C4+F4:2 -:4 A3+C4+F4:2 A3+C4+F4 | \
+            G#3+B3+E4:4 G#3+B3+E4:2 G#3+B3+E4 - G#3+B3+E4:4 G#3+B3+E4:2 | \
+            F#2+E3+A#3+D#4 - F#2+E3+A#3+D#4:4 F#2+E3+A#3+D4 F#2+E3+A#3+C#4 | \
+            -:2 G#3+D4+F#4:4 G#3+D4+F#4:2 -:4 G#3+D4+F#4:2 G#3+D4+F#4 | \
+            G#3+D4+F#4:4 G#3+D4+F#4:2 G#3+D4+F#4 - G#3+D4+F#4:4 G#3+D4+F#4:2")
+        .with_lines(&[line(
+            "Bass",
+            gm::FINGER_BASS,
+            "!mf D2:2 A2:4 -:2 A2:8 | E1 E2 | D2:2 A2:4 -:2 A2:8 | D2 A2 | C#2:4 G#2:2 - G#1:8 | \
+            F#1 F#2 | B2 E2 | E2 B1:2 G#2:4 -:2",
+        )])
+        .with_drums(&[
+            (Drum::Kick, "x:1 -:5 x:1 - x -:7 | x:1 -:5 x:1 - x -:7 | x:1 -:5 x:1 - x -:7 | \
+             x:1 -:5 x:1 - x -:7 | x:1 -:5 x:1 - x -:7 | x:1 -:5 x:1 - x -:7 | \
+             x:1 -:5 x:1 - x -:7 | x:1 -:5 x:1 - x -:7"),
+            (Drum::Snare, "-:2 x:1 -:3 x:1 -:5 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:5 x:1 - | \
+             -:2 x:1 -:3 x:1 -:5 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:5 x:1 - | \
+             -:2 x:1 -:3 x:1 -:5 x:1 -:3 | x:1 -:3 x:1 -:3 x:1 -:5 x:1 - | -:16 | -"),
+            (Drum::Ride, "x:1 -:15 | -:16 | x:1 -:15 | -:16 | x:1 -:15 | -:16 | x:1 -:15 | -:16"),
+            (Drum::Shaker, "!p x:1 - x - x - x - x - x - x - x - | x - x - x - x - x - x - x - x - | \
+             x - x - x - x - x - x - x - x - | x - x - x - x - x - x - x - x - | \
+             x - x - x - x - x - x - x - x - | x - x - x - x - x - x - x - x - | -:16 | -"),
+        ]),
+        Part::new(
+            "Ending",
+            "-:16 | -",
+            "Am7 | Am7",
+        )
+        .with_left("!mf A2+G3+C4+E4:16 | A3 & -:16 | (3 -:1 !mf E4 _ _:14 & -:16 | \
+            (3 -:2 !mf G4 _ _:12 & -:16 | -:2 !mf C5:14")
+        .with_lines(&[line(
+            "Bass",
+            gm::FINGER_BASS,
+            "!mf A1:16 | A2",
+        )]),
+    ],
+    form: &[
+        "Intro",
+        "Samba",
+        "First ending",
+        "Samba",
+        "Second ending",
+        "Tango",
+        "Tango, second phrase",
+        "Tango, third phrase",
+        "Coda",
+        "Ending",
+    ],
+    drums_from: 0,
+    about: "Amado Régis's samba-tango, which Carmen Miranda recorded in 1937: the samba is sung \
+            in Portuguese and the tango in Spanish. In this arrangement a xylophone plays the \
+            tune over nylon-string guitar, bass guitar, drums and shaker. The samba is in A \
+            minor, on A minor 7 and E7#9, the dominant with a raised ninth, G natural against \
+            G sharp; then B minor 11 and E7 take turns. The tango turns to A major, the parallel \
+            major, rocking between A major 7 and E9; its second phrase moves between E9 and B \
+            minor 7 over E, and B7b5, the dominant of E with a lowered fifth, leads on. The last \
+            phrase heads for D major (IV) through E minor 7 and A13. The coda darkens it to D \
+            minor 7, the iv borrowed from A minor; C sharp minor 7 and F sharp 13 lead to E9, \
+            and the song ends on A minor 7, the samba's chord.",
+};
