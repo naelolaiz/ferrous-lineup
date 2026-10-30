@@ -14,10 +14,10 @@ Ferrous Lineup can play its instruments in two ways:
 The first time anything plays, when you press Play or open a demo
 (which starts playing at once), a window called **Real instrument
 sounds** offers to download **GeneralUser GS**, a free SoundFont by
-S. Christian Collins, of about 30 MB. The song goes on playing while it
-asks.
+S. Christian Collins, of about 30 MB, and asks "Play the instruments
+with it?". The song goes on playing while it asks.
 
-![The first Play: the song plays on while the Real instrument sounds window offers GeneralUser GS, with Download, Choose a file… and Not now](images/soundfont-offer.png)
+![The first Play: a demo plays on while the Real instrument sounds window offers GeneralUser GS and asks "Play the instruments with it?", with Download, Choose a file… and Not now](images/soundfont-offer.png)
 
 - **Download** fetches it once and keeps it on your computer. A bar
   shows how far it is, and **Stop** gives up. When it is done, the
@@ -27,6 +27,13 @@ asks.
   `.sf2` file made for General MIDI.
 - **Not now** keeps the Lineup Osc. Play does not ask again; the
   setting below is there when you change your mind.
+
+If GeneralUser GS is already on your computer, downloaded by an earlier
+version for instance, the window says so and offers **Use it** instead
+of **Download**: a moment later the instruments play from it. If you
+close the app without answering, it asks again the next time anything
+plays. Your answer and the sound settings below stay when you update
+Ferrous Lineup.
 
 If the download fails (no network, a firewall), the window says why.
 You can download `GeneralUser-GS.sf2` from [its
