@@ -29,11 +29,11 @@ llevando cada nota al acorde del momento.
    carpeta que abre el diálogo. Cierra el editor, abre la
    **Biblioteca** y busca **Mi groove** entre los preajustes (bajo
    **Estilos de usuario** cuando se agrupan por género).
-5. Aplícalo con **Patrones de ejecución** marcado y **Progresión de
-   acordes** sin marcar. La canción conserva sus acordes y la banda toca
-   tu patrón sobre ellos. Guarda el proyecto, cierra la app, mueve el
-   archivo `.lineup-style` a otro sitio y abre el proyecto otra vez: la
-   banda lo sigue tocando.
+5. Aplícalo con **Batería** y **Partes de acordes y bajo** marcadas y
+   **Progresión de acordes** sin marcar. La canción conserva sus
+   acordes y la banda toca tu patrón sobre ellos. Guarda el proyecto,
+   cierra la app, mueve el archivo `.lineup-style` a otro sitio y abre
+   el proyecto otra vez: la banda lo sigue tocando.
 
 ## Dónde está
 
@@ -255,24 +255,29 @@ cambia».
 La Biblioteca lee cada archivo `.lineup-style` de la carpeta al
 arrancar, y otra vez después de guardar o de cambiar de carpeta, los
 ordena por nombre y avisa de los que no puede leer: «Algunos estilos no
-se pudieron cargar: …». Se suman a los preajustes, junto a los estilos
-y ritmos integrados. No tienen género, así que **Agrupar por género**
-los pone bajo **Estilos de usuario (N)**. Un estilo con progresión dice
-**+ acordes**; uno sin ella dice **conserva los acordes**. **Empezar
-desde…** en el editor muestra la misma lista y la misma búsqueda, con
-**Estilo vacío** primero.
+se pudieron cargar: …». Se suman a los preajustes, junto a los estilos y
+ritmos integrados. No tienen género, así que **Agrupar por género** los
+pone bajo **Estilos de usuario (N)**. El filtro **Con acordes** deja los
+que tienen progresión, y el menú de instrumentos lista los sonidos de
+sus carriles. **Empezar desde…** en el editor muestra la misma lista y
+la misma búsqueda, con **Estilo vacío** primero.
 
 Aplicar uno de tus estilos funciona como con cualquier preajuste (ver
 [Qué partes tomar](library.md#qué-partes-tomar)):
-**Patrones de ejecución** trae sus carriles, **Voces / instrumentos**
-sus sonidos, y **Compás**, **Tempo**, **Swing** y **Progresión de
-acordes** lo suyo. Deja la progresión sin marcar para conservar los
-acordes de la canción.
+**Batería** trae sus carriles de batería, **Partes de acordes y bajo**
+sus otros carriles, **Voces / instrumentos** sus sonidos, y **Compás**,
+**Tempo**, **Swing** y **Progresión de acordes** lo suyo. Deja la
+progresión sin marcar para conservar los acordes de la canción. Solo
+las partes de acordes y bajo necesitan una banda que las toque, así que
+en una canción sin banda, un estilo tuyo necesita esas partes marcadas
+para que suenen sus carriles; su tempo, su compás, su swing o sus
+acordes solos cambian la canción tal como está.
 
 ### El estilo viaja con la canción
 
-Cuando se aplican los **Patrones de ejecución**, el `UserStyle` entero
-se guarda en la banda:
+Cuando se aplican las **Partes de acordes y bajo**, el `UserStyle`
+entero se guarda en la banda, y cuando se aplica la **Batería**, en su
+`drums`, como `BandDrums::Saved`:
 
 ```rust
 pub custom_rhythm: Option<Box<crate::library::UserStyle>>,
@@ -374,7 +379,7 @@ style.validate()?;
 // in another meter, after the band and the tempo changed: so it
 // is applied to a copy, and an error changes nothing.
 let mut project = self.clone();
-project.apply_valid_user_style(style, parts.for_preset())?;
+project.apply_valid_user_style(style, parts)?;
 *self = project;
 Ok(())
 ```

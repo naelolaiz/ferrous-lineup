@@ -12,30 +12,35 @@ hop, electronic, Latin, tango, Latin American folklore, flamenco,
 reggae, country and folk, classical and film music, dances in odd
 meters, and the styles you make yourself.
 
-![The demo Tea for Two with Bossa nova clicked in the Library: its window lists what it can bring, Playing patterns, Voices / instruments, Chord progression, Time signature, Tempo and Swing, each saying now: Tea for Two (demo)](images/library.png)
+![The starting song with Bossa nova clicked in the Library: its window lists what it can bring, under Accompaniment Drums, Chord and bass parts and Voices / instruments, under Harmony Chord progression, and under Timing Time signature, Tempo and Swing, each saying now: The starting song (demo)](images/library.png)
 
 ## Finding a style
 
-- **Search**: type a name, a kind of music or a time signature, such as
-  `bossa`, `tango` or `6/8`. **×** clears the search.
+- **Search**: type a name, a kind of music, a time signature or an
+  instrument, such as `bossa`, `tango`, `6/8` or `accordion`. **×**
+  clears the search.
 - **In 4/4** keeps only the styles in the song's time signature.
 - **Near 110 BPM** keeps only the styles made for about the song's
   tempo, at most 1.15 times faster or slower.
 - **With chords** keeps only the styles that bring a chord progression.
+- **Swing** keeps only the styles whose drums swing.
+- **Any instrument** opens the list of the instruments the styles
+  bring, and the drums. Choose one, such as **Accordion**, to keep only
+  the styles that bring it.
 
-The tick boxes name the song's own time signature and tempo, and they
-are remembered for next time. When nothing is left, the Library says
-whether the search or the boxes did it.
+The tick boxes name the song's own time signature and tempo, and the
+filters are remembered for next time. When nothing is left, the
+Library says whether the search or the filters did it.
+
+The styles are grouped by genre, with your own styles in a group of
+their own, and a search opens the groups it finds something in.
+**Edit > Settings… > Library > Style list > Alphabetical list** shows
+them all in one list instead.
 
 Each style shows its time signature when it is not 4/4, as in **Waltz
-(3/4)**, and either **+ chords**, when it brings a chord progression, or
-**keeps chords**, when it only plays yours. Point at one to read what
-it is: what to listen for, its progression in C as chords and as Roman
-numerals, its time signature, tempo and length in bars, and its drums.
-
-**Edit > Settings… > Library > Style list** shows the styles in
-alphabetical order, as the app starts, or **grouped by genre**, with
-your own styles in a group of their own.
+(3/4)**. Point at one to read what it is: what to listen for, its
+progression in C as chords and as Roman numerals, its time signature,
+tempo and length in bars, and its drums.
 
 Under the styles are three groups you can open:
 
@@ -49,15 +54,17 @@ Under the styles are three groups you can open:
 
 ## Trying a style
 
-Click a style. A small window asks what to take from it:
+Click a style. A small window asks what to take from it. Each option
+brings one part of the style; unticked, the song keeps its own:
 
 | Option | What it brings | Ticked at first |
 |---|---|---|
-| **Playing patterns** | the drums, and the way the piano, the bass and the other players play the chords | yes |
+| **Drums** | the style's drums | yes |
+| **Chord and bass parts** | the way the style's piano, bass and other players play the chords | yes |
 | **Voices / instruments** | the style's players and sounds: a nylon-string guitar for a bossa nova, strings for a tango | yes |
 | **Chord progression** | the style's progression, in place of the song's chords; the melody stays | no |
 | **Time signature** | the style's time signature: a waltz puts the song in 3/4 | yes |
-| **Tempo** | the style's usual tempo | no |
+| **Tempo** | the style's usual tempo | yes |
 | **Swing** | the style's swing (see [Swing and feel](swing.md)) | yes |
 
 Next to each option, **now:** says what the song has and where it came
@@ -69,22 +76,36 @@ choices you confirmed last, also the next time you start the app.
 choices you made last. **Ctrl+Z** undoes a style, whichever way it was
 applied.
 
-What the first choices keep:
+What the first choices do:
 
-- **Your chords.** With **Chord progression** off, every style you try
-  plays the chords already on the sheet. A style marked **keeps
-  chords** has no progression, and its option is greyed out.
-- **Your tempo.** With **Tempo** off, the song keeps its tempo. A style
-  in another time signature changes the bars, and each bar lasts as
-  long as before: a song at 112 beats per minute in 4/4 becomes 84 in
-  3/4, the same pace counted in three, and goes back to 112 when a 4/4
-  style comes back.
+- **Your chords stay.** With **Chord progression** off, every style you
+  try plays the chords already on the sheet. A style with no
+  progression has its option greyed out.
+- **The tempo comes.** With **Tempo** ticked, a style in the song's
+  own time signature brings its usual tempo, where most of the song
+  plays, and any tempo changes move with it. Untick it to keep the
+  song's tempo while you try styles. A style in another time signature
+  changes the bars instead, and each bar lasts as long as before: a
+  song at 112 beats per minute in 4/4 becomes 84 in 3/4, the same pace
+  counted in three, and goes back to 112 when a 4/4 style comes back.
+  The song's own time signature is the one it came with, so a style
+  brings the same tempo whichever styles you tried before it.
 
-At the top of the window, **Playing style** has a second choice, **Plain
-accents**: the style's drums, with the piano and the bass striking the
-chords on the main beats of each bar, on your own instruments and over
-your own chords. It is a plain way to hear a time signature without a
-style's patterns.
+The three accompaniment options go together as you like:
+
+- **Drums** alone: the style's drums under your own chord and bass
+  parts, played in the style's time signature if it is ticked.
+- **Chord and bass parts** alone: the style's way of playing the chords
+  and the bass, with the drums you had.
+- **Voices / instruments** alone: your own parts with the style's
+  sounds. The tracks named Keys and Bass, or the one chosen in the
+  rack, take its piano and its bass. In a song without them, such as an
+  imported MIDI file, each track but the tune takes the style's sound
+  for its family: a bass its bass, a piano its piano, a guitar its
+  guitar, an organ or an accordion its organ (or its piano), and
+  strings its strings.
+
+So you can take one style's drums and another's chord and bass parts.
 
 ## Where a style goes
 
@@ -108,11 +129,16 @@ Right-click a style for two more choices:
 
 ## Where each part came from
 
-At the top of the Library, six lines say where each part of the song
-comes from: **Patterns**, **Instruments**, **Time signature**,
-**Chords**, **Tempo** and **Swing**. Each one names the demo or the
-style it came from, says **edited, was …** once you change that part
-yourself, or **yours** when nothing brought it in. A **Sections** line
+At the top of the Library, nine lines say where each part of the song
+comes from: **Drums**, **Chord and bass parts**, **Melody**,
+**Instruments**, **Time signature**, **Key**, **Chords**, **Tempo** and
+**Swing**. Each one names the demo or the style it came from, says
+**edited, was …** once you change that part yourself, or **yours** when
+nothing brought it in. A melody only comes from a demo: styles bring
+none. Some lines also say what the part is, as in **4/4**, **C major**,
+**130 BPM** or **even**. **Drums** and **Chord and bass parts** name two
+styles when you took them from two. A line too long for the
+panel is cut short; point at it to read it all. A **Sections** line
 lists the sections played in other styles (see [Song form and
 sections](song-form.md)), and a **Locked** line the tracks that styles
 leave alone (see [Locking a track, and playing your
@@ -133,12 +159,12 @@ songs.
 
 **Edit > Settings… > Library** has:
 
-- **Style list**: **Alphabetical list** or **Group by genre**.
+- **Style list**: **Group by genre**, as the app starts, or
+  **Alphabetical list**.
 - **Style application defaults**: the choices each style's window
-  starts with, as buttons to switch on and off (**Patterns**,
-  **Instruments**, **Chords**, **Meter**, **Tempo**, **Swing**), and
-  **Preset patterns** or **Plain accents**. **Edit defaults…** opens
-  them as a style's window does. Changing them changes the next style
-  you apply, not the song.
+  starts with, as buttons to switch on and off (**Drums**, **Chord and
+  bass parts**, **Instruments**, **Chords**, **Meter**, **Tempo**,
+  **Swing**). **Edit defaults…** opens them as a style's window does.
+  Changing them changes the next style you apply, not the song.
 - **Your styles**: **Styles folder…** chooses the folder your saved
   styles are read from (see [Your own styles](style-editor.md)).

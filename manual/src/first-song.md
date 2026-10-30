@@ -53,10 +53,11 @@ piano and the bass do with each chord. To try another one:
 1. Click in the **Search** box at the top of the Library and type
    `bossa`.
 2. Click **Bossa nova**. A small window asks what to take from it: its
-   **playing patterns**, its **instruments**, its **time signature**,
-   its **swing**, and, for a style marked **+ chords**, its chord
-   progression. What is ticked when it opens keeps your chords and your
-   tempo, so press **Apply**.
+   **drums** and **chord and bass parts**, its **instruments**, its
+   **time signature**, **tempo** and **swing**, and its chord
+   progression. What is ticked when it opens keeps your chords, so
+   press **Apply**. The tempo becomes the bossa nova's, 130 beats per
+   minute.
 3. Press **Space**. The same four chords, now as a bossa nova.
 
 Pick styles while the song plays, and the band carries on in each new
