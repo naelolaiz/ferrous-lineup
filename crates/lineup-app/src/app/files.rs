@@ -598,9 +598,11 @@ impl LineupApp {
         }
     }
 
-    /// A project file dropped on the window is opened. While the channel
-    /// rack is closed, dropped samples become new channels (when it is
-    /// open, the rack handles them, so they can land on a row).
+    /// A project file dropped on the window is opened, and a MIDI file,
+    /// a chord sheet or a recording imported (see [`is_project_file`]).
+    /// While the channel rack is closed, dropped sounds become new
+    /// sampler channels (when it is open, the rack handles them, so they
+    /// can land on a row).
     pub(super) fn handle_dropped_files(&mut self, ctx: &egui::Context) {
         let dropped: Vec<PathBuf> = ctx.input(|input| {
             input
@@ -610,8 +612,11 @@ impl LineupApp {
                 .map(|dropped| dropped.path().to_path_buf())
                 .collect()
         });
-        let (projects, samples): (Vec<PathBuf>, Vec<PathBuf>) =
+        let (mut projects, samples): (Vec<PathBuf>, Vec<PathBuf>) =
             dropped.into_iter().partition(|path| is_project_file(path));
+        // A file opened from the system's file manager while the app runs
+        // (see `open_files`) is opened as a dropped one is.
+        projects.extend(crate::open_files::take());
         let mut projects = projects.into_iter();
         if let Some(path) = projects.next() {
             if projects.next().is_some() {

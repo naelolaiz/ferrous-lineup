@@ -5,6 +5,7 @@
 //! only the chroma of each beat, so the beats are put together into bars
 //! and each bar's chroma stands for the notes in it.
 
+use lineup_core::Scale;
 use lineup_core::harmony::key_finding::{self, KeySpan};
 
 use crate::chroma::Frame;
@@ -63,4 +64,49 @@ pub fn key_spans(beats: &[Frame], beats_per_bar: usize, first_downbeat: usize) -
             ..span
         })
         .collect()
+}
+
+/// The key of the longest stretch in one key: the song's main key. On
+/// the songs of the key changes report it is right more often than the
+/// key of the whole recording heard at once (91 songs of 136 against
+/// 82), as a modulation or a long introduction in another key pulls
+/// the whole recording's notes away from the song's home key.
+pub fn main_key(spans: &[KeySpan]) -> Option<Scale> {
+    spans
+        .iter()
+        .max_by_key(|span| span.end - span.start)
+        .and_then(KeySpan::key)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use lineup_core::harmony::key_finding::KeyGuess;
+    use lineup_core::{PitchClass, ScaleKind};
+
+    fn span(start: usize, end: usize, tonic: PitchClass) -> KeySpan {
+        KeySpan {
+            start,
+            end,
+            guesses: vec![KeyGuess {
+                key: Scale::new(tonic, ScaleKind::Major),
+                fit: 0.8,
+                share: 0.9,
+            }],
+        }
+    }
+
+    #[test]
+    fn the_main_key_is_the_longest_stretchs() {
+        let spans = [
+            span(0, 8, PitchClass::G),
+            span(8, 40, PitchClass::C),
+            span(40, 56, PitchClass::F),
+        ];
+        assert_eq!(
+            main_key(&spans),
+            Some(Scale::new(PitchClass::C, ScaleKind::Major))
+        );
+        assert_eq!(main_key(&[]), None);
+    }
 }

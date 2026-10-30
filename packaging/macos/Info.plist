@@ -43,5 +43,50 @@
 
   <key>NSHumanReadableCopyright</key>
   <string>GPL-3.0-or-later</string>
+
+  <!-- Finder opens .lineup projects with the app (see
+       crates/lineup-app/src/open_files.rs for how the app takes them). -->
+  <key>CFBundleDocumentTypes</key>
+  <array>
+    <dict>
+      <key>CFBundleTypeName</key>
+      <string>Ferrous Lineup project</string>
+      <key>CFBundleTypeRole</key>
+      <string>Editor</string>
+      <key>CFBundleTypeIconFile</key>
+      <string>AppIcon</string>
+      <key>LSHandlerRank</key>
+      <string>Owner</string>
+      <key>LSItemContentTypes</key>
+      <array>
+        <string>io.github.naelolaiz.FerrousLineup.project</string>
+      </array>
+    </dict>
+  </array>
+
+  <key>UTExportedTypeDeclarations</key>
+  <array>
+    <dict>
+      <key>UTTypeIdentifier</key>
+      <string>io.github.naelolaiz.FerrousLineup.project</string>
+      <key>UTTypeDescription</key>
+      <string>Ferrous Lineup project</string>
+      <key>UTTypeIconFile</key>
+      <string>AppIcon</string>
+      <key>UTTypeConformsTo</key>
+      <array>
+        <string>public.data</string>
+      </array>
+      <key>UTTypeTagSpecification</key>
+      <dict>
+        <key>public.filename-extension</key>
+        <array>
+          <string>lineup</string>
+        </array>
+        <key>public.mime-type</key>
+        <string>application/x-ferrous-lineup</string>
+      </dict>
+    </dict>
+  </array>
 </dict>
 </plist>

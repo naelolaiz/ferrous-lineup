@@ -381,7 +381,7 @@ mod tests {
             bass: BassPart::Chord {
                 chord,
                 note: Note::new(36 + chord.root.semitone()),
-                next: chord.root,
+                next: Note::new(36 + chord.root.semitone()),
             },
         }
     }
@@ -451,7 +451,7 @@ mod tests {
             bass: BassPart::Chord {
                 chord,
                 note: Note::new(36),
-                next: PitchClass::C,
+                next: Note::new(36),
             },
         };
         let mut classes = chord_tones(&played);

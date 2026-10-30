@@ -25,8 +25,8 @@ pub type Chroma = [f32; 12];
 
 /// How many samples one frame holds, at 44.1 or 48 kHz. Low notes need
 /// long frames: the FFT tells frequencies apart only when they are more
-/// than `sample_rate / FRAME` apart, here about 5 Hz, which is less than
-/// a semitone down to about E2.
+/// than `sample_rate / FRAME` apart, here 5.4 Hz (5.9 Hz at 48 kHz),
+/// which is less than a semitone from about F♯2 up (G2 at 48 kHz).
 const FRAME: usize = 8192;
 
 /// How far one frame starts after the previous one: about 46 ms.

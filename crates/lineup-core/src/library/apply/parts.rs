@@ -229,7 +229,7 @@ fn accent_song_chords(
     let mut comping = Vec::new();
     let mut bass_notes = Vec::new();
     for (at, &(chord, _, _, start, length)) in chords.iter().enumerate() {
-        let next = chords[(at + 1) % chords.len()].1;
+        let next = line[(at + 1) % line.len()];
         comping.extend(Comping::Accents.play(time, &voicings[at], start, length));
         bass_notes.extend(Bass::Accents.play_over(time, chord, line[at], next, start, length));
     }

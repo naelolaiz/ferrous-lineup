@@ -147,7 +147,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ),
     (
         "A {} improvises over the chorus: chord tones on the beats, scale and chromatic notes between them. The piano roll says what each of its notes is",
-        "{} improvisa sobre las vueltas: notas del acorde en los pulsos, notas de la escala y cromáticas entre ellos. El piano roll dice qué es cada una de sus notas",
+        "El solista ({}) improvisa sobre las vueltas: notas del acorde en los pulsos, notas de la escala y cromáticas entre ellos. El piano roll dice qué es cada una de sus notas",
     ),
     ("A {}-bar intro", "Una introducción de {} compases"),
     (
@@ -1359,6 +1359,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Play the chord on each degree of the key",
         "Tocar el acorde de cada grado de la tonalidad",
     ),
+    (
+        "Play the instruments with it?",
+        "¿Tocar los instrumentos con él?",
+    ),
     ("play the part again", "volver a tocar la parte"),
     ("Play the style", "Tocar el estilo"),
     (
@@ -1467,6 +1471,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     (
         "Real instrument sounds come from a SoundFont, a file of recorded instruments. GeneralUser GS, by S. Christian Collins, is a free General MIDI SoundFont of about 30 MB. It is downloaded once and kept in:",
         "Los sonidos de instrumentos reales vienen de un SoundFont, un archivo de instrumentos grabados. GeneralUser GS, de S. Christian Collins, es un SoundFont General MIDI libre de unos 30 MB. Se descarga una vez y se guarda en:",
+    ),
+    (
+        "Real instrument sounds come from a SoundFont, a file of recorded instruments. GeneralUser GS, by S. Christian Collins, a free General MIDI SoundFont, is already on this computer, in:",
+        "Los sonidos de instrumentos reales vienen de un SoundFont, un archivo de instrumentos grabados. GeneralUser GS, de S. Christian Collins, un SoundFont General MIDI libre, ya está en esta computadora, en:",
     ),
     ("record notes", "grabar notas"),
     (
@@ -2335,6 +2343,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Use the preset’s usual tempo when the meter stays the same. Off, the song keeps its tempo. Changing meter keeps each bar's duration.",
         "Usa el tempo habitual del preajuste cuando la métrica no cambia. Desactivado, la canción conserva su tempo. Cambiar de métrica conserva la duración de cada compás.",
     ),
+    ("Use it", "Usarlo"),
     ("Use {}", "Usar {}"),
     ("User styles ({})", "Estilos de usuario ({})"),
     ("Variation {}", "Variación {}"),

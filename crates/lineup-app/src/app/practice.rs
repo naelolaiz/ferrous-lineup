@@ -433,7 +433,8 @@ impl LineupApp {
     pub(super) fn tap_tempo(&mut self, now: f64) {
         // The taps follow the beats the metronome clicks, which are not
         // always quarter notes: a dotted quarter in 6/8, an eighth in
-        // 7/8 (on average, as its beats are uneven), a half note in 2/2.
+        // 7/8, a half note in 2/2. In 2+2+3/8 the three beats are uneven,
+        // so a tap is taken as their average, a third of the bar.
         let time = self.project.time_signature;
         let beats = time.beat_starts().len().max(1);
         let quarters = time.steps_per_bar() as f64 / beats as f64 / f64::from(STEPS_PER_BEAT);

@@ -125,8 +125,9 @@ pub struct KeyGuess {
 }
 
 /// How much the shares favour a better fit: a fit better by 0.05 gets a
-/// share 1.8 times bigger. Measured on the demos, with this a key that
-/// comes out clear is right 97% of the time.
+/// share 1.8 times bigger. Measured on the demos, with this a bar whose
+/// key comes out clear is right 86% of the time (the report in
+/// `tests/key_finding.rs`).
 const SHARE_SHARPNESS: f32 = 12.0;
 
 /// When the best key's share is at least this many times the second's,

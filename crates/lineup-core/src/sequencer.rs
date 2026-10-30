@@ -10,7 +10,7 @@ pub const STEPS_PER_BEAT: u32 = 4;
 ///
 /// The audio thread calls [`Sequencer::tick`] once per frame. The
 /// sequencer keeps a fractional frame count, so even when a step lasts
-/// a non-whole number of frames (5512.5 at 130 BPM and 44.1 kHz, say)
+/// a non-whole number of frames (5512.5 at 120 BPM and 44.1 kHz, say)
 /// the timing never drifts: the remainder is carried to the next step.
 #[derive(Debug, Clone)]
 pub struct Sequencer {

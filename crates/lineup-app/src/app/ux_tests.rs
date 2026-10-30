@@ -25,9 +25,9 @@ impl Screen {
         // Never read or remove a real recovery copy while testing.
         app.recovery = super::recovery::Recovery::new(None);
         // Never download or read a real SoundFont either, nor offer one
-        // on the first Play.
+        // on Play.
         app.sounds.keep_general_user_in(no_sound_font());
-        app.sounds.offer_on_first_play(false);
+        app.sounds.offer_on_play(false);
         Self {
             ctx,
             app,
@@ -84,12 +84,30 @@ impl Screen {
     }
 
     /// Starts the app again, with what egui keeps of its state between
-    /// runs (saved and read back as eframe does), as when it is closed
-    /// and opened.
+    /// runs and the preferences (saved and read back as eframe does), as
+    /// when it is closed and opened.
     fn restart(&mut self) {
+        self.start_again(true);
+    }
+
+    /// Starts the app again as a newer version of it: egui's memory no
+    /// longer finds the values it keeps by their Rust type (see
+    /// `preferences`), and only what is kept by name is there.
+    fn update(&mut self) {
+        self.start_again(false);
+    }
+
+    fn start_again(&mut self, same_version: bool) {
+        let mut storage = super::preferences::Stored::default();
+        self.app.save(&mut storage);
         let saved = self.ctx.memory(|memory| ron::to_string(memory).unwrap());
-        self.ctx
-            .memory_mut(|memory| *memory = ron::from_str(&saved).unwrap());
+        self.ctx.memory_mut(|memory| {
+            *memory = ron::from_str(&saved).unwrap();
+            if !same_version {
+                memory.data = Default::default();
+            }
+        });
+        super::preferences::Preferences::of(&self.ctx).load(&storage);
         // The styles are not saved: the app sets them as it starts.
         theme::apply(&self.ctx);
         self.ctx.all_styles_mut(|style| style.animation_time = 0.0);
@@ -1437,16 +1455,24 @@ fn the_library_is_in_front_when_the_app_starts() {
 }
 
 #[test]
-fn the_first_play_offers_real_instrument_sounds_once() {
+fn play_offers_real_instrument_sounds_until_the_offer_is_answered() {
     let mut screen = Screen::new();
-    screen.app.sounds.offer_on_first_play(true);
+    screen.app.sounds.offer_on_play(true);
     screen.app.rack_open = false;
     screen.key(Key::Space);
     assert!(screen.app.playing, "it plays while it asks");
-    assert_eq!(screen.app.sounds.offered_and_on(), (true, true));
+    assert_eq!(screen.app.sounds.offered_and_on(), (true, false));
     let output = screen.draw(vec![]);
     assert!(text_rect(&output, "Real instrument sounds").is_some());
+    assert!(text_rect(&output, "Play the instruments with it?").is_some());
     assert!(text_rect(&output, "Download").is_some());
+    assert!(text_rect(&output, "Use it").is_none());
+    // Not answered before the app closes: the next Play asks again.
+    screen.restart();
+    screen.app.rack_open = false;
+    screen.key(Key::Space);
+    assert!(screen.app.playing);
+    assert_eq!(screen.app.sounds.offered_and_on(), (true, false));
     // Not now: the Lineup Osc plays on, and Play asks nothing again.
     screen.click("Not now");
     assert_eq!(screen.app.sounds.offered_and_on(), (false, false));
@@ -1454,34 +1480,45 @@ fn the_first_play_offers_real_instrument_sounds_once() {
     screen.key(Key::Space);
     assert!(screen.app.playing);
     assert_eq!(screen.app.sounds.offered_and_on(), (false, false));
-    // Nor once the app starts again.
+    // Nor once the app starts again, even as a newer version.
     screen.restart();
+    screen.update();
     screen.app.rack_open = false;
     screen.key(Key::Space);
     assert!(screen.app.playing);
     assert_eq!(screen.app.sounds.offered_and_on(), (false, false));
+}
 
-    // A SoundFont already on disk was turned off on purpose: nothing is
-    // asked, and the sounds stay off.
+#[test]
+fn play_offers_a_sound_font_already_on_disk() {
+    // Downloaded by an earlier run, but not played from: as after a run
+    // that turned it off without being asked, or lost its settings.
     let on_disk = std::env::temp_dir().join(format!(
-        "ferrous-lineup-test-soundfont-{}.sf2",
+        "ferrous-lineup-test-soundfont-on-disk-{}.sf2",
         std::process::id()
     ));
     std::fs::write(&on_disk, b"").unwrap();
     let mut screen = Screen::new();
     screen.app.sounds.keep_general_user_in(on_disk.clone());
-    screen.app.sounds.offer_on_first_play(true);
+    screen.app.sounds.offer_on_play(true);
     screen.app.rack_open = false;
     screen.key(Key::Space);
     assert!(screen.app.playing);
-    assert_eq!(screen.app.sounds.offered_and_on(), (false, false));
+    assert_eq!(screen.app.sounds.offered_and_on(), (true, false));
+    let output = screen.draw(vec![]);
+    assert!(text_rect(&output, "Use it").is_some());
+    assert!(text_rect(&output, "Download").is_none());
+    // Use it: read at once, and the instruments play from it.
+    screen.click("Use it");
+    assert_eq!(screen.app.sounds.offered_and_on(), (false, true));
+    assert_eq!(screen.app.sounds.reading(), Some(on_disk.as_path()));
     std::fs::remove_file(on_disk).unwrap();
 }
 
 #[test]
 fn a_demo_asks_for_real_instrument_sounds_in_front_of_its_chord_sheet() {
     let mut screen = Screen::new();
-    screen.app.sounds.offer_on_first_play(true);
+    screen.app.sounds.offer_on_play(true);
     screen.app.rack_open = false;
     let demo =
         super::library::Demo::Song(lineup_core::library::Song::named("Jingle Bells").unwrap());
@@ -5141,6 +5178,20 @@ fn every_window_writes_in_spanish() {
         english(&screen.draw(vec![]), &mut found);
         screen.key(Key::Escape);
     }
+    // The offer of real instrument sounds, to download and on disk.
+    screen.app.sounds.offer_on_play(true);
+    screen.app.set_playing(true);
+    english(&screen.draw(vec![]), &mut found);
+    let on_disk = std::env::temp_dir().join(format!(
+        "ferrous-lineup-test-soundfont-in-spanish-{}.sf2",
+        std::process::id()
+    ));
+    std::fs::write(&on_disk, b"").unwrap();
+    screen.app.sounds.keep_general_user_in(on_disk.clone());
+    english(&screen.draw(vec![]), &mut found);
+    screen.click(tr("Not now"));
+    std::fs::remove_file(on_disk).unwrap();
+    screen.app.set_playing(false);
     screen.app.settings_open = true;
     for page in ["Appearance", "Harmony", "Library", "Audio", "Playback"] {
         screen.click(tr(page));
@@ -5161,4 +5212,68 @@ fn every_window_writes_in_spanish() {
         found.len(),
         found.into_iter().collect::<Vec<_>>().join("\n"),
     );
+}
+
+/// A WAV file of `seconds` of silence, in a folder of its own.
+fn silent_wav(name: &str, seconds: u32) -> std::path::PathBuf {
+    let folder = std::env::temp_dir().join(format!("lineup-drop-{}", std::process::id()));
+    std::fs::create_dir_all(&folder).unwrap();
+    let path = folder.join(name);
+    let recording = lineup_listen::Recording {
+        samples: vec![0.0; seconds as usize * 8_000],
+        sample_rate: 8_000,
+    };
+    lineup_listen::arrange::write_wav(&recording, 0.0, &path).unwrap();
+    path
+}
+
+/// A file dropped on the window, as the windowing system hands it over.
+#[derive(Debug)]
+struct Dropped(std::path::PathBuf);
+
+impl egui::DroppedFile for Dropped {
+    fn path(&self) -> &std::path::Path {
+        &self.0
+    }
+
+    fn bytes(&self) -> Result<Vec<u8>, String> {
+        std::fs::read(&self.0).map_err(|err| err.to_string())
+    }
+}
+
+#[test]
+fn a_recording_dropped_on_the_window_is_imported_and_a_short_sound_goes_to_the_sampler() {
+    let drop = |screen: &mut Screen, path: &std::path::Path| {
+        let raw = RawInput {
+            screen_rect: Some(Rect::from_min_size(Pos2::ZERO, screen.size)),
+            dropped_files: vec![std::sync::Arc::new(Dropped(path.to_path_buf()))],
+            ..Default::default()
+        };
+        screen.run(raw);
+    };
+    let recording = silent_wav("song.wav", 12);
+    let hit = silent_wav("hit.wav", 1);
+    for rack_open in [false, true] {
+        let mut screen = Screen::new();
+        screen.app.rack_open = rack_open;
+        screen.draw(vec![]);
+        let channels = screen.app.project.channels().len();
+        // A song-long WAV is listened to, as File > Import does.
+        drop(&mut screen, &recording);
+        assert!(screen.app.import.is_some(), "rack open: {rack_open}");
+        assert_eq!(screen.app.project.channels().len(), channels);
+        // A short one is a new sampler channel.
+        let mut screen = Screen::new();
+        screen.app.rack_open = rack_open;
+        screen.draw(vec![]);
+        drop(&mut screen, &hit);
+        screen.draw(vec![]);
+        assert!(screen.app.import.is_none());
+        assert_eq!(
+            screen.app.project.channels().len(),
+            channels + 1,
+            "rack open: {rack_open}"
+        );
+    }
+    std::fs::remove_dir_all(recording.parent().unwrap()).ok();
 }

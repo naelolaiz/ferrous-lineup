@@ -31,6 +31,7 @@ mod library;
 mod live;
 mod mixer;
 mod practice;
+mod preferences;
 mod recent;
 mod recovery;
 mod settings;
@@ -193,6 +194,8 @@ pub struct LineupApp {
     live: live::Live,
     /// The SoundFont the instruments can play from.
     sounds: sounds::Sounds,
+    /// The preferences kept by name, which eframe saves.
+    preferences: preferences::Preferences,
     /// The count-in, the metronome and the practice speed.
     practice: practice::Practice,
     /// The swing each style was last played with.
@@ -224,6 +227,7 @@ impl LineupApp {
     /// otherwise the demo song is.
     pub fn new(cc: &eframe::CreationContext<'_>, path: Option<PathBuf>) -> Self {
         theme::apply(&cc.egui_ctx);
+        crate::open_files::wake(&cc.egui_ctx);
         // The zoom keys zoom the part of the screen under the pointer, and
         // the whole interface only elsewhere (see view.rs). Alt and the wheel zooms too, so
         // egui must not take it for scrolling: the scroll it smooths out
@@ -233,6 +237,9 @@ impl LineupApp {
             options.input_options.zoom_modifier = egui::Modifiers::COMMAND | egui::Modifiers::ALT;
         });
 
+        if let Some(storage) = cc.storage {
+            preferences::Preferences::of(&cc.egui_ctx).load(storage);
+        }
         // The reason audio is unavailable is written in the chosen language.
         crate::i18n::apply_settings(&cc.egui_ctx);
         let audio = match AudioEngine::start() {
@@ -301,6 +308,7 @@ impl LineupApp {
             key_finder: key_finder::KeyFinder::default(),
             live: live::Live::new(midi),
             sounds: sounds::Sounds::new(ctx),
+            preferences: preferences::Preferences::of(ctx),
             practice: practice::Practice::new(ctx),
             swings: swing::SwingMemory::new(ctx),
             ear_training: EarTraining::new(ctx),
@@ -552,7 +560,7 @@ impl LineupApp {
             self.send(Command::Seek(self.cursor));
             self.send(Command::Play);
             self.playing = true;
-            self.offer_sound_font_on_first_play();
+            self.offer_sound_font_on_play();
         } else {
             self.halt();
             self.cursor = self.marker;
@@ -2359,6 +2367,12 @@ impl eframe::App for LineupApp {
         self.unsaved_changes_dialog(&ctx);
         self.update_title(&ctx);
         self.end_frame_for_undo(&ctx);
+    }
+
+    /// Called by eframe every 30 seconds and when the window closes, to
+    /// write what is kept between runs. egui's memory is saved with it.
+    fn save(&mut self, storage: &mut dyn eframe::Storage) {
+        self.preferences.save(storage);
     }
 
     /// A clean shutdown needs no recovery copy: remove the one this run

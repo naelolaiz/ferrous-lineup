@@ -69,6 +69,24 @@ impl SampleData {
     }
 }
 
+/// Whether the audio file at `path` is a recording to import rather than
+/// a sound for the sampler: a file the sampler cannot play (anything but
+/// WAV, such as MP3), or a WAV longer than a sound that rings out (see
+/// [`crate::Instrument::release_all`]), such as a whole song.
+pub fn is_recording(path: &Path) -> bool {
+    let is_wav = path
+        .extension()
+        .and_then(|extension| extension.to_str())
+        .is_some_and(|extension| extension.eq_ignore_ascii_case("wav"));
+    if !is_wav {
+        return true;
+    }
+    hound::WavReader::open(path).is_ok_and(|reader| {
+        let rate = u64::from(reader.spec().sample_rate);
+        u64::from(reader.duration()) > rate * crate::instrument::LONG_SAMPLE_SECONDS
+    })
+}
+
 /// Why a sample could not be loaded.
 #[derive(Debug)]
 pub enum SampleError {
@@ -135,6 +153,31 @@ impl SampleCache {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_long_wav_or_another_kind_of_file_is_a_recording() {
+        let short = write_test_wav("lineup-short-sound.wav");
+        assert!(!is_recording(&short), "a drum hit is a sound");
+        let long = std::env::temp_dir().join("lineup-long-recording.wav");
+        let spec = hound::WavSpec {
+            channels: 1,
+            sample_rate: 8_000,
+            bits_per_sample: 16,
+            sample_format: hound::SampleFormat::Int,
+        };
+        let mut writer = hound::WavWriter::create(&long, spec).unwrap();
+        for _ in 0..11 * 8_000 {
+            writer.write_sample(0_i16).unwrap();
+        }
+        writer.finalize().unwrap();
+        assert!(is_recording(&long), "eleven seconds is a recording");
+        assert!(
+            is_recording(Path::new("song.mp3")),
+            "the sampler reads only WAV"
+        );
+        std::fs::remove_file(short).ok();
+        std::fs::remove_file(long).ok();
+    }
 
     /// Writes a small 16-bit stereo WAV file and returns its path.
     fn write_test_wav(name: &str) -> std::path::PathBuf {
