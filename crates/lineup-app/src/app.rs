@@ -224,6 +224,7 @@ impl LineupApp {
     /// otherwise the demo song is.
     pub fn new(cc: &eframe::CreationContext<'_>, path: Option<PathBuf>) -> Self {
         theme::apply(&cc.egui_ctx);
+        crate::open_files::wake(&cc.egui_ctx);
         // The zoom keys zoom the part of the screen under the pointer, and
         // the whole interface only elsewhere (see view.rs). Alt and the wheel zooms too, so
         // egui must not take it for scrolling: the scroll it smooths out

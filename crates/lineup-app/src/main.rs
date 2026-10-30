@@ -27,6 +27,7 @@ mod library_browser;
 mod meters;
 mod micromodes;
 mod midi;
+mod open_files;
 mod piano_roll;
 mod playlist;
 mod style_editor;
@@ -109,6 +110,9 @@ fn main() -> eframe::Result {
         viewport,
         ..Default::default()
     };
+    // On macOS a project opened from Finder comes in a message, not on
+    // the command line.
+    open_files::listen();
 
     eframe::run_native(
         app::APP_NAME,
