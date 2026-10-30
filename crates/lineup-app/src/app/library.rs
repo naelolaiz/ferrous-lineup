@@ -255,7 +255,10 @@ impl LineupApp {
         }
         let before = self.project.clone();
         let mut source = self.song_source();
-        let changes_meter = !lineup_core::remeter::is_in(&before, time);
+        // Whether the meter changes from the song's own, as it came: not
+        // from the one the last style put it in, so the same style with
+        // the same options plays the same, whatever was tried before it.
+        let changes_meter = !lineup_core::remeter::is_in(&source.reference, time);
         let effective = apply::StyleParts {
             // Built-in meter changes preserve bar duration; saved styles
             // can explicitly supply their tempo along with their meter.
@@ -531,6 +534,7 @@ impl LineupApp {
             time_signature: parts.time_signature && !played,
             ..parts
         };
+        let reused = reuse.is_some();
         let target = reuse
             .as_ref()
             .map(|a| a.pattern)
@@ -554,7 +558,12 @@ impl LineupApp {
             let source = source.as_ref()?;
             project.bring_in(source, taken, PartSet::NONE, |project| {
                 let index = target.or_else(|| project.add_pattern_around_locked(from))?;
-                let time = project.pattern_time(index);
+                // The meter it is tried against: the song's, not the one
+                // the style tried before put the same pattern in.
+                let time = match reused {
+                    true => project.time_signature,
+                    false => project.pattern_time(index),
+                };
                 match action {
                     LibraryAction::Style(style) | LibraryAction::StyleInSong(style) => {
                         apply::write_style_parts(project, index, style, selected, parts)
@@ -572,7 +581,7 @@ impl LineupApp {
                 // As in the song: a pattern put in another meter keeps
                 // the song's tempo.
                 if parts.tempo && project.pattern_time(index) == time {
-                    project.scale_tempo(Tempo::new(tempo));
+                    project.take_tempo(Tempo::new(tempo));
                 }
                 if !own_pattern {
                     project.pattern_mut(index)?.name = name.to_string();
@@ -751,7 +760,7 @@ impl LineupApp {
                 && change.time.is_none()
                 && let Some(bpm) = tempo
             {
-                project.scale_tempo(Tempo::new(bpm));
+                project.take_tempo(Tempo::new(bpm));
             }
             change
         });
@@ -1016,7 +1025,7 @@ impl LineupApp {
                     apply::write_rhythm(project, index, rhythm);
                 }
                 if use_tempo && project.pattern_time(index) == time {
-                    project.scale_tempo(Tempo::new(tempo));
+                    project.take_tempo(Tempo::new(tempo));
                 }
                 Some((index, project.pattern(index)?.clone()))
             })

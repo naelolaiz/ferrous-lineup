@@ -1331,7 +1331,7 @@ impl Project {
             crate::remeter::remeter(self, harmony.map_or(style.time, |style| style.time));
         }
         if parts.tempo && time == self.meter() {
-            self.scale_tempo(Tempo::new(harmony.map_or(style.tempo, |style| style.tempo)));
+            self.take_tempo(Tempo::new(harmony.map_or(style.tempo, |style| style.tempo)));
         }
         if parts.swing {
             self.swing = style.swing();
@@ -1399,7 +1399,7 @@ impl Project {
             crate::remeter::remeter(self, style.time);
         }
         if parts.tempo {
-            self.scale_tempo(style.tempo);
+            self.take_tempo(style.tempo);
         }
         if parts.swing {
             self.swing = style.swing;
