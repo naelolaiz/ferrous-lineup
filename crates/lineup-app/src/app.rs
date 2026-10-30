@@ -246,10 +246,19 @@ impl LineupApp {
             Ok(engine) => Audio::Running(Box::new(engine)),
             Err(err) => Audio::Unavailable(err.to_string()),
         };
+        let starting_song = path.is_none();
         let mut app = Self::with_audio(&cc.egui_ctx, path, audio);
         // Only the real window recovers work: tracing and rendering a
         // video use `with_audio` too and must not touch that copy.
         app.recovery = recovery::Recovery::new(eframe::storage_dir(APP_NAME));
+        // The starting song opens on the playlist and the Library, with no
+        // window over them: F6 shows its beat in the channel rack.
+        if starting_song {
+            app.rack_open = false;
+        }
+        // Real instrument sounds are offered as soon as the window opens,
+        // before anything plays.
+        app.offer_sound_font();
         app
     }
 
@@ -560,7 +569,7 @@ impl LineupApp {
             self.send(Command::Seek(self.cursor));
             self.send(Command::Play);
             self.playing = true;
-            self.offer_sound_font_on_play();
+            self.offer_sound_font();
         } else {
             self.halt();
             self.cursor = self.marker;
