@@ -27,7 +27,7 @@ impl Screen {
         // Never download or read a real SoundFont either, nor offer one
         // on Play.
         app.sounds.keep_general_user_in(no_sound_font());
-        app.sounds.offer_on_play(false);
+        app.sounds.offer(false);
         Self {
             ctx,
             app,
@@ -1457,7 +1457,7 @@ fn the_library_is_in_front_when_the_app_starts() {
 #[test]
 fn play_offers_real_instrument_sounds_until_the_offer_is_answered() {
     let mut screen = Screen::new();
-    screen.app.sounds.offer_on_play(true);
+    screen.app.sounds.offer(true);
     screen.app.rack_open = false;
     screen.key(Key::Space);
     assert!(screen.app.playing, "it plays while it asks");
@@ -1490,6 +1490,29 @@ fn play_offers_real_instrument_sounds_until_the_offer_is_answered() {
 }
 
 #[test]
+fn the_app_offers_real_instrument_sounds_as_it_opens() {
+    let mut screen = Screen::new();
+    screen.app.sounds.offer(true);
+    screen.app.rack_open = false;
+    // What `LineupApp::new` does once the window is made.
+    screen.app.offer_sound_font();
+    assert!(!screen.app.playing, "before anything plays");
+    screen.draw(vec![]);
+    let output = screen.draw(vec![]);
+    assert!(text_rect(&output, "Real instrument sounds").is_some());
+    assert!(text_rect(&output, "Download").is_some());
+    screen.click("Not now");
+    assert_eq!(screen.app.sounds.offered_and_on(), (false, false));
+    // Turned down, it is not offered when the app opens again, even as a
+    // newer version.
+    screen.draw(vec![]);
+    screen.restart();
+    screen.update();
+    screen.app.offer_sound_font();
+    assert_eq!(screen.app.sounds.offered_and_on(), (false, false));
+}
+
+#[test]
 fn play_offers_a_sound_font_already_on_disk() {
     // Downloaded by an earlier run, but not played from: as after a run
     // that turned it off without being asked, or lost its settings.
@@ -1500,7 +1523,7 @@ fn play_offers_a_sound_font_already_on_disk() {
     std::fs::write(&on_disk, b"").unwrap();
     let mut screen = Screen::new();
     screen.app.sounds.keep_general_user_in(on_disk.clone());
-    screen.app.sounds.offer_on_play(true);
+    screen.app.sounds.offer(true);
     screen.app.rack_open = false;
     screen.key(Key::Space);
     assert!(screen.app.playing);
@@ -1518,7 +1541,7 @@ fn play_offers_a_sound_font_already_on_disk() {
 #[test]
 fn a_demo_asks_for_real_instrument_sounds_in_front_of_its_chord_sheet() {
     let mut screen = Screen::new();
-    screen.app.sounds.offer_on_play(true);
+    screen.app.sounds.offer(true);
     screen.app.rack_open = false;
     let demo =
         super::library::Demo::Song(lineup_core::library::Song::named("Jingle Bells").unwrap());
@@ -5179,7 +5202,7 @@ fn every_window_writes_in_spanish() {
         screen.key(Key::Escape);
     }
     // The offer of real instrument sounds, to download and on disk.
-    screen.app.sounds.offer_on_play(true);
+    screen.app.sounds.offer(true);
     screen.app.set_playing(true);
     english(&screen.draw(vec![]), &mut found);
     let on_disk = std::env::temp_dir().join(format!(
