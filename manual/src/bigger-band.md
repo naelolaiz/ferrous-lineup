@@ -120,14 +120,16 @@ home.
 
 | Style | What the horns play |
 |---|---|
-| Ballads (Pop ballad, Jazz ballad, Slow blues, Neo soul, R&B, Bossa nova, Bolero…) | long notes held under the band |
+| Ballads (Pop ballad, Jazz ballad, Big band ballad, Slow blues, Neo soul, R&B, Bossa nova, Bolero…) | long notes held under the band |
+| Big band | two-bar riffs, as in a big band's shout chorus |
 | Swing, shuffle, blues, rock and roll | big-band kicks on beat 1 and just before beat 3, the Charleston rhythm |
-| Pop, rock, soul, hip hop, Latin, second line | short punches in 3 + 3 + 2, the tresillo |
+| Pop, rock, soul, hip hop, Latin, second line, klezmer | short punches in 3 + 3 + 2, the tresillo |
 | Funk | tight stabs in sixteenth notes |
 | House and other electronic styles | syncopated stabs |
 | Reggaeton, moombahton | short chords in the dembow's 3 + 3 + 2 |
 | Ska | short chords between the beats |
 | March, waltz, polka, Balkan dances | afterbeats, the "pah" of a brass band's oom-pah |
+| Ragtime band, Six-eight march, Pasodoble | afterbeats, the "pah" after each beat |
 | Tango, folk, classical, reggae, other styles in 3/4 or 6/8, styles without drums | long notes |
 | Other styles in 5/4, 7/8 and other odd meters | a punch on each beat the bar is felt in |
 
@@ -139,8 +141,15 @@ music, and it is everywhere in pop and soul horn lines. The
 plays "oom" on the beat and the horns "pah" between.
 
 The horns play **Brass Section** in most styles, **French Horn** in
-classical ones and **Synth Brass 1** in electronic ones; click the
-**Horns** line in the Band menu to choose another sound.
+classical ones, **Synth Brass 1** in electronic ones and **Alto Sax**
+in the Big band ballad; click the **Horns** line in the Band menu to
+choose another sound.
+
+A big band is its horns, so the **Big band** and **Big band ballad**
+styles bring them: **Horn section** is ticked as soon as you pick one of
+them, and untick it to send the horns home. When you then pick another
+style, the horns the big band brought leave with it; horns you ticked
+yourself stay.
 
 ### Close harmony
 

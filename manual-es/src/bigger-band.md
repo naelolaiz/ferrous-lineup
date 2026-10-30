@@ -129,14 +129,16 @@ casa.
 
 | Estilo | Qué tocan los vientos |
 |---|---|
-| Baladas (Balada pop, Balada de jazz, Blues lento, Neo soul, R&B, Bossa nova, Bolero…) | notas largas sostenidas debajo de la banda |
+| Baladas (Balada pop, Balada de jazz, Balada de big band, Blues lento, Neo soul, R&B, Bossa nova, Bolero…) | notas largas sostenidas debajo de la banda |
+| Big band | riffs de dos compases, como en el shout chorus de una big band |
 | Swing, shuffle, blues, rock and roll | golpes de big band en el pulso 1 y justo antes del pulso 3, el ritmo del charlestón |
-| Pop, rock, soul, hip hop, latina, second line | golpes cortos en 3 + 3 + 2, el tresillo |
+| Pop, rock, soul, hip hop, latina, second line, klezmer | golpes cortos en 3 + 3 + 2, el tresillo |
 | Funk | ataques secos en semicorcheas |
 | House y otros estilos electrónicos | ataques sincopados |
 | Reguetón, moombahton | acordes cortos en el 3 + 3 + 2 del dembow |
 | Ska | acordes cortos entre los pulsos |
 | Marcha, vals, polca, danzas balcánicas | contratiempos, el «pa» del «um-pa» de una banda de metales |
+| Banda de ragtime, Marcha en 6/8, Pasodoble | contratiempos, el «pa» después de cada pulso |
 | Tango, folclore, clásica, reggae, otros estilos en 3/4 o 6/8, estilos sin batería | notas largas |
 | Otros estilos en 5/4, 7/8 y otras métricas irregulares | un golpe en cada pulso en que se siente el compás |
 
@@ -149,9 +151,15 @@ de metales: en una marcha la tuba toca «um» en el pulso y los vientos
 «pa» entre medio.
 
 Los vientos tocan con **Sección de metales** en la mayoría de los
-estilos, **Corno francés** en los clásicos y **Metales sintetizados 1**
-en los electrónicos; haz clic en la línea **Vientos** del menú Banda para
-elegir otro sonido.
+estilos, **Corno francés** en los clásicos, **Metales sintetizados 1**
+en los electrónicos y **Saxo alto** en la Balada de big band; haz clic
+en la línea **Vientos** del menú Banda para elegir otro sonido.
+
+Una big band son sus vientos, así que los estilos **Big band** y
+**Balada de big band** los traen: **Sección de vientos** queda marcada
+en cuanto eliges uno de ellos, y desmárcala para mandarlos a casa. Si
+después eliges otro estilo, los vientos que trajo la big band se van con
+ella; los que marcaste tú se quedan.
 
 ### Armonía cerrada
 
