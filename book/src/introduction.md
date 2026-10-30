@@ -3,84 +3,75 @@
 **Ferrous Lineup** is an open source program, written in Rust, for
 playing songs with a **backing band**. Type the chords of a song bar by
 bar, pick a style, and a band (bass, drums and piano, with a guitar,
-strings or an organ when the style has them) plays it in any key and
-tempo. Change the style, the key or the tempo, and the band plays the
-song again the new way. Every part the band plays lands on a track of
-its own, where you can open it in the piano roll, change it by hand, or
-leave it out and play it yourself.
+strings, horns or an organ when the style has them) plays it in any key
+and tempo. Every part the band plays lands on a track of its own, where
+you can open it in the piano roll, change it by hand, or leave it out
+and play it yourself.
 
-It also has a second goal: helping you **learn harmony** while you play.
-It names every chord you hear, with its numeral in the key and what it
-does there (home, away or tension), and it knows the other ways music
-names harmony too: pitch-class sets, twelve-tone rows and Kröpfl's
-micromodes.
+It is also a way to **learn harmony** while you play. It names every
+chord you hear, with its numeral in the key and what it does there, and
+it knows the other ways music names harmony too: pitch-class sets,
+twelve-tone rows and Kröpfl's micromodes.
 
-Steps 1 to 8 build what the band stands on: the sound, patterns and
-tracks, a piano roll with harmony help, MIDI, and a library of styles,
-rhythms and songs. Step 9 puts the band in front: a chord sheet to type
-the song into, and a band that plays it.
+This book is about the inside: **how the code is organized, how it is
+designed and why**, and how the music theory the app knows is written
+in Rust. It explains the Rust each part uses as it goes, pointing at the
+real files, so it is also a Rust course built around a real program. You
+do not need to know Rust before reading; if you know another
+programming language, you can follow along. To *use* the app, read the
+[user manual](https://naelolaiz.github.io/ferrous-lineup/manual/)
+instead: it has no code at all.
 
-This book has a third goal: it is a **Rust course built around a real
-project**. Every step of the project adds a chapter that explains:
+## How the book is organized
 
-- *what* was built and *why* it was designed that way, and
-- *which Rust concepts* the code uses, pointing at the real files.
+The chapters follow the code, from the program's shape to how it ships.
+Each says what a part of the app does, with a link to the manual page
+on using it; how it is designed and why; the Rust it uses; the files it
+lives in; and the tests that guard it. Exercises close each part.
 
-You do not need to know Rust before reading. If you know another
-programming language, you will be able to follow along. Each step ends with
-a few exercises you can try on your own copy of the code.
+| Part | About | Rust along the way |
+|------|-------|--------------------|
+| I. The shape of the program | the five crates, the two threads, the project's data, undo, saving, the windows, two languages | workspaces and crates, modules, enums with data, rules kept by one gatekeeper, `Arc` and a lock-free ring buffer, `History<T>`, serde, error enums, `Drop`, immediate-mode drawing, thread-local settings |
+| II. Sound | the sequencer, tempo and meter, the instruments, SoundFonts, the mixer, MIDI, exporting, the playback trace | timing to the sample, atomics, `FnMut` closures, a `Mutex` and `mpsc` queues, byte strings and slice patterns, the one `unsafe` block, `Copy` types with rules |
+| III. Music theory in code | pitch, scales and keys, chords, numerals and functions, editing tools, hearing harmony, sets, rows, micromodes, voice leading, importing a recording | `match` tables, bit sets, iterators (`find_map`, `cycle`, `chunk_by`), collecting `Option`s, `FromStr` and `Display`, `try_from`, dynamic programming |
+| IV. The band | the library, the chord sheet, how the band plays, the orchestra, song form, stops, the soloist, your own styles, practice tools, the lead sheet | `static` tables and `const fn`, `macro_rules!`, hashing and seeded generators, parsing text, drawing a PDF |
+| V. Songs as data | how a demo is written, and how a MIDI performance or a score becomes one | `const` data in child modules, struct update syntax, `LazyLock`, sorting with `Ordering` |
+| VI. Building, testing and shipping | the tests, the three systems and their CI, release packages, how these books are built | `#[cfg(test)]`, integration tests, `catch_unwind`, `cfg` and features, build scripts |
 
-## How to read this book
-
-You can read it in four ways:
-
-1. As plain Markdown files, in the book's `src` folder.
-2. As a website on your computer: run `mdbook build` in the book's
-   folder and open `book/index.html` in a browser.
-3. Online, at <https://naelolaiz.github.io/ferrous-lineup/>.
-4. As one PDF with every chapter in order, to read offline or print:
-   [ferrous-lineup-book.pdf](https://naelolaiz.github.io/ferrous-lineup/ferrous-lineup-book.pdf).
-   It has page numbers, the contents at the front, an index of words at
-   the back, and bookmarks for every chapter in your PDF reader's side
-   panel.
-
-[The book online and as a PDF](step-9/book-online.md) tells how the last
-two are made.
-
-Source links in the chapters point at the current `main` branch, which is
-the finished program. The book is a history: each step says when a later
-step changed the code it shows, so a link is a place to read further, not
-a promise that the file still looks exactly like the snippet.
+At the back are the [project file format](reference/project-format.md),
+a [Rust glossary](reference/rust-glossary.md), a [music
+glossary](reference/music-glossary.md) and [ideas for what comes
+next](reference/ideas.md).
 
 ## Where to start
 
-- **To play and learn music**: read [Getting started](getting-started.md),
-  then [A tour of the app](tour.md), then [Step 9](step-9/README.md).
-  The earlier steps explain how it was built; you do not need them to use
-  the app.
-- **To learn Rust**: read Steps 1 to 9 in order. Keep the
-  [Rust glossary](glossary.md) open, and try the exercises at the end of
-  each step.
-- **To contribute or look something up**: the [Roadmap](roadmap.md) says
-  where the project is going; the [project file format](appendix-project-format.md),
-  [keyboard shortcuts](appendix-shortcuts.md), [troubleshooting](troubleshooting.md)
-  and [music glossary](music-glossary.md) are the reference pages.
+- **To learn Rust:** read the parts in order, with the [Rust
+  glossary](reference/rust-glossary.md) open, and try the exercises
+  at the end of each part. [Building it from
+  source](building.md) gets the code running first.
+- **To learn how the music theory is programmed:** start with Part III,
+  and keep the [music glossary](reference/music-glossary.md) close.
+  The theory itself, without code, is taught in the manual.
+- **To change something:** find the part of the app in the contents, read
+  its chapter, and run its tests before and after your change.
 
-## The plan
+## How to read it
 
-| Step | What gets built | Rust topics |
-|------|-----------------|-------------|
-| 1 | Window, audio engine, test tone, CI | Cargo, crates, `[[bin]]` targets, modules, structs, enums, traits, closures, threads, errors |
-| 2 | Channel rack and step sequencer | Arrays, `Option` combinators, `Arc`, atomics, closures as `FnMut`, custom widgets, sample-accurate timing |
-| 3 | Piano roll with harmony helpers | Enums and pattern matching for music theory, bit sets, iterators, your own traits and generics, state machines |
-| 4 | Playlist, saving projects, macOS and Windows builds | Keeping rules across lists, serde and derive macros, error enums, newtypes, trait objects, `FnOnce`, `cfg` and features, a CI matrix |
-| 5 | Undo and redo, WAV export | Generics without bounds, `VecDeque`, `mem::swap`, `fn` pointers, testing against a model, `HashMap` and `Borrow`, threads, `Send` and `'static`, `move` closures, `JoinHandle` |
-| 6 | Harmony tools: selections, transposing, arpeggios, inversions, suggestions, ghost notes, velocities | Pure functions, collecting `Option`s, `checked_add_signed`, `find_map`, `cycle`, `step_by` and `zip`, knowledge as `const` tables, `Option::take` against the borrow checker, `flat_map` and lifetimes on returned iterators |
-| 7 | MIDI in and out: keyboards, external synths, recording, `.mid` files | Slice patterns, byte strings and `to_be_bytes`, an `f64` in an `AtomicU64`, `Option::as_mut`, `Mutex` and poisoning, `mpsc` channels, `thread::Builder`, closures that capture fields, `Box` for a large enum variant, float `as` casts |
-| 8 | Harmony keys, time signatures, a library of styles, rhythms and songs, demos | Knowledge as data, `macro_rules!`, constant promotion, `static` tables, struct update syntax, `Display`, `is_multiple_of` and `ilog2`, serde field attributes, enum variants with data, `&'static` references in actions, comparing snapshots with `PartialEq` |
-| 9 | The band: chord names, a chord sheet, song form, swing, instrument sounds, then the repertoire, mixer, video, and reliability | `FromStr` and `str::parse`, `rsplit_once`, closures as `impl Fn` parameters, byte strings as file-format tags, H.264/MP3 encoding, PDF drawing, recovery state, command and MIDI queues |
+1. Online, at <https://naelolaiz.github.io/ferrous-lineup/>.
+2. As one PDF, to read offline or print:
+   [ferrous-lineup-book.pdf](https://naelolaiz.github.io/ferrous-lineup/ferrous-lineup-book.pdf).
+   It has page numbers, the contents at the front, an index of words at
+   the back, and bookmarks for every chapter.
+3. As Markdown files, in the repository's `book/src` folder, or as a
+   website on your computer with `mdbook serve --open` in `book/`.
 
-The [Roadmap](roadmap.md) chapter keeps this table up to date.
+The book is also in Spanish, at
+<https://naelolaiz.github.io/ferrous-lineup/es/>. [How the books are
+built](shipping/books.md) tells how the websites and PDFs are made.
+
+Code links point at the `main` branch, and the snippets in the chapters
+are copied from it. Where a snippet leaves lines out, it says so with
+`// ...`.
 
 ## Name and license
 

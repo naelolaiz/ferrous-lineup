@@ -116,6 +116,6 @@ con la línea de ese archivo.
 ## Compilarlo tú
 
 También puedes compilar Ferrous Lineup desde su código fuente, en
-cualquiera de los tres sistemas. El [libro de Ferrous
-Lineup](https://naelolaiz.github.io/ferrous-lineup/es/getting-started.html)
+cualquiera de los tres sistemas. El libro [Ferrous Lineup por
+dentro](https://naelolaiz.github.io/ferrous-lineup/es/building.html)
 explica cómo.
