@@ -49,7 +49,9 @@ pub struct Analysis {
     pub beats_per_bar: usize,
     /// Which beat is the first downbeat (the "one" of a bar).
     pub first_downbeat: usize,
-    /// The key, if the recording has one.
+    /// The song's key: the key of its longest stretch in one key (see
+    /// [`keys::main_key`]), or the key of the whole recording at once
+    /// when no stretch has one. `None` if the recording has no key.
     pub scale: Option<Scale>,
     /// Where the key changes: the stretches in one key, with their
     /// `start` and `end` in beats (indexes into `beats`), and every key
@@ -72,7 +74,7 @@ pub fn analyze(recording: &Recording) -> Analysis {
     let beats = beats::track(&recording.samples, recording.sample_rate).times;
     let bpm = tempo_of(&beats);
 
-    let scale = bpm_key::analyze(
+    let whole = bpm_key::analyze(
         &recording.samples,
         1,
         recording.sample_rate,
@@ -99,9 +101,10 @@ pub fn analyze(recording: &Recording) -> Analysis {
             chroma::average(&frames, start, end)
         })
         .collect();
-    let chords = chords::chords_per_beat(&beat_chromas, scale);
+    let chords = chords::chords_per_beat(&beat_chromas, whole);
     let (beats_per_bar, first_downbeat) = meter::guess(&chords);
     let keys = keys::key_spans(&beat_chromas, beats_per_bar, first_downbeat);
+    let scale = keys::main_key(&keys).or(whole);
 
     Analysis {
         beats,

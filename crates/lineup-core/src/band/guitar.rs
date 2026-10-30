@@ -648,7 +648,7 @@ mod tests {
                     bass: BassPart::Chord {
                         chord,
                         note: Note::new(36 + root.semitone()),
-                        next: root,
+                        next: Note::new(36 + root.semitone()),
                     },
                 };
                 let notes = shape(&harmony);
@@ -673,7 +673,7 @@ mod tests {
             bass: BassPart::Chord {
                 chord: Chord::new(root, quality),
                 note: Note::new(36 + bass.semitone()),
-                next: root,
+                next: Note::new(36 + root.semitone()),
             },
         };
         let midi = |notes: Vec<Note>| notes.iter().map(|note| note.midi()).collect::<Vec<_>>();
@@ -702,7 +702,7 @@ mod tests {
             bass: BassPart::Chord {
                 chord: Chord::new(PitchClass::C, Major),
                 note: Note::new(48),
-                next: PitchClass::C,
+                next: Note::new(36),
             },
         };
         let bar = Meter::steady(TimeSignature::COMMON).bar(0);
@@ -745,7 +745,7 @@ mod tests {
             bass: BassPart::Chord {
                 chord: Chord::new(PitchClass::G, Major),
                 note: Note::new(43),
-                next: PitchClass::G,
+                next: Note::new(43),
             },
         };
         let bar = Meter::steady(TimeSignature::COMMON).bar(0);
@@ -772,7 +772,7 @@ mod tests {
             bass: BassPart::Chord {
                 chord: Chord::new(PitchClass::A, quality),
                 note: Note::new(45),
-                next: PitchClass::A,
+                next: Note::new(45),
             },
         };
         let bar = Meter::steady(TimeSignature::COMMON).bar(0);

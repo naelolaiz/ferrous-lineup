@@ -22,7 +22,7 @@ const BASS_LOWEST: u8 = 36;
 
 /// How low a bass line may step down: E1, the lowest string of a bass
 /// guitar.
-const BASS_FLOOR: u8 = 28;
+pub(crate) const BASS_FLOOR: u8 = 28;
 
 /// How high a bass line may step up: D3.
 const BASS_CEILING: u8 = 50;

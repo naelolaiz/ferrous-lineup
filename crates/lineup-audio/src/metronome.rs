@@ -40,7 +40,7 @@ impl ClickVoice {
         }
     }
 
-    /// Starts a click: an A6 on the first beat of a bar, an E6 a fifth
+    /// Starts a click: an A6 on the first beat of a bar, an E6 a fourth
     /// lower on the others, as a metronome's bell and tick differ.
     pub(crate) fn strike(&mut self, click: Click) {
         let (frequency, level) = match click {

@@ -2,7 +2,7 @@
 //! demos rendered to audio, whose keys are known from their scores.
 //!
 //! `cargo test --release -p lineup-listen --test key_changes -- --ignored --nocapture`
-//! prints the report. It renders about 50 songs, so it takes a while.
+//! prints the report. It renders 136 songs, so it takes a while.
 
 use lineup_audio::{ChannelNotes, Command, Instrument, PlayMode, Renderer, SampleCache};
 use lineup_core::harmony::key_finding::KeySpan;
@@ -99,7 +99,7 @@ fn report() {
         .step_by(5)
         .collect();
     let (mut beats_total, mut beats_right) = (0, 0);
-    let (mut main_right, mut bpm_key_right, mut songs) = (0, 0, 0);
+    let (mut key_right, mut songs) = (0, 0);
     let (mut steady_changes, mut true_changes, mut found_changes) = (0, 0, 0);
     for song in modulating.iter().chain(&steady) {
         let project = song_demo(song);
@@ -124,13 +124,7 @@ fn report() {
         beats_total += total;
         beats_right += right;
         songs += 1;
-        let main = analysis
-            .keys
-            .iter()
-            .max_by_key(|span| span.end - span.start)
-            .and_then(KeySpan::key);
-        main_right += usize::from(main.and_then(family) == family(song.scale()));
-        bpm_key_right += usize::from(analysis.scale.and_then(family) == family(song.scale()));
+        key_right += usize::from(analysis.scale.and_then(family) == family(song.scale()));
         let truth_changes: Vec<usize> = (1..truth.len())
             .filter(|&i| family(truth[i]) != family(truth[i - 1]))
             .collect();
@@ -168,7 +162,7 @@ fn report() {
             })
             .collect();
         println!(
-            "{:32} {:3}/{:3} beats  bpm-key: {}\n    truth: {}\n    found: {}",
+            "{:32} {:3}/{:3} beats  key: {}\n    truth: {}\n    found: {}",
             song.name,
             right,
             total,
@@ -182,9 +176,7 @@ fn report() {
         "beats in the right key: {beats_right}/{beats_total} ({:.1}%)",
         100.0 * beats_right as f64 / beats_total as f64
     );
-    println!(
-        "main key right: {main_right}/{songs}; bpm-key's one key right: {bpm_key_right}/{songs}"
-    );
+    println!("the song's key right: {key_right}/{songs}");
     println!("true changes found within two beats: {found_changes}/{true_changes}");
     println!(
         "songs in one key with a change found: {steady_changes}/{}",

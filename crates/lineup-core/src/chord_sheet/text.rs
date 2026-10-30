@@ -19,11 +19,13 @@
 //! ```
 //!
 //! Each bar holds what would be typed in a bar of the chord sheet (see
-//! [`read_typed_bar`]): harmonies spread over the beats, "/" for a beat that
-//! goes on with the harmony before, and "%" (or nothing) for a bar that
-//! goes on with the bar before. A harmony keeps its marks: "C." is a
-//! shot, "C.." a hold, "C..." a rest and "^C" a push. A line can hold any number of bars;
-//! "||", "|:" and ":|" read as plain bar lines.
+//! [`read_typed_bar`](super::read_typed_bar)): harmonies spread over the
+//! beats, "/" for a beat that goes on with the harmony before, "%" for
+//! the bar before played again ("| C G | % |" is C G twice), and nothing
+//! (or only "/") for a bar that goes on with the harmony before. A
+//! harmony keeps its marks: "C." is a shot, "C.." a hold, "C..." a rest
+//! and "^C" a push. A line can hold any number of bars; "||", "|:" and
+//! ":|" read as plain bar lines.
 //!
 //! The settings at the top are all optional. A line in square brackets
 //! starts a section, with "×2" (or "x2") if it is played twice. "Key:"
@@ -34,7 +36,7 @@
 use std::fmt;
 use std::ops::Range;
 
-use super::{ChordMarker, read_typed_bar, write_bar};
+use super::{ChordMarker, read_typed_bar_after, repeat_bar, write_bar};
 use crate::band::band_styles;
 use crate::harmony::{Scale, ScaleKind};
 use crate::i18n::{Language, tr, trf};
@@ -349,6 +351,18 @@ pub fn paste(
     let mut bars = meter.bars().skip(first);
     let mut markers = Vec::new();
     let mut range: Option<Range<usize>> = None;
+    // The bar before, for a "%": the song's own before the first bar.
+    let mut before = first.checked_sub(1).map(|number| {
+        let bar = meter.bar(number);
+        let in_bar: Vec<ChordMarker> = project
+            .playlist()
+            .chord_markers()
+            .iter()
+            .filter(|marker| (bar.start..bar.end()).contains(&marker.start))
+            .copied()
+            .collect();
+        (bar, in_bar)
+    });
     for item in &sheet.items {
         match item {
             Item::Key(key) => text_key = Some(*key),
@@ -358,10 +372,15 @@ pub fn paste(
                     .filter(|bar| bar.end() <= MAX_SONG_STEPS)
                     .ok_or_else(|| error(*line, tr("the song cannot be this long.")))?;
                 let key = text_key.unwrap_or_else(|| keys.key_at(bar.start));
-                let written = read_typed_bar(text, &bar, key).map_err(|message| {
-                    error(*line, trf("bar {}: {}", &[&(bar.number + 1), &message]))
-                })?;
-                markers.extend(written);
+                let context = before
+                    .as_ref()
+                    .map(|(bar, in_bar)| (bar, in_bar.as_slice()));
+                let written =
+                    read_typed_bar_after(text, &bar, key, context).map_err(|message| {
+                        error(*line, trf("bar {}: {}", &[&(bar.number + 1), &message]))
+                    })?;
+                markers.extend(written.iter().copied());
+                before = Some((bar, written));
                 let start = range.as_ref().map_or(bar.start, |range| range.start);
                 range = Some(start..bar.end());
             }
@@ -463,11 +482,16 @@ pub fn import(sheet: &TextSheet) -> Result<Imported, TextError> {
     let meter = project.meter();
     let keys = project.key_map();
     let mut markers = Vec::new();
+    let mut before: Option<(crate::meter::Bar, Vec<ChordMarker>)> = None;
     for (start, text, line) in bars {
         let bar = meter.bar_at(start);
-        let written = read_typed_bar(text, &bar, keys.key_at(start))
+        let context = before
+            .as_ref()
+            .map(|(bar, in_bar)| (bar, in_bar.as_slice()));
+        let written = read_typed_bar_after(text, &bar, keys.key_at(start), context)
             .map_err(|message| error(line, trf("bar {}: {}", &[&(bar.number + 1), &message])))?;
-        markers.extend(written);
+        markers.extend(written.iter().copied());
+        before = Some((bar, written));
     }
     project.set_chords(0, end, &markers);
     project.follow_chord_sheet();
@@ -562,6 +586,7 @@ fn lines(project: &Project, bars: Range<usize>, marks: bool) -> Vec<Line> {
     let sections = project.playlist().sections();
     let mut lines: Vec<Line> = Vec::new();
     let mut previous = None;
+    let mut bar_before: Option<(crate::meter::Bar, Vec<ChordMarker>)> = None;
     for number in bars {
         let bar = meter.bar(number);
         if bar.start >= MAX_SONG_STEPS {
@@ -605,13 +630,24 @@ fn lines(project: &Project, bars: Range<usize>, marks: bool) -> Vec<Line> {
             .copied()
             .collect();
         let written = write_bar(&in_bar, &bar);
+        // A bar that goes on with the harmony before is "%" when playing
+        // the bar before again sounds the same ("| C | % |"), and a "/"
+        // for each beat when it does not: "| C G | % |" would be C G
+        // twice, not G held.
+        let text = if !written.is_empty() {
+            written
+        } else if bar_before
+            .as_ref()
+            .is_none_or(|(before, markers)| repeat_bar(markers, before, &bar).is_empty())
+        {
+            "%".to_string()
+        } else {
+            vec!["/"; bar.beat_starts().count()].join(" ")
+        };
         if let Some(Line::Bars(bars)) = lines.last_mut() {
-            bars.push(if written.is_empty() {
-                "%".to_string()
-            } else {
-                written
-            });
+            bars.push(text);
         }
+        bar_before = Some((bar, in_bar));
     }
     lines
 }
@@ -911,6 +947,41 @@ Style: Pop beat
         assert!(project.playlist().sections().is_empty());
         let wrong = read("| C | Bm7b5b9b13 |").unwrap();
         assert_eq!(paste(&wrong, &project, 0).unwrap_err().line, 1);
+    }
+
+    #[test]
+    fn a_simile_sign_plays_the_whole_bar_before_again() {
+        let project = imported("| C G | % | % |\n| F | % | C. | % |");
+        assert_eq!(
+            chords(&project),
+            [
+                (0, "C".to_string()),
+                (8, "G".to_string()),
+                (16, "C".to_string()),
+                (24, "G".to_string()),
+                (32, "C".to_string()),
+                (40, "G".to_string()),
+                // "| F | % |" holds F; "| C. | % |" is two shots.
+                (48, "F".to_string()),
+                (80, "C".to_string()),
+                (96, "C".to_string()),
+            ]
+        );
+        let shots = project.playlist().chord_markers();
+        assert!(
+            shots[shots.len() - 2..]
+                .iter()
+                .all(|marker| marker.stop.is_some())
+        );
+        // A bar that goes on with G after "C G" is written with a "/" for
+        // each beat, since "%" would play C G again.
+        let mut held = imported("| C G | C |");
+        let bar = held.meter().bar(1);
+        held.set_chords(bar.start, bar.end(), &[]);
+        assert_eq!(write_bars(&held, 0..2), "| C G | / / / / |\n");
+        assert_eq!(chords(&imported(&write(&held, None))), chords(&held));
+        // After a bar of one chord, "%" says the same thing.
+        assert_eq!(write_bars(&project, 3..5), "| F | % |\n");
     }
 
     #[test]

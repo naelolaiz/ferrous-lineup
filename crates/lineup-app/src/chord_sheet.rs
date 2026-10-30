@@ -38,7 +38,7 @@ use eframe::egui::{
 use lineup_core::band::solo::Soloist;
 use lineup_core::band::{Ending, Variation};
 use lineup_core::chord_sheet::function::{Function, Functions, Role};
-use lineup_core::chord_sheet::{Push, Stop, read_typed_bar, text, write_bar};
+use lineup_core::chord_sheet::{Push, Stop, read_typed_bar_after, text, write_bar};
 use lineup_core::general_midi;
 use lineup_core::library::{Genre, Style};
 use lineup_core::{
@@ -1579,7 +1579,13 @@ impl ChordSheet {
             return true;
         };
         let bar = cell.bar;
-        match read_typed_bar(&editing.text, &bar, keys.key_at(bar.start)) {
+        let before = bar
+            .number
+            .checked_sub(1)
+            .map(|number| project.meter().bar(number));
+        let before_markers = before.map(|before| markers_in(project, &before));
+        let context = before.as_ref().zip(before_markers.as_deref());
+        match read_typed_bar_after(&editing.text, &bar, keys.key_at(bar.start), context) {
             Ok(markers) => {
                 if markers != markers_in(project, &bar) {
                     actions.push(SheetAction::SetChords {
@@ -1884,7 +1890,12 @@ impl ChordSheet {
                 .map_err(|err| trf("The text pasted could not be read, {}", &[&err]))
         } else {
             let bar = project.meter().bar(first);
-            read_typed_bar(pasted, &bar, project.key_map().key_at(bar.start))
+            let before = first
+                .checked_sub(1)
+                .map(|number| project.meter().bar(number));
+            let before_markers = before.map(|before| markers_in(project, &before));
+            let context = before.as_ref().zip(before_markers.as_deref());
+            read_typed_bar_after(pasted, &bar, project.key_map().key_at(bar.start), context)
                 .map(|markers| (bar.start..bar.end(), markers))
                 .map_err(|err| trf("Bar {}: {}", &[&(first + 1), &err]))
         };
@@ -2772,6 +2783,47 @@ mod tests {
         assert!(!copied(vec![Event::Cut]));
         // Copy still copies the whole sheet.
         assert!(copied(vec![Event::Copy]));
+    }
+
+    #[test]
+    fn a_simile_sign_typed_in_a_bar_plays_the_bar_before_again() {
+        let mut project = Project::with_band();
+        let first = project.meter().bar(0);
+        let markers = lineup_core::chord_sheet::read_bar("C G", &first, project.scale).unwrap();
+        project.set_chords(first.start, first.end(), &markers);
+        let second = project.meter().bar(1);
+        let written = |actions: &[SheetAction]| -> Vec<(usize, String)> {
+            match actions {
+                [SheetAction::SetChords { markers, .. }] => markers
+                    .iter()
+                    .map(|marker| (marker.start, marker.harmony.to_string()))
+                    .collect(),
+                _ => panic!("one bar written"),
+            }
+        };
+        let expected = [(16, "C".to_string()), (24, "G".to_string())];
+        // Typed in bar 2.
+        let mut sheet = ChordSheet::new();
+        sheet.editing = Some(Editing {
+            bar: 1,
+            text: "%".into(),
+            fresh: None,
+        });
+        let cells = [Cell {
+            bar: second,
+            rect: Rect::NOTHING,
+            line: 0,
+            column: 1,
+        }];
+        let mut actions = Vec::new();
+        assert!(sheet.take_in(&project, &cells, &project.key_map(), &mut actions));
+        assert_eq!(written(&actions), expected);
+        // Pasted into bar 2.
+        let mut sheet = ChordSheet::new();
+        sheet.selected = Some(1);
+        let mut actions = Vec::new();
+        sheet.paste("%", &project, &mut actions);
+        assert_eq!(written(&actions), expected);
     }
 
     fn heard(text: &str) -> Vec<u8> {

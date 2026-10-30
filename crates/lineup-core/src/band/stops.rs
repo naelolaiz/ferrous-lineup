@@ -264,7 +264,7 @@ mod tests {
             bass: BassPart::Chord {
                 chord: Chord::new(PitchClass::from_semitone(root), ChordQuality::Major),
                 note: Note::new(root - 24),
-                next: PitchClass::C,
+                next: Note::new(36),
             },
         }
     }

@@ -175,7 +175,7 @@ fn crash(sample_rate: u32) -> Vec<f32> {
     })
 }
 
-/// A cowbell: two square waves a little more than a fifth apart, with a
+/// A cowbell: two square waves a little less than a fifth apart, with a
 /// sharp attack and a short ring.
 fn cowbell(sample_rate: u32) -> Vec<f32> {
     let mut low_cut = HighPass::new(400.0, sample_rate);
