@@ -35,7 +35,7 @@ use serde::{Deserialize, Serialize};
 
 use super::PitchSet;
 use crate::i18n::{tr, trf};
-use crate::{Note, NoteName, PitchClass, Spelling};
+use crate::{Note, NoteName, NoteNaming, PitchClass, Spelling};
 
 /// A twelve-tone row: the twelve pitch classes, each once, in order.
 ///
@@ -455,8 +455,25 @@ fn parse_number(token: &str) -> Result<u8, String> {
     }
 }
 
-/// A note name such as "C", "F#", "Bb" or "Ebb", in any case.
+/// A note name such as "C", "F#", "Bb" or "Ebb", in any case, or in
+/// solfège, as the Spanish app shows them: "Mi", "Fa#", "Sib" ("mi",
+/// "SIb" too). No solfège syllable is also a letter name.
 fn parse_name(token: &str) -> Result<u8, String> {
+    parse_letters(token).or_else(|error| {
+        // "sOL#" is read as "Sol#": a capital, then small letters, so
+        // that a "b" after the syllable is a flat.
+        let mut chars = token.chars();
+        let first = chars.next().map(|c| c.to_uppercase().collect::<String>());
+        let written = first.unwrap_or_default() + &chars.as_str().to_lowercase();
+        NoteName::read_as(&written, NoteNaming::Solfege)
+            .filter(|(_, rest)| rest.is_empty())
+            .map(|(name, _)| name.pitch_class().semitone())
+            .ok_or(error)
+    })
+}
+
+/// A note name in letters (see [`parse_name`]).
+fn parse_letters(token: &str) -> Result<u8, String> {
     let mut chars = token.chars();
     let letter = chars.next().map(|c| c.to_ascii_uppercase());
     let natural: i32 = match letter {
@@ -716,6 +733,11 @@ mod tests {
         assert_eq!(row("4,5,7,1,6,3,8,2,E,0,9,T"), by_name);
         assert_eq!(row("457163 82E09T"), by_name, "two compact halves");
         assert_eq!(row("e-f-g-c#-f#-d#-g#-d-b-c-a-a#"), by_name);
+        // In solfège, as the Spanish app writes notes, in any case.
+        assert_eq!(row("Mi Fa Sol Reb Solb Mib Lab Re Si Do La Sib"), by_name);
+        assert_eq!(row("mi fa sol do# fa# re# sol# re si do la la#"), by_name);
+        assert_eq!(row("MI FA SOL DO# FA# MIb LAb RE SI DO LA SIb"), by_name);
+        assert!(ToneRow::parse("Mi Fa Sel").is_err());
         assert!(ToneRow::parse("C D E").unwrap_err().contains("this has 3"));
         let twice = ToneRow::parse("C C D D# E F F# G G# A A# B").unwrap_err();
         assert!(twice.contains("C comes twice"), "{twice}");
