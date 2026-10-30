@@ -77,6 +77,6 @@ glossary and an index.
 
 The app is also in Spanish, and so is this manual: the
 [manual de usuario](https://naelolaiz.github.io/ferrous-lineup/es/manual/).
-How the program is built, and why, is in a separate book, the
-[Ferrous Lineup book](https://naelolaiz.github.io/ferrous-lineup/),
-written for people who want to read or change its code.
+How the program is built, and why, is in a separate book, [Inside
+Ferrous Lineup](https://naelolaiz.github.io/ferrous-lineup/), written
+for people who want to read or change its code.

@@ -109,6 +109,6 @@ for that file.
 ## Building it yourself
 
 You can also build Ferrous Lineup from its source code, on any of the
-three systems. The [Ferrous Lineup
-book](https://naelolaiz.github.io/ferrous-lineup/getting-started.html)
-says how.
+three systems. The book [Inside Ferrous
+Lineup](https://naelolaiz.github.io/ferrous-lineup/building.html) says
+how.
