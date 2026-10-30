@@ -949,7 +949,11 @@ pub(crate) fn simple_chords(parts: &StyleParts) -> bool {
 
 /// The preset's drums, and under them whether its chord and bass parts
 /// come too.
-fn playing_ui(ui: &mut Ui, parts: &mut StyleParts, now: Option<&[String; SongPart::ALL.len()]>) {
+pub(crate) fn playing_ui(
+    ui: &mut Ui,
+    parts: &mut StyleParts,
+    now: Option<&[String; SongPart::ALL.len()]>,
+) {
     with_source(ui, now, SongPart::Drums, |ui| {
         ui.checkbox(&mut parts.rhythm, tr("Drums")).on_hover_text(tr(
             "Copy the preset’s drums, and with the box below, how it plays the chords and the bass.",
