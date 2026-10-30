@@ -732,9 +732,11 @@ const MOST_WORDS: usize = 4;
 /// a bar of four beats take two beats each, three take two, one and
 /// one, and two in a bar of three take two and one. A "/" (or ".") is
 /// one beat of the harmony before it, to place them yourself: "C / / G7"
-/// puts G7 on the fourth beat. "%", or nothing at all, leaves the bar
-/// going on with the harmony before it. A harmony can carry the marks of
-/// a [`Push`] and a [`Stop`]: "^C.".
+/// puts G7 on the fourth beat. Nothing at all, or only "/", leaves the
+/// bar going on with the harmony before it. "%", the simile sign, is the
+/// bar before played again, which only a reader that knows that bar can
+/// write ([`read_typed_bar_after`]); here it reads as an empty bar. A
+/// harmony can carry the marks of a [`Push`] and a [`Stop`]: "^C.".
 ///
 /// Returns the markers, each on the step its beat starts on, or why the
 /// text could not be read.
@@ -753,6 +755,53 @@ pub fn read_bar(text: &str, bar: &Bar, key: Scale) -> Result<Vec<ChordMarker>, S
 /// typed.
 pub fn read_typed_bar(text: &str, bar: &Bar, key: Scale) -> Result<Vec<ChordMarker>, String> {
     read_bar_counting(text, bar, key, MinorNumerals::current())
+}
+
+/// [`read_typed_bar`] for a bar that comes after `before`, the bar before
+/// it with its markers: there "%" is the simile sign, the bar before
+/// played again (see [`repeat_bar`]).
+pub fn read_typed_bar_after(
+    text: &str,
+    bar: &Bar,
+    key: Scale,
+    before: Option<(&Bar, &[ChordMarker])>,
+) -> Result<Vec<ChordMarker>, String> {
+    match before {
+        Some((before_bar, markers)) if text.trim() == "%" => {
+            Ok(repeat_bar(markers, before_bar, bar))
+        }
+        _ => read_typed_bar(text, bar, key),
+    }
+}
+
+/// What "%" writes in `bar`: the harmonies of `before_bar`, `before`,
+/// again, each as many steps into the bar. "| C G | % |" is C G twice,
+/// as musicians read it, and "| C. | % |" two shots. A first harmony
+/// that would only go on with the one sounding, as in "| C | % |", is
+/// left out, so the bar goes on as an empty one does.
+pub fn repeat_bar(before: &[ChordMarker], before_bar: &Bar, bar: &Bar) -> Vec<ChordMarker> {
+    let in_bar: Vec<&ChordMarker> = before
+        .iter()
+        .filter(|marker| (before_bar.start..before_bar.end()).contains(&marker.start))
+        .collect();
+    let sounding = in_bar.last().map(|marker| marker.harmony);
+    let mut markers: Vec<ChordMarker> = in_bar
+        .iter()
+        .map(|marker| ChordMarker {
+            start: bar.start + (marker.start - before_bar.start),
+            ..**marker
+        })
+        .filter(|marker| marker.start < bar.end())
+        .collect();
+    if let Some(first) = markers.first()
+        && first.start == bar.start
+        && Some(first.harmony) == sounding
+        && first.push.is_none()
+        && first.stop.is_none()
+    {
+        markers.remove(0);
+    }
+    markers
 }
 
 fn read_bar_counting(
