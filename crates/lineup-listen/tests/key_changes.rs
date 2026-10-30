@@ -2,7 +2,7 @@
 //! demos rendered to audio, whose keys are known from their scores.
 //!
 //! `cargo test --release -p lineup-listen --test key_changes -- --ignored --nocapture`
-//! prints the report. It renders about 50 songs, so it takes a while.
+//! prints the report. It renders 136 songs, so it takes a while.
 
 use lineup_audio::{ChannelNotes, Command, Instrument, PlayMode, Renderer, SampleCache};
 use lineup_core::harmony::key_finding::KeySpan;

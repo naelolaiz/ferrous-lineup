@@ -4,7 +4,7 @@
 //! it works in any key), a way of playing the chords ([`Comping`]) and a
 //! bass line ([`Bass`]). Playing "I V vi IV" as held piano chords makes a
 //! ballad; playing it as offbeat stabs over a bass on the offbeats makes
-//! house music. The tables below are the library: about seventy styles,
+//! house music. The tables below are the library: 177 styles,
 //! each with a sentence on what makes it sound the way it does.
 
 use crate::harmony::{Chord, Scale, ScaleKind};
