@@ -1,6 +1,6 @@
 # The main window
 
-![The main window when the app starts: the menus and the toolbar at the top, the Library on the left, the playlist in the middle with the channel rack open over it, and the harmony keys along the bottom](images/main-window-start.png)
+![The main window when the app starts: the menus and the toolbar at the top, the Library on the left, the starting song on the playlist in the middle, and the harmony keys along the bottom](images/main-window-start.png)
 
 From top to bottom, the window has:
 

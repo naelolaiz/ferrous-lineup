@@ -9,15 +9,15 @@ Ferrous Lineup can play its instruments in two ways:
   piano, a double bass, a bandoneón, a choir, a drum kit. This is how
   the band should sound.
 
-## The first Play
+## When the app opens
 
-The first time anything plays, when you press Play or open a demo
-(which starts playing at once), a window called **Real instrument
-sounds** offers to download **GeneralUser GS**, a free SoundFont by
-S. Christian Collins, of about 30 MB, and asks "Play the instruments
-with it?". The song goes on playing while it asks.
+The first time you open Ferrous Lineup, before anything plays, a window
+called **Real instrument sounds** offers to download **GeneralUser
+GS**, a free SoundFont by S. Christian Collins, of about 30 MB, and
+asks "Play the instruments with it?". If the app first offers to bring
+back unsaved work, the sounds come right after.
 
-![The first Play: a demo plays on while the Real instrument sounds window offers GeneralUser GS and asks "Play the instruments with it?", with Download, Choose a file… and Not now](images/soundfont-offer.png)
+![The app as it opens for the first time: the Real instrument sounds window over the starting song offers GeneralUser GS and asks "Play the instruments with it?", with Download, Choose a file… and Not now](images/soundfont-offer.png)
 
 - **Download** fetches it once and keeps it on your computer. A bar
   shows how far it is, and **Stop** gives up. When it is done, the
@@ -25,15 +25,16 @@ with it?". The song goes on playing while it asks.
   instrument plays its recording from then on, next time too.
 - **Choose a file…** uses another SoundFont you already have, any
   `.sf2` file made for General MIDI.
-- **Not now** keeps the Lineup Osc. Play does not ask again; the
-  setting below is there when you change your mind.
+- **Not now**, or closing the window, keeps the Lineup Osc. The app
+  does not ask again; the setting below is there when you change your
+  mind.
 
 If GeneralUser GS is already on your computer, downloaded by an earlier
 version for instance, the window says so and offers **Use it** instead
-of **Download**: a moment later the instruments play from it. If you
-close the app without answering, it asks again the next time anything
-plays. Your answer and the sound settings below stay when you update
-Ferrous Lineup.
+of **Download**: a moment later the instruments play from it. Until you
+answer, it asks again each time the app opens, and when you press Play
+or open a demo. Your answer and the sound settings below stay when you
+update Ferrous Lineup.
 
 If the download fails (no network, a firewall), the window says why.
 You can download `GeneralUser-GS.sf2` from [its
