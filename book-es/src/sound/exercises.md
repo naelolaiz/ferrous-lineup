@@ -97,9 +97,9 @@ mantener separados tocar y editar.
 - En la Biblioteca, toca los ritmos **Kalamatianós** y **Rachenitsa**
   uno después del otro. Da palmas al compás: ¿dónde está el pulso largo
   en cada uno?
-- Elige `5/8` en el cuadro Compás de una canción en 4/4, con **Usar el
-  estilo correspondiente** marcado. ¿Qué ritmo recibe, y cómo escribe
-  el cuadro el compás?
+- Elige `5/8` en el cuadro Compás de una canción en 4/4, con **Batería**
+  y **Partes de acordes y bajo** marcadas. ¿Qué ritmo recibe, y cómo
+  escribe el cuadro el compás?
 - Abre **Süsserl** y mira la regla mientras suena. Cuenta los compases
   de dos y los de tres en la primera parte: ¿coinciden con 2 2 3,
   2 2 3, 2 2 3 3?

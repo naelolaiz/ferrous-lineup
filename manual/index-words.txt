@@ -100,6 +100,7 @@ Export WAV: exporting.md#a-sound-file
 Fermata: stops.md#the-music
 File menu: saving.md#the-file-menu
 Fill: not patterns-and-playlist.md, styles.md#finding-a-style, song-form.md#variations-a-and-b
+Filters (Library): styles.md#finding-a-style
 Find the key: keys-and-modes.md#finding-the-key-experimental
 Follow playhead: patterns-and-playlist.md#moving-around, settings.md#playback
 Forte number: sets-rows-micromodes.md#pitch-class-sets
@@ -198,7 +199,6 @@ Picardy third: outside-the-key.md#borrowed-chords
 Pickup: soloist.md#notes-between-the-beats
 Pitch-class set: sets-rows-micromodes.md#pitch-class-sets
 Pivot chord: outside-the-key.md#pivot-chords-changing-key
-Plain accents: styles.md#trying-a-style
 Play it again: locks.md#a-part-you-edit-stays-yours
 Playlist: main-window.md#the-playlist, patterns-and-playlist.md
 Polychord: chords.md#two-chords-at-once, concert-hall.md#debussy-and-stravinsky

@@ -218,8 +218,8 @@ format.
 2. Add `notes: String` to `ProjectFile`, with
    `#[serde(default, skip_serializing_if = "String::is_empty")]`, and
    copy it in both directions.
-3. Raise `FORMAT_VERSION` by one, to 29 (if another exercise already
-   took 29, use the next free number). In `format_for`, return the new
+3. Raise `FORMAT_VERSION` by one, to 30 (if another exercise already
+   took 30, use the next free number). In `format_for`, return the new
    number first when `!project.notes.is_empty()`; leave everything else
    as it is.
 4. Write three tests in `file.rs`: an empty project stays at its old

@@ -74,11 +74,11 @@ que llevaban cuatro. Los cambios de tempo se mueven con ella. Las
 opciones de arriba de la lista, compartidas con la Biblioteca, dicen qué
 más entra:
 
-- **Usar el estilo correspondiente**: el estilo de la Biblioteca para
-  esa métrica, como un vals para 3/4. Apagado, tus propios instrumentos
-  marcan los acentos de la nueva métrica.
-- **Aplicar patrones rítmicos / acentos**: los patrones de toque del
-  estilo. Apagado, solo cambia la métrica.
+- **Batería**: la batería del estilo de la Biblioteca para esa métrica,
+  como un vals para 3/4. Apagado, la canción conserva su propia batería,
+  en la nueva métrica.
+- **Partes de acordes y bajo**: cómo toca ese estilo los acordes y el
+  bajo. Apagado, la canción conserva las suyas, en la nueva métrica.
 - **Usar los instrumentos del estilo** y **Usar el swing del ritmo**:
   los sonidos del estilo y su swing.
 
