@@ -9,14 +9,15 @@
 //! SoundFont's drum kit.
 //!
 //! The app does not come with a SoundFont, because a good one is tens of
-//! megabytes. When anything plays with the sounds off, until the offer is
-//! answered, or when the sounds are turned on, it offers to download
-//! GeneralUser GS, a free General MIDI SoundFont by S. Christian Collins,
-//! and keeps it in the app's data folder, or to use it if it is there
-//! already. Any other `.sf2` file can be chosen instead. Downloading and reading a SoundFont take a
-//! while, so both run on a thread of their own, like the WAV export, and
-//! the window keeps drawing meanwhile. When the SoundFont is ready, every
-//! channel is given its instrument again.
+//! megabytes. When the app opens or anything plays with the sounds off,
+//! until the offer is answered, and when the sounds are turned on, it
+//! offers to download GeneralUser GS, a free General MIDI SoundFont by
+//! S. Christian Collins, and keep it in the app's data folder, or to use
+//! it if it is there already. Any other `.sf2` file can be chosen
+//! instead. Downloading and reading a SoundFont take a while, so both run
+//! on a thread of their own, like the WAV export, and the window keeps
+//! drawing meanwhile. When the SoundFont is ready, every channel is given
+//! its instrument again.
 //!
 //! The sound preferences are remembered between runs, by name (see
 //! [`super::preferences`]), so an update keeps them.
@@ -69,8 +70,8 @@ struct Settings {
     file: Option<PathBuf>,
     /// Whether the offer of real instrument sounds was turned down, with
     /// "Not now", or the sounds were turned off in Settings. Until then,
-    /// Play offers them whenever they are off.
-    declined: bool,
+    /// the app offers them as it opens and on Play whenever they are off.
+    turned_down: bool,
 }
 
 impl Default for Settings {
@@ -79,7 +80,7 @@ impl Default for Settings {
             on: false,
             drums: true,
             file: None,
-            declined: false,
+            turned_down: false,
         }
     }
 }
@@ -336,7 +337,7 @@ impl LineupApp {
                 if ui.checkbox(&mut on, tr("SoundFont instruments")).on_hover_text(
                 tr("General MIDI channels use the SoundFont. Channels using a Lineup Osc sound keep it."),
             ).changed() {
-                self.sounds.settings.declined = !on;
+                self.sounds.settings.turned_down = !on;
                 self.set_sound_font(on);
             }
                 let mut drums = self.sounds.settings.drums;
@@ -383,15 +384,16 @@ impl LineupApp {
         );
     }
 
-    /// When anything plays on the Lineup Osc, offers the SoundFont, until
-    /// the offer is turned down: the Lineup Osc makes every instrument out
-    /// of a few simple waves, which is not how a band should sound. Said
-    /// yes to, the instruments play from GeneralUser GS as soon as it is
-    /// downloaded, or read if it is on disk already. Nothing is asked while
-    /// the sounds are on, even if their SoundFont is still being read.
-    pub(super) fn offer_sound_font_on_play(&mut self) {
+    /// When the app opens, and whenever anything plays on the Lineup Osc,
+    /// offers the SoundFont, until the offer is turned down: the Lineup Osc
+    /// makes every instrument out of a few simple waves, which is not how a
+    /// band should sound. Said yes to, the instruments play from GeneralUser
+    /// GS as soon as it is downloaded, or read if it is on disk already.
+    /// Nothing is asked while the sounds are on, even if their SoundFont is
+    /// still being read.
+    pub(super) fn offer_sound_font(&mut self) {
         let sounds = &mut self.sounds;
-        if !sounds.settings.on && !sounds.settings.declined && sounds.general_user.is_some() {
+        if !sounds.settings.on && !sounds.settings.turned_down && sounds.general_user.is_some() {
             sounds.offer_open = true;
         }
     }
@@ -444,7 +446,7 @@ impl LineupApp {
             return;
         };
         self.sounds.settings.file = Some(path);
-        self.sounds.settings.declined = false;
+        self.sounds.settings.turned_down = false;
         self.sounds.offer_open = false;
         self.sounds.changed = true;
         self.set_sound_font(true);
@@ -509,7 +511,9 @@ impl LineupApp {
     /// The window that offers GeneralUser GS: to download it, or to use it
     /// if it is on disk already. It shows the download going on.
     pub(super) fn sound_font_window(&mut self, ctx: &egui::Context) {
-        if !self.sounds.offer_open {
+        // Unsaved work from a run that did not close cleanly is offered
+        // first.
+        if !self.sounds.offer_open || !self.recovery.pending.is_empty() {
             return;
         }
         let downloading = self.sounds.job.as_ref().is_some_and(|job| job.download);
@@ -601,7 +605,7 @@ impl LineupApp {
         {
             let sounds = &mut self.sounds;
             sounds.settings.file = None;
-            sounds.settings.declined = false;
+            sounds.settings.turned_down = false;
             if download {
                 sounds.settings.on = true;
                 sounds.changed = true;
@@ -628,12 +632,12 @@ impl LineupApp {
         }
     }
 
-    /// "Not now": the Lineup Osc plays on, and Play stops offering the
-    /// SoundFont. Settings > Audio has it for later.
+    /// "Not now": the Lineup Osc plays on, and neither opening the app nor
+    /// Play offers the SoundFont again. Settings > Audio has it for later.
     fn decline_sound_font(&mut self) {
         let sounds = &mut self.sounds;
         sounds.offer_open = false;
-        sounds.settings.declined = true;
+        sounds.settings.turned_down = true;
         sounds.turn_off();
     }
 }
@@ -646,10 +650,10 @@ impl Sounds {
         self.general_user = Some(path);
     }
 
-    /// For the tests: whether Play is to offer the SoundFont, as when the
-    /// offer was not turned down yet.
-    pub(super) fn offer_on_play(&mut self, offer: bool) {
-        self.settings.declined = !offer;
+    /// For the tests: whether opening the app and Play are to offer the
+    /// SoundFont, as when the offer was not turned down yet.
+    pub(super) fn offer(&mut self, offer: bool) {
+        self.settings.turned_down = !offer;
         self.changed = true;
     }
 
