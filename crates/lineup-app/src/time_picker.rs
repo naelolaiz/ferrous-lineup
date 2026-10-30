@@ -73,9 +73,10 @@ pub fn time_picker(
         ui.weak(tr("Shared with the Library options"));
         // Those of the Library's style for the new meter, as a waltz's
         // for 3/4.
-        crate::library_browser::playing_ui(ui, parts, None);
-        let enabled = !crate::library_browser::simple_chords(parts);
-        crate::library_browser::instrument_option(ui, parts, "Use style instruments", enabled);
+        crate::library_browser::playing_ui(ui, parts, None, |ui, parts| {
+            let enabled = !crate::library_browser::simple_chords(parts);
+            crate::library_browser::instrument_option(ui, parts, "Use style instruments", enabled);
+        });
         ui.checkbox(&mut parts.swing, tr("Use rhythm's swing"))
             .on_hover_text(tr("Turn off to keep the current swing amount"));
         ui.separator();

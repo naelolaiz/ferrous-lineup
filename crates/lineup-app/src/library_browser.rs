@@ -947,12 +947,14 @@ pub(crate) fn simple_chords(parts: &StyleParts) -> bool {
     parts.rhythm && !parts.matching_style
 }
 
-/// The preset's drums, and under them whether its chord and bass parts
-/// come too.
+/// The preset's drums, under them whether its chord and bass parts come
+/// too, and under those what `with_them` draws: the options that can
+/// only come with them.
 pub(crate) fn playing_ui(
     ui: &mut Ui,
     parts: &mut StyleParts,
     now: Option<&[String; SongPart::ALL.len()]>,
+    with_them: impl FnOnce(&mut Ui, &mut StyleParts),
 ) {
     with_source(ui, now, SongPart::Drums, |ui| {
         ui.checkbox(&mut parts.rhythm, tr("Drums")).on_hover_text(tr(
@@ -970,6 +972,7 @@ pub(crate) fn playing_ui(
             ))
             .on_disabled_hover_text(tr("They come with the drums: tick Drums to copy them."));
         });
+        ui.indent("with-chord-and-bass-parts", |ui| with_them(ui, parts));
         if simple_chords(parts) {
             ui.weak(tr("Simple chords on the beats, with your instruments and chords."));
         }
@@ -983,35 +986,35 @@ fn copy_parts_ui(
     follows: bool,
     now: Option<&[String; SongPart::ALL.len()]>,
 ) {
-    playing_ui(ui, parts, now);
-    let simple = simple_chords(parts);
-    with_source(ui, now, SongPart::Instruments, |ui| {
-        instrument_option(ui, parts, tr("Voices / instruments"), !simple);
-    });
-    ui.add_space(2.0);
-    ui.strong(tr("Harmony"));
-    // Simple chords play the song's own chords. Whether to copy a
-    // progression is kept for when the chord and bass parts come again.
-    let mut progression = has_progression && parts.progression && !simple;
-    with_source(ui, now, SongPart::Chords, |ui| {
-        let response = ui
-            .add_enabled(
-                has_progression && !simple,
-                egui::Checkbox::new(&mut progression, tr("Chord progression")),
-            )
-            .on_hover_text(tr("Replace the song’s chords with this preset’s chart. The melody is kept. Leave this off to keep the song’s harmony while changing its playing style or instruments: each style you try then plays the chords already there, and in a new trial pattern, those of the first style you tried."))
-            .on_disabled_hover_text(if simple {
-                tr("Simple chords play the song’s own chords.")
-            } else {
-                tr("This preset has no chord progression. Your current chords are kept.")
-            });
-        if response.changed() {
-            parts.progression = progression;
+    playing_ui(ui, parts, now, |ui, parts| {
+        let simple = simple_chords(parts);
+        with_source(ui, now, SongPart::Instruments, |ui| {
+            instrument_option(ui, parts, tr("Voices / instruments"), !simple);
+        });
+        // Simple chords play the song's own chords. Whether to copy a
+        // progression is kept for when the chord and bass parts come
+        // again.
+        let mut progression = has_progression && parts.progression && !simple;
+        with_source(ui, now, SongPart::Chords, |ui| {
+            let response = ui
+                .add_enabled(
+                    has_progression && !simple,
+                    egui::Checkbox::new(&mut progression, tr("Chord progression")),
+                )
+                .on_hover_text(tr("Replace the song’s chords with this preset’s chart. The melody is kept. Leave this off to keep the song’s harmony while changing its playing style or instruments: each style you try then plays the chords already there, and in a new trial pattern, those of the first style you tried."))
+                .on_disabled_hover_text(if simple {
+                    tr("Simple chords play the song’s own chords.")
+                } else {
+                    tr("This preset has no chord progression. Your current chords are kept.")
+                });
+            if response.changed() {
+                parts.progression = progression;
+            }
+        });
+        if progression {
+            ui.weak(tr("Replaces existing chords. The melody is kept."));
         }
     });
-    if progression {
-        ui.weak(tr("Replaces existing chords. The melody is kept."));
-    }
     ui.add_space(2.0);
     ui.strong(tr("Timing"));
     if follows {
