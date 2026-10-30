@@ -612,8 +612,11 @@ impl LineupApp {
                 .map(|dropped| dropped.path().to_path_buf())
                 .collect()
         });
-        let (projects, samples): (Vec<PathBuf>, Vec<PathBuf>) =
+        let (mut projects, samples): (Vec<PathBuf>, Vec<PathBuf>) =
             dropped.into_iter().partition(|path| is_project_file(path));
+        // A file opened from the system's file manager while the app runs
+        // (see `open_files`) is opened as a dropped one is.
+        projects.extend(crate::open_files::take());
         let mut projects = projects.into_iter();
         if let Some(path) = projects.next() {
             if projects.next().is_some() {
