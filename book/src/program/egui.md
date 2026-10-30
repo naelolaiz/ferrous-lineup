@@ -739,17 +739,55 @@ if let Demo::Song(_) = demo {
 }
 ```
 
-The app itself opens on neither. Its starting song is a beat, but the
-first thing to see is the playlist and the Library, so `LineupApp::new`
-closes the rack when no file was named on the command line:
+The app itself opens on the windows that were open when it was last
+closed. `app/windows.rs` keeps them as one small struct of `bool`s, one
+for each window of the View menu:
 
 ```rust
-// The starting song opens on the playlist and the Library, with no
-// window over them: F6 shows its beat in the channel rack.
-if starting_song {
-    app.rack_open = false;
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub(super) struct OpenWindows {
+    chord_sheet: bool,
+    lead_sheet: bool,
+    rack: bool,
+    piano_roll: bool,
+    harmony_keys: bool,
+    /// The Patterns and Library panel.
+    browser: bool,
+    mixer: bool,
+    ear_training: bool,
 }
 ```
+
+Its `Default` is the first time: the chord sheet, the harmony keys and
+the Library over the playlist, with no rack. `#[serde(default)]` on the
+struct fills a window added to the list later with its value in
+`Default`, so an older save still reads. The style editor and the
+dialogs are left out: each opens for something, a style or a question,
+that the next run does not have.
+
+`App::save`, which eframe calls every 30 seconds and when the window
+closes, writes the struct among the preferences kept by name (see
+[Kept by name, not by type](#kept-by-name-not-by-type)), and
+`LineupApp::new` reads it back:
+
+```rust
+fn save(&mut self, storage: &mut dyn eframe::Storage) {
+    self.preferences.put(windows::NAME, &self.open_windows());
+    self.preferences.save(storage);
+}
+```
+
+```rust
+let windows: OpenWindows = preferences::get(ctx, NAME).unwrap_or_default();
+```
+
+Writing them only on save, rather than at every click on a window
+button, keeps the many places that open and close windows free of that
+chore. `the_app_first_opens_on_the_chord_sheet_then_with_the_windows_left_open`
+checks both runs: the first opens on the sheet, and after closing it
+with F5 and opening the mixer with F9, the next start finds the mixer
+open and the sheet closed.
 
 ### Windows the size of what they show
 
@@ -971,7 +1009,8 @@ type can change its fields and still read what an older version kept,
 with `#[serde(default)]` for fields that were not there yet.
 
 The sound settings ([SoundFonts](../sound/soundfonts.md)) are kept this
-way, as `"sound-font"`. The other choices above are still in egui's
+way, as `"sound-font"`, and so are the open windows, as
+`"open-windows"`. The other choices above are still in egui's
 memory, so an update can forget them; moving one over is a matter of
 calling `preferences::get` and `preferences::set` with a name instead
 of `get_persisted` and `insert_persisted` with an `Id`.

@@ -7,7 +7,7 @@ mismos tipos, y lo guarda con la extensión `.lineup`.
 
 ```text
 (
-    format: 28,
+    format: 29,
     tempo: 130.0,
     scale: (root: C, kind: Major),
     channels: [
@@ -20,7 +20,7 @@ mismos tipos, y lo guarda con la extensión `.lineup`.
 
 [Guardar](../program/saving.md) explica RON, serde y el struct
 `ProjectFile` que media entre el archivo y el `Project` en vivo. Esta
-página es la referencia del número de arriba: `FORMAT_VERSION` es **28**
+página es la referencia del número de arriba: `FORMAT_VERSION` es **29**
 en
 [`crates/lineup-core/src/file.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/file.rs).
 
@@ -30,7 +30,7 @@ El número dice qué características puede contener un archivo. No es la
 versión de la aplicación.
 
 `format_for` escribe el formato **más bajo** que puede contener el
-proyecto, no siempre el 28. Un proyecto sencillo se queda en el formato
+proyecto, no siempre el 29. Un proyecto sencillo se queda en el formato
 1, así que cualquier versión de Ferrous Lineup puede abrirlo. Una
 canción con hoja de acordes pero sin banda es el formato 12; una banda
 es el formato 13; un canal bloqueado es al menos el formato 23. El
@@ -73,6 +73,7 @@ ningún paso de conversión al abrirse: lleva solo lo que usa.
 | 26 | Un balance y un envío de reverberación en cada canal. | Tocaría cada canal en el centro y con todo su sonido en la reverberación. | [El mezclador](../sound/mixer.md#el-balance-dos-altavoces-un-canal) |
 | 27 | Enviar una batería integrada por MIDI. | Tocaría la batería ella misma en lugar de enviarla al sintetizador externo. | [MIDI](../sound/midi.md#un-canal-desde-su-menú-de-instrumento) |
 | 28 | Una sección de vientos en la banda, y EQ, compresión y delay en un canal. | No tocaría vientos, y tocaría cada canal sin sus efectos. | [Cómo toca la banda](../band/band.md#una-sección-de-vientos), [El mezclador](../sound/mixer.md#los-efectos-de-cada-canal) |
+| 29 | Una banda que toca la batería de otro estilo que sus partes de acordes y bajo, o que deja la batería a la canción. | Tocaría la batería del estilo propio de la banda. | [Cómo toca la banda](../band/band.md#una-banda-en-la-canción), [La biblioteca](../band/library.md#qué-partes-tomar) |
 
 Dos registros pueden estar en un archivo de cualquier formato, porque
 una versión que se los salta sigue tocando la canción exactamente
@@ -93,7 +94,7 @@ cambiado. Así que el lector comprueba el número de formato y rechaza
 todo lo que esté por encima de `FORMAT_VERSION`:
 
 ```text
-this file uses format 29, made by a newer version of Ferrous Lineup (this one reads up to format 28)
+this file uses format 30, made by a newer version of Ferrous Lineup (this one reads up to format 29)
 ```
 
 Primero se lee el archivo entero, y el número se comprueba después.

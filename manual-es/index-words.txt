@@ -22,7 +22,6 @@
 
 Abrir recientes: saving.md#el-menú-archivo
 Accelerando: tempo-meter-key.md#cambiar-el-tempo-a-mitad-de-camino
-Acentos simples: styles.md#probar-un-estilo
 Acerca de: main-window.md#teclas-que-funcionan-en-todas-partes
 Acompañamiento: styles.md
 Acorde: chords.md
@@ -132,6 +131,7 @@ Exportar MIDI: exporting.md#un-archivo-midi
 Exportar video: exporting.md#un-video
 Exportar WAV: exporting.md#un-archivo-de-sonido
 Figuras: rhythm-and-meter.md#figuras-y-pasos
+Filtros (Biblioteca): styles.md#buscar-un-estilo
 Final: first-song.md#6-dale-una-forma, song-form.md#el-final-a-casa-y-sostenido
 Forma prima: sets-rows-micromodes.md#conjuntos-de-clases-de-alturas
 Formación de instrumentos: bigger-band.md#el-menú-banda

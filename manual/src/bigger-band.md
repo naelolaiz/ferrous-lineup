@@ -9,8 +9,9 @@ uses it, and any style can add a **horn section**.
 ## The Band menu
 
 **🎷 Band**, at the top left of the chord sheet, chooses who plays and
-with which sounds. The playing patterns come from the Library (see
-[Styles and the Library](styles.md)); this menu leaves them alone.
+with which sounds. What they play, the drums and the chord and bass
+parts, comes from the Library (see [Styles and the
+Library](styles.md)); this menu leaves it alone.
 
 ![The Band menu of a bossa nova: Instrument lineup, then Piano, Bass, Drums and Guitar ticked with their instruments, Horn section, Soloist (experimental), Another solo, and No band](images/band-menu.png)
 

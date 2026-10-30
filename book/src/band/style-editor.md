@@ -28,10 +28,11 @@ any chord sheet, moving every note to the chord of the moment.
    the dialog opens. Close the editor, open the **Library**, and find
    **My groove** among the presets (under **User styles** when they are
    grouped by genre).
-5. Apply it with **Playing patterns** ticked and **Chord progression**
-   unticked. The song keeps its chords and the band plays your pattern
-   over them. Save the project, close the app, move the `.lineup-style`
-   file away and open the project again: the band still plays it.
+5. Apply it with **Drums** and **Chord and bass parts** ticked and
+   **Chord progression** unticked. The song keeps its chords and the
+   band plays your pattern over them. Save the project, close the app,
+   move the `.lineup-style` file away and open the project again: the
+   band still plays it.
 
 ## Where it is
 
@@ -239,21 +240,27 @@ The Library reads every `.lineup-style` file in the folder at startup,
 and again after a save or a change of folder, sorts them by name, and
 reports any it cannot read: "Some styles could not be loaded: …".
 They join the presets beside the built-in styles and rhythms. They have
-no genre, so **Group by genre** puts them under **User styles (N)**. A
-style with a progression says **+ chords**; one without says **keeps
-chords**. **Start from…** in the editor shows the same list and search,
+no genre, so **Group by genre** puts them under **User styles (N)**.
+The **With chords** filter keeps those with a progression, and the
+instrument menu lists the sounds of their lanes. **Start from…** in
+the editor shows the same list and search,
 with **Empty style** first.
 
 Applying one of your styles works as for any preset (see [Which parts
-to take](library.md#which-parts-to-take)): **Playing
-patterns** brings its lanes, **Voices / instruments** their sounds, and
-**Time signature**, **Tempo**, **Swing** and **Chord progression**
-those. Leave the progression unticked to keep the song's chords.
+to take](library.md#which-parts-to-take)): **Drums** brings its drum
+lanes, **Chord and bass parts** its other lanes, **Voices /
+instruments** their sounds, and **Time signature**, **Tempo**,
+**Swing** and **Chord progression** those. Leave the progression
+unticked to keep the song's chords. Only the chord and bass parts need
+a band to play them, so on a song without a band, a style of your own
+needs them ticked for its lanes to play; its tempo, meter, swing or
+chords alone change the song as it is.
 
 ### The style travels with the song
 
-When **Playing patterns** is applied, the whole `UserStyle` is stored
-in the band:
+When **Chord and bass parts** is applied, the whole `UserStyle` is
+stored in the band, and when **Drums** is, in its `drums`, as
+`BandDrums::Saved`:
 
 ```rust
 pub custom_rhythm: Option<Box<crate::library::UserStyle>>,
@@ -351,7 +358,7 @@ style.validate()?;
 // in another meter, after the band and the tempo changed: so it
 // is applied to a copy, and an error changes nothing.
 let mut project = self.clone();
-project.apply_valid_user_style(style, parts.for_preset())?;
+project.apply_valid_user_style(style, parts)?;
 *self = project;
 Ok(())
 ```
