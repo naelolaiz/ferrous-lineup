@@ -13,7 +13,7 @@ use crate::meter::{Bar, TimeSignature};
 use crate::pattern::NoteEvent;
 use crate::pitch::{Note, PitchClass};
 
-use super::voicing::{bass_root, voice_parts, voice_progression};
+use super::voicing::{BASS_FLOOR, bass_root, voice_parts, voice_progression};
 
 /// Which notes of a chord voicing a hit plays.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -546,11 +546,15 @@ enum Tone {
     LowFifth,
     Octave,
     Third,
+    /// The third an octave lower, under the root.
+    LowThird,
     /// The chord's seventh, or its sixth if it has no seventh.
     Seventh,
-    /// The next chord's root, played early: an "anticipation".
+    /// The seventh (or sixth) an octave lower, under the root.
+    LowSeventh,
+    /// The next chord's bass note, played early: an "anticipation".
     Next,
-    /// One semitone from the next chord's root, leading into it.
+    /// One semitone from the next chord's bass note, leading into it.
     Approach,
 }
 
@@ -768,15 +772,15 @@ impl Bass {
         start: usize,
         span: usize,
     ) -> Vec<NoteEvent> {
-        self.play_over(time, chord, bass_root(chord), next.root, start, span)
+        self.play_over(time, chord, bass_root(chord), bass_root(next), start, span)
     }
 
     /// The bass notes for `chord` with `bass` as its lowest note, as in
     /// a slash chord: G/B has B in the bass. The line plays `bass`
     /// wherever it would play the root, and finds the chord's other
     /// notes (its third, fifth and seventh) above it, or its fifth just
-    /// below. `next` is the bass note of the chord after it, which some
-    /// lines lead into.
+    /// below. `next` is the bass note of the chord after it, as the line
+    /// will play it, which some lines lead into.
     ///
     /// The bars of `time` are counted from step 0, which only matters to
     /// a line that follows the bar ([`Bass::Aksak`]).
@@ -785,7 +789,7 @@ impl Bass {
         time: TimeSignature,
         chord: Chord,
         bass: Note,
-        next: PitchClass,
+        next: Note,
         start: usize,
         span: usize,
     ) -> Vec<NoteEvent> {
@@ -802,21 +806,61 @@ impl Bass {
         bar: usize,
         chord: Chord,
         bass: Note,
-        next: PitchClass,
+        next: Note,
         start: usize,
         span: usize,
     ) -> Vec<NoteEvent> {
-        let note = |tone: Tone, at: usize, length: usize, velocity: u8| NoteEvent {
-            velocity,
-            ..NoteEvent::new(tone_note(tone, chord, bass, next), start + at, length)
+        // The note before decides which way a line leads into the next
+        // chord: the root, at first.
+        let mut previous = bass;
+        let mut note = |tone: Tone, at: usize, length: usize, velocity: u8| {
+            let pitch = tone_note(tone, chord, bass, next, previous);
+            previous = pitch;
+            NoteEvent {
+                velocity,
+                ..NoteEvent::new(pitch, start + at, length)
+            }
         };
         match self {
             Bass::None => Vec::new(),
             Bass::Held => vec![note(Tone::Root, 0, span, 100)],
-            Bass::Walking => walk(span)
-                .into_iter()
-                .map(|(at, tone)| note(tone, at, 4.min(span - at), if at == 0 { 104 } else { 92 }))
-                .collect(),
+            Bass::Walking => {
+                // The line walks up the chord or down it, whichever leads
+                // into the next note in smaller steps: up from C into A,
+                // down from G into C. Down only if it stays above E1.
+                let line = |down: bool| -> Vec<NoteEvent> {
+                    let mut previous = bass;
+                    walk(span, down)
+                        .into_iter()
+                        .map(|(at, tone)| {
+                            let pitch = tone_note(tone, chord, bass, next, previous);
+                            previous = pitch;
+                            let velocity = if at == 0 { 104 } else { 92 };
+                            NoteEvent {
+                                velocity,
+                                ..NoteEvent::new(pitch, start + at, 4.min(span - at))
+                            }
+                        })
+                        .collect()
+                };
+                let leaps = |notes: &[NoteEvent]| -> u32 {
+                    notes
+                        .iter()
+                        .map(|note| note.pitch)
+                        .chain([next])
+                        .collect::<Vec<Note>>()
+                        .windows(2)
+                        .map(|pair| u32::from(pair[0].midi().abs_diff(pair[1].midi())))
+                        .sum()
+                };
+                let (up, down) = (line(false), line(true));
+                let low_enough = down.iter().all(|note| note.pitch.midi() >= BASS_FLOOR);
+                if low_enough && leaps(&down) < leaps(&up) {
+                    down
+                } else {
+                    up
+                }
+            }
             Bass::Aksak | Bass::Accents => {
                 // The line keeps its place in the bar, wherever the chord
                 // starts; a chord that starts between two of its notes
@@ -861,6 +905,7 @@ impl Bass {
                         .find(|hit| hit.what == Tone::Next)
                         .and_then(|hit| span.checked_sub(period - hit.at))
                         .filter(|_| last);
+                    let approaches = last && hits.iter().any(|hit| hit.what == Tone::Approach);
                     for hit in hits {
                         let at = match (hit.what, early) {
                             (Tone::Next, Some(early)) => early,
@@ -871,6 +916,18 @@ impl Bass {
                         }
                         let tone = match hit.what {
                             Tone::Next | Tone::Approach if !last => Tone::Root,
+                            // Before a note leading into the next chord,
+                            // the fifth goes the way the line is going:
+                            // under G into C, D2, not D3.
+                            Tone::Fifth if approaches => {
+                                let fifth = |tone| tone_note(tone, chord, bass, next, bass);
+                                let away = |note: Note| note.midi().abs_diff(next.midi());
+                                if away(fifth(Tone::LowFifth)) < away(fifth(Tone::Fifth)) {
+                                    Tone::LowFifth
+                                } else {
+                                    Tone::Fifth
+                                }
+                            }
                             tone => tone,
                         };
                         // The next chord's root, played early, belongs to
@@ -905,17 +962,26 @@ pub(crate) fn one_at_a_time(notes: &mut [NoteEvent], end: usize) {
 }
 
 /// The beats of a walking bass line over `span` steps: the root first,
-/// a note leading into the next chord last, and chord notes between.
-/// A bar of three walks root, fifth, then the lead-in: the third would
-/// often be the lead-in itself (C to F: E, then E again).
-fn walk(span: usize) -> Vec<(usize, Tone)> {
-    const MIDDLE: [Tone; 6] = [
+/// a note leading into the next chord last, and chord notes between,
+/// above the root or, `down`, below it. A bar of three walks root,
+/// fifth, then the lead-in: the third would often be the lead-in itself
+/// (C to F: E, then E again).
+fn walk(span: usize, down: bool) -> Vec<(usize, Tone)> {
+    const UP: [Tone; 6] = [
         Tone::Third,
         Tone::Fifth,
         Tone::Seventh,
         Tone::Octave,
         Tone::Fifth,
         Tone::Third,
+    ];
+    const DOWN: [Tone; 6] = [
+        Tone::LowSeventh,
+        Tone::LowFifth,
+        Tone::LowThird,
+        Tone::LowFifth,
+        Tone::LowSeventh,
+        Tone::Root,
     ];
     let beats = span.div_ceil(4);
     (0..beats)
@@ -925,17 +991,20 @@ fn walk(span: usize) -> Vec<(usize, Tone)> {
             } else if beat == beats - 1 {
                 Tone::Approach
             } else if beats == 3 {
-                Tone::Fifth
+                if down { Tone::LowFifth } else { Tone::Fifth }
+            } else if down {
+                DOWN[(beat - 1) % DOWN.len()]
             } else {
-                MIDDLE[(beat - 1) % MIDDLE.len()]
+                UP[(beat - 1) % UP.len()]
             };
             (beat * 4, tone)
         })
         .collect()
 }
 
-/// The note a bass tone stands for, over `bass`.
-fn tone_note(tone: Tone, chord: Chord, bass: Note, next: PitchClass) -> Note {
+/// The note a bass tone stands for, over `bass`. `next` is the note the
+/// line leads into, and `previous` the line's note before this one.
+fn tone_note(tone: Tone, chord: Chord, bass: Note, next: Note, previous: Note) -> Note {
     let intervals = chord.quality.intervals();
     let has = |interval: u8| intervals.contains(&interval);
     // The note `interval` semitones above the chord's root, in the
@@ -954,44 +1023,59 @@ fn tone_note(tone: Tone, chord: Chord, bass: Note, next: PitchClass) -> Note {
     } else {
         7
     };
+    let third = if has(3) {
+        3
+    } else if has(4) {
+        4
+    } else if has(5) {
+        5
+    } else {
+        2
+    };
+    // A chord's own seventh or sixth comes first: the double-flat
+    // seventh of a diminished seventh chord, the sixth of a minor sixth
+    // chord. Only a plain minor chord borrows the flat seventh.
+    let seventh = if has(10) {
+        10
+    } else if has(11) {
+        11
+    } else if has(9) {
+        9
+    } else if has(3) {
+        10
+    } else {
+        9
+    };
+    let below = |note: Note| Note::new(note.midi().saturating_sub(12));
     match tone {
         Tone::Root => bass,
         Tone::Fifth => up(fifth),
         // The same fifth, an octave lower: under the bass note.
-        Tone::LowFifth => Note::new(up(fifth).midi().saturating_sub(12)),
+        Tone::LowFifth => below(up(fifth)),
         Tone::Octave => Note::new(bass.midi() + 12),
-        Tone::Third => up(if has(3) {
-            3
-        } else if has(4) {
-            4
-        } else if has(5) {
-            5
-        } else {
-            2
-        }),
-        // A chord's own seventh or sixth comes first: the double-flat
-        // seventh of a diminished seventh chord, the sixth of a minor
-        // sixth chord. Only a plain minor chord borrows the flat seventh.
-        Tone::Seventh => up(if has(10) {
-            10
-        } else if has(11) {
-            11
-        } else if has(9) {
-            9
-        } else if has(3) {
-            10
-        } else {
-            9
-        }),
-        Tone::Next => nearest(bass, next),
-        Tone::Approach => {
-            let target = nearest(bass, next);
-            if target > bass {
-                Note::new(target.midi() - 1)
-            } else {
-                Note::new(target.midi() + 1)
-            }
-        }
+        Tone::Third => up(third),
+        Tone::LowThird => below(up(third)),
+        Tone::Seventh => up(seventh),
+        Tone::LowSeventh => below(up(seventh)),
+        // An anticipation is the next chord's own note, in whichever
+        // octave is nearer the line: it belongs to the next chord, whose
+        // line goes on from its own bass note.
+        Tone::Next => nearest(previous, next.pitch_class()),
+        Tone::Approach => approach(previous, next),
+    }
+}
+
+/// The note a semitone from `to` that leads into it from `from`: from
+/// the side nearer `from`, and from below when both are as near, but
+/// never `from` itself, which would only repeat it.
+fn approach(from: Note, to: Note) -> Note {
+    let below = Note::new(to.midi().saturating_sub(1));
+    let above = Note::new(to.midi() + 1);
+    let away = |note: Note| note.midi().abs_diff(from.midi());
+    if below == from || (above != from && away(above) < away(below)) {
+        above
+    } else {
+        below
     }
 }
 
@@ -1024,11 +1108,12 @@ pub struct Played {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BassPart {
     /// A chord: its line goes over the chord's notes from `note` (its
-    /// root, or a slash chord's bass), and may lead into `next`.
+    /// root, or a slash chord's bass), and may lead into `next`, the
+    /// bass note of the harmony after it.
     Chord {
         chord: Chord,
         note: Note,
-        next: PitchClass,
+        next: Note,
     },
     /// A group of notes with no root, such as a pitch-class set: the
     /// bass keeps the rhythm of its line on this one note and its octave.
@@ -1175,7 +1260,7 @@ impl Bass {
                 notes.extend(match harmony.bass {
                     BassPart::Chord { chord, note, next } => {
                         // Only the last piece leads into the next chord.
-                        let next = if last { next } else { note.pitch_class() };
+                        let next = if last { next } else { note };
                         self.play_from(time, bar, chord, note, next, start, span)
                     }
                     BassPart::Pedal(note) => self.pedal(time, bar, note, start, span),
@@ -1209,7 +1294,7 @@ impl Bass {
         span: usize,
     ) -> Vec<NoteEvent> {
         let chord = Chord::new(note.pitch_class(), crate::harmony::ChordQuality::Major);
-        self.play_from(time, bar, chord, note, note.pitch_class(), start, span)
+        self.play_from(time, bar, chord, note, note, start, span)
             .into_iter()
             .map(|played| {
                 let octave = played.pitch.midi() == note.midi() + 12;
@@ -1286,8 +1371,75 @@ mod tests {
         let f = Chord::new(F, Dominant7);
         let notes = Bass::Walking.play(FOUR, c, f, 0, 16);
         let pitches: Vec<u8> = notes.iter().map(|note| note.pitch.midi()).collect();
-        // C2, E2, G2, then E2 a semitone under F2.
-        assert_eq!(pitches, [36, 40, 43, 40]);
+        // C2, E2, G2, then F#2, the semitone above F2 nearer G2.
+        assert_eq!(pitches, [36, 40, 43, 42]);
+    }
+
+    #[test]
+    fn a_walking_line_goes_the_way_of_the_next_chord() {
+        let line = |chord: Chord, next: Chord| -> Vec<u8> {
+            let notes = Bass::Walking.play(FOUR, chord, next, 0, 16);
+            notes.iter().map(|note| note.pitch.midi()).collect()
+        };
+        let c = Chord::new(C, Major);
+        let am = Chord::new(A, Minor);
+        let f = Chord::new(F, Major);
+        let g7 = Chord::new(G, Dominant7);
+        // Up from C2 into A2, down from A2 into F2, up from F2 into G2,
+        // and down from G2 into C2, each last note a semitone from the
+        // next chord's root as the bass plays it (A2, F2, G2, C2).
+        assert_eq!(line(c, am), [36, 40, 43, 44]);
+        assert_eq!(line(am, f), [45, 43, 40, 42]);
+        assert_eq!(line(f, g7), [41, 45, 48, 44]);
+        assert_eq!(line(g7, c), [43, 41, 38, 37]);
+        // On the same chord, it comes back to its root.
+        assert_eq!(line(c, c), [36, 33, 31, 35]);
+        // Whatever the two chords, the line leads into the next root by
+        // a semitone, and never leaps more than a sixth.
+        let qualities = [
+            Major,
+            Minor,
+            Dominant7,
+            Minor7,
+            Major7,
+            HalfDiminished7,
+            Diminished7,
+        ];
+        for root in PitchClass::ALL {
+            for next in PitchClass::ALL {
+                for quality in qualities {
+                    for span in [12, 16] {
+                        let chord = Chord::new(root, quality);
+                        let next = Chord::new(next, Major);
+                        let notes = Bass::Walking.play(FOUR, chord, next, 0, span);
+                        let mut pitches: Vec<u8> =
+                            notes.iter().map(|note| note.pitch.midi()).collect();
+                        pitches.push(bass_root(next).midi());
+                        let last = pitches.len() - 1;
+                        assert_eq!(
+                            pitches[last].abs_diff(pitches[last - 1]),
+                            1,
+                            "{chord:?} {next:?}"
+                        );
+                        let leap = pitches
+                            .windows(2)
+                            .map(|pair| pair[0].abs_diff(pair[1]))
+                            .max();
+                        assert!(leap <= Some(9), "{chord:?} to {next:?}: {pitches:?}");
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn a_lazy_line_leans_into_the_next_root_by_a_semitone() {
+        let g = Chord::new(G, Major);
+        let c = Chord::new(C, Major);
+        let notes = Bass::Lazy.play(FOUR, g, c, 0, 16);
+        let pitches: Vec<u8> = notes.iter().map(|note| note.pitch.midi()).collect();
+        // G2, its fifth below (D2, nearer C2 than D3), then C#2 into C2.
+        assert_eq!(pitches, [43, 38, 37]);
     }
 
     #[test]
@@ -1296,8 +1448,9 @@ mod tests {
         let g = Chord::new(G, Major);
         let notes = Bass::Tumbao.play(FOUR, c, g, 0, 32);
         let pitches: Vec<u8> = notes.iter().map(|note| note.pitch.midi()).collect();
-        // Fifth, root; fifth, then G (the next root, nearest to C2: G1).
-        assert_eq!(pitches, [43, 36, 43, 31]);
+        // Fifth, root; fifth, then G, the next root, in the octave
+        // nearest the note before it: G2 again, as a tumbao has it.
+        assert_eq!(pitches, [43, 36, 43, 43]);
         // The anticipated G rings over the bar line, up to the next fifth.
         let last = notes.last().unwrap();
         assert_eq!((last.start, last.length), (28, 10));
@@ -1320,8 +1473,8 @@ mod tests {
     #[test]
     fn the_seventh_is_one_the_chord_has() {
         let seventh = |chord: Chord| {
-            tone_note(Tone::Seventh, chord, bass_root(chord), chord.root).midi()
-                - bass_root(chord).midi()
+            let bass = bass_root(chord);
+            tone_note(Tone::Seventh, chord, bass, bass, bass).midi() - bass_root(chord).midi()
         };
         // Am6 has F#, not G.
         assert_eq!(seventh(Chord::new(A, Minor6)), 9);
@@ -1349,28 +1502,30 @@ mod tests {
         // C/E with the bass on E2: root and fifth become E2 and the G
         // below it.
         let e2 = Note::new(40);
+        let f2 = Note::new(41);
         assert_eq!(
-            pitches(Bass::RootFifth.play_over(FOUR, c, e2, F, 0, 16)),
+            pitches(Bass::RootFifth.play_over(FOUR, c, e2, f2, 0, 16)),
             [40, 31]
         );
         assert_eq!(
-            pitches(Bass::Octaves.play_over(FOUR, c, e2, F, 0, 4)),
+            pitches(Bass::Octaves.play_over(FOUR, c, e2, f2, 0, 4)),
             [40, 52]
         );
         // A walking line over C/E starts on E and leads into the next
         // bass note, D, from a semitone above.
-        let walk = pitches(Bass::Walking.play_over(FOUR, c, e2, D, 0, 16));
+        let walk = pitches(Bass::Walking.play_over(FOUR, c, e2, Note::new(38), 0, 16));
         assert_eq!(walk.first(), Some(&40));
         assert_eq!(walk.last(), Some(&39), "Eb2 leads down into D2");
-        // In a bar of three: C2, G2, then E2 into F, not C2 E2 E2.
+        // In a bar of three: C2, G2, then F#2 into F2. The third would
+        // lead in too, but C2 E2 E2 only repeats it.
         let c2 = Note::new(36);
-        let walk = pitches(Bass::Walking.play_over(FOUR, c, c2, F, 0, 12));
-        assert_eq!(walk, [36, 43, 40]);
+        let walk = pitches(Bass::Walking.play_over(FOUR, c, c2, f2, 0, 12));
+        assert_eq!(walk, [36, 43, 42]);
         // With the root in the bass, play_over is play.
         let g = Chord::new(G, Dominant7);
         for bass in [Bass::Walking, Bass::Boogie, Bass::Tumbao, Bass::Reggae] {
             assert_eq!(
-                bass.play_over(FOUR, c, bass_root(c), G, 0, 32),
+                bass.play_over(FOUR, c, bass_root(c), bass_root(g), 0, 32),
                 bass.play(FOUR, c, g, 0, 32),
                 "{bass:?}"
             );

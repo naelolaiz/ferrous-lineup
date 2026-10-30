@@ -572,7 +572,7 @@ fn play_style(
     let voicings = comping.voicings(&chords, &line);
     let mut backing = Backing::default();
     for (index, span) in spans.iter().enumerate() {
-        let (next, _) = basses[(index + 1) % basses.len()];
+        let next = line[(index + 1) % line.len()];
         backing
             .chords
             .extend(comping.play(time, &voicings[index], span.start, span.length));
@@ -679,7 +679,7 @@ fn play_breaks(
             bass: BassPart::Chord {
                 chord: chords[index],
                 note: line[index],
-                next: basses[(index + 1) % basses.len()].0,
+                next: line[(index + 1) % line.len()],
             },
         })
         .collect();
