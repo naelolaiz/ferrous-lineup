@@ -238,7 +238,8 @@ let target_row = pointer.and_then(|p| row_rects.iter().position(|rect| rect.cont
 true, or `None`. A WAV file dropped on a row replaces that channel's
 sound; a file dropped anywhere else becomes a new channel named after
 the file (`path.file_stem()` is the file name without its extension). A
-project, MIDI or chord sheet file is left for the app, which opens it.
+project, MIDI or chord sheet file, or a recording, is left for the app,
+which opens or imports it.
 
 Loading happens in `LineupApp::load_sample`, on the window's thread,
 because reading files is slow and must never happen on the audio thread.

@@ -64,7 +64,11 @@ lo que se encuentra en cancioneros y en sitios web. El formato está en
 ## Grabaciones (experimental)
 
 **Archivo > Importar grabación…** abre un archivo de sonido (MP3, WAV,
-FLAC u Ogg) e intenta tocar junto con él. Escucha durante unos segundos
+FLAC u Ogg) e intenta tocar junto con él. También puedes soltar el
+archivo sobre la ventana, o abrirlo con Ferrous Lineup desde tu gestor
+de archivos. (Un archivo WAV de diez segundos o menos soltado sobre la
+ventana se toma como un sonido para un canal: ver [El rack de
+canales](channel-rack.md#tus-propios-sonidos).) Escucha durante unos segundos
 (*Escuchando …* en la barra de estado), y luego arma una canción con dos
 pistas:
 
@@ -73,7 +77,10 @@ pistas:
 
 También adivina el tempo, el compás, la tonalidad y los cambios de
 tonalidad, para que las barras de compás, la hoja de acordes y las
-teclas de armonía sigan la música. La barra de estado dice lo que
+teclas de armonía sigan la música. La tonalidad de la canción es
+aquella en la que la grabación se queda más tiempo. La grabación suena
+desde donde empieces: desde el principio, desde un compás en el que
+hagas clic, o después de un salto. La barra de estado dice lo que
 encontró, como en *canon-in-d: 63.9 BPM, 4/4, Re mayor, acordes en 43 de
 43 pulsos*.
 

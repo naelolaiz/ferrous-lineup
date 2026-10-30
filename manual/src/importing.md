@@ -60,7 +60,11 @@ sheet](chord-sheet.md#chord-sheets-as-text).
 ## Recordings (experimental)
 
 **File > Import recording…** opens a sound file (MP3, WAV, FLAC or
-Ogg) and tries to play along with it. It listens for a few seconds
+Ogg) and tries to play along with it. You can also drop the file on
+the window, or open it with Ferrous Lineup from your file manager. (A
+WAV file of ten seconds or less dropped on the window is taken as a
+sound for a channel instead: see [The channel
+rack](channel-rack.md#your-own-sounds).) It listens for a few seconds
 (*Listening to …* in the status bar), then makes a song with two
 tracks:
 
@@ -69,7 +73,9 @@ tracks:
 
 It also guesses the tempo, the time signature, the key and the key
 changes, so the bar lines, the chord sheet and the harmony keys follow
-the music. The status bar says what it found, as in *canon-in-d: 63.9 BPM, 4/4,
+the music. The song's key is the one the recording stays in longest. The
+recording plays wherever you start: from the beginning, from a bar you
+click, or after a jump. The status bar says what it found, as in *canon-in-d: 63.9 BPM, 4/4,
 D major, chords on 43 of 43 beats*.
 
 Hearing a full recording is much harder than reading a MIDI file, and

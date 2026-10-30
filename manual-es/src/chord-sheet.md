@@ -81,7 +81,8 @@ Varias armonías caben en un compás, separadas por espacios:
 | Una forma de la serie | una forma de la serie dodecafónica de la canción | `P0`, `I5`, `R3`, `RI7` |
 | Sin acorde | la banda no toca armonía | `N.C.` |
 | Un pulso sostenido | la armonía anterior sigue un pulso más | `/` |
-| El compás anterior otra vez | el compás sigue con lo que sonaba | `%`, o nada |
+| Nada | el compás sigue con lo que sonaba | un compás vacío |
+| El compás anterior otra vez | vuelve a tocar el compás anterior: después de `C G`, otra vez C G | `%` |
 
 Los acordes se escriben en solfeo o con letras, como prefieras: `Lam7`
 y `Am7` son el mismo acorde, y `b` después de la nota es un bemol
@@ -235,9 +236,10 @@ Todo menos los compases es opcional:
 | `\| C \| Am7 \| Dm7 G7 \|` | Compases, tantos por línea como quieras. |
 | `# una nota` | Una nota para las personas, que se salta. |
 
-En un compás va exactamente lo que escribirías en un compás de la hoja.
-`%`, o un compás vacío `| |`, repite el compás anterior; `||`, `|:` y
-`:|` se leen como barras simples. Una línea `Key:` o `Time:` entre
+En un compás va exactamente lo que escribirías en un compás de la hoja:
+`%` vuelve a tocar el compás anterior, y un compás vacío `| |` sigue
+con el acorde que sonaba; `||`, `|:` y `:|` se leen como barras
+simples. Una línea `Key:` o `Time:` entre
 compases cambia la tonalidad o el compás desde el compás siguiente.
 
 Los números romanos se leen en la tonalidad del esquema, así que este

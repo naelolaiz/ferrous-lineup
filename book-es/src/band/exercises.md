@@ -138,18 +138,19 @@ compases eliminados *antes* de mover nada (ver [Qué se lleva un compás
 eliminado](chord-sheet.md#qué-se-lleva-un-compás-eliminado)).
 ¿Qué leería si preguntara después, y cómo sonaría la canción?
 
-### 11. El signo de repetición (lineup-core, medio)
+### 11. Dos compases otra vez (lineup-core, medio)
 
-Hoy `%` en un compás significa «sigue la armonía de antes», así que
-después de `| C G |`, un `| % |` mantiene G, mientras que un músico que
-lee una partitura vuelve a tocar C G. Haz que `%` repita todo el compás
-anterior. `read_bar` solo ve su propio compás: ¿qué hay que darle? ¿Qué
-deben escribir `write_bar` y `text::write` para un compás que mantiene
-el acorde de antes, y para uno que repite un compás de dos acordes? Los
-proyectos guardan los acordes, no el texto: ¿qué archivos podrían
-cambiar de significado, y cuáles no?
+`%` vuelve a tocar el compás anterior (`repeat_bar`). Los cifrados
+tienen también un signo para los dos compases anteriores, un `%` con
+dos barras, dibujado sobre la barra de compás de los dos compases que
+ocupa. Haz que `%%` escrito en un compás repita los dos compases
+anteriores, en ese compás y en el siguiente, que tiene que estar
+vacío. `read_typed_bar_after` lee un compás y recibe un compás
+anterior: ¿qué hay que darle ahora, y cómo se entera la ventana de la
+hoja de que escribir en un compás escribió dos? ¿Qué debería escribir
+`text::write` para dos compases que repiten los dos anteriores?
 
-*Practica:* cambiar lo que significa una notación, y quién la lee.
+*Practica:* una notación que abarca más que el lugar donde se escribe.
 
 ### 12. Un título en la canción (lineup-core y lineup-app, medio)
 

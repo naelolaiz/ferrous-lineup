@@ -56,10 +56,12 @@ pregunta si **Detener y salir** o **Continuar exportando**.
 ## Abrir archivos de otras maneras
 
 - **Suelta un archivo sobre la ventana** desde tu gestor de archivos.
-  Un archivo .lineup se abre; un archivo MIDI o una hoja de acordes en
-  texto se importa. Suelta uno a la vez: con varios, no se abre
-  ninguno. Un archivo WAV se vuelve un canal que lo toca, o, soltado
-  sobre un canal del rack, el sonido de ese canal (ver [El rack de
+  Un archivo .lineup se abre; un archivo MIDI, una hoja de acordes en
+  texto o una [grabación](importing.md#grabaciones-experimental) (MP3,
+  FLAC, Ogg, o un WAV de más de diez segundos) se importa. Suelta uno a
+  la vez: con varios, no se abre ninguno. Un archivo WAV más corto es
+  un sonido: se vuelve un canal que lo toca, o, soltado sobre un canal
+  del rack, el sonido de ese canal (ver [El rack de
   canales](channel-rack.md)).
 - **Abre un archivo con Ferrous Lineup** desde tu gestor de archivos,
   o dáselo al programa en la línea de comandos, como en `ferrous-lineup

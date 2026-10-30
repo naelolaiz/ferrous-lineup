@@ -13,8 +13,9 @@ mayor, y cada una sería un buen proyecto para quien lea este libro:
   II](../sound/exercises.md#22-grabar-en-modo-canción-los-tres-crates-más-difícil)).
 - **Clips de audio** en las pistas, junto a los patrones, colocados y
   movidos como cualquier clip. Una grabación importada suena ahora como
-  una sola nota larga desde el principio de la canción, así que no
-  puede empezar a mitad de camino ([Importar una
-  grabación](../theory/listen.md#asperezas)).
+  una sola nota larga del sampler en el primer paso de la canción, que
+  el motor empieza por la mitad cuando la reproducción empieza más
+  tarde ([Empezar por la
+  mitad](../sound/instruments.md#empezar-por-la-mitad)).
 - **Automatización**: movimientos de mandos grabados o dibujados a lo
   largo del tiempo, sobre las pistas.

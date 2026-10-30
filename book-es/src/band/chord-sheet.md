@@ -40,7 +40,8 @@ cosas, separadas por espacios:
 | Una forma de serie | una forma de la serie dodecafónica de la tonalidad | `P0`, `I5`, `R3`, `RI7` |
 | Sin acorde | nada toca la armonía | `N.C.` o `NC` |
 | Una prolongación | la armonía anterior sigue un pulso más | `/` o `.` |
-| Nada, o `%` | el compás sigue con la armonía anterior | |
+| Nada | el compás sigue con la armonía anterior | |
+| `%` | el compás anterior, otra vez | `| C G | % |` es C G, C G |
 
 Una barra después de un acorde indica una nota en el bajo, así que las
 dos capas de un poliacorde se unen con una barra vertical: `Eb7|Fb` es
@@ -1277,11 +1278,49 @@ Em7 A7, D: una progresión en cualquier tonalidad. Sin línea `Style:`,
 la banda toca un estilo en el compás del cifrado, y sin compás
 tampoco, el estilo con que empieza una canción nueva.
 
-Un compás vacío, o `%`, se lee como en la hoja: la armonía anterior
-sigue a través de él. Eso es lo que significa el signo de repetición
-después de un compás de un solo acorde. Después de un compás de dos
-acordes, «| C G | % |», un músico vuelve a tocar C G, mientras que la
-aplicación sostiene el G.
+Un compás vacío se lee como en la hoja: la armonía anterior sigue a
+través de él. `%`, el signo de repetición, vuelve a tocar el compás
+anterior, como lo lee un músico: después de un compás de dos acordes,
+«| C G | % |» es C G dos veces, y después de un compás de un solo
+acorde es lo mismo que un compás vacío.
+
+`read_bar` solo ve su propio compás, así que el signo lo lee
+`read_typed_bar_after`, que recibe además el compás anterior y sus
+marcadores. `repeat_bar` copia esos marcadores en el compás nuevo, cada
+uno a los mismos pasos del comienzo, con su golpe, sostenido, silencio
+o anticipación. Un primer marcador que solo seguiría con la armonía que
+ya suena, como en «| C | % |», se deja fuera, para que ese compás
+guarde exactamente lo mismo que uno vacío:
+
+```rust
+pub fn repeat_bar(before: &[ChordMarker], before_bar: &Bar, bar: &Bar) -> Vec<ChordMarker> {
+    let in_bar: Vec<&ChordMarker> = before
+        .iter()
+        .filter(|marker| (before_bar.start..before_bar.end()).contains(&marker.start))
+        .collect();
+    let sounding = in_bar.last().map(|marker| marker.harmony);
+    let mut markers: Vec<ChordMarker> = in_bar
+        .iter()
+        .map(|marker| ChordMarker {
+            start: bar.start + (marker.start - before_bar.start),
+            ..**marker
+        })
+        .filter(|marker| marker.start < bar.end())
+        .collect();
+    if let Some(first) = markers.first()
+        && first.start == bar.start
+        && Some(first.harmony) == sounding
+        && first.push.is_none()
+        && first.stop.is_none()
+    {
+        markers.remove(0);
+    }
+    markers
+}
+```
+
+La canción guarda los acordes, no el texto: una vez leído, el compás
+tiene un C y un G propios, y al hacer clic en él muestra «C G».
 
 ### Leer el texto
 
@@ -1441,9 +1480,12 @@ así que deshacer y la banda no necesitan nada nuevo.
 llena el campo de texto de un compás al hacer clic en él, y junta
 líneas: palabras («[Verse ×2]», «Key: D minor») o una fila de hasta
 cuatro compases. Una sección, un cambio de tonalidad o de compás
-empieza una fila nueva, y un compás vacío se escribe `%`. Escribe en
-letras y en inglés, muestre lo que muestre la aplicación, para que el
-texto se lea igual dondequiera que se pegue:
+empieza una fila nueva, y un compás vacío se escribe `%` cuando volver
+a tocar el compás anterior suena igual, como después de «| C |».
+Después de «| C G |» un compás sostenido se escribe `/ / / /`, una `/`
+por pulso, porque `%` se volvería a leer como C G. Escribe en letras y
+en inglés, muestre lo que muestre la aplicación, para que el texto se
+lea igual dondequiera que se pegue:
 
 ```rust
 pub fn write(project: &Project, title: Option<&str>) -> String {
