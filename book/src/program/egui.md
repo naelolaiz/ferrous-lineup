@@ -884,12 +884,85 @@ It writes a file called `app.ron` in the place each system keeps app data
 (on Linux, `~/.local/share/ferrouslineup/`), every 30 seconds and when the
 window closes.
 
-The app keeps its own lasting choices in the same memory, with
+The app keeps most of its own lasting choices in the same memory, with
 `insert_persisted` instead of `insert_temp`: the area zooms, the
-settings, the recent files, the library's filters, the SoundFont. Each
-module stores its own under an `Id` of its own, and eframe saves them
-all together. Anything kept with `insert_temp` is forgotten when the
-app closes.
+settings, the recent files, the library's filters. Each module stores
+its own under an `Id` of its own, and eframe saves them all together.
+Anything kept with `insert_temp` is forgotten when the app closes.
+
+### Kept by name, not by type
+
+egui finds a value in its memory by two things: the `Id` it was stored
+under and its Rust type, through the type's `TypeId`. A `TypeId` is a
+number the compiler works out from the type's path, its fields and the
+crate it is in, and the crate's part changes with the crate's version
+and with the version of the compiler. So after an update of the app, or
+a build with a newer Rust, or a field added to the type, `get_persisted`
+looks under a new number and finds nothing: the setting is back to its
+default, and the old value sits unread in `app.ron`. The SoundFont
+showed it: with the same `app.ron`, version 0.4.0 played from
+GeneralUser GS and a build numbered 0.4.1 had it off.
+
+eframe has a storage of its own, the same `app.ron`, which finds values
+by a name: a `&str` that stays the same whatever the version. eframe
+hands it to the app only twice: as `cc.storage` when the app starts, and
+to `App::save`, every 30 seconds and when the window closes. The module
+`app/preferences.rs` bridges the two. It keeps every preference by name,
+written as RON text, in one map:
+
+```rust
+/// Each preference by name, written as RON. egui's context holds one
+/// handle to the map and the app another, to save it.
+#[derive(Clone, Default)]
+pub(super) struct Preferences(Arc<Mutex<BTreeMap<String, String>>>);
+```
+
+A handle to the map lives in egui's temporary memory, so any code with
+the `Context` reaches it, as with any other value kept there:
+
+```rust
+/// The preference kept as `name`, if there is one and it can be read.
+pub(super) fn get<T: DeserializeOwned>(ctx: &egui::Context, name: &str) -> Option<T> {
+    let text = Preferences::of(ctx).map().get(name).cloned()?;
+    ron::from_str(&text).ok()
+}
+
+/// Keeps `value` as the preference `name`.
+pub(super) fn set<T: Serialize>(ctx: &egui::Context, name: &str, value: &T) {
+    if let Ok(text) = ron::to_string(value) {
+        Preferences::of(ctx).map().insert(name.to_string(), text);
+    }
+}
+```
+
+The app reads the map from eframe's storage before anything else is
+made,
+
+```rust
+if let Some(storage) = cc.storage {
+    preferences::Preferences::of(&cc.egui_ctx).load(storage);
+}
+```
+
+keeps another handle to it, and gives it back to eframe to write:
+
+```rust
+fn save(&mut self, storage: &mut dyn eframe::Storage) {
+    self.preferences.save(storage);
+}
+```
+
+The `Arc<Mutex<…>>` lets both handles share one map. The lock is held
+only while a line is read or written, and only the window's thread
+takes it. Because the values are RON text until they are asked for, a
+type can change its fields and still read what an older version kept,
+with `#[serde(default)]` for fields that were not there yet.
+
+The sound settings ([SoundFonts](../sound/soundfonts.md)) are kept this
+way, as `"sound-font"`. The other choices above are still in egui's
+memory, so an update can forget them; moving one over is a matter of
+calling `preferences::get` and `preferences::set` with a name instead
+of `get_persisted` and `insert_persisted` with an `Id`.
 
 ### Cargo features
 

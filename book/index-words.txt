@@ -64,6 +64,7 @@ Pitch-class set: theory/sets.md
 Playback trace: sound/trace.md
 Playlist: program/project.md, program/editors.md#the-playlist
 Practice: band/practice.md
+Preferences: program/egui.md#kept-by-name-not-by-type, sound/soundfonts.md#asked-until-answered
 Project file: program/saving.md, reference/project-format.md
 Recording MIDI keys: sound/midi.md#recording-from-a-key-to-a-note
 Release packages: shipping/releases.md

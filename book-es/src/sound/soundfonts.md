@@ -498,12 +498,12 @@ mientras el Lineup Osc sostiene sus notas, así que los dos nunca
 coinciden del todo, y otro SoundFont puede sonar más fuerte o más
 suave; el volumen de cada canal hace el resto.
 
-## La primera reproducción, y la descarga
+## La oferta al reproducir, y la descarga
 
 La aplicación no trae un SoundFont, porque uno bueno ocupa decenas de
-megabytes. La primera vez que algo suena, una ventana ofrece uno:
+megabytes. Cuando algo suena con el Lineup Osc, una ventana ofrece uno:
 
-![La primera reproducción: la canción sigue sonando mientras la ventana «Sonidos de instrumentos reales» ofrece GeneralUser GS, unos 30 MB, con Descargar, Elegir un archivo… y Ahora no](../images/step-9-soundfont-offer.png)
+![Reproducir: la canción sigue sonando mientras la ventana «Sonidos de instrumentos reales» ofrece GeneralUser GS, unos 30 MB, pregunta «¿Tocar los instrumentos con él?» y tiene Descargar, Elegir un archivo… y Ahora no](../images/step-9-soundfont-offer.png)
 
 **Descargar** baja GeneralUser GS, un SoundFont General MIDI gratuito de
 S. Christian Collins, desde su propio repositorio, y lo guarda en la
@@ -515,7 +515,13 @@ las mismas opciones para más adelante: **Instrumentos del SoundFont**,
 **Batería del SoundFont**, **Elegir SoundFont…** y **Usar GeneralUser
 GS**.
 
-### Se pregunta una vez
+Si GeneralUser GS ya está en esa carpeta, descargado por una ejecución
+o una versión anterior, no hay nada que descargar, y la ventana ofrece
+**Usarlo** en su lugar:
+
+![GeneralUser GS ya está en el disco: la ventana lo dice, pregunta «¿Tocar los instrumentos con él?» y tiene Usarlo, Elegir un archivo… y Ahora no](../images/step-9-soundfont-use-it.png)
+
+### Se pregunta hasta que se responde
 
 Todas las formas de empezar a tocar (el botón ▶, **Espacio**, una
 escucha previa de la biblioteca, abrir una demostración) pasan por
@@ -523,41 +529,76 @@ escucha previa de la biblioteca, abrir una demostración) pasan por
 
 ```rust
 self.playing = true;
-self.offer_sound_font_on_first_play();
+self.offer_sound_font_on_play();
 ```
 
-y eso pregunta una sola vez:
+y eso abre la ventana siempre que los instrumentos suenan con el Lineup
+Osc y la oferta no fue rechazada:
 
 ```rust
-pub(super) fn offer_sound_font_on_first_play(&mut self) {
+pub(super) fn offer_sound_font_on_play(&mut self) {
     let sounds = &mut self.sounds;
-    if sounds.settings.offered {
-        return;
+    if !sounds.settings.on && !sounds.settings.declined && sounds.general_user.is_some() {
+        sounds.offer_open = true;
     }
-    sounds.settings.offered = true;
-    sounds.changed = true;
-    let missing = sounds.wanted_path().is_some_and(|path| !path.is_file());
-    if !sounds.settings.on && sounds.settings.file.is_none() && missing {
+}
+```
+
+No se pregunta nada mientras los sonidos están activados, aunque su
+SoundFont todavía se esté leyendo, ni en un sistema sin carpeta para
+datos de aplicaciones (ahí `general_user` es `None`). La reproducción
+sigue mientras la ventana pregunta, así que el primer sonido nunca
+espera a una pregunta.
+
+Abrir la ventana no responde nada. Una ejecución que se cierra antes de
+responder vuelve a preguntar la próxima vez que algo suena, y lo mismo
+pasa si su SoundFont desapareció. Solo un «no» termina la oferta:
+
+```rust
+fn decline_sound_font(&mut self) {
+    let sounds = &mut self.sounds;
+    sounds.offer_open = false;
+    sounds.settings.declined = true;
+    sounds.turn_off();
+}
+```
+
+**Ahora no** la llama, y también cerrar la ventana antes de una
+descarga y **Detener** durante una. Desmarcar **Instrumentos del
+SoundFont** en los ajustes también marca `declined`, y marcarlo lo
+borra. Un «sí» activa los sonidos y borra `declined`:
+
+```rust
+// Yes: GeneralUser GS, even in place of a chosen file that is
+// gone, played from as soon as it is downloaded or read.
+if (download || use_it)
+    && let Some(path) = self.sounds.general_user.clone()
+{
+    let sounds = &mut self.sounds;
+    sounds.settings.file = None;
+    sounds.settings.declined = false;
+    if download {
+        sounds.settings.on = true;
+        sounds.changed = true;
+        sounds.start(path, true);
+    } else {
+        sounds.offer_open = false;
         self.set_sound_font(true);
     }
 }
 ```
 
-`offered` se marca antes que nada, así que, sea cual sea la respuesta,
-Reproducir no vuelve a preguntar. La oferta es lo mismo que marcar el
-ajuste: activa los sonidos, y como falta el archivo, se abre la ventana;
-**Ahora no** los vuelve a desactivar. No se pregunta nada si los sonidos
-ya están activados, si elegiste un archivo propio, o si GeneralUser GS
-ya está en el disco: entonces los sonidos se desactivaron a propósito.
-La reproducción sigue mientras la ventana pregunta, así que el primer
-sonido nunca espera a una pregunta. La ventana se dibuja en el orden
-`Foreground` de egui, encima de todas las demás, porque una
-demostración abre su hoja de acordes y la trae al frente en el mismo
-frame en que empieza a sonar.
+**Descargar** empieza la descarga y deja la ventana abierta para
+mostrarla. **Usarlo** cierra la ventana y pasa por `set_sound_font`,
+igual que marcar el ajuste, que encuentra el archivo en el disco y
+empieza a leerlo. En los dos casos, cuando el SoundFont está listo,
+`check_sounds` vuelve a dar a cada canal su instrumento y la barra de
+estado dice «Los instrumentos suenan desde GeneralUser GS». La ventana
+se dibuja en el orden `Foreground` de egui, encima de todas las demás,
+porque una demostración abre su hoja de acordes y la trae al frente en
+el mismo frame en que empieza a sonar.
 
-Los ajustes son una pequeña struct guardada en la memoria de egui, que
-eframe conserva entre ejecuciones ([Recordar entre
-ejecuciones](../program/egui.md#recordar-entre-ejecuciones)):
+Los ajustes son una pequeña struct:
 
 ```rust
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -570,15 +611,33 @@ struct Settings {
     /// A SoundFont file chosen with "Choose SoundFont…", or `None` for
     /// GeneralUser GS.
     file: Option<PathBuf>,
-    /// Whether the first Play has offered the SoundFont: it does once.
-    offered: bool,
+    /// Whether the offer of real instrument sounds was turned down, with
+    /// "Not now", or the sounds were turned off in Settings. Until then,
+    /// Play offers them whenever they are off.
+    declined: bool,
 }
 ```
 
+Se guardan entre ejecuciones por nombre, como `"sound-font"`, con el
+módulo `preferences` de la aplicación ([Guardado por nombre, no por
+tipo](../program/egui.md#guardado-por-nombre-no-por-tipo)):
+
+```rust
+settings: preferences::get(ctx, SETTINGS_NAME).unwrap_or_default(),
+```
+
+al arrancar la aplicación, y `preferences::set(ctx, SETTINGS_NAME,
+&self.sounds.settings)` cada vez que cambian. Guardados por nombre,
+sobreviven a una actualización de la aplicación. En la memoria propia
+de egui no sobrevivían: una actualización desactivaba los sonidos y,
+con GeneralUser GS todavía en el disco, nada volvía a ofrecerlos.
+
 `#[serde(default)]` sobre la struct rellena cualquier campo que falte en
 los datos guardados con su valor de `Default`, de modo que se puede
-añadir un campo sin perder los ajustes de nadie. `Default` está escrito
-a mano en lugar de derivado, porque `drums` empieza en `true`.
+añadir un campo sin perder los ajustes de nadie, y un campo que ya no
+existe (como `offered`, que guardaba una versión anterior) se salta.
+`Default` está escrito a mano en lugar de derivado, porque `drums`
+empieza en `true`.
 
 ### Descargar en un hilo propio
 
@@ -746,14 +805,17 @@ archivo que no es un SoundFont, y qué canales toma el SoundFont
 Los tests de ventana no deben depender de si el ordenador que los
 ejecuta ha descargado GeneralUser GS. Así que cada aplicación de prueba
 lo busca en una ruta que nunca existe,
-`keep_general_user_in(no_sound_font())`, y arranca como si la primera
-reproducción ya hubiera preguntado. El único test sobre la oferta,
-`the_first_play_offers_real_instrument_sounds_once`, deshace eso: pulsa
+`keep_general_user_in(no_sound_font())`, y arranca como si la oferta ya
+se hubiera rechazado. Tres tests deshacen eso.
+`play_offers_real_instrument_sounds_until_the_offer_is_answered` pulsa
 **Espacio** y comprueba que la ventana se abre mientras la canción
-suena, hace clic en **Ahora no**, vuelve a reproducir, y comprueba que no
-se pregunta nada, ni siquiera tras reiniciar. Luego pone un archivo
-vacío donde va GeneralUser GS y comprueba que reproducir no pregunta
-nada.
+suena, con **Descargar**. Vuelve a arrancar la aplicación sin responder
+y comprueba que reproducir pregunta otra vez. Luego hace clic en
+**Ahora no**, reproduce dos veces, y comprueba que no se pregunta nada,
+ni tras reiniciar ni tras una actualización.
+`play_offers_a_sound_font_already_on_disk` pone un archivo vacío donde
+va GeneralUser GS, comprueba que la ventana ofrece **Usarlo**, hace clic
+y comprueba que el archivo se está leyendo.
 `a_demo_asks_for_real_instrument_sounds_in_front_of_its_chord_sheet`
 comprueba que la ventana queda encima, y que sus botones reciben el
 clic.
