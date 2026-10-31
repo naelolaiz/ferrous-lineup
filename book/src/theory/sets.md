@@ -288,9 +288,10 @@ T3I its inversion moved up three. Then:
   (`ChordStamp::Set`, next to the chord stamps of [Chords: building,
   naming and inversions](chords.md#chord-stamps));
 - **Use as the key** makes the set the song's key: the piano roll
-  highlights its notes and the harmony keys play chords stacked from it
-  (or, for a set of three notes, its forms by degree, as for a
-  micromode: see [Micromodes](micromodes.md#a-micromode-as-the-key-degrees)).
+  highlights its notes and the harmony keys show its forms by degree,
+  as for a micromode (see
+  [Micromodes](micromodes.md#a-micromode-as-the-key-degrees)), or,
+  under **Chords**, chords stacked from it.
   Picked here, a set of three notes is named as a set, 3-3, not as the
   micromode it also is (see [Three notes: a set or a
   micromode](#three-notes-a-set-or-a-micromode)).
@@ -314,17 +315,19 @@ in another scale, or name the same notes another way. Ferrous Lineup
 takes the second meaning, because a set is a notation. C major already
 *is* a pitch-class set, C D E F G A B, the class 7-35. So switching the
 key from C major to "pitch-class set" keeps every note of the song and
-only shows the same harmony in set notation:
+only shows the same harmony in set notation. The harmony keys play the
+same chords as before, named as sets (the last column is what C major
+called them; the keys no longer do):
 
-| Harmony key | Notes | Set class |
-|---|---|---|
-| C | C E G | 3-11 |
-| Dm | D F A | 3-11 |
-| Em | E G B | 3-11 |
-| F | F A C | 3-11 |
-| G | G B D | 3-11 |
-| Am | A C E | 3-11 |
-| Bdim | B D F | 3-10 |
+| Harmony key | Notes | Set class | In C major |
+|---|---|---|---|
+| 3-11 T7I | C E G | 3-11 | C |
+| 3-11 T2 | D F A | 3-11 | Dm |
+| 3-11 T4 | E G B | 3-11 | Em |
+| 3-11 T0I | F A C | 3-11 | F |
+| 3-11 T2I | G B D | 3-11 | G |
+| 3-11 T9 | A C E | 3-11 | Am |
+| 3-10 T11 | B D F | 3-10 | Bdim |
 
 The table is a lesson on its own. Major and minor triads are the
 **same** class, 3-11, because a minor triad is a major triad upside
@@ -508,6 +511,38 @@ can be read the same way, so a key that is a set of 2 to 11 notes has a
 table above, or its forms. A set of three notes is one chord already,
 so it always shows its forms.
 
+Picking a new set as the key, in the Key menu or with **Use as the
+key**, turns the switch to **Forms**, since a set's own forms are what
+its music is made of. Naming the same notes as a set, as C major
+becomes 7-35, turns it to **Chords**, the chords the song had before.
+Every way of changing the key ends in one place, `RollAction::SetScale`
+or `HarmonyAction::SetScale` in `app.rs`, so one call there covers them
+all:
+
+```rust
+pub fn key_picked(&mut self, old: Scale, new: Scale) {
+    if !matches!(new.kind, ScaleKind::Set(_)) {
+        return;
+    }
+    if new.pitch_set() != old.pitch_set() {
+        self.forms = true;
+    } else if !matches!(old.kind, ScaleKind::Set(_)) {
+        self.forms = false;
+    }
+}
+```
+
+A row or a set is music without a key, so its keys never take the
+names of tonal music. A chord stacked from a set's notes is called by
+the set it makes, as the chord sheet writes it: C E G in a set key is
+**3-11 T7I**, not C, with its prime form, [037], underneath. A row's
+group is called by its place in the row, "1–3", with its set class
+underneath, even in the *Four triads* row, whose groups sound like
+triads. The rule is the owner's: tonal names and set names are not
+mixed unless asked for. `GroupKey::new` names the group with
+`HarmonyName::Set(set).to_string()`, the same text the chord sheet
+writes, so the keys and the sheet agree.
+
 The degrees are counted as for a micromode: **T*n*** is the key's own
 form moved up *n* semitones, **T*n*I** the key's form turned upside
 down around the key's note and then moved up *n*. Switching the key to
@@ -550,11 +585,17 @@ C E G B♭ becomes C A♭ F D, Dm7b5, and a tone up that is E G B♭ D, Em7b5:
 two (E♭7, F♯7, A7 and six half-diminished sevenths), seven keep one and
 six keep none.
 
-A key names a form as what it is when tonal music has a name for it: a
-chord (C7, Em7b5), spelled from its root, or, for more than five notes,
-the scale it is when it is the key's own scale moved (7-35 moved up a
-fifth from C major is G major, written with F♯). Anything else is its
-notes in normal form.
+In the app, a key never calls a set's form by the chord or scale it
+sounds like. Its key shows the degree, the notes in normal form, and
+underneath the form as the chord sheet writes it: T2I of C E G B♭ is
+D E G B♭, **4-27 T2**. A form of more than five notes that is the
+key's own scale moved is still spelled as that scale (7-35 moved up a
+fifth from C major is written G A B C D E F♯, with F♯, not G♭), but not
+called G major. Only Kröpfl's three chord micromodes (Acorde
+disminuido, menor-mayor and aumentado), which are triads by name, show
+the triad each form is, spelled from its root (see [A micromode as the
+key: degrees](micromodes.md#a-micromode-as-the-key-degrees)); the same
+three notes named as a set, 3-11, do not.
 
 ### Progressions of forms
 
@@ -644,6 +685,17 @@ chord found has exactly the form's notes, so four notes that only make a
 chord with one of them left out are not called that chord. Three notes
 go to the micromode, which only calls a triad a chord: C C♯ E is Menor
 3, not an incomplete C♯m(maj7).
+
+The band uses it to put a chord's root in the bass. The harmony keys
+ask it only in a key that is a micromode:
+
+```rust
+let triad = scale.micromode().and(form_chord(form));
+```
+
+`Option::and` gives the second option when the first is `Some`, and
+`None` when it is `None`. `Scale::micromode` is `None` for a key named
+as a set, so such a key's forms get no chord name.
 
 Finding the ways to split the twelve notes is a search that tries a
 form, goes on, and takes the form back when the way is finished or
@@ -1260,9 +1312,13 @@ checks that the project is exactly as it was.
 
 The forms of a set key are tested where they are made. `keys.rs`
 checks C major as a set (its forms are the twelve major scales, nearest
-by the circle of fifths, G major spelled with F♯, nine near home), C7
-(home, then Em7b5 as T2I, 24 forms in all) and a hexachord with no
-name. `micromodal.rs` checks the ways sets split the twelve notes (18
+by the circle of fifths, T7 spelled with F♯, nine near home, none named
+as a scale), C7 (home, then D E G B♭ as T2I, 24 forms in all, none
+named as a chord), a hexachord with no name, and that the chords
+stacked from a set are named as sets ("3-11 T7I") and a row's groups
+by their place only. An app test picks 6-20 from the Key menu and
+checks that the menu says "set 6-20" and the harmony keys show its
+forms. `micromodal.rs` checks the ways sets split the twelve notes (18
 for Menor 3, 1 for the augmented triad, none for the diminished triad,
 6 for the chromatic hexachord, each a tritone from its other half),
 that every group of an all-twelve walk holds every note, that C major
