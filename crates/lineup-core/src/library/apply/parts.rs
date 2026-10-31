@@ -118,7 +118,7 @@ fn own_players_instruments(project: &mut Project, band: &BandStyle) -> bool {
 
 /// Whether a channel called `name` plays the tune, as "Lead", "Melody",
 /// "Melodía", "Voice" or "Voz" say.
-fn plays_the_tune(name: &str) -> bool {
+pub(crate) fn plays_the_tune(name: &str) -> bool {
     let name = name.to_lowercase();
     ["lead", "melod", "voice", "vocal", "voz", "canto", "tune"]
         .iter()
