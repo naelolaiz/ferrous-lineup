@@ -2273,4 +2273,70 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "🔒 The strings is locked: it keeps its notes, not new chords.",
         "🔒 Las cuerdas están bloqueadas: conservan sus notas, no toman acordes nuevos.",
     ),
+    ("keeps no note", "no conserva ninguna nota"),
+    ("keeps every note, {}", "conserva todas las notas, {}"),
+    ("keeps {}; {} goes to {}", "conserva {}; {} pasa a {}"),
+    ("keeps {}; {} go to {}", "conserva {}; {} pasan a {}"),
+    (
+        "\"{}\" is a degree, but {} has no forms to count.",
+        "\"{}\" es un grado, pero {} no tiene formas que contar.",
+    ),
+    ("the key's own form", "la forma propia de la tonalidad"),
+    (
+        "the key's form moved up a semitone",
+        "la forma de la tonalidad transportada un semitono hacia arriba",
+    ),
+    (
+        "the key's form moved up {} semitones",
+        "la forma de la tonalidad transportada {} semitonos hacia arriba",
+    ),
+    (
+        "the key's form turned upside down",
+        "la forma de la tonalidad dada vuelta",
+    ),
+    ("In {} it is {}: {}.", "En {} es {}: {}."),
+    ("Near home", "Cercanas"),
+    (
+        "The forms that share at least one note with the key's own form",
+        "Las formas que comparten al menos una nota con la forma propia de la tonalidad",
+    ),
+    ("All forms", "Todas las formas"),
+    (
+        "Every form of the micromode, moved and upside down",
+        "Todas las formas del micromodo, transportadas y dadas vuelta",
+    ),
+    (
+        "The micromode's forms, nearest home first. Outlined: they keep two notes of {}.",
+        "Las formas del micromodo, primero las más cercanas a la de la tonalidad. Con borde: conservan dos notas de {}.",
+    ),
+    (
+        "The micromode's forms, nearest home first. Hold a key or press {}.",
+        "Las formas del micromodo, primero las más cercanas a la de la tonalidad. Mantén una tecla o pulsa {}.",
+    ),
+    (
+        " The outlined forms keep two notes of {} and move one: the smoothest ways on.",
+        " Las formas con borde conservan dos notas de {} y mueven una: los enlaces más suaves.",
+    ),
+    (
+        "Music on one micromode makes its chords and its tunes of the micromode's own forms, so these are its keys, each called by its degree: T0 is the key's own form, T2 the same moved up two semitones, T2I upside down. The more notes a form keeps from home, the brighter its key.{} Hold one (or press {}) to play it.",
+        "La música sobre un micromodo hace sus acordes y sus melodías con las formas del propio micromodo, así que estas son sus teclas, cada una llamada por su grado: T0 es la forma propia de la tonalidad, T2 la misma transportada dos semitonos hacia arriba, T2I dada vuelta. Cuantas más notas conserva una forma de la de la tonalidad, más brillante es su tecla.{} Mantén una (o pulsa {}) para tocarla.",
+    ),
+    (
+        "keeps 1 note of home",
+        "conserva 1 nota de la forma de la tonalidad",
+    ),
+    (
+        "keeps {} notes of home",
+        "conserva {} notas de la forma de la tonalidad",
+    ),
+    ("From {}: {}.", "Desde {}: {}."),
+    ("1 common", "1 común"),
+    ("{} common", "{} comunes"),
+    (
+        "From the harmony before, it {}.",
+        "Desde la armonía anterior, {}.",
+    ),
+    ("parallel", "paralela"),
+    ("leading-tone exchange", "intercambio de sensible"),
+    ("relative", "relativa"),
 ];
