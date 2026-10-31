@@ -185,6 +185,7 @@ Odd meter: rhythm-and-meter.md#odd-meters, odd-meters-and-balkans.md
 Open recent: saving.md#the-file-menu
 Organ: bigger-band.md#strings-and-organ
 Pad: bigger-band.md#strings-and-organ
+Palindrome (row): practising.md#ear-training-experimental
 Pan: mixer.md#the-lines, mixer.md#placing-the-band
 Parallel fifths and octaves: voice-leading.md#no-parallel-fifths-or-octaves
 Parallel keys: keys-and-modes.md#major-and-minor-keys
