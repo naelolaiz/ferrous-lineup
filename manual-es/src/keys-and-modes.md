@@ -158,8 +158,8 @@ V7/IV en La mayor.
 También funciona mientras tocas con un teclado MIDI o el teclado del
 equipo, con los compases que llevas tocados. En modo canción, **Marcar
 en la lista de reproducción** escribe como marcas de tonalidad los
-cambios que oyó, y así le das a un archivo MIDI o una grabación
-importados los cambios de tonalidad que tienen de verdad. Ninguna nota
+cambios que oyó, y así le das a un archivo MIDI importado los cambios
+de tonalidad que tiene de verdad. Ninguna nota
 se mueve, y Deshacer las quita.
 
 ![Buscar la tonalidad en una canción en Mi dórico: La menor se muestra más brillante, con Mi menor y La mayor más tenues después, y lo que es en cada una el acorde que suena](images/find-key.png)
