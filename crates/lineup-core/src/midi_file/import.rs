@@ -35,7 +35,9 @@ use crate::key_map::{KeyMap, KeyMarker};
 use crate::meter::{Meter, TimeMarker, TimeSignature};
 use crate::pattern::{MAX_STEPS, NoteEvent, STEP_NOTE, TICKS_PER_STEP};
 use crate::playlist::{Clip, MAX_SONG_STEPS};
-use crate::project::{Channel, Drum, MAX_CHANNELS, MAX_PATTERNS, Project};
+use crate::project::{
+    Channel, ChannelKind, Drum, MAX_CHANNELS, MAX_PATTERNS, Project, SampleSource,
+};
 use crate::tempo::{Tempo, TempoMarker};
 use crate::{DRUM_CHANNEL, Note, PitchClass, STEPS_PER_BEAT, Spelling};
 
@@ -253,6 +255,9 @@ pub fn import(file: &MidiFile, title: &str) -> Result<Imported, ImportError> {
     left_out += place_patterns(&mut project, &meter, &chunks, &notes);
     if let Some(track) = project.track_mut(0) {
         track.name = title.to_string();
+    }
+    if let Some(track) = project.track_mut(DRUMS_TRACK) {
+        track.name = DRUMS.to_string();
     }
     project.remove_unused_tracks();
 
@@ -921,9 +926,19 @@ fn chunks(meter: &Meter, length: usize, notes: &[Placed]) -> Vec<(usize, usize)>
     chunks
 }
 
+/// The track the drums go on, under the one of the other parts: their
+/// own, so that a band's drums can take their place (see
+/// [`crate::band`]).
+const DRUMS_TRACK: usize = 1;
+
+/// The name of the drums' track.
+const DRUMS: &str = "Drums";
+
 /// Fills the project's patterns with the notes of each chunk, and places
-/// them on the playlist. Returns how many notes were left out because
-/// the project ran out of patterns.
+/// them on the playlist: the drums of a chunk in a pattern of their own
+/// on the drums' track, the other parts in one on the first track.
+/// Returns how many notes were left out because the project ran out of
+/// patterns.
 fn place_patterns(
     project: &mut Project,
     meter: &Meter,
@@ -931,6 +946,14 @@ fn place_patterns(
     notes: &[Placed],
 ) -> usize {
     let channels = project.channels().len();
+    let is_drum: Vec<bool> = (project.channels().iter())
+        .map(|channel| matches!(channel.kind, ChannelKind::Sampler(SampleSource::Builtin(_))))
+        .collect();
+    while project.playlist().tracks().len() <= DRUMS_TRACK {
+        if project.add_track().is_none() {
+            break;
+        }
+    }
     // The notes of each chunk, by channel. A note that runs past the end
     // of its chunk goes on in the next one.
     let mut rows: Vec<Vec<Vec<NoteEvent>>> = vec![vec![Vec::new(); channels]; chunks.len()];
@@ -952,8 +975,22 @@ fn place_patterns(
 
     let mut made: Vec<usize> = Vec::new();
     let mut left_out = 0;
-    for (index, &(first, end)) in chunks.iter().enumerate() {
-        let notes = &rows[index];
+    let parts = [(false, 0), (true, DRUMS_TRACK)];
+    for ((index, &(first, end)), &(drums, track)) in chunks
+        .iter()
+        .enumerate()
+        .flat_map(|chunk| parts.iter().map(move |part| (chunk, part)))
+    {
+        // The chunk's notes on the drums, or on the other channels.
+        let notes: Vec<Vec<NoteEvent>> = (rows[index].iter().enumerate())
+            .map(|(channel, notes)| {
+                if is_drum[channel] == drums {
+                    notes.clone()
+                } else {
+                    Vec::new()
+                }
+            })
+            .collect();
         if notes.iter().all(Vec::is_empty) {
             continue;
         }
@@ -981,7 +1018,11 @@ fn place_patterns(
                     continue;
                 };
                 if let Some(pattern) = project.pattern_mut(new) {
-                    pattern.name = bars_name(meter, first, end);
+                    pattern.name = if drums {
+                        drums_name(meter, first, end)
+                    } else {
+                        bars_name(meter, first, end)
+                    };
                     pattern.set_length(length);
                     for (channel, notes) in notes.iter().enumerate() {
                         pattern.set_notes(channel, notes.iter().copied());
@@ -991,7 +1032,7 @@ fn place_patterns(
                 new
             }
         };
-        project.add_clip(Clip::new(pattern, 0, first));
+        project.add_clip(Clip::new(pattern, track, first));
     }
     left_out
 }
@@ -1005,6 +1046,11 @@ fn bars_name(meter: &Meter, first: usize, end: usize) -> String {
     } else {
         format!("Bars {from}–{to}")
     }
+}
+
+/// "Drums, bars 1–16", or "Drums, bar 5" for one bar.
+fn drums_name(meter: &Meter, first: usize, end: usize) -> String {
+    format!("{DRUMS}, {}", bars_name(meter, first, end).to_lowercase())
 }
 
 /// The built-in drum closest to a General MIDI drum sound (notes 35 to
@@ -1377,13 +1423,36 @@ mod tests {
         let project = &imported.project;
         let names: Vec<&str> = project.channels().iter().map(|c| c.name.as_str()).collect();
         assert_eq!(names, ["Electric Bass (finger)", "Kick", "Hat"]);
-        let pattern = &project.patterns()[0];
+        // The drums in a pattern of their own, on a track of their own,
+        // so that a band's drums can take their place.
+        let names: Vec<&str> = project.patterns().iter().map(|p| p.name.as_str()).collect();
+        assert_eq!(names, ["Bar 1", "Drums, bar 1"]);
+        let tracks: Vec<&str> = (project.playlist().tracks().iter())
+            .map(|t| t.name.as_str())
+            .collect();
+        assert_eq!(tracks, ["Song", "Drums"]);
+        let clips: Vec<(usize, usize)> = (project.playlist().clips().iter())
+            .map(|clip| (clip.track, clip.pattern))
+            .collect();
+        assert_eq!(clips, [(0, 0), (1, 1)]);
+        assert_eq!(project.patterns()[0].notes(1), []);
+        let pattern = &project.patterns()[1];
+        assert_eq!(pattern.notes(0), [], "no bass among the drums");
         assert!(pattern.is_step_row(1) && pattern.is_step_row(2));
         let kicks: Vec<usize> = pattern.notes(1).iter().map(|n| n.start).collect();
         assert_eq!(kicks, [0, 4, 8, 12]);
         let hats: Vec<usize> = pattern.notes(2).iter().map(|n| n.start).collect();
         assert_eq!(hats, [0, 2, 6, 10, 14], "the pedal hat is a hat too");
         assert_eq!(imported.report.notes_left_out, 1, "the whistle");
+    }
+
+    #[test]
+    fn a_file_without_drums_has_no_drums_track() {
+        let project = import(&file(0, vec![note(0, 60, 0, 480).to_vec()])).project;
+        let tracks: Vec<&str> = (project.playlist().tracks().iter())
+            .map(|t| t.name.as_str())
+            .collect();
+        assert_eq!(tracks, ["Song"]);
     }
 
     #[test]
