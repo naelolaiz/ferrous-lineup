@@ -510,6 +510,16 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Combinatorial: its first six notes and those of {} make all twelve.",
         "Combinatoria: sus seis primeras notas y las de {} forman las doce.",
     ),
+    ("With its partner, {}", "Con su compañera, {}"),
+    ("With its partner", "Con su compañera"),
+    (
+        "Its combinatorial partner sounds an octave under it, note for note: the first six notes of the two make all twelve, and so do the last six",
+        "Su compañera combinatoria suena una octava más abajo, nota por nota: las seis primeras notas de las dos forman las doce, y también las seis últimas",
+    ),
+    (
+        "No form of this row has the six notes the first half leaves out as its own first half, so it has no partner",
+        "Ninguna forma de esta serie tiene como primera mitad las seis notas que deja fuera la primera mitad, así que no tiene compañera",
+    ),
     ("Compressor", "Compresor"),
     ("Concert pitch", "Altura real"),
     ("Copied 1 bar as text.", "Se copió 1 compás como texto."),
@@ -1968,8 +1978,8 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "En una canción, la banda lo toca desde la hoja de acordes: las formas escritas ahí cuando la tonalidad es un conjunto, o si no su propio recorrido, que escribe en la hoja, y la tonalidad se vuelve el micromodo, empezando en la nota de la tonalidad.",
     ),
     (
-        "The key becomes the row, starting on the key note. While the song plays, a click plays the whole song this way.",
-        "La tonalidad se vuelve la serie, empezando en la nota de la tonalidad. Si la canción está sonando, un clic toca así toda la canción.",
+        "It plays the key's row when the key is a row, and else its own, starting on the key note. In a song, the band plays it from the chord sheet: the forms of the row written there (P0, RI5…), or else its own plan, which it writes on the sheet. With Chord progression, its own row and plan.",
+        "Toca la serie de la tonalidad cuando la tonalidad es una serie, y si no la suya, empezando en la nota de la tonalidad. En una canción, la banda lo toca desde la hoja de acordes: las formas de la serie escritas ahí (P0, RI5…), o si no su propio plan, que escribe en la hoja. Con Progresión de acordes, su propia serie y su plan.",
     ),
     (
         "The key of the song. A new key or mode moves the chords, bass and melody into it (the drums stay), so the song plays in the new key. Ctrl+Z puts them back.",

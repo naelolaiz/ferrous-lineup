@@ -151,6 +151,7 @@ impl Band {
             band.accents_only = false;
             band.drums = super::BandDrums::Style;
             band.micromode = None;
+            band.row = None;
         }
         band
     }
