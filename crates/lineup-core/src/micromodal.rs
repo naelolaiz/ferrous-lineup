@@ -55,9 +55,9 @@ pub enum Walk {
     /// the twelve notes between them, one after another, then another
     /// such group starting from a form that keeps as many notes of the
     /// last as it can. Four forms of three notes, three of four, two of
-    /// six (a hexachord and its complement). Peter Schat called this
-    /// "steering" in his Tone Clock; Webern's Concerto row is four forms
-    /// of Menor 3. A set that cannot split the twelve notes walks as
+    /// six (a hexachord and its complement). Peter Schat's Tone Clock is
+    /// built on such groups of trichords; Webern's Concerto row is four
+    /// forms of Menor 3. A set that cannot split the twelve notes walks as
     /// [`Walk::CommonTones`].
     AllTwelve,
     /// Move every note up this many semitones: a sequence.
