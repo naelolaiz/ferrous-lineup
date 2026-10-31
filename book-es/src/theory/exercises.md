@@ -3,7 +3,7 @@
 Estos ejercicios practican esta parte sobre el código real: las notas y
 los acordes, los números romanos, las herramientas de edición, la
 escucha de acordes y tonalidades, los conjuntos, las series y los
-micromodos, la conducción de voces y la importación de grabaciones.
+micromodos, la conducción de voces y las tomas.
 Cada uno dice qué **ya existe**, para que lo amplíes en lugar de
 volver a construirlo. Algunos son cosas que tocar en la aplicación y
 escuchar; otros son piezas de Rust con un final claro; los que se
@@ -645,67 +645,70 @@ otros movimientos cambian de tamaño?
 
 *Practica:* letras y semitonos, otra vez.
 
-## Importar una grabación
+## Tomas
 
-### 42. Una plantilla sus4 (lineup-listen, medio)
+### 42. Una repetición ligada (lineup-listen, medio)
 
-`chords.rs` conoce seis cualidades. Añade `ChordQuality::Sus4` a
-`QUALITIES` y mira qué hace en una grabación con un acorde sus: renderiza
-a WAV una demostración que tenga uno (el test `write_wav` de
-`tests/key_changes.rs` lo hace). Más candidatos son más maneras de
-equivocarse. ¿Necesita `SEVENTH_COST` un primo para los acordes raros?
+`voice::notes` corta una nota cantada otra vez a la misma altura donde
+la intensidad baja o sube de golpe (ver [De una línea de altura a
+notas](listen.md#de-una-línea-de-altura-a-notas)), así que «la, la» son
+dos notas, pero una repetición cantada ligada, sin bajada y sin ataque
+nuevo, es una. Haz una voz de prueba que cante la misma altura dos veces
+con solo una bajada de 3 dB entre ellas, y mira qué sale. ¿Qué más
+cambia al principio de una sílaba cantada? (Piensa en la consonante: un
+golpe corto de ruido, sin altura, donde el mejor candidato del buscador
+de alturas tiene una probabilidad baja.) Prueba a cortar donde la
+probabilidad de que haya voz baja durante uno o dos instantes.
 
-*Practica:* medir un cambio sobre datos conocidos.
+*Practica:* medir un cambio con datos conocidos.
 
-### 43. Seis por ocho (lineup-listen, medio)
+### 43. Un vibrato que se aleja demasiado (lineup-listen, fácil)
 
-`meter::guess` conoce 3 y 4 pulsos por compás. Añade el 6/8: seis
-pulsos en dos grupos de tres, donde los acordes cambian en los pulsos 1
-y 4. ¿Cómo distingues 6/8 de 3/4 al doble del tempo, cuando los dos
-ponen cambios cada tres pulsos? (Quizás no se pueda solo con los
-acordes: ¿qué otra cosa podría distinguirlos?)
+`pitch_cuts` toma como nota nueva un movimiento de más de tres cuartos
+de semitono que dura 70 ms. El vibrato de un cantante de ópera puede
+oscilar un semitono entero, cinco o seis veces por segundo. Haz una voz
+de prueba con un vibrato de ±1 semitono a 5,5 Hz (la `voice` de los
+tests usa ±0,25) y mira si se rompe en notas. ¿Cuál de `AWAY` y `STAYS`
+cambiarías, y qué le costaría eso a una carrera rápida de
+semicorcheas?
 
 *Practica:* los límites de un método.
 
-### 44. Una grabación sin copia (lineup-audio, lineup-core y lineup-listen, más difícil)
+### 44. Qué toma gana (lineup-core, medio)
 
-La importación guarda una copia de la grabación con una entrada de
-silencio (mira [Asperezas](listen.md#asperezas)), solo porque una nota
-del sampler toca su sonido desde la primera muestra. El sampler ya
-puede empezar una voz por la mitad (`start_at`, que usa `resume`, mira
-[Empezar por la mitad](../sound/instruments.md#empezar-por-la-mitad)).
-Dale a `SampleSource::File` un desplazamiento de comienzo en segundos,
-negativo para un silencio antes del sonido, y deja que el `note_on` del
-sampler empiece ahí. Luego borra `write_wav`, y usa la entrada como
-desplazamiento. ¿Qué tiene que sumarle `resume` a `elapsed`? Y
-`SampleSource` se guarda en los archivos de proyecto: ¿qué número de
-formato necesita el cambio, y cómo se lee un archivo más viejo?
+Donde dos tramos cubren los mismos compases, se conserva el último
+(`kept` en `take.rs`): canta el estribillo otra vez hasta que salga
+bien. Hay quien preferiría quedarse con la toma más afinada. Cada
+`SungNote` tiene su altura con fracción, así que se sabe cuánto se alejó
+cada nota de su semitono. Escribe una versión de `kept` que se quede,
+para cada trozo cantado más de una vez, con el tramo cuyas notas
+estuvieron más cerca de sus semitonos, y un test con dos tramos sobre
+los mismos compases.
 
-*Practica:* cambiar un tipo que se guarda en archivos, el hilo de
-audio.
+*Practica:* recorrer rangos, elegir por una medida.
 
-### 45. Una tonalidad clara, o la de toda la grabación (lineup-listen, fácil)
+### 45. Una toma que sigue una interpretación (lineup-core, más difícil)
 
-`keys::main_key` toma la tonalidad del tramo más largo, aunque la
-tonalidad de ese tramo no sea clara (`KeySpan::is_clear`, mira
-[Los cambios de tonalidad](listen.md#los-cambios-de-tonalidad)). Prueba otras
-dos reglas: la tonalidad del tramo *claro* más largo, y la tonalidad de
-toda la grabación que da `bpm-key` (`whole` en `analyze`) cuando el
-tramo más largo no es claro. Ejecuta el informe de
-`tests/key_changes.rs` para cada una. ¿Qué regla acierta más canciones,
-y son las mismas las canciones en que falla?
+`Take::laid` pone una grabación añadida desde un archivo sin parar al
+tempo de la canción, así que una interpretación que se frena se aleja
+de los compases (ver [Asperezas](listen.md#asperezas)). Si la canción
+tiene marcas de tempo que siguen la interpretación, las marcas de la
+toma ya las siguen. ¿Qué podría encontrar esas marcas a partir de la
+grabación misma? (Un seguidor de pulsos, como la programación dinámica
+de Dan Ellis, que se usa con las interpretaciones MIDI en [De una
+interpretación MIDI o una partitura a una
+demostración](../songs/from-midi-and-scores.md#encontrar-el-pulso).)
+Esboza lo que haría falta, y en qué crate iría cada parte.
 
-*Practica:* dejar que decida una medición.
+*Practica:* planificar a través de varios crates.
 
-### 46. Piénsalo: escuchar
+### 46. Piénsalo: las tomas
 
-- Los acordes se nombran por pulso, y el chroma de un pulso es el
-  promedio de sus ventanas. ¿Qué le pasa a un acorde que cambia en el
-  «y» de un pulso, como en mucho jazz y mucha música latina?
-- ¿Por qué el compás se adivina a partir de los acordes y no de la
-  intensidad de los pulsos, como siente el tiempo fuerte quien
-  escucha?
-- La importación corre en su propio hilo y se suelta, no se detiene,
-  cuando se abre otro proyecto. ¿Cuándo valdría la pena detenerla, y
-  cómo le dirías a un hilo que se detenga? (Mira cómo se detiene una
-  exportación.)
+- La afinación de una toma es un solo número para toda la toma. ¿Qué
+  haría falta para alguien que se va bajando poco a poco en una toma
+  larga?
+- ¿Por qué una toma conserva su grabación como referencia, en lugar de
+  solo las notas oídas en ella?
+- Las marcas las escribe un hilo que se despierta cada 5 ms. ¿Por qué no
+  puede escribirlas la función de retorno del micrófono misma, y qué
+  saldría mal si el hilo del grabador se atrasara un segundo?

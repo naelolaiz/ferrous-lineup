@@ -30,8 +30,8 @@ puede probarse por su cuenta:
 | Crate | Tipo | Función |
 |-------|------|---------|
 | `lineup-core` | librería | La música y la canción: notas, escalas, acordes y armonía, la hoja de acordes, los patrones y la lista de reproducción, los archivos de proyecto y los diffs, el historial de deshacer, los archivos MIDI, las partituras guía, la banda, y la biblioteca de estilos, ritmos y canciones. Sin audio y sin interfaz. |
-| `lineup-audio` | librería | El motor en tiempo real y el renderizador sin conexión: baterías y samplers, el Lineup Osc, los instrumentos SoundFont, la reproducción de canciones y patrones, los efectos, la exportación WAV, y la traza de cada nota tocada. |
-| `lineup-listen` | librería | Decodifica una grabación (MP3, WAV, FLAC u Ogg Vorbis) y escucha sus pulsos, tonalidad, acordes y compás. Experimental. |
+| `lineup-audio` | librería | El motor en tiempo real y el renderizador sin conexión: baterías y samplers, el Lineup Osc, los instrumentos SoundFont, la reproducción de canciones y patrones, los efectos, la exportación WAV, la traza de cada nota tocada, y el micrófono para las tomas. |
+| `lineup-listen` | librería | Decodifica una grabación (MP3, WAV, FLAC u Ogg Vorbis), oye las notas cantadas o silbadas en ella, y guarda las tomas como archivos WAV. |
 | `lineup-video` | librería | Pinta las vistas de la aplicación en memoria y las codifica como H.264 y MP3 en un archivo MP4. |
 | `lineup-app` | binario (programa) | La ventana, construida con `egui`, y el MIDI a través de `midir`. Es dueño del estado que une los otros cuatro, y produce el ejecutable `ferrous-lineup`. |
 

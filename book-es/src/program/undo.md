@@ -277,8 +277,10 @@ Sigue unos cuantos gestos a través de estas dos funciones:
 - **Escribir un tempo.** Hacer clic en la casilla de BPM la convierte en
   un campo de texto, así que se aplica la misma regla: todo lo escrito
   ahí es un paso, que termina cuando sales de la casilla.
-- **Grabar una toma.** Cada nota tocada mientras se graba se une a un
-  mismo paso, así que un deshacer quita la toma entera.
+- **Grabar desde un teclado.** Cada nota tocada mientras se graba se
+  une a un mismo paso, así que un deshacer quita la grabación entera.
+  Una toma cantada que se escribe desde la ventana **Tu toma** también
+  es un solo paso (ver [Tomas](../theory/listen.md#en-la-aplicación)).
 
 `start_frame_for_undo` importa en un caso: un clic que empieza cuando un
 campo de texto aún tiene el foco. La pulsación cierra el paso de

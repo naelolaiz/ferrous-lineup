@@ -182,7 +182,9 @@ impl UserStyle {
                 crate::ChannelKind::MidiOut { channel } => channel.hash(&mut hash),
                 crate::ChannelKind::Sampler(source) => match source {
                     crate::SampleSource::Builtin(drum) => drum.hash(&mut hash),
-                    crate::SampleSource::File(path) => path.hash(&mut hash),
+                    crate::SampleSource::File(path) | crate::SampleSource::Take(path) => {
+                        path.hash(&mut hash)
+                    }
                 },
             }
             lane.notes.hash(&mut hash);

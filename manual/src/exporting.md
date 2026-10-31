@@ -73,7 +73,7 @@ music program, a notation program, or a synthesizer:
 first step: a beat or a part to use somewhere else.
 
 Ferrous Lineup can open the file again (see [Opening MIDI files and
-recordings](importing.md)), and keeps the exact key it was in.
+chord sheets](importing.md)), and keeps the exact key it was in.
 
 ## A chord sheet as text
 
