@@ -811,6 +811,182 @@ tuya](band.md#una-parte-que-editas-sigue-siendo-tuya)). El
 bloqueo cuenta en esa huella solo cuando hay algo bloqueado, así que
 una canción sin nada bloqueado conserva la huella que tenía.
 
+## Partes oídas en las notas
+
+Un baterista toca una canción por sus partes: el patrón de una frase
+desde su primer compás, un relleno en el último, otra cosa para el
+estribillo. Un demo nombra sus partes, y puedes marcar secciones en la
+lista de reproducción, pero un archivo MIDI no nombra ninguna.
+`heard_sections.rs` las busca, como un músico oye la forma de una
+grabación, y `Project::form_sections` es donde la banda y la biblioteca
+preguntan por las partes de la canción:
+
+```rust
+pub fn form_sections(&self) -> Vec<Section> {
+    if self.playlist.sections.is_empty() {
+        self.heard_sections()
+    } else {
+        self.playlist.sections.clone()
+    }
+}
+```
+
+Las secciones escritas siempre ganan. Las oídas son solo para una
+canción que no nombra ninguna.
+
+### Probarlo
+
+Abre un archivo MIDI (**Archivo > Importar archivo MIDI…**), o abre el
+demo *Candombe para Gardel* y borra sus secciones. La franja
+**Secciones** muestra unas tenues, llamadas A, B, Introducción, Coda, y
+la primera dice «reconocida». Haz clic en una: pasan a ser las
+secciones propias de la canción, en un solo paso que se puede deshacer.
+
+### Tres clases de indicios
+
+Cada compás se describe una vez (`Heard`): qué clases de altura suenan
+en él, o el acorde de la hoja donde lo hay; dónde empiezan las notas de
+la melodía y cuáles son; cuántos canales tocan. `likenesses` compara
+cada compás con todos los demás, una tabla cuadrada de números de 0 a
+1. A partir de ella y de los compases, `reasons` le da a cada barra de
+compás una puntuación para que empiece allí una parte:
+
+- **Lo que vuelve.** Una tanda de compases que suena como otra más
+  adelante (una diagonal de la tabla) es una parte: puntúan el compás
+  donde empieza la tanda y el compás donde empieza su vuelta, más
+  cuanto más larga es la tanda, hasta ocho compases; los compases donde
+  terminan puntúan menos.
+- **Lo que cambia.** Los compases antes de la barra parecidos entre sí,
+  los de después también, y los dos grupos distintos: empieza algo
+  nuevo. Una tonalidad o un compás nuevos en la barra cuentan también,
+  y una melodía que descansa justo antes, el final de una frase.
+- **Las frases.** La mayoría de las partes duran cuatro u ocho
+  compases, contados desde el primer compás entero de la melodía. Un
+  primer compás en el que la melodía entra después de su primer pulso
+  es una **anacrusa** y no se cuenta.
+
+Cuánto cuenta cada clase es un número de `Ear`, y los números se
+ajustaron con las partes escritas de los demos que no son clásicos:
+los tests ignorados `score_against_the_demos` y `tune_the_ear` imprimen
+la puntuación y prueban cada número hacia arriba y hacia abajo. Dos
+tests que corren siempre impiden que empeore: ocho demos oídos
+exactamente como están escritos, y un piso para la puntuación sobre
+todos ellos.
+
+### El mejor corte, por programación dinámica
+
+Dados los indicios, ¿qué compases empiezan partes? Probar todas las
+formas de cortar una canción de 100 compases es imposible (hay 2⁹⁹),
+pero el mejor corte tiene una forma que lo hace fácil: la mejor manera
+de cortar los primeros `end` compases es la mejor manera de cortar los
+primeros `start`, para el mejor `start`, más una parte de `start` a
+`end`. `best_cut` llena una tabla `best[end]` de izquierda a derecha:
+
+```rust
+for end in anchor + 1..=n {
+    for start in end.saturating_sub(LONGEST).max(anchor)..end {
+        // ...
+        let opens = if start == anchor {
+            0.0
+        } else {
+            reasons[start] + phrase(start) - ear.part_cost
+        };
+        let shape = if last { 0.0 } else { length_cost(length, ear) };
+        let score = best[start] + opens - shape;
+        if score > best[end] {
+            best[end] = score;
+            from[end] = start;
+        }
+    }
+}
+```
+
+`phrase` suma un premio por empezar en una línea de ocho compases y
+uno menor en una de cuatro, `part_cost` evita que corte en todas
+partes, y `length_cost` castiga los largos raros. `from[end]` recuerda
+qué `start` ganó, así que al recorrer hacia atrás desde el último
+compás sale el corte. Eso es programación dinámica: cada respuesta se
+arma con respuestas más chicas que ya están en la tabla, y todo lleva
+`n × LONGEST` pasos en lugar de 2ⁿ.
+
+Antes de todo eso, `cut` busca un **vamp**: una canción que da vueltas
+a un giro de hasta cuatro compases de principio a fin, como un groove
+sobre C, Am, F, G, no tiene partes, y no se corta nada.
+
+Por último, `name` les pone letras a las partes: una parte que suena
+como una anterior recibe su letra, una nueva la letra siguiente. Una
+primera parte que no vuelve nunca, antes de otras que sí, es la
+**Introducción** cuando es corta o no tiene melodía; una última que no
+vuelve, de ocho compases o menos, la **Coda**.
+
+### Tenues, y oídas solo cuando la canción cambia
+
+La lista de reproducción dibuja las partes oídas cuando no hay
+secciones marcadas (`playlist/sections.rs`). Oír una canción larga
+lleva tiempo, hasta unas decenas de milisegundos en una compilación
+release y unos cientos en una debug, demasiado para hacerlo en cada
+cuadro. Así que la franja guarda lo que oyó junto con un número que
+dice de qué lo oyó, `Project::hearing_key`: un hash de los clips, las
+notas de los patrones propios de la canción, la hoja de acordes, los
+compases y las tonalidades. En cada cuadro calcula ese número de nuevo,
+que es rápido, y vuelve a escuchar solo cuando cambia. Mientras sigue
+cambiando, como mientras se arrastran notas, escucha como mucho cada
+400 ms.
+
+Un clic en una parte tenue envía `PlaylistAction::KeepHeardSections`, y
+`Project::keep_heard_sections` las agrega como secciones, en un solo
+paso para deshacer.
+
+## La batería por partes
+
+`library/drum_form.rs` decide qué toca la batería sobre cada parte.
+`form_parts` corta los compases de la canción en las partes de
+`form_sections`, y cada parte se vuelve un `DrumPart`:
+
+```rust
+pub struct DrumPart<'a> {
+    pub bars: &'a [Bar],
+    pub opens: bool,
+    pub groove: usize,
+    pub contrast: bool,
+    pub then: Then,
+    pub lead_in: bool,
+    pub crash: bool,
+    pub turn: usize,
+}
+```
+
+- **Frases.** `phrases` corta una parte en frases de ocho compases; una
+  parte de menos de ocho es una frase, y lo que sobra es una frase
+  propia cuando tiene cuatro compases o más.
+- **Rellenos.** `fill_places` pone un relleno en el último compás de
+  una parte, uno pequeño (el último pulso o dos, desde `small_from`) al
+  final de cada ocho compases dentro de las partes de dieciséis o más,
+  y dos compases que crecen hacia el final (`Then::Ending`). Los
+  rellenos se turnan entre el del ritmo y los habituales de su género
+  (`fills_of`), contados sobre toda la canción, así que una misma
+  canción toca siempre los mismos rellenos. Un ritmo para un conjunto
+  sin batería, el bombo de una zamba, hace sus rellenos en sus propios
+  tambores (`own_fill`); un tango no hace ninguno.
+- **Crashes.** La parte que sigue a una que termina con un relleno
+  (`ends_with_fill`) recibe `crash`, y empieza con el platillo crash,
+  salvo que el ritmo ya lo toque ahí.
+- **Grooves.** `groove` es la clase de la parte: el mismo número para
+  las secciones del mismo nombre, según `section_kinds`, así que
+  «Verse 2» se toca como «Verse». Una clase impar toca la batería
+  `contrasting`, el hi-hat pasado al ride, salvo que las variaciones de
+  la canción digan qué se toca dónde.
+- **Turnos.** `turn` cuenta las frases de esa clase que la canción ya
+  tocó (`Turns`), para los ritmos repartidos en grooves y cierres que se
+  turnan, como los del candombe (ver [Repartido sobre las partes de una
+  canción](library.md#repartido-sobre-las-partes-de-una-canción)).
+
+Los patrones de la banda siguen las mismas partes: `chunks` empieza un
+patrón donde empieza una parte. Ese borde es **blando**: cuando un
+músico sostiene una nota sobre él, como las cuerdas sostienen un acorde
+hacia la parte siguiente, `write_part` une los dos tramos en un solo
+patrón, así que el acorde no vuelve a atacarse donde empieza la parte.
+
 ## En el archivo
 
 Las cuatro cosas se guardan con la banda, y cada una se deja fuera del
@@ -844,8 +1020,9 @@ Cada módulo prueba su parte:
   quedan congeladas; `an_intro_is_a_turnaround_into_the_first_chord`
   comprueba turnarounds hacia acordes mayores y menores, las grafías
   hacia Ebm y Gb, y un blues; `the_ending_holds_the_tonic` comprueba
-  que el último compás es un acorde sostenido 16 pasos, con un solo
-  crash; `the_form_is_saved` comprueba que el archivo se lee igual.
+  que el último compás es un acorde sostenido 16 pasos, con un crash, y
+  un crash en el primer pulso del final después del relleno;
+  `the_form_is_saved` comprueba que el archivo se lee igual.
 - `variation.rs`: `markers_keep_only_changes`,
   `the_drummer_moves_to_the_ride`, `the_drums_fill_into_a_change`,
   `variation_b_is_louder`, `players_switch_to_their_busier_way`,
@@ -862,8 +1039,22 @@ Cada módulo prueba su parte:
   `band/locks.rs` comprueba cada regla de la banda, y que
   `no_band_leaves_the_locked_parts_to_the_song`.
 
+- `heard_sections.rs`: `the_ear_hears_these_demos_as_written` y
+  `the_ear_hears_most_parts_of_the_demos`, con y sin las hojas de
+  acordes.
+- `drum_form.rs`: `parts_are_cut_in_phrases_of_eight`,
+  `a_part_ends_with_a_fill_and_long_parts_fill_inside`,
+  `the_fills_take_turns`, `a_b_part_moves_the_hi_hat_to_the_ride`,
+  `folklore_fills_on_its_own_drums_and_the_tango_not_at_all`,
+  `the_part_after_a_fill_lands_with_a_crash` y
+  `the_candombe_phrases_take_turns`.
+- `band.rs`: `the_band_starts_its_patterns_where_the_parts_start` y
+  `a_chord_held_over_a_section_start_is_not_struck_again`.
+
 En la aplicación, `ux_tests.rs` hace clic en el candado del rack y lo
 deshace (`the_rack_locks_a_channel_and_undo_unlocks_it`), prueba
 Doo-wop y luego Bossa nova en un patrón alrededor de unos Teclados
 bloqueados, y comprueba que los avisos y la hoja de acordes dicen qué
-se conserva (`the_library_and_the_band_say_what_is_kept`).
+se conserva (`the_library_and_the_band_say_what_is_kept`), y conserva
+con un clic las partes oídas en una canción
+(`a_song_without_sections_shows_the_ones_heard_and_keeps_them_with_a_click`).
