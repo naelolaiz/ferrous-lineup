@@ -76,6 +76,11 @@ pub struct Layout {
     /// phrases take turns with.
     pub closing: usize,
     pub closings: usize,
+    /// The drum that plays alone in the last bar before a new part, while
+    /// the band stops (see [`super::drum_form::break_bars`]): its line's
+    /// first bar of the opening. `None` for a rhythm that plays on into
+    /// every part.
+    pub breaks: Option<Drum>,
 }
 
 impl Layout {
@@ -516,6 +521,8 @@ const CANDOMBE: Layout = Layout {
     turns: 2,
     closing: 2,
     closings: 2,
+    // The repique's clave on the wood, alone, leads into a new part.
+    breaks: Some(Drum::Rim),
 };
 const THREE_FOUR: TimeSignature = TimeSignature::new(3, 4);
 const SIX_EIGHT: TimeSignature = TimeSignature::new(6, 8);
@@ -1718,7 +1725,9 @@ pub static RHYTHMS: &[Rhythm] = &[
     // so no two phrases in a row sound the same; and two closings of two
     // bars, taken in turns too. The repique plays the 3-2 clave on the
     // wood (Rim) in the opening and in the first bar of every second
-    // phrase, never just before a new part; its "continuo" base (High
+    // phrase, and alone in the last bar before a new part, where the band
+    // stops (`Layout::breaks`), but never under the band just before
+    // one; its "continuo" base (High
     // tom) in the grooves, the "continuo variante" in every second bar
     // of B parts and in three of four in their second turn, and its
     // "fraseo" to close, the second closing leading into it from the
@@ -1809,7 +1818,11 @@ pub static RHYTHMS: &[Rhythm] = &[
          one opens with a bar of clave on the wood and varies the piano every second bar, \
          and every second call starts from the repique's busier base. A part of another kind, a refrain \
          after the verse, mixes the repique's busier base into its own and varies the \
-         piano every second bar, more often still on its second turn.",
+         piano every second bar, more often still on its second turn. Before every new \
+         part the band stops on the first beat of the last bar, and the repique plays the \
+         clave on the wood alone, leading into it. Where the tune leads into the new part \
+         with a pickup bar, the band and the drums wait on through it, the clave alone, and \
+         come in with the next bar.",
     )
     .laid_out(CANDOMBE),
     rhythm(
@@ -1883,7 +1896,8 @@ pub static RHYTHMS: &[Rhythm] = &[
          repique opens on the wooden shell with the Ansina madera, eight strokes a bar, and \
          the piano answers its open stroke before beat 2 with three quick strokes around \
          beat 3, the open hand between two open sticks. It is laid out over each part of a \
-         song as the Cuareim candombe is.",
+         song, and breaks before every new part on its madera, as the Cuareim candombe \
+         does.",
     )
     .laid_out(CANDOMBE),
     rhythm(

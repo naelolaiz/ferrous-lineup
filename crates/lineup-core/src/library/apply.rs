@@ -376,13 +376,7 @@ fn drums_where_it_plays(
     bars: &[crate::meter::Bar],
 ) -> Option<Vec<(Drum, NoteEvent)>> {
     let length = project.pattern(pattern)?.length();
-    let start = project
-        .playlist()
-        .clips()
-        .iter()
-        .filter(|clip| clip.pattern == pattern)
-        .map(|clip| clip.start)
-        .min()?;
+    let start = first_played(project, pattern)?;
     bars.iter().find(|bar| bar.start == start)?;
     let end = start + length;
     Some(
@@ -401,6 +395,34 @@ fn drums_where_it_plays(
             })
             .collect(),
     )
+}
+
+/// The song's tune up to step `end`, each note's first step and the step
+/// after its last: the notes of its melody channel (see
+/// [`crate::lead_sheet::melody::default_melody_channel`]), unless that
+/// is the band's keys or bass.
+fn tune(project: &Project, end: usize) -> Vec<(usize, usize)> {
+    use crate::lead_sheet::melody;
+    let band = [find_synth(project, KEYS), find_synth(project, BASS)];
+    melody::default_melody_channel(project)
+        .filter(|channel| !band.contains(&Some(*channel)))
+        .map_or_else(Vec::new, |channel| {
+            melody::melody(project, channel, end)
+                .iter()
+                .map(|note| (note.start, note.end()))
+                .collect()
+        })
+}
+
+/// Where pattern `pattern` first plays in the song, if it plays.
+fn first_played(project: &Project, pattern: usize) -> Option<usize> {
+    project
+        .playlist()
+        .clips()
+        .iter()
+        .filter(|clip| clip.pattern == pattern)
+        .map(|clip| clip.start)
+        .min()
 }
 
 /// Replaces the drums of pattern `pattern` from step `at` on with
@@ -486,6 +508,25 @@ fn plays_chords(notes: &[NoteEvent]) -> bool {
 /// Returns `false`, changing nothing, if the pattern has no chords or
 /// both its chords and its bass are locked.
 pub fn recomp(project: &mut Project, pattern: usize, comping: Comping, bass: Bass) -> bool {
+    recomp_breaking(project, pattern, comping, bass, 0, None)
+}
+
+/// How long the band's shot lasts where it breaks: an eighth note.
+const SHOT_STEPS: usize = 2;
+
+/// Plays the chords of pattern `pattern` again, as [`recomp`], with the
+/// band silent up to step `waits`, through a pickup bar after a break
+/// (see [`drum_form::pickup_bars`]), and breaking from step `breaks` on,
+/// if it is given (see [`drum_form::break_bars`]): there it strikes the
+/// chord sounding and is silent to the pattern's end.
+fn recomp_breaking(
+    project: &mut Project,
+    pattern: usize,
+    comping: Comping,
+    bass: Bass,
+    waits: usize,
+    breaks: Option<usize>,
+) -> bool {
     let Some(chords_channel) = heard_chords_channel(project, pattern) else {
         return false;
     };
@@ -520,15 +561,42 @@ pub fn recomp(project: &mut Project, pattern: usize, comping: Comping, bass: Bas
     let voicings = comping.voicings(&chords, &roots);
     let mut new_chords = Vec::new();
     let mut new_bass = Vec::new();
+    let breaks_at = breaks.unwrap_or(length);
     for (index, (chord, stretch)) in played.iter().enumerate() {
         let next = played[(index + 1) % played.len()].0;
-        new_chords.extend(comping.play(time, &voicings[index], stretch.start, stretch.length));
-        new_bass.extend(bass.play(time, *chord, next, stretch.start, stretch.length));
+        let end = stretch.start + stretch.length;
+        let start = stretch.start.max(waits).min(end);
+        let until = end.min(breaks_at);
+        if until > start {
+            new_chords.extend(comping.play(time, &voicings[index], start, until - start));
+            new_bass.extend(bass.play(time, *chord, next, start, until - start));
+        }
+        // The shot: the chord sounding where the band breaks.
+        if (stretch.start..end).contains(&breaks_at) {
+            let shot = SHOT_STEPS.min(length - breaks_at);
+            let struck = |mut notes: Vec<NoteEvent>| {
+                for note in &mut notes {
+                    note.velocity = note.velocity.max(100);
+                }
+                notes
+            };
+            new_chords.extend(struck(Comping::Held.play(
+                time,
+                &voicings[index],
+                breaks_at,
+                shot,
+            )));
+            new_bass.extend(struck(
+                Bass::Held.play(time, *chord, *chord, breaks_at, shot),
+            ));
+        }
     }
-    // Where no chord is heard, the old notes stay.
+    // Where no chord is heard, the old notes stay, but where the band
+    // waits or breaks.
     for stretch in heard.iter().filter(|stretch| stretch.chord.is_none()) {
         let inside = |note: &&NoteEvent| {
             (stretch.start..stretch.start + stretch.length).contains(&note.start)
+                && (waits..breaks_at).contains(&note.start)
         };
         new_chords.extend(old_chords.iter().filter(inside));
         new_bass.extend(old_bass.iter().filter(inside));
@@ -731,23 +799,39 @@ fn play_song(
     // The rhythm is laid out over the song's parts, written or heard, up
     // to its ending: each pattern plays the drums of the place it first
     // plays in.
-    let song_drums = rhythm.filter(|_| parts.rhythm).map(|rhythm| {
-        let end = project
-            .playlist()
-            .clips()
-            .iter()
-            .filter(|clip| is_ending(project, clip.pattern))
-            .map(|clip| clip.start)
-            .min()
-            .unwrap_or_else(|| project.song_length());
-        let bars: Vec<crate::meter::Bar> = project
-            .meter()
-            .bars()
-            .take_while(|bar| bar.start < end)
-            .collect();
-        let form = project.form_sections();
-        (drum_form::song_drums(rhythm, &bars, &form, end), bars)
-    });
+    let end = project
+        .playlist()
+        .clips()
+        .iter()
+        .filter(|clip| is_ending(project, clip.pattern))
+        .map(|clip| clip.start)
+        .min()
+        .unwrap_or_else(|| project.song_length());
+    let bars: Vec<crate::meter::Bar> = project
+        .meter()
+        .bars()
+        .take_while(|bar| bar.start < end)
+        .collect();
+    let laid = rhythm.filter(|_| parts.rhythm);
+    let form = if laid.is_some() {
+        project.form_sections()
+    } else {
+        Vec::new()
+    };
+    // Where the band breaks before a new part, as the drums do, and the
+    // pickup bars it waits on through after a break, where the tune
+    // leads into the new part.
+    let breaks = match laid.filter(|&rhythm| drum_form::breaks(rhythm)) {
+        Some(_) => drum_form::break_bars(&bars, &form, end),
+        None => Vec::new(),
+    };
+    let pickups = if breaks.is_empty() {
+        Vec::new()
+    } else {
+        drum_form::pickup_bars(&bars, &form, &breaks, &tune(project, end))
+    };
+    let song_drums = laid
+        .map(|rhythm| drum_form::song_drums_breaking(rhythm, &bars, &form, end, &breaks, &pickups));
     for pattern in 0..patterns {
         let Some(length) = project.pattern(pattern).map(|p| p.length()) else {
             continue;
@@ -766,7 +850,20 @@ fn play_song(
                 .all(|start| drums_in(project, pattern, start, bar) != last)
         };
         let has_chords = heard_chords_channel(project, pattern).is_some();
-        if parts.matching_style && recomp(project, pattern, comping, bass) {
+        // The band breaks where the drums do, before a new part: in the
+        // pattern's last bar, where it first plays.
+        let first = first_played(project, pattern);
+        let breaks_at = first.and_then(|start| {
+            let last = breaks.iter().find(|bar| bar.end() == start + length)?;
+            (last.start >= start).then(|| last.start - start)
+        });
+        // And waits through the pickup bar it starts with, if it does.
+        let waits = first
+            .and_then(|start| pickups.iter().find(|bar| bar.start == start))
+            .map_or(0, |bar| bar.length);
+        if parts.matching_style
+            && recomp_breaking(project, pattern, comping, bass, waits, breaks_at)
+        {
             change.harmony += 1;
         } else if !drums && !has_chords {
             continue;
@@ -777,7 +874,7 @@ fn play_song(
         {
             let laid = song_drums
                 .as_ref()
-                .and_then(|(notes, bars)| drums_where_it_plays(project, pattern, notes, bars));
+                .and_then(|notes| drums_where_it_plays(project, pattern, notes, &bars));
             let wrote = match laid {
                 Some(notes) => write_drums(project, pattern, &notes),
                 // A pattern that plays nowhere plays the rhythm over and
@@ -950,7 +1047,10 @@ mod tests {
         // Candombe para Gardel's parts are 12, 8, 8, 4, 7 and 12 bars
         // long. The candombe ends each with the repique's call, one of
         // its closings, wherever the part ends in the rhythm's cycle, and
-        // opens the song with the clave.
+        // opens the song with the clave. A part that goes on into a new
+        // one breaks in its last bar: the clave on the wood alone. The
+        // tune leads into the verses and the link from their first bar,
+        // a pickup the break goes on through.
         let song = super::super::Song::named("Candombe para Gardel").unwrap();
         let mut project = super::super::demo::song_demo(song);
         let rhythm = Rhythm::named("Candombe").unwrap();
@@ -973,7 +1073,9 @@ mod tests {
         };
         let sections = project.playlist().sections().to_vec();
         assert!(sections.len() >= 6);
-        for section in &sections {
+        let mut broke = 0;
+        let mut picked_up = 0;
+        for (index, section) in sections.iter().enumerate() {
             let Some(clip) = project
                 .playlist()
                 .clips()
@@ -983,18 +1085,79 @@ mod tests {
                 continue;
             };
             let length = project.pattern(clip.pattern).unwrap().length();
+            let breaks = sections.get(index + 1).is_some_and(|next| {
+                next.start == section.end() && !drum_form::same_part(&section.name, &next.name)
+            });
+            broke += usize::from(breaks);
             // The phrases take turns with the closings.
             let closes = (0..layout.closings).any(|turn| {
                 let from = layout.closing_at(turn);
                 rhythm.drums().all(|drum| {
-                    [(2, from), (1, from + 1)].into_iter().all(|(back, line)| {
-                        played(clip.pattern, length - back * bar, drum)
-                            == rhythm.bar_notes(drum, line, time, bar)
-                    })
+                    let last = played(clip.pattern, length - bar, drum);
+                    let ends = match (breaks, layout.breaks == Some(drum)) {
+                        (true, true) => last == rhythm.bar_notes(drum, 0, time, bar),
+                        (true, false) => last.is_empty(),
+                        (false, _) => last == rhythm.bar_notes(drum, from + 1, time, bar),
+                    };
+                    ends && played(clip.pattern, length - 2 * bar, drum)
+                        == rhythm.bar_notes(drum, from, time, bar)
                 })
             });
             assert!(closes, "{}", section.name);
+            // The band strikes the break's first beat and stops.
+            let song = project
+                .playlist()
+                .clips()
+                .iter()
+                .find(|clip| clip.track == 0 && clip.start == section.start)
+                .unwrap()
+                .pattern;
+            let keys = find_synth(&project, KEYS).unwrap();
+            let in_last: Vec<usize> = project
+                .pattern(song)
+                .unwrap()
+                .notes(keys)
+                .iter()
+                .filter(|note| note.start >= length - bar)
+                .map(|note| note.start - (length - bar))
+                .collect();
+            if breaks {
+                assert!(!in_last.is_empty() && in_last.iter().all(|&at| at == 0));
+            } else if index + 1 < sections.len() {
+                // "Verse" goes on into "Verse 2".
+                assert!(in_last.iter().any(|&at| at > 0), "{}", section.name);
+            }
+            // After a break, the band waits through a pickup bar, and the
+            // clave plays on alone; a part the tune does not lead into
+            // comes in at once.
+            let after_break = index.checked_sub(1).is_some_and(|before| {
+                let before = &sections[before];
+                before.end() == section.start && !drum_form::same_part(&before.name, &section.name)
+            });
+            let picks_up = ["Verse", "Link", "Verse 3"].contains(&section.name.as_str());
+            picked_up += usize::from(picks_up);
+            let in_first = project
+                .pattern(song)
+                .unwrap()
+                .notes(keys)
+                .iter()
+                .filter(|note| note.start < bar)
+                .count();
+            if picks_up {
+                assert!(after_break && in_first == 0, "{}", section.name);
+                for drum in rhythm.drums() {
+                    let alone = match layout.breaks == Some(drum) {
+                        true => rhythm.bar_notes(drum, 1, time, bar),
+                        false => Vec::new(),
+                    };
+                    assert_eq!(played(clip.pattern, 0, drum), alone, "{}", section.name);
+                }
+            } else if after_break {
+                assert!(in_first > 0, "{}", section.name);
+            }
         }
+        assert!(broke >= 6, "{broke} breaks");
+        assert_eq!(picked_up, 3);
         let intro = project
             .playlist()
             .clips()
