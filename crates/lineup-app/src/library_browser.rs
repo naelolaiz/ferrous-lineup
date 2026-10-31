@@ -63,8 +63,11 @@ impl Tried {
     pub fn from_band(band: &Band) -> Self {
         Self {
             user_style: band.custom_rhythm.as_ref().map(|style| style.id()),
-            style: band.harmony_style.filter(|_| band.custom_rhythm.is_none()),
+            style: band
+                .harmony_style
+                .filter(|_| band.custom_rhythm.is_none() && band.micromode.is_none()),
             rhythm: band.drums_style().and_then(|style| style.rhythm),
+            micromode_style: band.micromode,
             ..Self::default()
         }
     }
@@ -1133,8 +1136,9 @@ fn micromode_styles(
                     ],
                 ),
                 tr(
-                    "The key becomes the micromode, starting on the key note. While the song \
-                    plays, a click plays the whole song this way."
+                    "In a song, the band plays it from the chord sheet: the forms written there \
+                    when the key is a set, or else its own walk, which it writes on the sheet, \
+                    and the key becomes the micromode, starting on the key note."
                 ),
             );
             let selected = tried.micromode_style == Some(style);

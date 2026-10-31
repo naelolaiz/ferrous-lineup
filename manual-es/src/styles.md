@@ -48,9 +48,13 @@ compases y su batería.
 Debajo de los estilos hay tres grupos que se pueden abrir:
 
 - **Series dodecafónicas** y **Micromodos (Kröpfl)**: estilos que tocan
-  una serie dodecafónica o un micromodo en lugar de acordes. La
-  tonalidad se convierte en la serie o el micromodo, empezando en la
-  tónica; ver [Más allá de las tonalidades:
+  una serie dodecafónica o un micromodo en lugar de acordes. Un estilo
+  de series convierte la tonalidad en su serie, empezando en la tónica.
+  En una canción, la banda toca un estilo de micromodo desde la hoja de
+  acordes: las formas escritas ahí cuando la tonalidad es un conjunto,
+  o si no el recorrido propio del estilo, que escribe en la hoja, y la
+  tonalidad se vuelve el micromodo, empezando en la tónica. Ver [Más
+  allá de las tonalidades:
   conjuntos, series y micromodos](sets-rows-micromodes.md).
 - **Rellenos**: un compás de batería cada uno: Redoble de caja, Relleno
   de toms, Subida de house, Relleno latino, Relleno de hip hop y Final
@@ -165,7 +169,11 @@ la hoja desde el compás seleccionado, en la tonalidad de la canción, sin
 cambiar el estilo de la banda. La selección pasa después de ellos, así
 que la siguiente progresión que elijas va a continuación. Es una manera
 rápida de empezar una canción: **Progresión** y luego **Cuatro
-acordes** te da I V vi IV, la progresión de mil canciones pop.
+acordes** te da I V vi IV, la progresión de mil canciones pop. Cuando
+la tonalidad de la canción es un conjunto de clases de alturas o un
+micromodo, el botón ofrece en cambio maneras de encadenar las formas del
+conjunto (ver [Un conjunto como
+tonalidad](sets-rows-micromodes.md#un-conjunto-como-tonalidad-sus-formas)).
 
 ## Los ajustes de la Biblioteca
 

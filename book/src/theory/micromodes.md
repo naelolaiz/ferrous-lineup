@@ -302,7 +302,11 @@ round all twelve notes. The tests check each of these numbers.
 
 Several forms share two notes with the current one (for Menor 3 on C
 C♯ E there are three: A C C♯, C D♯ E and C♯ E F), so the walk needs a
-rule to pick one. In order:
+rule to pick one. First, the form just before is left out while there
+is anywhere else to go; for a micromode the rules below never pick it
+anyway, but some bigger sets keep their most notes only in pairs and
+would rock between two forms (see [Progressions of
+forms](sets.md#progressions-of-forms)). Then, in order:
 
 1. the form whose **new note** has not been heard for the longest
    time, so the music goes round all the notes it can reach,
@@ -356,7 +360,8 @@ pass again. Click a style in the Library while the song plays and the
 whole song goes over to it: its chords and bass are replaced by the
 walk, the patterns start from those four places in turn, and the key
 becomes the micromode itself, a pitch-class set, so the harmony keys
-play its forms.
+play its forms, counted from home (see [A micromode as the key:
+degrees](#a-micromode-as-the-key-degrees)).
 
 ## The micromodes in Rust: a table in a `static`
 
@@ -580,10 +585,10 @@ recently, then the smallest move", is one `min_by_key` with a tuple of
 four:
 
 ```rust
-members
+options
     .iter()
     .copied()
-    .filter(|&set| set != current && shared(set) == most)
+    .filter(|&set| shared(set) == most)
     .min_by_key(|&set| {
         let new = PitchSet::from_bits(set.bits() & !current.bits());
         // The new note heard most recently decides; never heard is best.
@@ -602,10 +607,21 @@ members
     .unwrap_or(current)
 ```
 
+`options` is every form of the set (24, 12 or 4 of them for a
+micromode) but the current one and the one before it, which is found
+without a panic when there is none:
+
+```rust
+let back = before.len().checked_sub(2).map(|index| before[index]);
+```
+
+`before.len() - 2` would underflow on a `usize` when fewer than two
+forms have been played, and panic in a debug build; `checked_sub` gives
+`None` instead, and `map` only looks the form up when there is one.
+
 A few things to notice:
 
-- `members` is every form of the micromode (24, 12 or 4 of them).
-  `shared(set)` counts the notes a form has in common with the current
+- `shared(set)` counts the notes a form has in common with the current
   one, with the bits: `set.bits() & current.bits()` keeps the notes in
   both. `set.bits() & !current.bits()` keeps the notes of `set` that
   are *not* in `current`: the new note.
@@ -632,73 +648,393 @@ let count = length.div_ceil(self.steps.max(1)).max(1);
 `div_ceil` is division that rounds up: `16.div_ceil(6)` is 3, where
 `16 / 6` is 2.
 
-## Styles take over the harmony
-
-A micromode style, like a twelve-tone style, has no chords to follow.
-When you click it while the song plays, it *replaces* the song's
-harmony: it silences the chords and the bass it does not play, and
-writes its own voices on the right channels. The row styles do the
-same, so both kinds of style call one function, from
-[Twelve-tone rows and their
-rules](twelve-tone.md#playing-a-whole-song-as-a-row):
-
-```rust
-pub(super) fn take_over_harmony(
-    project: &mut Project,
-    uses: &dyn Fn(&str) -> bool,
-    rhythm: Option<&Rhythm>,
-    mut write: impl FnMut(&mut Project, usize, usize, Option<usize>),
-) -> RhythmChange {
-```
-
-The two closures are passed in two different ways, on purpose:
-
-- `uses` only answers a question ("does the style play this
-  channel?"), so it is an `&dyn Fn`: a **trait object**, a reference
-  to some closure whose type is decided at run time. One compiled copy
-  of `take_over_harmony` works for every closure.
-- `write` is called once per pattern with `&mut Project`, and does the
-  writing. It is an `impl FnMut`: the compiler makes a copy of
-  `take_over_harmony` for each closure type passed in (one for the row
-  styles, one for the micromode styles), which is a little faster and
-  allows the closure to change what it captured. `FnMut` is the
-  loosest bound that can still be called many times.
-
-The micromode styles call it like this:
-
-```rust
-pub fn use_micromode_style(project: &mut Project, style: &MicromodeStyle) -> RhythmChange {
-    let key = project.scale.root;
-    let uses = |name: &str| style.voices.iter().any(|voice| voice.channel == name);
-    let change = take_over_harmony(
-        project,
-        &uses,
-        style.rhythm(),
-        |project, pattern, n, keys| {
-            let start = DEMO_SECTIONS[n % DEMO_SECTIONS.len()].0;
-            write_voices(project, pattern, style, key, start, keys);
-        },
-    );
-    if change.harmony > 0 {
-        project.scale = style.scale(key);
-    }
-    change
-}
-```
-
-`n` counts the patterns written so far, so the first pattern of the
-song starts from the micromode, the next upside down, the next a
-tritone away, and so on: the song does not repeat itself. The closure
-is given `project` as an argument instead of capturing it:
-`take_over_harmony` already holds `&mut Project`, and Rust allows only
-one mutable borrow at a time, so the project is lent to the closure for
-each call.
-
 The demos are arranged like the twelve-tone demos: `section_patterns`
 makes one pattern per section and fills it with a closure, and
 `arrange_sections` lays them out on the playlist, with the drums coming
 in after the first section. `micromode_demo` and `row_demo` both use
 them, each passing its own closure.
+
+## In a song, the band plays the forms on the sheet
+
+Tried on its own, a micromode style writes its walk into a pattern of
+its own, as the other library styles do (see [The
+library](../band/library.md)). In a song, the band plays it, the way it
+plays a tonal style: from the chord sheet. A tonal style says *how* to
+play chords and the sheet says *which* chords; a micromode style says
+how to play forms, and the sheet says which forms, in which order. So
+the order of the forms, a micromode's I–IV–V, is yours to write, with
+the harmony keys, the **Progression** button or degrees typed in the
+bars, and the style follows every change, as a tonal style follows a
+changed chord.
+
+`Band` has one more field:
+
+```rust
+pub micromode: Option<&'static MicromodeStyle>,
+```
+
+The styles live in a `static` table (see [The micromodes in
+Rust](#the-micromodes-in-rust-a-table-in-a-static)), so the band only
+points at one, with a `&'static` reference that is valid as long as
+the program runs. `None` is a tonal band. Any other style picked for
+the band sets it back to `None`.
+
+### Who plays what
+
+The style's keys play in place of the piano, its bass in place of the
+bass, and its line in place of the soloist; the guitar, the strings and
+the organ do not play. The drums and the horns play as in any style.
+One function says which players the style decides:
+
+```rust
+pub(super) fn takes_over(style: &MicromodeStyle, player: Player) -> bool {
+    match player {
+        Player::Drums | Player::Horns => false,
+        Player::Soloist => voice_of(style, player).is_some(),
+        _ => true,
+    }
+}
+```
+
+`band_notes`, which writes each player's part, asks it first:
+
+```rust
+if let Some(style) = band.micromode
+    && micromode::takes_over(style, player)
+{
+    return self.micromode_notes(band, style, player, score);
+}
+```
+
+`if let … && …` is a **let chain**: the pattern has to match *and* the
+condition has to hold. A soloist the style has no line for falls
+through, and improvises as in any style. The players the band has
+(`Band::players`) come from the same voices, so the chord sheet's
+**You play** buttons name only the players there are.
+
+### The sheet as spans
+
+The band already reads the sheet into `Played` harmonies, each with
+where it starts and ends and the notes the piano voices it with (see
+[How the band plays](../band/band.md#the-harmonies-as-notes)). A
+micromode voice needs only the form of each:
+
+```rust
+fn spans(harmonies: &[Played]) -> Vec<Span> {
+    harmonies
+        .iter()
+        .map(|played| Span {
+            start: played.start,
+            end: played.end,
+            form: match played.bass {
+                BassPart::Chord { chord, .. } => chord.pitch_set(),
+                _ => played.voicing.iter().map(|note| note.pitch_class()).collect(),
+            },
+        })
+        .collect()
+}
+```
+
+A chord gives its own notes, so C7 typed as a chord is the same form as
+the set C E G B♭. A set, a micromode or a group of a row gives the notes
+it is voiced with. `collect()` can build a `PitchSet` because
+`PitchSet` implements `FromIterator<PitchClass>`. A bar of no chord
+gives an empty span: the voices rest, and go on from the form before.
+
+`micromodal::write_spans` voices the spans, each from the one before,
+in the texture the voice asks for. It is the very code that writes a
+style's walk into a pattern: `write_forms` only cuts the walk into
+spans of `steps` steps each and hands them over:
+
+```rust
+let spans: Vec<Span> = (0..length)
+    .step_by(steps)
+    .map(|start| Span {
+        start,
+        end: (start + steps).min(length),
+        form: forms[(start / steps) % forms.len()],
+    })
+    .collect();
+write_spans(&spans, writing)
+```
+
+So a style sounds the same tried in a pattern and played by the band
+over the same forms. `step_by` makes an iterator that takes every
+`steps`-th number of the range: 0, 8, 16… for a form every half bar.
+
+### Keeping the sheet, or writing the walk
+
+`Project::apply_micromode_style` first decides whether the forms on the
+sheet stay:
+
+```rust
+let writes = parts.progression || !self.sheet_holds_forms();
+```
+
+The sheet holds forms when the key is a set and every harmony on it,
+but bars of no chord, is a form of that set, written as a set or as the
+chord it is: Em7b5 is a form of C7 as a set, Dm7 is not. Then the style
+plays them, in your order, and the key stays. That works for any set,
+not only a micromode: a texture plays four or six notes as it plays
+three, so "Viennese points" can play the forms of C7 as a set.
+Otherwise (a tonal sheet, an empty one, or the Library's **Chord
+progression** box ticked) the style writes its own walk on the sheet,
+from the first bar to the end of the song, each form as long as the
+style holds it, and the key becomes its micromode on the song's key
+note, all through the song.
+
+The rest is what any band style does: a band coming in mutes the song's
+own chords and bass; with the **Drums** box ticked the style's drums
+play, and a style without drums leaves the song without; the time
+signature, the tempo and the swing follow their boxes. The band is made
+or changed in one `match`:
+
+```rust
+match &mut self.band {
+    None => {
+        let mut band = Band::new(drums);
+        // ...
+        if band.end > 0 {
+            band.muted = self.mute_the_songs_own(parts.rhythm);
+        }
+        self.band = Some(band);
+    }
+    Some(band) => {
+        if parts.rhythm {
+            drums_come = band.drums == BandDrums::Song;
+            band.style = drums;
+            band.drums = BandDrums::Style;
+        }
+        // ...
+    }
+}
+```
+
+Matching on `&mut self.band` makes `band` a `&mut Band` in the second
+arm: the band is changed where it is, without taking it out of the
+`Option` and putting it back. The first arm binds nothing, so nothing
+of `self` is borrowed inside it, and it can still call
+`self.mute_the_songs_own` and set `self.band`: the borrow checker
+looks at what each arm really uses.
+
+### A saved style over a set
+
+A style you save yourself is written over C major, and each of its
+notes is moved to the harmony it plays over: C, E and G become the
+chord's root, third and fifth (see [Your own
+styles](../band/style-editor.md)). A set has no root, third or fifth,
+so over a set the notes go to the set's own notes, counted up from the
+bass: C, E and G (and B) take its first, second and third (and fourth)
+notes, and any other note the set's note nearest to it. A saved style
+over a micromode plays only the micromode's three notes:
+
+```rust
+let target = place
+    .and_then(|place| intervals.get(place).copied())
+    .or_else(|| intervals.iter().copied().min_by_key(|&interval| distance(interval)))
+    .unwrap_or(0);
+```
+
+`and_then` keeps going only if there is a place and the set has that
+many notes; `or_else` falls back to the nearest note, and `unwrap_or`
+to the bass for an empty set.
+
+### In the file
+
+The band saves the style by name, `micromode: Some("Viennese points")`,
+and a version that does not know the name refuses the file rather than
+play something else. A band playing a micromode style needs format 30
+(see [Project file format](../reference/project-format.md)).
+
+## A micromode as the key: degrees
+
+In C major the chord on D is called ii, wherever the song is: "ii"
+says where the chord stands in the key, not which notes it has, so a
+progression written in numerals plays in any key. A song whose key is a
+micromode needs the same kind of name for its forms. Its forms are not
+built on the notes of a scale, though: each is the key's own three notes
+moved, or turned upside down and moved. So the name says just that, how
+far and whether upside down, measured from the key.
+
+A form's **degree** says how it is made from the key's own form:
+**T*n*** is home moved up *n* semitones, and **T*n*I** is home turned
+upside down around the key's note, then moved up *n*. Upside down means
+mirrored: each note goes as far below the key's note as it was above
+it. In a song in Menor 3 on D (D D♯ F♯), E F G♯ is **T2**; turned over
+around D, D D♯ F♯ becomes D C♯ A♯, and a semitone up from there, B D
+D♯, is **T1I**:
+
+| Degree | Means | In Menor 3 on C | In Menor 3 on D |
+|---|---|---|---|
+| T0 | the key's own form, home | C C♯ E | D D♯ F♯ |
+| T2 | home moved up 2 semitones | D D♯ F♯ | E F G♯ |
+| T0I | home upside down around the key's note | A♭ B C | A♯ C♯ D |
+| T1I | that, moved up 1 | A C C♯ | B D D♯ |
+| T4 | home moved up 4 | E F G♯ | F♯ G A♯ |
+
+Like ii, a degree stays the same when the whole piece moves: the last
+column is the one before moved up a tone, with the same degrees. In
+Menor 3 on C the degrees are the very names the chord sheet writes
+after a micromode ("Menor 3 T4", "Menor 3 T1I"), which count from the
+table's form on C; in any other key they are counted from the key
+instead.
+
+Where the mirror stands matters. Pitch-class set theory's T*n*I turns
+notes over around C, and with that mirror a name would change when the
+music moves: in Menor 3 on C, A C C♯ is C C♯ E turned over around C and
+moved up 1, but a tone higher the same shapes, B D D♯ from D D♯ F♯,
+would be "turned over around C and moved up 5". The key's own note
+moves with the piece, so the app mirrors around it, and B D D♯ in
+Menor 3 on D is T1I, as A C C♯ is in Menor 3 on C.
+
+Home is always T0, whichever way up the key's own form is. For the
+triads, the parallel chord is T7I from either side: in C major as a
+key, C E G turned over around C is C A♭ F, F minor, and a fifth up that
+is C minor; in C minor as a key, C major is T7I too. The relative minor
+of C major, A minor, is T4I, and the relative major of C minor, E♭
+major, is T10I.
+
+### How near a form is: the notes it keeps
+
+A tonal key ranks its chords by what they do (tonic, subdominant,
+dominant). A micromode has no such roles, because every form has the
+same intervals; what tells two forms apart, to the ear, is how many
+notes they share. For three notes:
+
+- keeping **two** notes and moving one is the smoothest link, the move
+  of the walk in [Keeping two notes, moving
+  one](#keeping-two-notes-moving-one);
+- keeping **one** note is a pivot: one note holds while two change;
+- keeping **none** is a contrast: all three notes are new.
+
+Menor 3 has 24 forms. From C C♯ E, three keep two notes (A C C♯, C E♭ E
+and C♯ E F), nine keep one, and eleven keep none. So the harmony keys of
+a micromode key show its forms in that order, home first, each brighter
+the more it keeps of home, and leave out the ones that keep nothing
+until **All forms** asks for them. After a form plays, the forms that
+keep two of *its* notes are outlined, as the tonal keys outline the
+chords that usually come next, and the hint says what stays and what
+moves: "keeps A and C; C♯ goes to A♭". For the triads it also names the
+move, P, L or R.
+
+On the chord sheet, each bar of a micromode key shows its degree, and
+from the second bar on how many notes it keeps of the bar before: "T1I
+· 2 common". The degrees can be typed, too: `T2` and `T5I` mean those
+forms of the key.
+
+The sheet's **Progression** button, in a micromode key, writes eight
+bars of the key's forms by one of the walks of [Music from one
+micromode](#music-from-one-micromode): keep two notes and move one,
+keep one and move two, all twelve notes in every four forms, or a
+sequence. The band plays them as a micromode style would, the shared
+notes held on the same keys. Any pitch-class set can do the same: see
+[A set as the key: its forms](sets.md#a-set-as-the-key-its-forms).
+
+### Degrees in Rust: a small `Copy` struct
+
+A degree is two facts, so it is a struct of two fields, in
+`harmony/degree.rs`:
+
+```rust
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct Degree {
+    /// How many semitones it is moved, from 0 to 11.
+    pub up: u8,
+    /// Whether it is turned upside down first, around the key's note.
+    pub inverted: bool,
+}
+```
+
+It is `Copy` because it is two bytes: passing it by value costs nothing,
+and code can use it after passing it without thinking about ownership.
+
+Finding the degree is a search: home moved up 0 to 11 semitones, and
+then, only if none of those is the form, home turned over and moved:
+
+```rust
+pub fn of(key: Scale, form: PitchSet) -> Option<Degree> {
+    let own = key.pitch_set();
+    if own.is_empty() || own.len() != form.len() {
+        return None;
+    }
+    let mirrored = mirror(own, key.root);
+    let moved = |shape: PitchSet| (0..12u8).find(|&up| shape.transpose(up) == form);
+    moved(own)
+        .map(|up| Degree {
+            up,
+            inverted: false,
+        })
+        .or_else(|| moved(mirrored).map(|up| Degree { up, inverted: true }))
+}
+```
+
+The closure `moved` tries the twelve moves of a shape; `find` stops at
+the first that matches and gives it as `Some(up)`, or `None`. `map` turns
+`Some(up)` into `Some(Degree { .. })` and leaves `None` alone, and
+`or_else` runs its closure only on `None`, so the mirrored shape is only
+tried when home moved could not make the form. That order matters for a
+set that is the same upside down, such as the augmented triad or C
+major as a set: every form of it is home moved, so it gets the plainer
+name.
+
+The mirror itself is one line:
+
+```rust
+pub fn mirror(set: PitchSet, note: PitchClass) -> PitchSet {
+    set.invert().transpose((2 * note.semitone()) % 12)
+}
+```
+
+`invert` turns a set over around C, each note *n* semitones above C
+going to *n* below. Moving the result up twice the distance from C to
+the key's note puts the mirror on that note instead: a note *n* above D
+lands *n* below D. The `% 12` keeps the move under an octave; a `u8`
+times two can be up to 22.
+
+`Display` writes a degree as "T2" or "T5I", and `parse` reads it back.
+`strip_prefix` and `strip_suffix` take a pattern, and an array of
+characters is a pattern that matches any of them, so the letters can be
+upper or lower case:
+
+```rust
+pub fn parse(text: &str) -> Option<Degree> {
+    let number = text.trim().strip_prefix(['T', 't'])?;
+    let (number, inverted) = match number.strip_suffix(['I', 'i']) {
+        Some(number) => (number, true),
+        None => (number, false),
+    };
+    if number.is_empty() || !number.chars().all(|c| c.is_ascii_digit()) {
+        return None;
+    }
+    let up = number.parse::<u8>().ok().filter(|&up| up < 12)?;
+    Some(Degree { up, inverted })
+}
+```
+
+The check for digits is there because `"+3".parse::<u8>()` succeeds;
+`filter` turns T12 into `None`.
+
+The harmony keys' order is one sort, again with a tuple whose items are
+the rules in order:
+
+```rust
+forms.sort_by_key(|&(form, degree)| {
+    (
+        degree != Degree::HOME,
+        std::cmp::Reverse(kept(own, form)),
+        degree.inverted,
+        degree.up,
+    )
+});
+```
+
+`false` sorts before `true`, and `degree != Degree::HOME` is `false` only
+for home, so home comes first. `Reverse` flips
+the order of what it wraps, so the forms that keep *more* notes come
+first, without negating a count. Then the forms the right way up come
+before the upside-down ones, and finally they go by degree. `kept`
+counts the shared notes with the bits, as the walk does:
+`PitchSet::from_bits(a.bits() & b.bits()).len()`.
 
 ## The window: a clock drawn with egui's painter
 
@@ -893,11 +1229,27 @@ A C E is A minor, so its bass is A; B D F is B diminished; C C♯ E is
 no triad, so its bass is the first note of its normal form, C; and B C
 E♭ is no triad either, starting on B.
 
+`harmony/degree.rs` checks the degrees: counted from the key's own
+form and mirrored around its note, the same when the whole piece moves,
+home T0 whichever way up the key is (C major and C minor each the
+other's T7I), read as written ("T2", "t7i") and never T12; the 24 forms of
+Menor 3 in order of nearness (3, 9 and 11 forms keeping two, one and no
+notes), the augmented triad's four forms with no smooth link; and the
+names of the P, L and R moves.
+
 `library/micromodes.rs` checks that every style plays only its
 micromode, in any key and from every section's start, with the key
 becoming the micromode; that the first form starts on the key note;
-and that a song takes a micromode style. The app's tests check that
-chord micromodes are spelled as chords (C E♭ G♭), that **▶ Hear it**
+and `band/micromode.rs` that the band plays only the form written in
+each bar, with every style; that forms already on the sheet stay, in
+their order, with the key, and that changing a bar changes what the
+style plays; that a tonal song takes the style's walk on its sheet;
+that a locked Keys of the song keeps playing its part; and that the
+band is saved and read again. A saved style over a set plays only the
+set's notes, for every note of the octave over every form of a
+tetrachord. The app's tests check that a micromode style clicked in a
+song with forms on its sheet plays those forms, that chord
+micromodes are spelled as chords (C E♭ G♭), that **▶ Hear it**
 plays the three notes from middle C, and that picking a form shows how
 it was moved.
 
