@@ -693,8 +693,11 @@ accompaniment, so first the band:
    [Where the chords come
    from](chord-sheet.md#where-the-chords-come-from)), and
 2. **mutes** the song's own chord and bass channels (the library calls
-   them "Keys" and "Bass") and, when the style's drums come too, its
-   tracks that hold only drums,
+   them "Keys" and "Bass"), a bass of the song's own as a MIDI file
+   brings it (a channel named for one, or with a General MIDI bass
+   sound: `plays_the_bass`) and, when the style's drums come too, its
+   tracks that hold only drums, which an imported file keeps on a track
+   of their own,
 
 so the two do not play over each other. The melody plays on, now with
 the band behind it. Without the style's drums, the band comes in with

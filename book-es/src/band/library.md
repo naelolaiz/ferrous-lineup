@@ -612,36 +612,42 @@ canción importada de un archivo MIDI no tiene ninguno de los dos; sus
 canales llevan los nombres que les dio el archivo, como «PIANO
 MELODIA», «BANDONEON» o «CONTRABAJO». Entonces `own_players_instruments`
 da los sonidos del estilo a los músicos propios de la canción, a cada
-uno según la familia del instrumento que tenía, y deja la melodía en
-paz:
+uno según la parte que toca, y deja la melodía en paz:
 
 ```rust
-let program = match channel.program? {
-    general_midi::CONTRABASS => band.bass_program(),
-    // Violins to tremolo strings, and the string ensembles.
-    40..=44 | 48..=51 => extras.strings.as_ref()?.program,
-    program => match general_midi::FAMILIES[general_midi::family(program)] {
-        "Piano" => piano,
-        "Organ" => extras.organ.as_ref().map_or(piano, |organ| organ.program),
-        "Guitar" => extras
-            .guitar
-            .as_ref()
-            .map_or(piano, |guitar| guitar.program),
-        "Bass" => band.bass_program(),
-        _ => return None,
-    },
+let program = match role(&channel.name, channel.program)? {
+    Role::Piano => piano,
+    Role::Organ => extras.organ.as_ref().map_or(piano, |organ| organ.program),
+    Role::Guitar => extras
+        .guitar
+        .as_ref()
+        .map_or(piano, |guitar| guitar.program),
+    Role::Bass => band.bass_program(),
+    Role::Strings => extras.strings.as_ref()?.program,
 };
 ```
 
-El código está dentro de un cierre que se pasa a `filter_map`, que
-devuelve un `Option`, así que cada `?` y el `return None` significan
-«este canal conserva su sonido»: un canal sin programa General MIDI,
-las cuerdas cuando el estilo no tiene, un coro o un bandoneón, que
-ningún estilo tiene. Un contrabajo está en la familia de las cuerdas de
-General MIDI, así que se reconoce primero, por su número, y toma el
-bajo. La melodía es cualquier canal cuyo nombre lo diga (Lead, Melody,
-Melodía, Voice, Voz, Canto), o si no el que mostraría la partitura de
-melodía.
+`role` lee primero el nombre del canal («slapbass», «drive guitar»,
+«organ», «warmstrings», o bajo, guitarra, órgano, cuerdas), y solo
+después la familia de su sonido General MIDI, contando el contrabajo
+como bajo aunque General MIDI lo archive entre las cuerdas. El nombre
+va primero porque un estilo puede haber cambiado la familia del
+sonido: en una banda sin guitarra, la guitarra toca la parte del piano,
+y por su sonido solo seguiría siendo un piano en la banda siguiente,
+que tiene un banjo para ella. El código está dentro de un cierre que se
+pasa a `filter_map`, que devuelve un `Option`, así que cada `?`
+significa «este canal conserva su sonido»: un canal cuyo nombre y
+sonido no dicen nada (un coro, un pad), o las cuerdas cuando el estilo
+no tiene. La melodía es cualquier canal cuyo nombre lo diga (Lead,
+Melody, Melodía, Voice, Voz, Canto), o si no el que mostraría la
+partitura de melodía.
+
+La entrada de la banda, `apply_band_parts`, llega al mismo código por
+`own_players_sounds`, dejando fuera los canales propios de la banda,
+así que los músicos del archivo cambian de sonido tanto si el estilo
+toca como banda como si no: el primer estilo sobre un archivo MIDI hace
+entrar a la banda, y cada estilo después de él vuelve a dar sus sonidos
+al órgano, las guitarras y las cuerdas del archivo.
 
 Dos métodos pequeños corrigen la elección según el tipo de preajuste,
 cada uno tomando `self` por valor y devolviendo una copia cambiada:
