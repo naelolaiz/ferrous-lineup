@@ -16,16 +16,16 @@
 //! Under the key, the colour of the passage: the micromode its notes
 //! fit and the set they make ([`Project::heard_colours`]), read eight
 //! bars at a time between the song's key markers
-//! ([`Project::colour_passage`]) and over the whole of a pattern. Not
-//! while you play: three notes are too few.
+//! ([`Project::colour_passage`]) and over the whole of a pattern. Only
+//! where the key is a set, a micromode, a row or the chromatic scale
+//! ([`shows_colours`]), and not while you play: three notes are too few.
 //!
 //! Nothing here changes the project. The work is done in
 //! [`lineup_core::harmony::key_finding`] and
 //! [`lineup_core::harmony::colour_finding`].
 
-use lineup_core::harmony::colour_finding::{Colour, Colours, find_colours};
+use lineup_core::harmony::colour_finding::{Colours, find_colours};
 use lineup_core::harmony::key_finding::{KeyListener, KeySpan, chromas_of_notes, rank_keys};
-use lineup_core::harmony::{Micromode, PitchSet};
 use lineup_core::{NoteEvent, Project, Scale, ScaleKind, Tempo};
 
 use super::LineupApp;
@@ -185,6 +185,10 @@ impl LineupApp {
                 let mut heard = shown(span, from, true)?;
                 let project = &self.project;
                 let passage = project.colour_passage(step);
+                let key = project.key_at(passage.0);
+                if !shows_colours(key) {
+                    return Some(heard);
+                }
                 if finder.passage.as_ref().is_none_or(|(at, _)| *at != passage) {
                     let (start, end) = passage;
                     let colours = project.heard_colours(start, end, Some(heard.best.key));
@@ -194,9 +198,8 @@ impl LineupApp {
                 let meter = project.meter();
                 let first = meter.position(passage.0).0;
                 let last = meter.position(passage.1.saturating_sub(1)).0;
-                let key = project.key_at(passage.0);
                 heard.colours = Some(ColoursHeard {
-                    colours: colours_in_key(colours, key, heard.alternatives.is_empty()),
+                    colours: colours.clone(),
                     from: trf("in bars {} to {}", &[&first, &last]),
                     passage: Some(passage),
                     key,
@@ -238,8 +241,11 @@ impl LineupApp {
                 let (_, span, colours) = finder.pattern.as_ref()?;
                 let mut heard = shown(span, "in this pattern", false)?;
                 let key = self.project.pattern_key(index);
+                if !shows_colours(key) {
+                    return Some(heard);
+                }
                 heard.colours = Some(ColoursHeard {
-                    colours: colours_in_key(colours, key, heard.alternatives.is_empty()),
+                    colours: colours.clone(),
                     from: tr("in this pattern").to_string(),
                     passage: None,
                     key,
@@ -250,34 +256,13 @@ impl LineupApp {
     }
 }
 
-/// The colours Find the key shows where the song is in `key`, when the
-/// notes there sound `clear`ly like one major or minor key.
-///
-/// A song in a key of tonal music, or one of its modes, is shown as
-/// that: its colour is offered only where its notes do not clearly sound
-/// like a major or minor key, as music made of a micromode does not, and
-/// never as the major and minor triads of Acorde menor-mayor, which
-/// tonal music is made of anyway. In a set, a micromode, a row or the
-/// chromatic scale, every colour found is shown.
-fn colours_in_key(colours: &Colours, key: Scale, clear: bool) -> Colours {
-    let tonal = key.kind.is_tonal() && key.kind != ScaleKind::Chromatic;
-    if !tonal {
-        return colours.clone();
-    }
-    if clear {
-        return Colours::default();
-    }
-    let triads = PitchSet::from_semitones(&[0, 4, 7]);
-    Colours {
-        micromodes: colours
-            .micromodes
-            .iter()
-            .filter(|guess| {
-                !matches!(guess.colour, Colour::Micromode(micromode)
-                    if Some(micromode) == Micromode::of(triads))
-            })
-            .copied()
-            .collect(),
-        collection: colours.collection,
-    }
+/// Whether Find the key shows the colour of a passage whose key is
+/// `key`: in a set, a micromode, a row or the chromatic scale. A song in
+/// a major or minor key or a mode is shown in chords only, as the chord
+/// sheet and the piano roll show it: tonal music is made of two
+/// micromodes, the major and minor triads and the diminished one, and
+/// naming them as micromodes says nothing new. To see the colour of a
+/// passage in such a song, make the key chromatic first.
+fn shows_colours(key: Scale) -> bool {
+    !key.kind.is_tonal() || key.kind == ScaleKind::Chromatic
 }
