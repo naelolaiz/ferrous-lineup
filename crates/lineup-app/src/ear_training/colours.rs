@@ -85,8 +85,8 @@ impl EarTraining {
             theme::hint(
                 spread,
                 tr(
-                    "The three notes in any order from the bottom, over more than an octave: \
-                    C C# E can sound as E C C#",
+                    "The three notes in any order from the bottom, up to two octaves wide: C \
+                    C# E can sound as E C C#",
                 ),
             );
         });
