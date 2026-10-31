@@ -79,7 +79,9 @@ vientos](bigger-band.md#la-sección-de-vientos)). Para tus propios
 acordes, el estilo **Big band** de la Biblioteca trae la banda entera:
 un walking bass, la guitarra a cuatro por compás y los vientos haciendo
 riffs juntos sobre un blues de jazz. **Balada de big band** sostiene los
-acordes en los saxofones.
+acordes en los saxofones. **Foxtrot** es el lento compás de dos de la
+orquesta de baile para el salón: el bajo en 1 y 3, el acorde y las
+escobillas en 2 y 4, la guitarra a cuatro por compás.
 
 ## El blues
 

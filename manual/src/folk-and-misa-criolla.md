@@ -101,7 +101,10 @@ the dominant's bass and leads to E.
 - **Uruguay**: the **candombe** of Montevideo. *Candombe del barrio*
   moves in 3 + 3 + 2, the tresillo the milonga and the tango lean on too;
   Rubén Rada's *Candombe para Gardel* keeps changing mode, from G major
-  to G minor and back.
+  to G minor and back. The Library's **Candombe** and **Candombe
+  Ansina** play the three drums of a candombe group: the repique opens
+  the song with the clave on the drum's wooden shell, and the phrases
+  take turns, so no two in a row sound the same.
 - **Brazil**: the songs of the gaúchos of Rio Grande do Sul, such as
   *Boi barroso*, and *Luar do sertão*, a *toada* about the moonlight of
   the backlands.

@@ -11,9 +11,10 @@ use crate::band::{Band, StyleMarker, VariationMarker};
 use crate::chord_sheet::{self, ChordMarker, HarmonyName};
 use crate::effects::Effects;
 use crate::harmony::key_finding::{KeySpan, chromas_of_notes, key_spans};
-use crate::harmony::voice_leading::{self, VoiceLeading, voices_of};
+use crate::harmony::voice_leading::{self, RowStatement, VoiceLeading, voices_of};
 use crate::harmony::{
-    Chord, ChordSymbol, Degree, Harmony, HeardNote, Hearing, Listening, PitchSet, Scale, hear,
+    Chord, ChordSymbol, Degree, Harmony, HeardNote, Hearing, Listening, PitchSet, RowLabel, Scale,
+    hear,
 };
 use crate::key_map::{KeyMap, KeyMarker, moved_key};
 use crate::meter::{Bar, Click, Meter, TimeMarker, TimeSignature};
@@ -539,6 +540,14 @@ impl Project {
     /// minor. The chord sheet moves with the notes too (see
     /// [`HarmonyName::moved`]).
     ///
+    /// From one twelve-tone row to another, each note keeps its place in
+    /// the form it is part of, read as the twelve-tone check reads the
+    /// forms (see [`tools::change_row`]): the piece is played on the new
+    /// row, form by form. A row whose forms have two names each (one that
+    /// is its own retrograde moved, as Berg's) can be read by the other
+    /// name on the way back, so Undo is the way back to the notes as they
+    /// were.
+    ///
     /// The band's parts move too, and are then written again from the
     /// moved sheet (see [`Project::follow_chord_sheet`]): moving with the
     /// song is not an edit that freezes them.
@@ -573,6 +582,20 @@ impl Project {
                     .min()
             })
             .collect();
+        // Where the key is a row and becomes another, the form each note
+        // is part of, read as an analyst would (see `voice_leading`), so
+        // the note keeps its place in it (see `row_form_of`).
+        let readings: Vec<Vec<RowStatement>> = (0..self.patterns.len())
+            .map(|pattern| {
+                if scale.tone_row().is_none() || before[pattern].tone_row().is_none() {
+                    return Vec::new();
+                }
+                let channels: Vec<usize> = (0..self.channels.len())
+                    .filter(|&channel| !self.patterns[pattern].is_step_row(channel))
+                    .collect();
+                self.voice_leading(pattern, &channels).rows
+            })
+            .collect();
         self.scale = scale;
         for marker in &mut self.playlist.key_markers {
             marker.scale = moved_key(marker.scale, from, scale);
@@ -602,11 +625,15 @@ impl Project {
                     .notes(channel)
                     .iter()
                     .map(|note| {
-                        let form = form_of(note, &sounding, &sheet, start, old);
-                        NoteEvent {
-                            pitch: tools::change_key_in(note.pitch, form, old, new),
-                            ..*note
-                        }
+                        let pitch = if old.tone_row().is_some() && new.tone_row().is_some() {
+                            let form =
+                                row_form_of(note, channel, &readings[index], &sheet, start, old);
+                            tools::change_row(note.pitch, form, old, new)
+                        } else {
+                            let form = form_of(note, &sounding, &sheet, start, old);
+                            tools::change_key_in(note.pitch, form, old, new)
+                        };
+                        NoteEvent { pitch, ..*note }
                     })
                     .collect();
                 pattern.set_notes(channel, notes);
@@ -2463,6 +2490,43 @@ fn form_of(
     })
 }
 
+/// The form of the row `key` that `note`, on track `channel`, is part
+/// of, so a change of row can keep its place in it (see
+/// [`tools::change_row`]): the form the track plays there, as the
+/// twelve-tone check reads it in `rows`, or the one all the tracks share
+/// there; else the form written on the sheet where the pattern first
+/// plays the note (it starts on step `start` of the song); else the
+/// form another track plays there, as for a line doubled in octaves,
+/// which the check reads once.
+fn row_form_of(
+    note: &NoteEvent,
+    channel: usize,
+    rows: &[RowStatement],
+    sheet: &[ChordMarker],
+    start: Option<usize>,
+    key: Scale,
+) -> Option<RowLabel> {
+    let there = |row: &&RowStatement| row.key == key && (row.start..row.end).contains(&note.start);
+    let read = |channel: Option<usize>| {
+        rows.iter()
+            .filter(there)
+            .find(|row| row.channel == channel)
+            .map(|row| row.label)
+    };
+    let written = || {
+        let step = start? + note.start;
+        let after = sheet.partition_point(|marker| marker.start <= step);
+        match sheet.get(after.checked_sub(1)?)?.harmony {
+            HarmonyName::Row(label) => Some(label),
+            _ => None,
+        }
+    };
+    read(Some(channel))
+        .or_else(|| read(None))
+        .or_else(written)
+        .or_else(|| rows.iter().find(there).map(|row| row.label))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -2579,6 +2643,87 @@ mod tests {
                 );
             }
         }
+    }
+
+    #[test]
+    fn a_new_row_keeps_every_note_in_its_form_and_its_place() {
+        use crate::harmony::{RowForm, RowLabel, RowPreset, ToneRow};
+        use crate::{PitchClass, ScaleKind};
+        let preset = |name: &str| RowPreset::named(name).unwrap().row;
+        let lineup = preset("Lineup row");
+        let label = |form, number| RowLabel::new(form, number);
+        let (p0, r0, ri5) = (
+            label(RowForm::Prime, 0),
+            label(RowForm::Retrograde, 0),
+            label(RowForm::RetrogradeInversion, 5),
+        );
+        // A tune that plays P0 then RI5, a note a step, and under it a
+        // bass that plays R0, a note every two steps: a form each.
+        let notes = |forms: &[RowLabel], low: u8, steps: usize| -> Vec<NoteEvent> {
+            forms
+                .iter()
+                .flat_map(|&form| lineup.form(form).semitones())
+                .enumerate()
+                .map(|(i, n)| NoteEvent::new(crate::Note::new(low + n), i * steps, steps))
+                .collect()
+        };
+        let mut project = Project::empty();
+        project.scale = Scale::row(lineup);
+        let tune = project.add_channel(Channel::synth()).unwrap();
+        let bass = project.add_channel(Channel::synth()).unwrap();
+        let pattern = project.pattern_mut(0).unwrap();
+        pattern.set_length(32);
+        pattern.set_notes(tune, notes(&[p0, ri5], 72, 1));
+        pattern.set_notes(bass, notes(&[r0], 48, 2));
+        let before = project.clone();
+        let classes = |project: &Project, channel: usize| -> Vec<u8> {
+            let mut notes = project.pattern(0).unwrap().notes(channel).to_vec();
+            notes.sort_by_key(|note| note.start);
+            notes
+                .iter()
+                .map(|note| note.pitch.pitch_class().semitone())
+                .collect()
+        };
+        let forms = |row: ToneRow, forms: &[RowLabel]| -> Vec<u8> {
+            forms
+                .iter()
+                .flat_map(|&form| row.form(form).semitones())
+                .collect()
+        };
+        // Into Berg's row on C, every form stays the same form.
+        let berg = preset("Berg's Lyric Suite").starting_on(PitchClass::C);
+        project.change_key(Scale::row(berg));
+        assert_eq!(classes(&project, tune), forms(berg, &[p0, ri5]));
+        assert_eq!(classes(&project, bass), forms(berg, &[r0]));
+        // No note jumps further than a tritone.
+        for channel in [tune, bass] {
+            let old = before.pattern(0).unwrap().notes(channel);
+            let new = project.pattern(0).unwrap().notes(channel);
+            for (a, b) in old.iter().zip(new) {
+                assert!(
+                    a.pitch.midi().abs_diff(b.pitch.midi()) <= 6,
+                    "{a:?} to {b:?}"
+                );
+            }
+        }
+        // Into Berg's row on D, the forms move up a tone with the key note.
+        let mut on_d = before.clone();
+        let berg_on_d = berg.starting_on(PitchClass::D);
+        on_d.change_key(Scale::row(berg_on_d));
+        let up = |form: RowLabel| label(form.form, form.number + 2);
+        assert_eq!(classes(&on_d, tune), forms(berg_on_d, &[up(p0), up(ri5)]));
+        assert_eq!(classes(&on_d, bass), forms(berg_on_d, &[up(r0)]));
+        // Into Schoenberg's row and back, the notes are where they were.
+        // (Not through Berg's: its second half is its first backwards a
+        // tritone up, so each of its forms has two names, and the way back
+        // reads them by the other one.)
+        let mut round = before.clone();
+        round.change_key(Scale::row(preset("Schoenberg's Suite")));
+        assert_ne!(classes(&round, tune), classes(&before, tune));
+        round.change_key(Scale::row(lineup));
+        assert_eq!(classes(&round, tune), classes(&before, tune));
+        assert_eq!(classes(&round, bass), classes(&before, bass));
+        assert!(matches!(round.scale.kind, ScaleKind::Row(_)));
     }
 
     #[test]

@@ -57,8 +57,8 @@ are in [`book/`](book/), next to the code they describe.
 - **Writing by hand**: a playlist of tracks, a channel rack with a step
   sequencer, a piano roll, a style editor and a mixer.
 - **Songs**: over 340 demos, from folk songs and hymns to tangos, jazz
-  standards and whole orchestral pieces, plus a library of 215 styles
-  and 139 rhythms.
+  standards and whole orchestral pieces, plus a library of 217 styles
+  and 141 rhythms.
 - **Takes**: sing or whistle a part along with the song, and its notes
   are written in (pitch, timing and loudness), with the recording kept
   on a track. A recording made before, as an MP3 or WAV, works the same.
@@ -120,7 +120,7 @@ On macOS the program is inside the app bundle:
 | | |
 |---|---|
 | ![The piano roll on the chords of the demo song, with the chord names above the grid and the chords that often come next lit up](screenshots/piano-roll.png) | ![The Library tab: Bossa nova has just been tried, and its tooltip shows its chords in C major](screenshots/library.png) |
-| The piano roll names the chords as they play and lights up the ones that often come next. | The Library: 215 harmony styles and 139 rhythms to try in your key. |
+| The piano roll names the chords as they play and lights up the ones that often come next. | The Library: 217 harmony styles and 141 rhythms to try in your key. |
 | ![The Your take window over the playlist: 21 notes heard from bar 1 to bar 6, going to the Lead on a grid of sixteenth notes, with the recording kept on a new track](screenshots/take-review.png) | ![The menu of a track: insert above or below, move up or down, delete](screenshots/track-menu.png) |
 | A sung take: its notes go into the Lead, the recording onto a track. | Right-click a track's name to insert, move or delete tracks. |
 | ![The twelve-tone window beside the piano roll: the matrix of a row with all its forms, and the piano roll numbering the notes of the row](screenshots/twelve-tone-row.png) | ![The pitch-class set browser showing the octatonic scale, 8-28, beside the piano roll](screenshots/pitch-class-sets.png) |

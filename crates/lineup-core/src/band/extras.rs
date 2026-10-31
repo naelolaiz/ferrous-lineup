@@ -190,6 +190,10 @@ const BY_STYLE: &[(&str, Extras)] = &[
     ),
     // Jazz: the swing band's guitar, a ballad with strings.
     ("Swing", with_guitar(GuitarPart::FourToTheBar, JAZZ_GUITAR)),
+    (
+        "Foxtrot",
+        with_guitar(GuitarPart::FourToTheBar, JAZZ_GUITAR),
+    ),
     // Freddie Green's guitar in Count Basie's band: four even chords to
     // the bar, felt more than heard.
     (

@@ -11,7 +11,7 @@ pattern. None of it is code. It is *knowledge*, and the best way to put
 knowledge into a program is to write it down as data, in a form a
 person can read and check, and to keep the code that uses it small.
 
-The library does that: 215 harmony styles, 139 rhythms and 6 fills,
+The library does that: 217 harmony styles, 141 rhythms and 7 fills,
 each a few lines in a table, plus the twelve-tone and micromode styles
 of the theory chapters and the songs of [How a demo is
 written](../songs/demos.md). This chapter goes through the notations,
@@ -306,6 +306,39 @@ rhythms, the ones marked `follows_the_meter`, are written again for
 every bar's own meter instead, for music whose meter changes all the
 time (see [An orchestra for music that changes
 meter](orchestra.md)).
+
+### Laid out over a song's parts
+
+Most rhythms are a loop of a bar or two, and the drums play it over and
+over, with fills where the song's parts end (see [Drums by
+part](song-form.md#drums-by-part)). Some music is built otherwise: a
+candombe's drums open with the clave played on the repique's wooden
+shell, groove on the repique's base, and close every phrase with its
+call, the "fraseo". `Rhythm::laid_out` gives a rhythm a `Layout`, and
+its lines are then read as those pieces one after another:
+
+```rust
+const CANDOMBE: Layout = Layout {
+    opening: 4,
+    grooves: &[4, 4, 4, 4],
+    turns: 2,
+    closing: 2,
+    closings: 2,
+};
+```
+
+So the candombe's lines are 24 bars long: four bars of opening; two
+grooves of four bars for A parts and two for B parts; and two closings
+of two bars. A phrase takes turns with the grooves of its kind and with
+the closings (`Layout::groove`, `Layout::closing_at`), counting the
+phrases of that kind the song has played: the first phrase of an A part
+plays the first groove and the first closing, the next the second ones,
+and so on round. The second groove opens with a bar of clave on the
+wood and varies the piano more; the second closing starts from the
+repique's busier base, so the clave never comes just before a new part.
+A phrase too short for it all plays the opening's start and the
+closing. Such a rhythm needs no fill from the table: its closing is its
+fill.
 
 ### A rhythm for any time signature
 
@@ -891,7 +924,8 @@ undo: after Ctrl+Z brings the previous style back, the pattern matches
 an older copy, and the next click still swaps it in place.
 
 Harmony styles and rhythms take the parts you ticked (see [Which parts
-to take](#which-parts-to-take)). Row styles and micromode styles have no such choice: they
+to take](#which-parts-to-take)). Row styles and micromode styles have no such choice (only
+Chord progression gives a row style its own row in place of the key's): they
 are tried the same way, and differ only in the notes they write. So
 their shared steps are one method, and the different step is a closure
 passed in:

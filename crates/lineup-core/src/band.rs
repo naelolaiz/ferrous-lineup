@@ -35,7 +35,7 @@ use crate::library::comping::{Bass, BassPart, Comping, Played};
 use crate::library::drum_form::{self, DrumPart, PartKind, Then};
 use crate::library::interpret::{self, Role};
 use crate::library::voicing::bass_line;
-use crate::library::{Genre, MicromodeStyle, RHYTHMS, Rhythm, Style};
+use crate::library::{Genre, MicromodeStyle, RHYTHMS, Rhythm, RowStyle, Style};
 use crate::meter::{Bar, TimeSignature};
 use crate::micromodal::{self, Walk};
 use crate::pattern::{MAX_STEPS, NoteEvent};
@@ -51,6 +51,7 @@ mod guitar;
 pub mod horns;
 pub mod locks;
 mod micromode;
+mod row;
 pub mod sections;
 pub mod solo;
 pub(crate) mod stops;
@@ -551,6 +552,10 @@ pub struct Band {
     /// in, if it plays one: its voices take the place of the piano, the
     /// bass and the soloist (see [`Project::apply_micromode_style`]).
     pub micromode: Option<&'static MicromodeStyle>,
+    /// The twelve-tone style the band plays the forms of the row on the
+    /// chord sheet in, if it plays one: its voices take the place of the
+    /// piano, the bass and the soloist (see [`Project::apply_row_style`]).
+    pub row: Option<&'static RowStyle>,
 }
 
 impl Band {
@@ -575,6 +580,7 @@ impl Band {
             solo: None,
             horns: style.brings_horns(),
             micromode: None,
+            row: None,
         }
     }
 
@@ -637,6 +643,9 @@ impl Band {
     pub fn players(&self) -> Vec<Player> {
         if let Some(style) = self.micromode {
             return self.micromode_players(style);
+        }
+        if let Some(style) = self.row {
+            return self.row_players(style);
         }
         if let Some(style) = &self.custom_rhythm {
             let mut players = self
@@ -740,6 +749,9 @@ impl Band {
         if let Some(style) = self.micromode {
             return style.name;
         }
+        if let Some(style) = self.row {
+            return style.name;
+        }
         if let Some(style) = &self.custom_rhythm {
             return &style.name;
         }
@@ -749,6 +761,9 @@ impl Band {
 
     pub fn instrument_name(&self) -> &str {
         if let Some(style) = self.micromode {
+            return style.name;
+        }
+        if let Some(style) = self.row {
             return style.name;
         }
         self.custom_instruments
@@ -878,6 +893,9 @@ pub(crate) struct BandFile {
     /// The micromode style it plays the chord sheet in, by name.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub micromode: Option<String>,
+    /// The twelve-tone style it plays the chord sheet in, by name.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub row: Option<String>,
 }
 
 /// Whose drums a band plays, as it is saved, when not its style's.
@@ -932,6 +950,7 @@ impl From<&Band> for BandFile {
             variations: band.variations.clone(),
             styles: band.styles.iter().map(StyleMarkerFile::from).collect(),
             micromode: band.micromode.map(|style| style.name.to_string()),
+            row: band.row.map(|style| style.name.to_string()),
         }
     }
 }
@@ -1001,6 +1020,18 @@ impl BandFile {
                 })
             })
             .transpose()?;
+        let row = self
+            .row
+            .as_deref()
+            .map(|name| {
+                RowStyle::named(name).ok_or_else(|| {
+                    trf(
+                        "its band plays \"{}\", a twelve-tone style this version does not know",
+                        &[&name],
+                    )
+                })
+            })
+            .transpose()?;
         Ok(Band {
             custom_rhythm: self.custom_rhythm,
             custom_instruments: self.custom_instruments,
@@ -1057,6 +1088,7 @@ impl BandFile {
             solo: self.solo,
             horns: self.with_horns,
             micromode,
+            row,
         })
     }
 }
@@ -1245,6 +1277,9 @@ struct Score {
     held: Option<Bar>,
     breaks: stops::Breaks,
     harmonies: Vec<Played>,
+    /// The harmonies of the chord sheet as written, each from the step
+    /// it starts on to the step the next one starts on.
+    spans: Vec<(usize, usize, HarmonyName)>,
     keys: crate::key_map::KeyMap,
     runs: Vec<Run>,
     variations: Vec<VariationMarker>,
@@ -1428,6 +1463,7 @@ impl Project {
                 && band.custom_rhythm.is_none()
                 && band.custom_instruments.is_none()
                 && band.micromode.is_none()
+                && band.row.is_none()
         }) {
             return;
         }
@@ -1454,6 +1490,7 @@ impl Project {
             band.accents_only = false;
             band.drums = BandDrums::Style;
             band.micromode = None;
+            band.row = None;
         }
         let empty = self.playlist.chord_markers.is_empty() && self.song_length() == 0;
         let other_meter =
@@ -1526,6 +1563,7 @@ impl Project {
             band.harmony_style = harmony;
             band.accents_only = false;
             band.micromode = None;
+            band.row = None;
         }
         let mut drums_come = false;
         if parts.rhythm {
@@ -1662,6 +1700,7 @@ impl Project {
                 band.accents_only = false;
                 band.harmony_style = None;
                 band.micromode = None;
+                band.row = None;
             }
             if parts.rhythm {
                 drums_come = band.drums == BandDrums::Song;
@@ -2116,6 +2155,10 @@ impl Project {
                     band.micromode
                         .and_then(|style| micromode::sound(style, player))
                 }
+                // So do a twelve-tone style's.
+                _ if band.row.is_some_and(|style| row::takes_over(style, player)) => {
+                    band.row.and_then(|style| row::sound(style, player))
+                }
                 Player::Piano => Some((KEYS, style.piano_program())),
                 Player::Bass => Some((BASS, style.bass_program())),
                 Player::Drums => None,
@@ -2371,6 +2414,10 @@ impl Project {
                 print.bytes(b"micromode");
                 print.bytes(style.name.as_bytes());
             }
+            if let Some(style) = band.row {
+                print.bytes(b"row");
+                print.bytes(style.name.as_bytes());
+            }
             // Only bands whose drums come from elsewhere count them.
             if band.drums != BandDrums::Style {
                 print.bytes(b"drums");
@@ -2540,6 +2587,14 @@ impl Project {
             markers.push(ChordMarker::new(ending.start, ending.harmony));
         }
         let harmonies = self.played_harmonies(&markers, parts_end, band.style.comping);
+        let spans = markers
+            .iter()
+            .enumerate()
+            .map(|(index, marker)| {
+                let stop = markers.get(index + 1).map_or(parts_end, |next| next.start);
+                (marker.start, stop, marker.harmony)
+            })
+            .collect();
         let keys = self.key_map();
         let breaks = stops::Breaks::of(&markers, parts_end);
         // The last bar of an ending is one chord, struck and held.
@@ -2554,6 +2609,7 @@ impl Project {
             held,
             breaks,
             harmonies,
+            spans,
             keys,
             runs,
             variations,
@@ -2664,6 +2720,11 @@ impl Project {
             && micromode::takes_over(style, player)
         {
             return self.micromode_notes(band, style, player, score);
+        }
+        if let Some(style) = band.row
+            && row::takes_over(style, player)
+        {
+            return self.row_notes(band, style, player, score);
         }
         let extras = band.extras();
         let seed = |player: Player| interpret::seed("band", band.style.name, player.name());
@@ -3149,6 +3210,8 @@ impl Project {
         // last part goes on into the next time round, not into the end.
         let repeats = self.repeated_chorus().is_some();
         let mut fills = 0;
+        let mut lands = false;
+        let mut turns = drum_form::Turns::default();
         let mut notes = Vec::new();
         for (index, (range, kind)) in parts.iter().enumerate() {
             let part = DrumPart {
@@ -3162,7 +3225,11 @@ impl Project {
                     Then::Part
                 },
                 lead_in: kind.lead_in,
+                crash: lands,
+                turn: turns.of(kind),
             };
+            lands = drum_form::ends_with_fill(rhythm, &part);
+            turns.played(kind, part.bars.len());
             for (drum, note) in drum_form::part_drums(rhythm, &part, &mut fills) {
                 if in_held(note.start) {
                     continue;

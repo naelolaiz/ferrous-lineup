@@ -575,7 +575,7 @@ canción movida o copiada a otra computadora junto con su carpeta de
 tomas encuentra sus tomas.
 
 Una canción con una toma se guarda en el [formato
-31](../reference/project-format.md): un Ferrous Lineup más antiguo no
+32](../reference/project-format.md): un Ferrous Lineup más antiguo no
 sabe qué es una toma, y dice que hace falta una versión más nueva en
 lugar de abrir la canción sin ella.
 

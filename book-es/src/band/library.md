@@ -12,7 +12,7 @@ meter conocimiento en un programa es escribirlo como datos, en una forma
 que una persona pueda leer y comprobar, y que el código que lo usa sea
 pequeño.
 
-La biblioteca hace eso: 215 estilos armónicos, 139 ritmos y 6 rellenos,
+La biblioteca hace eso: 217 estilos armónicos, 141 ritmos y 7 rellenos,
 cada uno unas pocas líneas en una tabla, más los estilos dodecafónicos y
 de micromodos de los capítulos de teoría y las canciones de [Cómo se
 escribe una demostración](../songs/demos.md). Este capítulo recorre
@@ -322,6 +322,40 @@ desplazarse por encima de las barras. Unos pocos ritmos, los marcados
 compás, para la música cuyo compás cambia todo el tiempo (ver [Una
 orquesta para música que cambia de
 compás](orchestra.md)).
+
+### Repartido sobre las partes de una canción
+
+La mayoría de los ritmos son un giro de un compás o dos, y la batería lo
+toca una y otra vez, con rellenos donde terminan las partes de la
+canción (ver [La batería por partes](song-form.md#la-batería-por-partes)).
+Alguna música se construye de otra manera: los tambores de un candombe
+abren con la clave tocada en la madera del repique, hacen el groove con
+la base del repique, y cierran cada frase con su llamada, el «fraseo».
+`Rhythm::laid_out` le da a un ritmo un `Layout`, y sus líneas se leen
+entonces como esas piezas, una tras otra:
+
+```rust
+const CANDOMBE: Layout = Layout {
+    opening: 4,
+    grooves: &[4, 4, 4, 4],
+    turns: 2,
+    closing: 2,
+    closings: 2,
+};
+```
+
+Así, las líneas del candombe duran 24 compases: cuatro de apertura; dos
+grooves de cuatro compases para las partes A y dos para las B; y dos
+cierres de dos compases. Una frase se turna con los grooves de su clase
+y con los cierres (`Layout::groove`, `Layout::closing_at`), contando las
+frases de esa clase que la canción ya tocó: la primera frase de una
+parte A toca el primer groove y el primer cierre, la siguiente los
+segundos, y así sucesivamente. El segundo groove abre con un compás de
+clave en la madera y varía más el piano; el segundo cierre arranca
+desde la base más cargada del repique, para que la clave nunca llegue
+justo antes de una parte nueva. Una frase demasiado corta para todo eso
+toca el comienzo de la apertura y el cierre. Un ritmo así no necesita
+un relleno de la tabla: su cierre es su relleno.
 
 ### Un ritmo para cualquier compás
 
@@ -935,7 +969,8 @@ más antigua, y el siguiente clic lo sigue cambiando en el mismo lugar.
 
 Los estilos armónicos y los ritmos toman las partes que marcaste (ver
 [Qué partes tomar](#qué-partes-tomar)). Los estilos de series y los de micromodos no tienen esa
-elección: se prueban de la misma manera, y solo se diferencian en las
+elección (solo Progresión de acordes le da a un estilo de serie su
+propia serie en lugar de la de la tonalidad): se prueban de la misma manera, y solo se diferencian en las
 notas que escriben. Así que sus pasos comunes son un único método, y el
 paso distinto es un closure que se le pasa:
 

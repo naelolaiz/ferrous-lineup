@@ -108,6 +108,27 @@ impl RowLabel {
             number: number % 12,
         }
     }
+
+    /// Reads a label as it is written: "P0", "I5", "R3" or "RI11", in
+    /// capitals (a small "i7" is a Roman numeral on the chord sheet).
+    /// `None` for anything else.
+    pub fn parse(text: &str) -> Option<RowLabel> {
+        let text = text.trim();
+        let forms = [
+            ("RI", RowForm::RetrogradeInversion),
+            ("P", RowForm::Prime),
+            ("I", RowForm::Inversion),
+            ("R", RowForm::Retrograde),
+        ];
+        let (form, number) = forms
+            .into_iter()
+            .find_map(|(letters, form)| Some((form, text.strip_prefix(letters)?)))?;
+        if number.is_empty() || !number.chars().all(|c| c.is_ascii_digit()) {
+            return None;
+        }
+        let number: u8 = number.parse().ok()?;
+        (number < 12).then(|| RowLabel::new(form, number))
+    }
 }
 
 impl fmt::Display for RowLabel {
@@ -268,6 +289,35 @@ impl ToneRow {
         .flat_map(|form| (0..12).map(move |n| RowLabel::new(form, n)))
         .filter(|&label| PitchSet::from_semitones(&self.form(label).0[..6]) == missing)
         .collect()
+    }
+
+    /// The form to play at the same time as the form `label`, so that the
+    /// first halves of the two make all twelve notes, and so do the
+    /// second halves: its combinatorial partner, if the row has one (see
+    /// [`ToneRow::combinatorial_forms`]). The partner Schoenberg used
+    /// most is the form upside down, going the same way: `I` with `P`,
+    /// `RI` with `R`. Without one, it is a form the same way up (`P6`
+    /// with `P0`, say), and last a form upside down and backwards. The
+    /// form's own retrograde, which would always do, is never the
+    /// partner: it is the same notes.
+    pub fn partner(self, label: RowLabel) -> Option<RowLabel> {
+        let missing = PitchSet::from_semitones(&self.form(label).0[..6]).complement();
+        let shape = |inverted: bool, backwards: bool| match (inverted, backwards) {
+            (false, false) => RowForm::Prime,
+            (true, false) => RowForm::Inversion,
+            (false, true) => RowForm::Retrograde,
+            (true, true) => RowForm::RetrogradeInversion,
+        };
+        let (inverted, backwards) = (label.form.is_inverted(), label.form.is_backwards());
+        [
+            shape(!inverted, backwards),
+            shape(inverted, backwards),
+            shape(!inverted, !backwards),
+        ]
+        .into_iter()
+        .flat_map(|form| (0..12).map(move |n| RowLabel::new(form, n)))
+        .filter(|&other| other != label)
+        .find(|&other| PitchSet::from_semitones(&self.form(other).0[..6]) == missing)
     }
 
     /// The note names, such as "E F G Db Gb Eb Ab D B C A Bb", with the
@@ -711,6 +761,44 @@ mod tests {
         assert_eq!(forms, ["I3"]);
         // The chromatic hexachord is combinatorial with all four forms.
         assert!(ToneRow::CHROMATIC.combinatorial_forms().len() >= 3);
+    }
+
+    /// Every form of a combinatorial row has a partner of the same kind,
+    /// and each half of the two together holds all twelve notes.
+    #[test]
+    fn every_form_has_its_partner() {
+        let lineup = RowPreset::named("Lineup row").unwrap().row;
+        let name = |label: RowLabel| lineup.partner(label).map(|l| l.to_string());
+        assert_eq!(
+            name(RowLabel::new(RowForm::Prime, 0)).as_deref(),
+            Some("I3")
+        );
+        assert_eq!(
+            name(RowLabel::new(RowForm::Retrograde, 0)).as_deref(),
+            Some("RI3")
+        );
+        for form in RowForm::ALL {
+            for n in 0..12 {
+                let label = RowLabel::new(form, n);
+                let partner = lineup.partner(label).expect("a partner");
+                assert_eq!(partner.form.is_inverted(), !form.is_inverted(), "{label}");
+                assert_eq!(partner.form.is_backwards(), form.is_backwards(), "{label}");
+                let (a, b) = (lineup.form(label).0, lineup.form(partner).0);
+                for half in [0..6, 6..12] {
+                    let notes: PitchSet = a[half.clone()]
+                        .iter()
+                        .chain(&b[half])
+                        .map(|&n| PitchClass::from_semitone(n))
+                        .collect();
+                    assert_eq!(notes.len(), 12, "{label} with {partner}");
+                }
+            }
+        }
+        // A row whose first half is 6-Z3 has none: the six notes it
+        // leaves out are another set class, 6-Z36.
+        let row = ToneRow::new([0, 1, 2, 3, 5, 6, 4, 7, 8, 9, 10, 11]).unwrap();
+        assert!(row.combinatorial_forms().is_empty());
+        assert_eq!(row.partner(row.label()), None);
     }
 
     #[test]
