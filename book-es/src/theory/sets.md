@@ -403,7 +403,10 @@ formas.
 Los grados se cuentan como en un micromodo: **T*n*** es la forma propia
 de la tonalidad subida *n* semitonos, **T*n*I** la forma de la
 tonalidad dada vuelta alrededor de la nota de la tonalidad y después
-subida *n*.
+subida *n*. Pasar la tonalidad a otro conjunto conserva el grado de
+cada forma, en la hoja y en las notas, como lo hace cambiar el modo de
+una tonalidad (ver [Otro color, los mismos
+grados](micromodes.md#otro-color-los-mismos-grados)).
 
 ### Qué tan cerca: las notas que conserva una forma
 
