@@ -275,6 +275,7 @@ impl LineupApp {
                                                 }
                                             },
                                         );
+                                        self.microphone_settings_ui(ui);
                                         self.sound_settings_ui(ui);
                                     }
                                     Page::Playback => self.playback_settings_ui(ui),
