@@ -929,7 +929,6 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("Imported {}: {} bars", "Se importó {}: {} compases"),
     ("In Sets →", "En Conjuntos →"),
     ("in the notes here", "en las notas de aquí"),
-    ("in the recording here", "en la grabación, aquí"),
     ("in this pattern", "en este patrón"),
     ("in what you play", "en lo que tocas"),
     ("In {}", "En {}"),

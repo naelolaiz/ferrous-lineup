@@ -533,7 +533,7 @@ impl LineupApp {
         self.chord_sheet.new_song();
         self.playlist.new_song();
         self.harmony_keys.forget_chords();
-        self.key_finder.new_project(&self.project, Vec::new());
+        self.key_finder.new_project(&self.project);
         self.message = None;
         self.notice =
             stopped_listening.then(|| tr("Stopped listening to the recording.").to_string());
