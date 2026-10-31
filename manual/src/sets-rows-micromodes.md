@@ -244,9 +244,14 @@ notes sound at once, as a chord; **Then** what comes after the form,
 one octave), **Smooth** (each note near the one before) or **Wide**
 (leaping over three octaves, as in Webern). **Serialism** goes further,
 as Messiaen, Boulez and Babbitt did around 1950: it lets the row
-choose the **Durations**, **Dynamics** and **Octaves** too. **Write P0
-into current pattern** replaces the channel's notes, and **Save to new
-pattern** puts them in a pattern of their own.
+choose the **Durations**, **Dynamics** and **Octaves** too. When the
+row is combinatorial, **With its partner, I3** (or whichever form it is)
+writes the form's partner with it, an octave lower and note for note in
+the same rhythm, so the first six notes of the two make all twelve, and
+so do the last six: Schoenberg's favourite way of keeping all twelve
+notes going in two voices at once. A row without a partner leaves the
+box grey. **Write P0 into current pattern** replaces the channel's
+notes, and **Save to new pattern** puts them in a pattern of their own.
 
 ### A row as the key
 
@@ -270,6 +275,30 @@ in the notes.
 
 The Library's **Twelve-tone rows** group has seven styles, and **File > Demos > Twelve-tone** plays each as a short
 piece.
+
+### A row style plays your row and your plan
+
+When the key is a row, the Library's row styles play that row, yours,
+each in its own way: the Triad chorale as chords over a slow bass, the
+Twelve-tone lo-fi over a beat, and so on. In a key that is not a row,
+or with **Chord progression** ticked, a style brings its own row,
+starting on the key note.
+
+In a song, the chord sheet holds the **plan** of the piece: which form
+of the row plays where. Click a bar and type a form, such as **P0**,
+**RI5**, **I7** or **R0**, and the band plays that form there, for as
+long as it lasts on the sheet, in the style's textures: each of the
+style's voices reads its own form the same way, so where the sheet says
+I5 a bass that plays the row backwards plays RI5. When the sheet has no
+forms of the row yet, the style writes its own plan there, one part
+each: the row as written, backwards, upside down, and both. Change any
+bar and the band plays the new form.
+
+The style's chords, bass and melody take the place of the piano, the
+bass and the soloist; the song's own chords and bass go quiet, and its
+melody keeps playing. The Hexachord pads style plays its melody from
+the partner of each form (see [The Row window](#the-row-window)), so
+every bar holds all twelve notes with any combinatorial row.
 
 ## Micromodes
 

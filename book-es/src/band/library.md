@@ -969,7 +969,8 @@ más antigua, y el siguiente clic lo sigue cambiando en el mismo lugar.
 
 Los estilos armónicos y los ritmos toman las partes que marcaste (ver
 [Qué partes tomar](#qué-partes-tomar)). Los estilos de series y los de micromodos no tienen esa
-elección: se prueban de la misma manera, y solo se diferencian en las
+elección (solo Progresión de acordes le da a un estilo de serie su
+propia serie en lugar de la de la tonalidad): se prueban de la misma manera, y solo se diferencian en las
 notas que escriben. Así que sus pasos comunes son un único método, y el
 paso distinto es un closure que se le pasa:
 
