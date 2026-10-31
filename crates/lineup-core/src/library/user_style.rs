@@ -9,7 +9,7 @@ use super::{
 use crate::i18n::{tr, tr_name, trf};
 use crate::{
     Bar, Channel, ChordMarker, HarmonyName, KeyMap, MAX_CHANNELS, MAX_STEPS, Note, NoteEvent,
-    NoteNaming, Player, Project, Scale, ScaleKind, Tempo, TimeSignature,
+    NoteNaming, PitchClass, Player, Project, Scale, ScaleKind, Tempo, TimeSignature,
 };
 use serde::{Deserialize, Serialize};
 
@@ -354,6 +354,10 @@ impl UserStyle {
 /// outside the key they keep their distance from the root, as in its own
 /// major, but a minor chord takes the flat seventh. The other notes are
 /// chromatic colours and keep their distance from the root.
+///
+/// A group of notes with no root (a pitch-class set, a micromode, a
+/// group of a row, two chords at once) has only its own notes: see
+/// [`group_pitch`].
 fn adapt_pitch(source: Note, player: Player, harmony: &Played, key: Scale) -> Option<Note> {
     let (root, intervals) = match harmony.bass {
         BassPart::Chord { chord, note, .. } => {
@@ -364,15 +368,10 @@ fn adapt_pitch(source: Note, player: Player, harmony: &Played, key: Scale) -> Op
             };
             (root, chord.quality.intervals())
         }
-        BassPart::Pedal(note) => (note.pitch_class(), &[0, 4, 7][..]),
+        BassPart::Pedal(note) => return Some(group_pitch(source, note.pitch_class(), harmony)),
         BassPart::Rest => return None,
     };
-    let semitone = i32::from(root.semitone());
-    let shift = if semitone > 6 {
-        semitone - 12
-    } else {
-        semitone
-    };
+    let shift = shift_to(root);
     let has = |interval: u8| intervals.contains(&interval);
     let own_seventh = [10, 11, 9].into_iter().find(|&seventh| has(seventh));
     let pc = source.midi() % 12;
@@ -408,6 +407,59 @@ fn adapt_pitch(source: Note, player: Player, harmony: &Played, key: Scale) -> Op
     } else {
         note.midi().saturating_sub(12 - up)
     }))
+}
+
+/// How far a note written over C moves to be over `root`: up to a
+/// tritone up, or down.
+fn shift_to(root: PitchClass) -> i32 {
+    let semitone = i32::from(root.semitone());
+    if semitone > 6 {
+        semitone - 12
+    } else {
+        semitone
+    }
+}
+
+/// The note a template note written over C major plays over a group of
+/// notes with no root, played over `bass`: one of the group's own notes,
+/// so a style never plays a note outside a set. Counted up from the bass,
+/// C, E and G (and B) take the group's first, second and third (and
+/// fourth) notes, as they take a chord's root, third and fifth (and
+/// seventh); any other note takes the group's note nearest to it.
+fn group_pitch(source: Note, bass: PitchClass, harmony: &Played) -> Note {
+    let mut intervals: Vec<u8> = harmony
+        .voicing
+        .iter()
+        .map(|note| bass.semitones_up_to(note.pitch_class()))
+        .chain([0])
+        .collect();
+    intervals.sort_unstable();
+    intervals.dedup();
+    let pc = source.midi() % 12;
+    let place = match pc {
+        0 => Some(0),
+        4 => Some(1),
+        7 => Some(2),
+        11 => Some(3),
+        _ => None,
+    };
+    let distance = |interval: u8| {
+        let apart = interval.abs_diff(pc);
+        apart.min(12 - apart)
+    };
+    let target = place
+        .and_then(|place| intervals.get(place).copied())
+        .or_else(|| {
+            intervals
+                .iter()
+                .copied()
+                .min_by_key(|&interval| distance(interval))
+        })
+        .unwrap_or(0);
+    // The nearest octave of the target to the written note.
+    let up = (i32::from(target) - i32::from(pc)).rem_euclid(12);
+    let moved = if up <= 6 { up } else { up - 12 };
+    Note::new((i32::from(source.midi()) + shift_to(bass) + moved).clamp(0, 127) as u8)
 }
 
 #[cfg(test)]
@@ -461,6 +513,44 @@ mod tests {
         assert_eq!(over(E, chord(A, Minor)), C);
         assert_eq!(over(G, chord(B, Diminished)), F);
         assert_eq!(over(DSharp, chord(A, Minor)), C);
+    }
+
+    #[test]
+    fn template_notes_over_a_set_play_only_its_notes() {
+        use crate::PitchClass::*;
+        use crate::harmony::PitchSet;
+        let key = Scale::new(C, ScaleKind::Major);
+        // The note `template` (written over C) plays over `set`, played
+        // over `bass`, as a pitch class.
+        let over = |template: crate::PitchClass, set: PitchSet, bass: crate::PitchClass| {
+            let harmony = Played {
+                start: 0,
+                end: 16,
+                voicing: crate::micromodal::voice(set, &[], Note::new(55)),
+                bass: BassPart::Pedal(Note::new(36 + bass.semitone())),
+            };
+            let source = Note::new(60 + template.semitone());
+            adapt_pitch(source, Player::Piano, &harmony, key)
+                .unwrap()
+                .pitch_class()
+        };
+        // Menor 3 on D: D, D# and F#. C, E and G are its three notes, up
+        // from D; the others the nearest of them.
+        let menor_3 = PitchSet::from_semitones(&[2, 3, 6]);
+        assert_eq!(over(C, menor_3, D), D);
+        assert_eq!(over(E, menor_3, D), DSharp);
+        assert_eq!(over(G, menor_3, D), FSharp);
+        assert_eq!(over(D, menor_3, D), DSharp);
+        // Every note of the octave, over every form, stays in the set.
+        let tetrachord = PitchSet::from_semitones(&[0, 1, 4, 6]);
+        for up in 0..12 {
+            let set = tetrachord.transpose(up);
+            let bass = set.normal_form()[0];
+            for template in 0..12 {
+                let pitch = crate::PitchClass::from_semitone(template);
+                assert!(set.contains(over(pitch, set, bass)), "{set:?} {template}");
+            }
+        }
     }
     #[test]
     fn styles_with_the_same_name_keep_distinct_patterns_selected() {
