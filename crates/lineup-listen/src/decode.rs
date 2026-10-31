@@ -19,9 +19,9 @@ use symphonia::core::formats::{FormatOptions, TrackType};
 use symphonia::core::io::{MediaSourceStream, MediaSourceStreamOptions};
 use symphonia::core::meta::MetadataOptions;
 
-/// The longest recording the importer listens to. Analysis holds the
-/// recording, and a copy of it, in memory while it works, so a longer
-/// one would need more than a small machine can spare.
+/// The longest recording read. A recording added to the song as a take
+/// is held in memory while its notes are heard, and a copy of it kept,
+/// so a longer one would need more than a small machine can spare.
 pub const MAX_SECONDS: f64 = 10.0 * 60.0;
 
 /// A recording, mixed down to one channel, between -1.0 and 1.0.

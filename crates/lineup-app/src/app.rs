@@ -44,6 +44,7 @@ mod trace;
 mod ux_tests;
 mod video;
 mod view;
+mod voice;
 mod windows;
 
 pub(crate) use demo_menu::fold;
@@ -82,8 +83,9 @@ use crate::widgets;
 /// downloads are kept in.
 pub const APP_NAME: &str = "Ferrous Lineup";
 
-/// How wide the pattern list in the toolbar is.
-const PATTERN_LIST_WIDTH: f32 = 92.0;
+/// How wide the pattern list in the toolbar is: as wide as leaves the
+/// toolbar on one row in a window 1280 points wide, in Spanish too.
+const PATTERN_LIST_WIDTH: f32 = 80.0;
 
 /// The sample rate used to prepare sounds when there is no sound card.
 const FALLBACK_SAMPLE_RATE: u32 = 48_000;
@@ -187,10 +189,10 @@ pub struct LineupApp {
     video_dialog: video::VideoDialog,
     /// The trace of what is played, while Settings > Playback > Trace is on.
     trace: Option<trace::LiveTrace>,
-    /// A recording being listened to in the background, if any.
-    import: Option<import::Import>,
     /// Find the key: the key worked out from the music.
     key_finder: key_finder::KeyFinder,
+    /// A take: singing or whistling along with the song, into notes.
+    voice: voice::Voice,
     /// MIDI, the typing keyboard, and recording.
     live: live::Live,
     /// The SoundFont the instruments can play from.
@@ -309,8 +311,8 @@ impl LineupApp {
             quit_after_export: false,
             video_dialog: video::VideoDialog::default(),
             trace: None,
-            import: None,
             key_finder: key_finder::KeyFinder::default(),
+            voice: voice::Voice::default(),
             live: live::Live::new(midi),
             sounds: sounds::Sounds::new(ctx),
             preferences: preferences::Preferences::of(ctx),
@@ -356,6 +358,8 @@ impl LineupApp {
     pub(super) fn start_audio(&mut self) {
         let position = self.playhead();
         let playing = self.playing && position.is_some();
+        // A take is placed in the song by the old stream's clock.
+        self.stop_voice();
         // Close the old stream first: a device being reopened cannot be
         // held by the dead one.
         let old = std::mem::replace(&mut self.audio, Audio::Unavailable(String::new()));
@@ -610,6 +614,7 @@ impl LineupApp {
             // Before the audio thread forgets where it was.
             self.finish_recording();
         }
+        self.stop_voice();
         self.playing = false;
         self.send(Command::Stop);
     }
@@ -692,6 +697,7 @@ impl LineupApp {
     fn set_mode(&mut self, mode: PlayMode) {
         if mode != self.mode {
             self.finish_recording();
+            self.stop_voice();
             self.mode = mode;
             self.cursor = 0;
             self.marker = 0;
@@ -1290,6 +1296,11 @@ impl LineupApp {
                 });
             }
             PlaylistAction::EditClip(pattern) => self.edit_clip(pattern),
+            PlaylistAction::TranscribeAgain {
+                channel,
+                from,
+                track,
+            } => self.transcribe_again(channel, from, track),
             PlaylistAction::RemoveClip(index) => {
                 self.edit("delete clips", |project| project.remove_clip(index));
             }
@@ -1314,6 +1325,20 @@ impl LineupApp {
                     }
                 });
             }
+            PlaylistAction::SoloTrack(track) => {
+                self.edit("solo track", |project| {
+                    let tracks = project.playlist().tracks();
+                    let alone = tracks
+                        .iter()
+                        .enumerate()
+                        .all(|(other, t)| (other == track) != t.muted);
+                    for other in 0..tracks.len() {
+                        if let Some(t) = project.track_mut(other) {
+                            t.muted = !alone && other != track;
+                        }
+                    }
+                });
+            }
             PlaylistAction::RenameTrack { track, name } => {
                 self.edit("rename track", |project| {
                     if let Some(track) = project.track_mut(track) {
@@ -1332,6 +1357,7 @@ impl LineupApp {
             PlaylistAction::AddTrack => {
                 self.edit("add track", |project| project.add_track());
             }
+            PlaylistAction::AddRecording(track) => self.add_recording(track),
             PlaylistAction::InsertTrack(index) => {
                 self.edit("insert track", |project| project.insert_track(index));
             }
@@ -1554,6 +1580,7 @@ impl LineupApp {
                     self.skip_bars(1);
                 }
                 self.record_button(ui);
+                self.voice_button(ui);
             });
 
             theme::group(ui, |ui| self.playback_controls(ui));
@@ -2078,7 +2105,7 @@ impl LineupApp {
         self.handle_dropped_files(ctx);
         self.check_export(ctx);
         self.check_sounds(ctx);
-        self.check_import(ctx);
+        self.check_voice(ctx);
         self.store_swings(ctx);
         if self.playing {
             // Keep redrawing so the playhead moves.
@@ -2384,6 +2411,7 @@ impl eframe::App for LineupApp {
         self.mixer_window(&ctx, area);
         self.shortcuts_window(&ctx, area);
         self.about_window(&ctx);
+        self.take_window(&ctx);
         self.style_editor_window(&ctx, area);
         self.settings_window(&ctx);
         self.video_dialog(&ctx);
