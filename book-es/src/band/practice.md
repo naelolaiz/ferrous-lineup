@@ -630,7 +630,9 @@ acordes en la hoja, números romanos y colores en las teclas de
 armonía, nombres de conjuntos en la ventana dodecafónica. Los músicos
 también necesitan *oírla*: distinguir una tercera menor de una mayor,
 un acorde disminuido de uno menor, y el V de una canción de su IV, sin
-mirar. Es una habilidad propia, y se aprende como la enseñan los juegos
+mirar. La música sin tonalidad tiene un oído propio: el color de tres
+notas, y una misma figura oída transportada, dada vuelta o hacia atrás.
+Es una habilidad propia, y se aprende como la enseñan los juegos
 de entrenamiento auditivo: algo suena, lo nombras, y te dicen al
 momento si acertaste.
 
@@ -640,9 +642,10 @@ archivo.
 
 ### Probarlo
 
-**Ver > Entrenamiento auditivo** abre la ventana. Arriba hay tres
-pestañas: **Intervalos**, **Acordes** y **Progresiones**. Debajo, un
-recuadro dice qué preguntar; luego **▶ Empezar** hace la primera
+**Ver > Entrenamiento auditivo** abre la ventana. Arriba hay seis
+pestañas: **Intervalos**, **Acordes** y **Progresiones** para la música
+en una tonalidad, y **Micromodos**, **Formas** y **Series** para la
+música sin ella. Debajo, un recuadro dice qué preguntar; luego **▶ Empezar** hace la primera
 pregunta y la toca. Si la canción estaba sonando, se pausa, para que la
 pregunta se oiga sola.
 
@@ -708,6 +711,47 @@ los **Acordes** que pueden salir (I IV V; I ii IV V vi; o Los siete),
 si son **Séptimas** (V7, ii7, Imaj7...), los **Músicos** (Piano, Piano y
 bajo, o la Banda con batería), la **Duración** (4 o 8 acordes) y el
 **Tempo** (de 60 a 160 BPM).
+
+![La pestaña Micromodos, respondida por familia: Mayor en verde, y el texto «Correcto. Mayor 4: Sib3 Do4 Fa4, con una segunda mayor y dos cuartas o quintas justas. Familia: Mayores. Cada uno tiene una segunda mayor, y ningún semitono. Un tono y dos cuartas: el acorde sus (Do Fa Sol, Do Re Sol) y los acordes construidos por cuartas (Re Sol Do).»](../images/step-9-ear-micromodes.png)
+
+**Micromodos.** Suenan tres notas, y nombras su color: cuál de los
+doce [micromodos](../theory/micromodes.md#la-tabla) son. Con
+**Respuesta: Su familia**, los botones son las tres familias, **Menor**
+(con un semitono), **Mayor** (un tono y ningún semitono) y **Acorde**
+(dos terceras o más): por ahí conviene empezar. Con **El micromodo**,
+hay un botón por cada micromodo elegido, con el nombre del menú de
+tonalidades (Menor 3, Mayor 2, m/M) y su forma prima debajo. El
+recuadro elige los micromodos que pueden salir, familia por familia, y
+cómo se tocan las notas (**Tocados**): **Arriba**, **Abajo** o
+**Juntas**. Van apretadas dentro de una octava; **Abiertas** las toca
+en cualquier orden desde abajo, en hasta dos octavas, así que Do Do♯ Mi
+puede sonar como Mi Do Do♯: el mismo color, más difícil de oír.
+
+![La pestaña Formas con 4 notas Como acorde: Transportada en verde, y el texto «Correcto. Transportada: Si3 Do#4 Re4 Fa#4 pasó a ser Lab3 Sib3 Si3 Mib4, 3 semitonos hacia abajo. De abajo hacia arriba, los intervalos quedan iguales: una segunda mayor, una segunda menor y una tercera mayor. Las dos son formas de 4-14.»](../images/step-9-ear-forms.png)
+
+**Formas.** Suena una figura, y después otra forma del mismo conjunto.
+¿La segunda es la primera **Transportada** (Tn) o **Dada vuelta**
+(TnI)? Transportada, cada paso queda igual; dada vuelta, cada paso va
+hacia el otro lado. El recuadro elige cuántas **Notas** (3, 4 o 5) y
+cómo se tocan: **Como línea**, una tras otra, o **Como acorde**, todas
+a la vez. Como acordes, dada vuelta quiere decir que los intervalos de
+abajo hacia arriba vienen en el otro orden: una tríada mayor se vuelve
+menor.
+
+![La pestaña Series, De obras: I en rojo, P en verde, y el texto «No exactamente. Dijiste I. P8: la serie transportada: cada paso queda igual. La serie: Mib4 Re4 Fa#4 Sol4 Si4 Sib4 Do5 Lab4 La4 Mi4 Fa4 Do#4. P8: Lab4 Sol4 Si4 Do5 Mi5 Mib5 Fa5 Do#5 Re5 La4 Sib4 Fa#4. La serie de Anton Webern, Concierto para nueve instrumentos, op. 24 (1934).»](../images/step-9-ear-rows.png)
+
+**Series.** Suena una serie dodecafónica, y después una de sus formas:
+**P** (la serie transportada), **I** (dada vuelta), **R** (hacia atrás)
+o **RI** (dada vuelta y hacia atrás). El recuadro elige las **Formas**
+que se pueden preguntar y de dónde salen las **Series**: **De obras**,
+las series de la ventana Serie (las de Schoenberg, Berg, Webern y más),
+o **Al azar**, las doce notas en cualquier orden.
+
+También en estas tres pestañas el recuadro de debajo de los botones
+explica la respuesta (las notas, los intervalos, los pasos, la obra), y
+una vez respondida, cada botón toca lo que *él* habría sido al lado de
+la pregunta: el micromodo elegido desde la misma nota grave, la figura
+transportada o dada vuelta, la otra forma de la serie.
 
 **La puntuación.** La línea de abajo cuenta los aciertos, el porcentaje
 y cuántos seguidos. Cada pestaña lleva la suya, y en una progresión cada
@@ -891,6 +935,93 @@ sin bajo, una disposición cerrada podría oírse como una inversión.
   probablemente es vi.
 - **Escuchar la tonalidad** cada vez que pierdas de vista dónde está la
   casa.
+
+#### Micromodos
+
+Tres notas distintas cualesquiera forman uno de doce **micromodos**,
+los nombres de Kröpfl para las doce clases de conjuntos de tres notas
+(ver [Micromodos](../theory/micromodes.md)). Un micromodo es un color,
+no un acorde: Do Do♯ Mi, Fa♯ Sol Si♭ y Do Mi♭ Mi son todos Menor 3,
+porque cada uno es otro transportado o dado vuelta. Así que una
+pregunta puede tocar cualquier forma del micromodo, desde cualquier
+nota, y la respuesta es la misma.
+
+Las familias son lo primero que el oído aprende a distinguir, así que
+son la primera manera de responder (ver [Tres familias, y sus
+nombres](../theory/micromodes.md#tres-familias-y-sus-nombres)):
+
+| Familia | Regla | Micromodos |
+|---------|-------|------------|
+| **Menor** | al menos un semitono | Menor 1 a 5: [012] [013] [014] [015] [016] |
+| **Mayor** | un tono, ningún semitono | Mayor 1 a 4: [024] [025] [026] [027] |
+| **Acorde** | dos terceras o más | ° [036], m/M [037], + [048] |
+
+El semitono es el roce más áspero que hay, así que los menores son los
+más fáciles de reconocer; sin él, los mayores suenan abiertos en
+comparación; y los acordes suenan a acordes. La explicación nombra los
+tres intervalos que contiene el micromodo, contados como clases de
+intervalo («una cuarta o quinta justa»: dentro de un conjunto, una
+quinta es una cuarta dada vuelta), la regla de su familia y dónde se
+oye.
+
+Las notas se escriben como el acorde que forman, si forman uno de los
+acordes de la pestaña Acordes (Mi♭ Sol♭ Si♭, no Re♯ Fa♯ La♯); si no,
+con los nombres habituales, Do♯ Mi♭ Fa♯ La♭ Si♭, porque un conjunto no
+tiene tonalidad desde la que escribirse.
+
+#### Formas: transportada o dada vuelta
+
+Un conjunto tiene dos clases de formas (ver [La música, en pocas
+palabras](../theory/sets.md#la-música-en-pocas-palabras)).
+**Transportada** (Tn), cada nota se mueve la misma distancia, y cada
+paso de una línea queda igual. **Dada vuelta** (TnI), cada paso va
+hacia el otro lado: un semitono hacia arriba se vuelve un semitono hacia
+abajo. Tn y TnI son los movimientos de los que está hecha la música
+dodecafónica y de conjuntos, así que distinguirlos de oído es la base
+para oírla.
+
+Como línea, la app da vuelta la figura alrededor de su primera nota, y
+luego la transporta hasta un tritono hacia arriba o hacia abajo (una
+figura solo transportada siempre se mueve alguna distancia, si no sería
+la misma figura otra vez), así que el oído tiene que seguir los pasos,
+no las notas. Como acorde, da vuelta el acorde alrededor de su centro,
+así que el acorde conserva su extensión, y los intervalos de abajo
+hacia arriba vienen en el otro orden. Es el caso conocido: Do Mi Sol
+(una tercera mayor, luego una menor) dado vuelta es Do Mi♭ Sol (una
+tercera menor, luego una mayor). Una tríada mayor dada vuelta es una
+tríada menor; una séptima de dominante, Sol Si Re Fa, dada vuelta es
+una séptima semidisminuida, porque las dos son formas de 4-27.
+
+No todos los conjuntos se pueden preguntar. Un conjunto que es su
+propio espejo, como la tríada disminuida (Do Mi♭ Sol♭ dada vuelta
+alrededor de Mi♭ es Sol♭ Mi♭ Do, las mismas notas), suena igual
+transportado o dado vuelta, así que no habría nada que oír. Formas
+pregunta solo los demás: de los doce micromodos, los siete que cambian
+(Menor 2 a 5, Mayor 2 y 3, y la tríada menor-mayor); de los conjuntos
+de cuatro notas, 14 de 29; de cinco, 28 de 38.
+
+#### Series: P, I, R y RI
+
+Una serie dodecafónica tiene 48 formas (ver [La
+matriz](../theory/twelve-tone.md#la-matriz)): **P**, la serie
+transportada; **I**, dada vuelta; **R**, hacia atrás, de su última nota
+a la primera; y **RI**, dada vuelta y hacia atrás. El número de la
+etiqueta es la nota sobre la que se construye la forma, contando desde
+Do = 0: R7 es P7, la serie transportada para empezar en Sol, leída
+hacia atrás, así que *termina* en Sol.
+
+Qué escuchar: P e I empiezan con los primeros pasos de la serie,
+iguales o en espejo; R y RI empiezan con los últimos. El ritmo es
+parejo, así que solo la línea las distingue.
+
+Algunas series están hechas de modo que dos formas tienen las mismas
+notas. En la Sinfonía op. 21 de Webern y en la Suite lírica de Berg, la
+segunda mitad de la serie es la primera hacia atrás, a un tritono; así
+que la serie entera leída hacia atrás es la misma serie transportada un
+tritono, y cada forma R es también una forma P. Cuando las notas que
+suenan son las dos cosas, las dos respuestas son correctas, y la
+explicación lo dice: «Las mismas notas son también P1, así que esa
+respuesta también es correcta».
 
 ### Cómo está construido
 
@@ -1083,6 +1214,143 @@ encendido (**Edición > Ajustes… > Audio**), las preguntas suenan con el
 piano, el bajo y la batería del SoundFont, como la banda (ver
 [SoundFonts y General MIDI](../sound/soundfonts.md)).
 
+#### Colores, figuras y series: de clases de altura a notas
+
+Los tres ejercicios sin tonalidad viven en `ear_training/colours.rs`.
+Un micromodo, un conjunto y una serie son **clases de altura**, notas
+sin octava; para sonar necesitan notas reales. Dos funciones pequeñas
+las colocan.
+
+`stack` aprieta un conjunto desde su nota más grave, cada nota la
+primera de su clase por encima de la anterior: en el orden de la forma
+normal del conjunto, las notas caben dentro de una octava, como se
+tocan una pregunta de micromodos y un acorde de Formas.
+
+`walk` hace una línea, para una figura de Formas y para una serie. Cada
+nota siguiente es la más cercana de su clase, así que la línea se mueve
+por pasos de un tritono o menos, pero se queda a `reach` semitonos como
+mucho de su primera nota, para que doce notas seguidas no se salgan del
+teclado:
+
+```rust
+fn walk(order: &[PitchClass], first: Note, reach: u8) -> Vec<Note> {
+    let (low, high) = (first.midi() - reach, first.midi() + reach);
+    let middle = i32::from(first.midi());
+    let mut notes = vec![first];
+    for &pitch_class in &order[1..] {
+        let last = notes[notes.len() - 1];
+        let up = i32::from(last.pitch_class().semitones_up_to(pitch_class));
+        let (near, far) = match up {
+            6 if i32::from(last.midi()) > middle => (-6, 6),
+            0..=6 => (up, up - 12),
+            _ => (up - 12, up),
+        };
+        let fits = |step: i32| {
+            last.transpose(step)
+                .filter(|note| (low..=high).contains(&note.midi()))
+        };
+        notes.push(fits(near).or_else(|| fits(far)).unwrap_or(last));
+    }
+    notes
+}
+```
+
+El `match` elige el paso más cercano y el otro, a una octava. Un
+tritono está igual de cerca hacia arriba que hacia abajo, así que vuelve
+hacia la primera nota. El orden de los brazos importa: Rust los prueba
+desde arriba, y el brazo con guarda `6 if ...` tiene que ir antes que
+`0..=6`, que si no atraparía primero todos los 6. `fits` acepta un paso
+solo si su nota cae dentro de la ventana, y `or_else` prueba el paso
+lejano cuando el cercano no cabe. Con un `reach` de 6 o más uno de los
+dos siempre cabe: están a 12 semitonos, a los dos lados de la última
+nota, y la ventana tiene al menos 12 de ancho.
+
+Dar vuelta es una línea de aritmética:
+
+```rust
+fn mirrored(notes: &[Note], a: Note, b: Note) -> Vec<Note> {
+    let sum = i32::from(a.midi()) + i32::from(b.midi());
+    notes
+        .iter()
+        .map(|note| Note::new((sum - i32::from(note.midi())).clamp(0, 127) as u8))
+        .collect()
+}
+```
+
+Cada nota va igual de lejos al otro lado del punto medio entre `a` y
+`b`: `x` se vuelve `a + b - x`. Es la inversión de la teoría de
+conjuntos, `n - x`, hecha con notas con octava. Una línea pasa su
+primera nota como `a` y como `b`, así que gira alrededor de esa nota;
+un acorde pasa su nota más grave y la más aguda, así que esas dos se
+intercambian y el acorde conserva su extensión, y luego `sort` lo vuelve
+a ordenar de abajo hacia arriba.
+
+Qué conjuntos puede preguntar Formas es un filtro sobre la tabla de
+clases de conjuntos:
+
+```rust
+SetClass::all()
+    .iter()
+    .filter(|class| sizes.contains(&class.cardinality) && !class.is_symmetric())
+    .collect()
+```
+
+`is_symmetric` pregunta si la forma prima de la clase, dada vuelta, se
+alcanza solo transportándola:
+
+```rust
+pub fn is_symmetric(&self) -> bool {
+    self.prime
+        .moved_to(self.prime.invert())
+        .is_some_and(|(_, inverted)| !inverted)
+}
+```
+
+`moved_to` prueba primero las transposiciones, así que para la tríada
+disminuida responde «transportada, no invertida», y la clase queda
+fuera.
+
+**Dos respuestas correctas.** Una pregunta de series sabe qué forma
+tocó, pero las notas pueden ser también otra forma. `labels` lee las
+notas tocadas como una serie y las compara con las 48 formas:
+
+```rust
+pub fn labels(&self) -> Vec<RowLabel> {
+    let played = ToneRow::from_notes(self.line_of(self.form)).ok();
+    let mut labels = vec![self.label()];
+    for form in RowForm::ALL {
+        for number in 0..12 {
+            let label = RowLabel::new(form, number);
+            if label != self.label() && played == Some(self.row.form(label)) {
+                labels.push(label);
+            }
+        }
+    }
+    labels
+}
+```
+
+Una respuesta es correcta si alguna de las etiquetas tiene su forma,
+así que los palíndromos de Webern y de Berg aceptan P además de R, y la
+explicación nombra las otras. Comparar 48 series de 12 notas no es nada
+para una computadora; no hace falta saber de antemano qué series son
+palíndromos.
+
+**Una palabra, dos géneros.** En español una respuesta tiene que
+concordar con lo que describe. En el resto de la app, «Upside down» es
+«Dado vuelta», en el masculino que el español usa cuando no se nombra
+ningún sustantivo (la herramienta del piano roll, un estilo de
+micromodos). La respuesta de Formas describe una forma, *la forma*, que
+es femenino, así que tiene que decir «Dada vuelta». El catálogo guarda
+las dos, la segunda bajo un contexto, y el botón la pide con `trc`:
+
+```rust
+true => (trc("form", "Upside down"), "TnI"),
+```
+
+`trc("form", "Upside down")` busca `"form|Upside down"` en español, y en
+inglés devuelve «Upside down» tal cual.
+
 #### La ventana: acciones hacia fuera
 
 La ventana no tiene el motor de audio. Devuelve lo que quiere oír como
@@ -1113,7 +1381,7 @@ match self.asked.take() {
         self.interval_answers(ui, &question, &mut answer, actions);
         self.asked = Some(Asked::Interval { question, answer });
     }
-    // ... chords and progressions the same way
+    // ... and the other five exercises the same way
 }
 ```
 
@@ -1148,7 +1416,7 @@ comprueban el marcado del tempo, en 4/4 y en 6/8; y
 70, 75, … 100, un paso que no divide el camino y un objetivo por debajo
 del comienzo.
 
-El núcleo del entrenamiento auditivo tiene 22 pruebas. Las que vigilan
+El núcleo del entrenamiento auditivo tiene 29 pruebas. Las que vigilan
 la teoría:
 
 - **Cada intervalo desde cada nota**
@@ -1178,6 +1446,39 @@ la teoría:
   elegidos; cada compás toca su propio acorde sobre su fundamental.
 - **Salen todas las tonalidades, fundamentales y notas de abajo**: 24
   tonalidades, 12 fundamentales, 16 notas de abajo.
+- **Una pregunta de micromodos toca su micromodo**
+  (`a_micromode_question_plays_a_form_of_its_micromode`): en 3.000
+  semillas, apretadas y abiertas, las tres notas son una forma del
+  micromodo preguntado, suben desde abajo, abarcan menos de una octava
+  (dos si están abiertas) y salen los doce; con dos elegidos, solo esos
+  dos.
+- **Explicado con su familia** (`a_micromode_is_explained_with_its_family`):
+  Do4 Do♯4 Mi4 es «Menor 3 (minor 3) ... Family: Minor (menores)», Re♯
+  Fa♯ La♯ se escribe Mi♭4 Sol♭4 Si♭4, y Menor 3 tocado en su lugar
+  empieza en la misma nota.
+- **Solo conjuntos que cambian**
+  (`forms_asks_only_sets_that_change_upside_down`): las clases de tres
+  notas que se preguntan son exactamente 3-2, 3-3, 3-4, 3-5, 3-7, 3-8 y
+  3-11; 4-27 se pregunta, la séptima disminuida 4-28 nunca.
+- **Transportada es transportada, dada vuelta es dada vuelta**
+  (`the_second_form_is_the_first_moved_or_upside_down`): para cada
+  tamaño y las dos texturas, la segunda forma es la primera
+  transportada (los mismos pasos) o dada vuelta (los pasos de una línea
+  con el signo cambiado, los de un acorde en orden inverso), el
+  conjunto no tiene ninguna forma que sea las dos cosas, una
+  transposición nunca es cero, y todas las notas quedan entre La2 y Mi6.
+- **Una tríada mayor dada vuelta es menor**
+  (`a_major_triad_upside_down_is_minor`): la explicación entera, palabra
+  por palabra, para Do Mi Sol como acorde y Do Do♯ Mi como línea.
+- **Cada forma de la serie es la serie cambiada**
+  (`a_row_form_is_the_rows_line_changed`): en 2.000 semillas de cada
+  origen, las notas que suenan en segundo lugar son la forma que nombra
+  la etiqueta, la línea se mueve por pasos y se queda a 9 semitonos
+  como mucho de su primera nota, P nunca es la serie misma, y salen las
+  cuatro formas.
+- **Palíndromos** (`a_palindrome_takes_both_answers`): para la Sinfonía
+  de Webern, R y P son correctas e I no; la Suite de Schoenberg tiene un
+  solo nombre.
 
 La frase tiene cuatro pruebas propias en `phrase.rs` (las notas empiezan
 a tiempo en cualquier orden en que lleguen, una frase termina cuando se
@@ -1186,3 +1487,10 @@ instrumento que no existe se dejan fuera), y tres en el motor: una frase
 suena sin canción cargada y se descarta después de apagarse, una frase
 nueva ocupa el lugar de la anterior, y una frase detenida no toca nada
 más.
+
+En la app, `ear_training_asks_micromodes_forms_and_rows` recorre las
+tres pestañas nuevas, en inglés y después en español: responde una
+pregunta en cada una, comprueba el comienzo de cada explicación
+(«Familia:», «Las dos son formas de», «La serie:»), cambia respuestas,
+texturas y orígenes de las series, y falla si algún texto en pantalla
+no tiene su español.

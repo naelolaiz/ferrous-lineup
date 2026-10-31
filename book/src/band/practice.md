@@ -596,9 +596,11 @@ Everything else in the app helps you *see* harmony: chord names on the
 sheet, numerals and colours on the harmony keys, set names in the
 twelve-tone window. Musicians also need to *hear* it: to tell a minor
 third from a major one, a diminished chord from a minor one, and the V
-of a song from its IV, without looking. That is a skill of its own,
-and it is learned the way ear-training games teach it: something plays,
-you name it, and you are told at once whether you were right.
+of a song from its IV, without looking. Music without a key has an ear
+of its own: the colour of three notes, and one shape heard moved,
+upside down or backwards. That is a skill of its own, and it is learned
+the way ear-training games teach it: something plays, you name it, and
+you are told at once whether you were right.
 
 It is **experimental** and stays out of the way: it lives in its own
 window, which is closed until you open it, and it changes nothing in
@@ -606,10 +608,12 @@ the song or in the file.
 
 ### Trying it
 
-**View > Ear training** opens the window. Three tabs sit at the top:
-**Intervals**, **Chords** and **Progressions**. Under them, a box says
-what to ask; then **▶ Start** asks the first question, and plays it.
-If the song was playing, it pauses, so the question is heard alone.
+**View > Ear training** opens the window. Six tabs sit at the top:
+**Intervals**, **Chords** and **Progressions** for music in a key, and
+**Micromodes**, **Forms** and **Rows** for music without one. Under
+them, a box says what to ask; then **▶ Start** asks the first
+question, and plays it. If the song was playing, it pauses, so the
+question is heard alone.
 
 ![The Intervals tab: m3, M3, P4, P5 and P8 chosen, played Up. The answer P5 is green, and the text explains: "Bb3 up to F4: a perfect fifth, 7 semitones. Open and stable: the root and the fifth of every major and minor chord. Like Twinkle, Twinkle, Little Star, at its first leap."](../images/step-9-ear-intervals.png)
 
@@ -665,6 +669,46 @@ The box at the top picks the **Keys** (Major, Minor or Both), the
 whether they are **Sevenths** (V7, ii7, Imaj7...), the **Players**
 (Piano, Piano and bass, or the Band with drums), the **Length** (4 or
 8 chords) and the **Tempo** (60 to 160 BPM).
+
+![The Micromodes tab, answered by family: Menor is green, Mayor red, and the text says "Not quite. You said Major (mayores). Menor 4 (minor 4): Eb4 G4 Ab4, with a minor second, a major third and a perfect fourth or fifth. Family: Minor (menores). Each has a minor second: a semitone. A major seventh chord without its fifth (C E B)..."](../images/step-9-ear-micromodes.png)
+
+**Micromodes.** Three notes play, and you name their colour: which of
+the twelve [micromodes](../theory/micromodes.md#the-table) they are.
+With **Answer: Its family**, the buttons are the three families,
+**Menor** (with a semitone), **Mayor** (a whole tone and no semitone)
+and **Acorde** (two thirds or more): the place to start. With **The
+micromode**, there is one button for each micromode chosen, named as in
+the key menu (Menor 3, Mayor 2, m/M), with its prime form under it.
+The box picks the micromodes that can come up, family by family, and
+how the notes are played: **Up**, **Down** or **Together**. They are
+packed within an octave; **Spread out** plays them in any order from
+the bottom, up to two octaves wide, so C C♯ E can sound as E C C♯:
+the same colour, harder to hear.
+
+![The Forms tab with 3 notes As a line: Upside down is green, and the text says "Right. Upside down: B4 C5 E5 became G4 F#4 D4. Every step goes the other way: up a minor second and up a major third became down a minor second and down a major third. Both are forms of Menor 4 (minor 4)."](../images/step-9-ear-forms.png)
+
+**Forms.** A figure plays, then another form of the same set. Is the
+second the first **Moved** (Tn) or **Upside down** (TnI)? Moved, every
+step stays the same; upside down, every step goes the other way. The
+box picks how many **Notes** (3, 4 or 5) and how they are **Played**:
+**As a line**, one after another, or **As a chord**, all at once. As
+chords, upside down means the intervals from the bottom up come in the
+other order: a major triad becomes a minor one.
+
+![The Rows tab, From pieces: P and R are both green, and the text says "Right. R7: the row backwards: from its last note to its first. The row: Eb4 D4 Bb3 G3 F4 C4 F#4 B4 C#4 E4 Ab4 A4. R7: C#5 C5 Ab4 F4 Eb5 Bb4 E4 A4 B3 D4 F#4 G4. The same notes are also P1, so that answer is right too. The row of Alban Berg, Lyric Suite (1927), first movement."](../images/step-9-ear-rows.png)
+
+**Rows.** A twelve-tone row plays, then one of its forms: **P** (the
+row moved), **I** (upside down), **R** (backwards) or **RI** (upside
+down and backwards). The box picks the **Forms** that can be asked and
+where the **Rows** come from: **From pieces**, the rows of the Row
+window (Schoenberg's, Berg's, Webern's and more), or **Random**, the
+twelve notes in any order.
+
+In these three tabs too, the box under the buttons explains the answer
+(the notes, the intervals, the steps, the piece), and once you have
+answered, every button plays what *it* would have been next to the
+question: the micromode clicked from the same lowest note, the figure
+moved or upside down, the row's other form.
 
 **The score.** The line at the bottom counts right answers, the
 percentage and how many in a row. Each tab keeps its own, and in a
@@ -837,6 +881,86 @@ voicing could be heard as an inversion.
   and so does iii (E G B). If a chord feels like home but minor, it is
   probably vi.
 - **Hear the key** whenever you lose track of where home is.
+
+#### Micromodes
+
+Any three different notes make one of twelve **micromodes**, Kröpfl's
+names for the twelve set classes of three notes (see
+[Micromodes](../theory/micromodes.md)). A micromode is a colour, not a
+chord: C C♯ E, F♯ G B♭ and C E♭ E are all Menor 3, because each is
+the others moved or turned upside down. So a question can play any
+form of the micromode, from any note, and the answer is the same.
+
+The families are the first thing the ear learns to tell apart, so they
+are the first way to answer (see [Three families, and their
+names](../theory/micromodes.md#three-families-and-their-names)):
+
+| Family | Rule | Micromodes |
+|--------|------|------------|
+| **Menor** | at least one semitone | Menor 1 to 5: [012] [013] [014] [015] [016] |
+| **Mayor** | a whole tone, no semitone | Mayor 1 to 4: [024] [025] [026] [027] |
+| **Acorde** | two thirds or more | ° [036], m/M [037], + [048] |
+
+The semitone is the sharpest rub there is, so the minor ones are the
+easiest to pick out; without it, the major ones sound open by
+comparison; and the chords sound like chords. The explanation names
+the three intervals the micromode contains, counted as interval classes
+("a perfect fourth or fifth": inside a set, a fifth is a fourth upside
+down), its family's rule, and where it is heard.
+
+The notes are spelled as the chord they make, if they make one of the
+chords of the Chords tab (E♭ G♭ B♭, not D♯ F♯ A♯); otherwise with the
+usual names, C♯ E♭ F♯ A♭ B♭, as a set has no key to spell from.
+
+#### Forms: moved or upside down
+
+A set has two kinds of forms (see [The music,
+briefly](../theory/sets.md#the-music-briefly)). **Moved** (Tn), every
+note goes the same distance, and every step of a line stays the same.
+**Upside down** (TnI), every step goes the other way: up a semitone
+becomes down a semitone. Tn and TnI are the moves twelve-tone and set
+music is made of, so telling them apart by ear is the base of hearing
+it.
+
+As a line, the app turns the figure upside down around its first note,
+then moves it up to a tritone up or down (a figure only moved is always
+moved some distance, or it would be the same figure again), so the ear
+has to follow the steps, not the notes. As a chord, it turns the
+chord around its middle, so the chord keeps its span, and the
+intervals from the bottom up come in the other order. That is the
+familiar case: C E G (a major third, then a minor third) upside down
+is C E♭ G (a minor third, then a major third). A major triad upside
+down is a minor triad; a dominant seventh, G B D F, upside down is a
+half-diminished seventh, as both are forms of 4-27.
+
+Not every set can be asked. A set that is its own mirror, such as the
+diminished triad (C E♭ G♭ turned upside down around E♭ is G♭ E♭ C,
+the same notes), sounds the same moved or upside down, so there would be
+nothing to hear. Forms asks only the others: of the twelve micromodes,
+the seven that change (Menor 2 to 5, Mayor 2 and 3, and the
+minor-major triad); of the sets of four notes, 14 of 29; of five, 28
+of 38.
+
+#### Rows: P, I, R and RI
+
+A twelve-tone row has 48 forms (see [The
+matrix](../theory/twelve-tone.md#the-matrix)): **P**, the row moved;
+**I**, upside down; **R**, backwards, from its last note to its first;
+and **RI**, upside down and backwards. The number in the label is the
+note the form is built on, counted from C = 0: R7 is P7, the row moved
+to start on G, read backwards, so it *ends* on G.
+
+What to listen for: P and I start with the row's first steps, the same
+or mirrored; R and RI start with its last steps. The rhythm is even,
+so only the line tells them apart.
+
+Some rows are built so that two forms have the same notes. In Webern's
+Symphony, Op. 21, and in Berg's Lyric Suite, the second half of the row
+is the first half backwards, a tritone away; so the whole row read
+backwards is the row itself, moved a tritone, and every R form is also
+a P form. When the notes played are both, both answers are right, and
+the explanation says so: "The same notes are also P1, so that answer
+is right too."
 
 ### How it is built
 
@@ -1020,6 +1144,138 @@ the drums the built-in kit. So with **SoundFont instruments** on
 piano, bass and drums, like the band (see [SoundFonts and General
 MIDI](../sound/soundfonts.md)).
 
+#### Colours, figures and rows: from pitch classes to notes
+
+The three exercises beyond keys live in `ear_training/colours.rs`. A
+micromode, a set and a row are **pitch classes**, notes without an
+octave; to be played they need real notes. Two small functions place
+them.
+
+`stack` packs a set from its lowest note, each note the first of its
+pitch class above the one before: in the order of the set's normal
+form, the notes fit within an octave, the way a micromode question and
+a Forms chord are played.
+
+`walk` makes a line, for a Forms figure and for a row. Each next note
+is the nearest of its pitch class, so the line moves by steps of a
+tritone or less, but it stays within `reach` semitones of its first
+note, so twelve notes in a row do not climb off the keyboard:
+
+```rust
+fn walk(order: &[PitchClass], first: Note, reach: u8) -> Vec<Note> {
+    let (low, high) = (first.midi() - reach, first.midi() + reach);
+    let middle = i32::from(first.midi());
+    let mut notes = vec![first];
+    for &pitch_class in &order[1..] {
+        let last = notes[notes.len() - 1];
+        let up = i32::from(last.pitch_class().semitones_up_to(pitch_class));
+        let (near, far) = match up {
+            6 if i32::from(last.midi()) > middle => (-6, 6),
+            0..=6 => (up, up - 12),
+            _ => (up - 12, up),
+        };
+        let fits = |step: i32| {
+            last.transpose(step)
+                .filter(|note| (low..=high).contains(&note.midi()))
+        };
+        notes.push(fits(near).or_else(|| fits(far)).unwrap_or(last));
+    }
+    notes
+}
+```
+
+The `match` picks the nearer step and the other one, an octave away.
+A tritone is as near up as down, so it goes back toward the first note.
+The order of the arms matters: Rust tries them from the top, and the
+guarded arm `6 if ...` must come before `0..=6`, which would catch every
+6 first. `fits` keeps a step only if its note is inside the window, and
+`or_else` tries the far step when the near one does not fit. With a
+`reach` of 6 or more one of the two always fits: they are 12 semitones
+apart, on the two sides of the last note, and the window is at least
+12 wide.
+
+Turning upside down is one line of arithmetic:
+
+```rust
+fn mirrored(notes: &[Note], a: Note, b: Note) -> Vec<Note> {
+    let sum = i32::from(a.midi()) + i32::from(b.midi());
+    notes
+        .iter()
+        .map(|note| Note::new((sum - i32::from(note.midi())).clamp(0, 127) as u8))
+        .collect()
+}
+```
+
+Each note goes as far on the other side of the point halfway between
+`a` and `b`: `x` becomes `a + b - x`. It is the inversion of set theory,
+`n - x`, done on notes with octaves. A line passes its first note as
+both `a` and `b`, so it turns around that note; a chord passes its
+lowest and highest notes, so those two swap and the chord keeps its
+span, then `sort` puts it back in order from the bottom.
+
+Which sets Forms can ask is a filter over the table of set classes:
+
+```rust
+SetClass::all()
+    .iter()
+    .filter(|class| sizes.contains(&class.cardinality) && !class.is_symmetric())
+    .collect()
+```
+
+`is_symmetric` asks whether the class's prime form, turned upside
+down, can be reached by moving it alone:
+
+```rust
+pub fn is_symmetric(&self) -> bool {
+    self.prime
+        .moved_to(self.prime.invert())
+        .is_some_and(|(_, inverted)| !inverted)
+}
+```
+
+`moved_to` tries the plain moves first, so for the diminished triad it
+answers "moved, not inverted", and the class is left out.
+
+**Two right answers.** A row question knows the form it played, but
+the notes may be another form too. `labels` reads the notes played as a
+row and compares them with all 48 forms:
+
+```rust
+pub fn labels(&self) -> Vec<RowLabel> {
+    let played = ToneRow::from_notes(self.line_of(self.form)).ok();
+    let mut labels = vec![self.label()];
+    for form in RowForm::ALL {
+        for number in 0..12 {
+            let label = RowLabel::new(form, number);
+            if label != self.label() && played == Some(self.row.form(label)) {
+                labels.push(label);
+            }
+        }
+    }
+    labels
+}
+```
+
+An answer is right if any of the labels has its form, so the palindromes
+of Webern and Berg take P as well as R, and the explanation lists the
+other names. Comparing 48 rows of 12 notes is nothing for a computer;
+there is no need to work out which rows are palindromes in advance.
+
+**One word, two genders.** In Spanish an answer has to agree with what
+it describes. Elsewhere in the app, "Upside down" is "Dado vuelta", in
+the masculine Spanish uses when no noun is named (the piano roll's
+tool, a micromode style). The Forms answer describes a form, *la
+forma*, which is feminine, so it must say "Dada vuelta". The catalog
+keeps both, the second under a context, and the button asks for it with
+`trc`:
+
+```rust
+true => (trc("form", "Upside down"), "TnI"),
+```
+
+`trc("form", "Upside down")` looks up `"form|Upside down"` in Spanish
+and gives back plain "Upside down" in English.
+
 #### The window: actions out
 
 The window does not hold the audio engine. It returns what it wants to
@@ -1049,7 +1305,7 @@ match self.asked.take() {
         self.interval_answers(ui, &question, &mut answer, actions);
         self.asked = Some(Asked::Interval { question, answer });
     }
-    // ... chords and progressions the same way
+    // ... and the other five exercises the same way
 }
 ```
 
@@ -1082,7 +1338,7 @@ and `only_the_last_taps_count` check tap tempo, in 4/4 and in 6/8; and
 70, 75, … 100, a step that does not divide the way, and a target
 below the start.
 
-The ear training core has 22 tests. The ones that guard the theory:
+The ear training core has 29 tests. The ones that guard the theory:
 
 - **Every interval from every note**
   (`every_interval_is_spelled_as_its_name_says_from_every_note`): for
@@ -1108,6 +1364,35 @@ The ear training core has 22 tests. The ones that guard the theory:
   plays its own chord over its root.
 - **Every key, root and bottom note comes up**: 24 keys, 12 roots, 16
   bottom notes.
+- **A micromode question plays its micromode**
+  (`a_micromode_question_plays_a_form_of_its_micromode`): over 3,000
+  seeds, packed and spread, the three notes are a form of the micromode
+  asked, rise from the bottom, span less than an octave (two when
+  spread), and all twelve come up; with two chosen, only those two.
+- **Explained with its family** (`a_micromode_is_explained_with_its_family`):
+  C4 C♯4 E4 is "Menor 3 (minor 3) ... Family: Minor (menores)",
+  D♯ F♯ A♯ is spelled E♭4 G♭4 B♭4, and Menor 3 played instead starts on
+  the same note.
+- **Only sets that change** (`forms_asks_only_sets_that_change_upside_down`):
+  the three-note classes asked are exactly 3-2, 3-3, 3-4, 3-5, 3-7, 3-8
+  and 3-11; 4-27 is asked, the diminished seventh 4-28 never.
+- **Moved is moved, upside down is upside down**
+  (`the_second_form_is_the_first_moved_or_upside_down`): for every size
+  and both textures, the second form is the first moved (same steps) or
+  upside down (a line's steps negated, a chord's in reverse order), the
+  set has no form that is both, a move is never zero, and every note
+  stays between A2 and E6.
+- **A major triad upside down is minor**
+  (`a_major_triad_upside_down_is_minor`): the whole explanation, word
+  for word, for C E G as a chord and C C♯ E as a line.
+- **Each row form is the row changed**
+  (`a_row_form_is_the_rows_line_changed`): over 2,000 seeds of each
+  source, the notes played second are the form the label names, the
+  line moves by steps and stays within 9 semitones of its first note,
+  P is never the row itself, and all four forms come up.
+- **Palindromes** (`a_palindrome_takes_both_answers`): for Webern's
+  Symphony both R and P are right and I is not; Schoenberg's Suite has
+  one name only.
 
 The phrase has four tests of its own in `phrase.rs` (notes start on
 time whatever order they come in, a phrase is over once it has rung
@@ -1115,3 +1400,9 @@ out, stopping drops the notes still to come, notes for a missing
 instrument are left out), and three in the engine: a phrase plays with
 no song loaded and is thrown away after it rings out, a new phrase
 takes the place of the last, and a stopped phrase plays nothing more.
+
+In the app, `ear_training_asks_micromodes_forms_and_rows` clicks
+through the three new tabs, in English and then in Spanish: it answers
+a question in each, checks the start of each explanation ("Family:",
+"Both are forms of", "The row:"), switches answers, textures and row
+sources, and fails if any text on screen has no Spanish.

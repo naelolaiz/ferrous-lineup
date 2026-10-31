@@ -90,7 +90,8 @@ nombres, y te dice enseguida si acertaste, y por qué:
 
 ![La ventana Entrenamiento auditivo en su pestaña Intervalos: los intervalos 3m, 3M, 4J, 5J y 8J elegidos, tocados Arriba. La respuesta 5J está en rojo y 3M en verde, y el recuadro dice «No exactamente. Dijiste quinta justa. Mi3 subiendo a Sol#3: una tercera mayor, 4 semitonos. La base de un acorde mayor: de su fundamental a su tercera. Como las dos primeras notas de When the Saints Go Marching In.» La línea de puntos dice «Aciertos: 0 de 1 (0%) · 0 seguidos».](images/ear-training.png)
 
-Tiene tres pestañas:
+Tiene seis pestañas. Las tres primeras entrenan el oído para la música
+en una tonalidad:
 
 - **Intervalos**: suenan dos notas, y nombras el intervalo. Elige qué
   intervalos pueden salir y cómo se tocan, en **Tocados**: **Arriba**,
@@ -109,10 +110,35 @@ Tiene tres pestañas:
   acordes que pueden salir, **Séptimas**, los **Músicos**, la
   **Duración** y el **Tempo**.
 
+Las otras tres lo entrenan para la música sin tonalidad (ver [Más allá
+de las tonalidades: conjuntos, series y
+micromodos](sets-rows-micromodes.md)):
+
+- **Micromodos**: suenan tres notas, y nombras su color, uno de los
+  doce [micromodos](sets-rows-micromodes.md#micromodos). Empieza con
+  **Respuesta: Su familia**: **Menor** (con un semitono), **Mayor** (un
+  tono y ningún semitono) o **Acorde** (dos terceras o más). **El
+  micromodo** pide el micromodo mismo. Elige qué micromodos pueden
+  salir y cómo se tocan, en **Tocados**; **Abiertas** toca las notas en
+  cualquier orden desde abajo, en hasta dos octavas.
+- **Formas**: suena una figura, y después otra forma del mismo
+  conjunto, y dices si la segunda es la primera **Transportada** (cada
+  paso queda igual) o **Dada vuelta** (cada paso va hacia el otro
+  lado). Elige 3, 4 o 5 **Notas**, tocadas **Como línea** o **Como
+  acorde**. Como acordes, una tríada mayor dada vuelta es una menor.
+- **Series**: suena una serie dodecafónica, y después una de sus
+  formas, y dices cuál: **P** (transportada), **I** (dada vuelta), **R**
+  (hacia atrás) o **RI** (dada vuelta y hacia atrás). Las series salen
+  **De obras** (de Schoenberg, Berg, Webern y otros) o **Al azar**.
+  Algunas series, como la de la Sinfonía de Webern, leídas hacia atrás
+  son la misma serie transportada; entonces las dos respuestas son
+  correctas.
+
 Después de responder, la respuesta correcta se pone verde, una
 equivocada roja, y un recuadro la explica: las notas, el nombre
 completo, cuántos semitonos y, para un intervalo hacia arriba, una
-melodía que empieza con él. Haz clic en cualquier botón de respuesta
+melodía que empieza con él (en las tres últimas pestañas, los pasos, la
+familia o la obra de la que sale la serie). Haz clic en cualquier botón de respuesta
 para oírlo junto al correcto. **▶ Volver a tocar** repite la pregunta
 todas las veces que quieras, y **Siguiente ▸** hace otra (antes de
 responder es **Saltar ▸**, y una pregunta saltada no cuenta). La línea

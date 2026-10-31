@@ -85,7 +85,7 @@ it, and tells you at once whether you were right, and why:
 
 ![The Ear training window on its Intervals tab: the intervals m3, M3, P4, P5 and P8 chosen, played Up. The answer P5 is red and M3 green, and the box says "Not quite. You said perfect fifth. E4 up to G#4: a major third, 4 semitones. The bottom of a major chord: from its root up to its third. Like the first two notes of When the Saints Go Marching In." The score line says "Right 0 of 1 (0%) · 0 in a row".](images/ear-training.png)
 
-It has three tabs:
+It has six tabs. The first three train the ear for music in a key:
 
 - **Intervals**: two notes play, and you name the interval. Choose
   which intervals can come up and how they are **Played**: **Up**,
@@ -103,9 +103,32 @@ It has three tabs:
   is. Choose the **Keys**, the chords that can come up, **Sevenths**,
   the **Players**, the **Length** and the **Tempo**.
 
+The other three train it for music without a key (see [Beyond keys:
+sets, rows and micromodes](sets-rows-micromodes.md)):
+
+- **Micromodes**: three notes play, and you name their colour, one of
+  the twelve [micromodes](sets-rows-micromodes.md#micromodes). Start
+  with **Answer: Its family**: **Menor** (with a semitone), **Mayor** (a
+  whole tone and no semitone) or **Acorde** (two thirds or more). **The
+  micromode** asks for the micromode itself. Choose which micromodes can
+  come up and how they are **Played**; **Spread out** plays the notes in
+  any order from the bottom, up to two octaves wide.
+- **Forms**: a figure plays, then another form of the same set, and you
+  say whether the second is the first **Moved** (every step stays the
+  same) or **Upside down** (every step goes the other way). Choose 3, 4
+  or 5 **Notes**, played **As a line** or **As a chord**. As chords, a
+  major triad upside down is a minor one.
+- **Rows**: a twelve-tone row plays, then one of its forms, and you say
+  which: **P** (moved), **I** (upside down), **R** (backwards) or **RI**
+  (upside down and backwards). The rows come **From pieces** (by
+  Schoenberg, Berg, Webern and others) or at **Random**. A few rows,
+  such as Webern's in his Symphony, read backwards are the row itself
+  moved; then both answers are right.
+
 After you answer, the right answer turns green, a wrong one red, and a
 box explains it: the notes, the full name, how many semitones and, for
-an interval going up, a tune that starts with it. Click any answer
+an interval going up, a tune that starts with it (in the last three
+tabs, the steps, the family or the piece the row comes from). Click any answer
 button to hear it next to the right one. **▶ Play again** repeats the
 question as often as you like, and **Next ▸** asks another (before you
 answer it is **Skip ▸**, and a skipped question doesn't count). The line at the bottom keeps the score,
