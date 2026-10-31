@@ -925,6 +925,29 @@ pub struct DrumPart<'a> {
   (`Turns`), for rhythms laid out with grooves and closings that take
   turns, such as the candombe's (see [Laid out over a song's
   parts](library.md#laid-out-over-a-songs-parts)).
+- **Breaks.** `break_bars` finds the last bar of each section, two bars
+  long or more, that goes on into a section of another name: a verse
+  into a refrain, but not "Verse" into "Verse 2" (`same_part`), and not
+  the last part before the ending. A part whose last bar is one gets
+  `breaks`. A rhythm laid out with a break drum (`Layout::breaks`, the
+  candombe's wood) plays only that drum there, the first bar of its
+  line; every other rhythm plays on, so only the candombe breaks.
+
+Where the drums break, the rest of the band breaks with them. The
+chord sheet already has a way to say "strike and stop", the **shot**
+(see [Shots, holds, rests and pushes](stops.md)), so a break
+is one more shot: `Breaks::with_shots` adds a shot on the first beat of
+each break bar to the sheet's own, on the harmony sounding there, and
+each player plays it as it plays the sheet's. A bar where the sheet
+already breaks or pushes keeps what the sheet says. The band does this
+only when its drums play and their rhythm breaks
+(`breaks_before_parts`). Library > Apply does the same in a pattern's
+last bar where the pattern first plays (`recomp_breaking`), as for its
+drums. A demo breaks a part that goes on into a new part every time
+the form plays it (`breaking_parts`), with a shot from its last bar on
+(`shot_from`), and lays its drums with the same breaks
+(`song_drums_breaking`); the chord sheet it writes stays as the chart
+is.
 
 The band's patterns follow the same parts: `chunks` starts a pattern
 where a part starts. Such an edge is **soft**: when a player holds a
@@ -985,14 +1008,20 @@ Each module tests its own part:
 - `heard_sections.rs`: `the_ear_hears_these_demos_as_written` and
   `the_ear_hears_most_parts_of_the_demos`, with and without the chord
   sheets.
-- `drum_form.rs`: `parts_are_cut_in_phrases_of_eight`,
+- `drum_form.rs`: `the_band_breaks_in_the_last_bar_before_a_new_part`,
+  `the_candombe_breaks_with_the_clave_on_the_wood_alone`,
+  `parts_are_cut_in_phrases_of_eight`,
   `a_part_ends_with_a_fill_and_long_parts_fill_inside`,
   `the_fills_take_turns`, `a_b_part_moves_the_hi_hat_to_the_ride`,
   `folklore_fills_on_its_own_drums_and_the_tango_not_at_all`,
   `the_part_after_a_fill_lands_with_a_crash` and
   `the_candombe_phrases_take_turns`.
-- `band.rs`: `the_band_starts_its_patterns_where_the_parts_start` and
-  `a_chord_held_over_a_section_start_is_not_struck_again`.
+- `band.rs`: `the_band_starts_its_patterns_where_the_parts_start`,
+  `a_chord_held_over_a_section_start_is_not_struck_again` and
+  `the_candombe_band_breaks_before_a_new_part`; `demo.rs`:
+  `the_candombe_breaks_before_every_new_part`; and `apply.rs`'s
+  `rhythms_close_every_part_of_the_song` checks every break of
+  *Candombe para Gardel* with the Candombe rhythm applied.
 
 In the app, `ux_tests.rs` clicks the rack's lock and undoes it
 (`the_rack_locks_a_channel_and_undo_unlocks_it`), tries Doo-wop and

@@ -341,6 +341,7 @@ const CANDOMBE: Layout = Layout {
     turns: 2,
     closing: 2,
     closings: 2,
+    breaks: Some(Drum::Rim),
 };
 ```
 
@@ -353,9 +354,13 @@ parte A toca el primer groove y el primer cierre, la siguiente los
 segundos, y así sucesivamente. El segundo groove abre con un compás de
 clave en la madera y varía más el piano; el segundo cierre arranca
 desde la base más cargada del repique, para que la clave nunca llegue
-justo antes de una parte nueva. Una frase demasiado corta para todo eso
-toca el comienzo de la apertura y el cierre. Un ritmo así no necesita
-un relleno de la tabla: su cierre es su relleno.
+bajo la banda justo antes de una parte nueva. Llega ahí sola: `breaks`
+nombra el tambor que toca solo el último compás antes de cada parte
+nueva, el primer compás de su apertura, mientras la banda golpea el
+primer pulso del compás y para (ver [La batería por
+partes](song-form.md#la-batería-por-partes)). Una frase demasiado corta
+para todo eso toca el comienzo de la apertura y el cierre. Un ritmo así
+no necesita un relleno de la tabla: su cierre es su relleno.
 
 ### Un ritmo para cualquier compás
 
