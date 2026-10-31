@@ -910,6 +910,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "su banda toca «{}», un estilo que esta versión no conoce",
     ),
     (
+        "its band plays \"{}\", a micromode style this version does not know",
+        "su banda toca «{}», un estilo de micromodos que esta versión no conoce",
+    ),
+    (
         "its band plays on channel {}, which does not exist",
         "su banda toca en el canal {}, que no existe",
     ),

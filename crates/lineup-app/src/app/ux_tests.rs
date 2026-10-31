@@ -5118,6 +5118,61 @@ fn any_set_key_has_forms_and_a_progression_of_them() {
     }
 }
 
+#[test]
+fn a_micromode_style_plays_the_forms_written_on_the_sheet() {
+    use crate::library_browser::LibraryAction;
+    use lineup_core::library::MicromodeStyle;
+    use lineup_core::{PitchSet, Player};
+    let mut screen = Screen::new();
+    let mut project = Project::with_band();
+    // C7 as a set key, and a walk of its forms on the sheet.
+    project.scale = Scale::set(
+        lineup_core::PitchClass::C,
+        PitchSet::from_semitones(&[0, 4, 7, 10]),
+    );
+    project.write_form_progression(0, lineup_core::micromodal::Walk::CommonTones);
+    project.follow_chord_sheet();
+    screen.app.replace_project(project, None);
+    screen.app.set_mode(PlayMode::Song);
+    let sheet = screen.app.project.playlist().chord_markers().to_vec();
+    let style = MicromodeStyle::named("Viennese points").unwrap();
+    screen
+        .app
+        .try_from_library(LibraryAction::MicromodeStyle(style));
+    let project = &screen.app.project;
+    let band = project.band().unwrap();
+    assert_eq!(band.micromode, Some(style));
+    assert!(screen.app.tried().micromode_style == Some(style));
+    // The forms stay as they were written, and so does the key.
+    assert_eq!(project.playlist().chord_markers(), sheet.as_slice());
+    assert_eq!(project.scale.pitch_set().len(), 4);
+    // The points play the notes of the form written in each bar.
+    let meter = project.meter();
+    for (index, marker) in sheet.iter().enumerate() {
+        let form = marker.harmony.pitch_set().unwrap();
+        let bar = meter.bar(index);
+        let played: PitchSet = project
+            .playlist()
+            .clips()
+            .iter()
+            .filter(|clip| project.pattern(clip.pattern).unwrap().player == Some(Player::Soloist))
+            .flat_map(|clip| {
+                let pattern = project.pattern(clip.pattern).unwrap();
+                pattern
+                    .all_notes()
+                    .filter(|(_, note)| (bar.start..bar.end()).contains(&(clip.start + note.start)))
+                    .map(|(_, note)| note.pitch.pitch_class())
+                    .collect::<Vec<_>>()
+            })
+            .collect();
+        assert!(!played.is_empty(), "bar {index}");
+        assert!(played.is_subset_of(form), "bar {index}");
+    }
+    // One step to undo.
+    screen.app.undo();
+    assert!(screen.app.project.band().unwrap().micromode.is_none());
+}
+
 mod chord_sheet_layout {
     use super::*;
 

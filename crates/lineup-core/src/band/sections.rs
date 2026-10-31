@@ -150,6 +150,7 @@ impl Band {
             band.harmony_style = None;
             band.accents_only = false;
             band.drums = super::BandDrums::Style;
+            band.micromode = None;
         }
         band
     }
