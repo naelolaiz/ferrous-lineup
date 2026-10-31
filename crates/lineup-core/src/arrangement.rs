@@ -36,9 +36,14 @@ use crate::project::Project;
 /// a repeated section starts again, or a loop region starts, partway
 /// through it. It is not zero either when the clip is trimmed at the
 /// start (see [`Clip::skip`]).
+///
+/// `track` is the playlist track of its clip. A take's recording is
+/// heard only where a clip of its track plays (see
+/// [`Play::covers`]).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Play {
     pub pattern: usize,
+    pub track: usize,
     pub start: usize,
     pub skip: usize,
     pub length: usize,
@@ -48,6 +53,18 @@ impl Play {
     /// The step just after its last one.
     pub fn end(&self) -> usize {
         self.start + self.length
+    }
+
+    /// Whether it plays on song step `step`.
+    pub fn covers(&self, step: usize) -> bool {
+        (self.start..self.end()).contains(&step)
+    }
+
+    /// The song step its pattern's first time round would start on, were
+    /// none of it left out: below zero when more of it is left out than
+    /// the song has steps before it.
+    pub fn origin(&self) -> isize {
+        self.start as isize - self.skip as isize
     }
 
     /// The step of the pattern played on song step `step`, if this piece
@@ -182,6 +199,7 @@ pub(crate) fn arrange(project: &Project, from: usize, to: usize) -> Arrangement 
                     .map_or(0, |p| clip.first_step(p.length()));
                 let play = Play {
                     pattern: clip.pattern,
+                    track: clip.track,
                     start: start + (begin - piece_from),
                     skip: first + (begin - clip.start),
                     length: end - begin,
@@ -275,6 +293,7 @@ mod tests {
         // Three times a 16-step pattern, starting at song step 32.
         let play = Play {
             pattern: 0,
+            track: 0,
             start: 32,
             skip: 0,
             length: 48,
@@ -293,6 +312,7 @@ mod tests {
         // The last 4 steps of the first round, then a whole round.
         let play = Play {
             pattern: 0,
+            track: 0,
             start: 0,
             skip: 12,
             length: 20,
@@ -326,6 +346,7 @@ mod tests {
             song.plays,
             [Play {
                 pattern: 0,
+                track: 0,
                 start: 16,
                 skip: 0,
                 length: 48
@@ -351,6 +372,7 @@ mod tests {
             song.plays,
             [Play {
                 pattern: 0,
+                track: 0,
                 start: 20,
                 skip: 4,
                 length: 42
@@ -440,6 +462,7 @@ mod tests {
             song.plays,
             [Play {
                 pattern: 0,
+                track: 0,
                 start: 0,
                 skip: 0,
                 length: 64
@@ -498,6 +521,7 @@ mod tests {
         // The chords clip of bars 3 and 4 is cut in half: its second bar.
         assert!(looped.plays.contains(&Play {
             pattern: 1,
+            track: 0,
             start: 0,
             skip: 16,
             length: 16
