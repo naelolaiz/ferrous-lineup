@@ -51,8 +51,9 @@ pub const HOP_SECONDS: f64 = 0.01;
 const WINDOW_SECONDS: f64 = 0.025;
 
 /// The analysis runs at a rate of at least this much: a microphone's
-/// 44.1 or 48 kHz is halved, which keeps every pitch up to [`HIGHEST_HZ`]
-/// and its first overtones and halves the work.
+/// 48 kHz is divided by 3 and 44.1 kHz by 2, which keeps every pitch up
+/// to [`HIGHEST_HZ`] and its first overtones, for a third or half of the
+/// work.
 const ANALYSIS_RATE: u32 = 16_000;
 
 /// A frame quieter than this, in dB below full scale, is silence.
