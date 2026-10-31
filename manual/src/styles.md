@@ -45,11 +45,15 @@ tempo and length in bars, and its drums.
 Under the styles are three groups you can open:
 
 - **Twelve-tone rows** and **Micromodes (Kröpfl)**: styles that play a
-  twelve-tone row or a micromode instead of chords. A row style makes
-  the key its row, starting on the key note. In a song, the band plays a
-  micromode style from the chord sheet: the forms written there when
-  the key is a set, or else the style's own walk, which it writes on the
-  sheet, and the key becomes the micromode, starting on the key note.
+  twelve-tone row or a micromode instead of chords. A row style plays
+  the key's row when the key is a row, and else its own, starting on the
+  key note; **Chord progression** gives it its own row in any key. In a
+  song, the band plays both kinds from the chord sheet. A row style
+  plays the forms of the row written there (P0, RI5…), or else its own
+  plan, which it writes on the sheet. A micromode style plays the forms
+  written there when the key is a set, or else the style's own walk,
+  which it writes on the sheet, and the key becomes the micromode,
+  starting on the key note.
   See [Beyond keys: sets, rows and
   micromodes](sets-rows-micromodes.md).
 - **Fills**: one bar of drums each: Snare roll, Tom fill, House build,

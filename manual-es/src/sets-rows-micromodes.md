@@ -268,9 +268,14 @@ forma, **Una vez**, **Repetir** o **P, R, I, RI**; el registro,
 anterior) o **Amplio** (saltando por tres octavas, como en Webern).
 **Serialismo** va más allá, como Messiaen, Boulez y Babbitt hacia 1950:
 deja que la serie elija también las **Duraciones**, las **Dinámicas** y
-las **Octavas**. **Escribir P0 en el patrón actual** reemplaza las notas
-del canal, y **Guardar en un patrón nuevo** las pone en un patrón
-propio.
+las **Octavas**. Cuando la serie es combinatoria, **Con su compañera,
+I3** (o la forma que sea) escribe con la forma su compañera, una octava
+más abajo y nota por nota con el mismo ritmo, así que las seis primeras
+notas de las dos forman las doce, y también las seis últimas: la manera
+preferida de Schoenberg de mantener las doce notas sonando en dos voces
+a la vez. Una serie sin compañera deja la casilla en gris. **Escribir
+P0 en el patrón actual** reemplaza las notas del canal, y **Guardar en
+un patrón nuevo** las pone en un patrón propio.
 
 ### Una serie como tonalidad
 
@@ -295,6 +300,33 @@ acordes muestra las formas que lee en las notas.
 El grupo **Series dodecafónicas** de la Biblioteca tiene siete estilos,
 y **Archivo > Demostraciones > Dodecafónico** toca cada uno como una
 pieza corta.
+
+### Un estilo de series toca tu serie y tu plan
+
+Cuando la tonalidad es una serie, los estilos de series de la
+Biblioteca tocan esa serie, la tuya, cada uno a su manera: el Coral de
+tríadas como acordes sobre un bajo lento, el Lo-fi dodecafónico sobre
+un ritmo, y así. En una tonalidad que no es una serie, o con
+**Progresión de acordes** marcada, un estilo trae su propia serie,
+empezando en la tónica.
+
+En una canción, la hoja de acordes guarda el **plan** de la pieza: qué
+forma de la serie suena dónde. Haz clic en un compás y escribe una
+forma, como **P0**, **RI5**, **I7** o **R0**, y la banda toca esa forma
+ahí, mientras dure en la hoja, con las texturas del estilo: cada voz
+del estilo lee su propia forma de la misma manera, así que donde la
+hoja dice I5 un bajo que toca la serie al revés toca RI5. Cuando la
+hoja todavía no tiene formas de la serie, el estilo escribe ahí su
+propio plan, una parte cada una: la serie como está escrita, al revés,
+dada vuelta y las dos cosas. Cambia cualquier compás y la banda toca la
+forma nueva.
+
+Los acordes, el bajo y la melodía del estilo ocupan el lugar del piano,
+el bajo y el solista; los acordes y el bajo propios de la canción se
+callan, y su melodía sigue sonando. El estilo Pads de hexacordios toca
+su melodía desde la compañera de cada forma (ver [La ventana Serie
+dodecafónica](#la-ventana-serie-dodecafónica)), así que cada compás
+tiene las doce notas con cualquier serie combinatoria.
 
 ## Micromodos
 

@@ -413,6 +413,69 @@ dentro fuera del de afuera, y ese closure usa `form`: `move` hace que
 se lleve su propia copia de `form` en vez de tomar prestada una
 variable que está a punto de desaparecer.
 
+### La compañera
+
+`combinatorial_forms` responde por la serie tal como está escrita. Para
+tocar cualquier forma con la forma que la completa, cada forma necesita
+su propia compañera, y `partner` la encuentra. Prueba tres tipos de
+forma, en el orden en que los usaban los compositores: dada vuelta y en
+el mismo sentido (P con I, R con RI), la que más usaba Schoenberg;
+luego del mismo lado (P0 con P6, por ejemplo); y por último dada vuelta
+y al revés. La retrogradación de la propia forma, que siempre la
+completa, nunca es la compañera, porque son las mismas notas:
+
+```rust
+pub fn partner(self, label: RowLabel) -> Option<RowLabel> {
+    let missing = PitchSet::from_semitones(&self.form(label).0[..6]).complement();
+    let shape = |inverted: bool, backwards: bool| match (inverted, backwards) {
+        (false, false) => RowForm::Prime,
+        (true, false) => RowForm::Inversion,
+        (false, true) => RowForm::Retrograde,
+        (true, true) => RowForm::RetrogradeInversion,
+    };
+    let (inverted, backwards) = (label.form.is_inverted(), label.form.is_backwards());
+    [
+        shape(!inverted, backwards),
+        shape(inverted, backwards),
+        shape(!inverted, !backwards),
+    ]
+    .into_iter()
+    .flat_map(|form| (0..12).map(move |n| RowLabel::new(form, n)))
+    .filter(|&other| other != label)
+    .find(|&other| PitchSet::from_semitones(&self.form(other).0[..6]) == missing)
+}
+```
+
+`shape` son otra vez los dos interruptores del [grupo de
+Klein](#aritmética-de-formas), leídos al revés: de «¿dada vuelta?» y
+«¿al revés?» a una forma. Si una forma tiene compañera, todas tienen
+una del mismo tipo: hacerles lo mismo a dos formas (moverlas a las dos,
+darlas vuelta o invertir su sentido) mantiene sus mitades
+complementarias. Para la Serie de Lineup, P0 va con I3 y R0 con RI3.
+Una serie cuya primera mitad es 6-Z3, Do Do♯ Re Re♯ Fa Fa♯, no tiene
+ninguna: las seis notas que deja fuera son otra clase, 6-Z36, así que
+ninguna forma de la serie puede empezar con ellas.
+
+**Con su compañera, I3**, en la ventana de la serie, escribe la
+compañera junto con la forma, una octava más abajo y nota por nota con
+el mismo ritmo, así que las seis primeras notas de las dos forman las
+doce, y también las seis últimas (`RowWriting::partner`). La compañera
+de cada forma de una cadena es la suya, así que P, R, I, RI con
+compañeras empareja P0 con I3, luego R0 con RI3, y así sucesivamente.
+Cada grupo de la compañera baja de octava en octava hasta quedar por
+debajo de la nota más grave de la forma en ese lugar, mientras siga
+dentro del teclado:
+
+```rust
+if let Some(floor) = floor {
+    while pitches.iter().any(|pitch| *pitch >= floor)
+        && pitches.iter().all(|pitch| pitch.midi() >= 24 + 12)
+    {
+        pitches = pitches.iter().map(|pitch| Note::new(pitch.midi() - 12)).collect();
+    }
+}
+```
+
 ### Las series para empezar
 
 El menú **Series famosas y de ejemplo** tiene ocho series. Cuatro
@@ -614,7 +677,7 @@ El grupo **Series dodecafónicas** de la Biblioteca tiene siete estilos:
 |--------|----------|
 | Melodía de la serie | la Serie de Lineup como melodía en corcheas, por P, R, I y RI |
 | Coral de tríadas | la serie Cuatro tríadas como acordes, sobre su retrogradación en el bajo: música dodecafónica que suena casi tonal |
-| Pads de hexacordios | media serie como acorde, las otras seis notas desde I3 como melodía: cada compás tiene las doce notas |
+| Pads de hexacordios | media serie como acorde, las otras seis notas desde su compañera (I3 para la Serie de Lineup) como melodía: cada compás tiene las doce notas |
 | Puntillismo | notas sueltas que saltan por tres octavas, con duraciones y dinámicas de la serie, como en Webern |
 | Serialismo integral | alturas, duraciones, dinámicas y octavas, todas de la serie de todos los intervalos, sobre su retrogradación de la inversión en acordes de dos notas |
 | Lo-fi dodecafónico | los tricordios de la serie sobre un ritmo lo-fi, con su forma original en el bajo: una serie también puede tener groove |
@@ -703,9 +766,10 @@ pub fn combine(section: RowForm, voice: RowForm) -> RowForm {
 `a.0 != b.0` sobre dos `bool` es un *o exclusivo*: verdadero cuando
 exactamente uno lo es. Los matemáticos llaman a este pequeño sistema el
 **grupo de Klein**: cada forma se deshace a sí misma (I de I es P), y
-el orden no importa. Un detalle más: la melodía de Pads de hexacordios
-toca I3, tres semitonos *por encima* de la primera nota de la serie.
-Dada vuelta, «tres por encima» pasa a ser «tres por debajo», así que en
+el orden no importa. Un detalle más: la forma de una voz también se
+puede mover. La forma propia de la melodía de Pads de hexacordios es
+I3, tres semitonos *por encima* de la primera nota de la serie, y la
+toca cuando la serie no tiene [compañera](#la-compañera). Dada vuelta, «tres por encima» pasa a ser «tres por debajo», así que en
 las secciones I y RI ese desplazamiento pasa a ser 12 − 3 = 9:
 
 ```rust
@@ -716,73 +780,127 @@ let offset = if inverted {
 };
 ```
 
-### Tocar una canción entera como una serie
+### En una canción, la banda toca las formas de la hoja
 
-Como con los demás estilos, un estilo de serie se puede probar de dos
-maneras: parado, se escribe en un patrón propio; mientras suena la
-canción, se adueña de toda la canción. `use_row_style` recorre cada
-patrón que tiene acordes, una línea de bajo o una melodía, y escribe el
-estilo allí, leyendo los patrones por turno como P, R, I y RI para que
-la canción no se repita. La tonalidad pasa a ser la serie, empezando en
-la tónica de la canción, y los finales quedan como están.
+Parado, un estilo de serie se prueba en un patrón propio, como cualquier
+estilo. En una canción es de la banda, como un [estilo de
+micromodo](micromodes.md#en-una-canción-la-banda-toca-las-formas-de-la-hoja):
+la hoja de acordes guarda el **plan** de la pieza, una forma de la
+serie en cada compás o parte (`P2 | RI7 | I5 | R2`, escritas como
+acordes), y las voces del estilo tocan esas formas, cada una mientras
+dure en la hoja. El plan lo escribes tú, como los acordes en un estilo
+tonal.
 
-Una regla decide qué pasa con las partes propias de la canción: **el
-estilo se adueña de la armonía**. Acordes tonales o un bajo tonal bajo
-una serie solo chocan, así que los canales de acordes y de bajo que el
-estilo no usa se callan en ese patrón, y los acordes del estilo van al
-canal que tocaba los acordes de la canción. La melodía se queda, salvo
-que el estilo tenga una propia:
+Cada voz lee su propia forma como la forma de la hoja lee la serie,
+con la misma [aritmética de formas](#aritmética-de-formas): donde la
+hoja dice `I5`, los acordes del Coral de tríadas tocan `I5` y su bajo,
+que toca la serie al revés, toca `RI5`. Es un método de la voz, que
+recibe la serie y la forma de la parte:
 
 ```rust
-if chords.is_some() || plays(project, bass) || melody {
-    let before = project.pattern(pattern).cloned();
-    let quiet: Vec<usize> = [(KEYS, chords), (BASS, bass)]
-        .into_iter()
-        .filter(|(name, _)| !uses(name))
-        .filter_map(|(_, channel)| channel)
-        .collect();
-    // ... empty the `quiet` channels, write the voices ...
-    if project.pattern(pattern) != before.as_ref() {
-        written += 1;
-        change.harmony += 1;
+pub fn writing(&self, row: ToneRow, section: RowLabel) -> RowWriting {
+    if self.partner
+        && let Some(partner) = row.partner(section)
+    {
+        return RowWriting {
+            label: partner,
+            ..self.writing_from(PitchClass::from_semitone(section.number), section.form)
+        };
+    }
+    self.writing_from(PitchClass::from_semitone(section.number), section.form)
+}
+```
+
+Una voz que toca la **compañera** (la melodía de Pads de hexacordios)
+toca la [compañera combinatoria](#la-compañera) de la forma de la parte
+cuando la serie tiene una, así que el compás conserva las doce notas
+sea cual sea la serie; una serie sin compañera vuelve a la forma propia
+de la voz, I3 de la parte.
+
+La banda las toca en `band/row.rs`, junto a `band/micromode.rs`. Los dos
+tipos de estilo comparten cómo entra una banda de voces y cómo toma el
+compás, el tempo y el swing (`bring_a_band_of_voices` y
+`take_timing`); lo que cambia es la música. Para cada parte de la hoja
+que es una forma de la serie donde la tonalidad es una serie, una voz
+escribe su forma con [`write_row`](#de-una-serie-a-notas-el-serialismo),
+tan larga como la parte, y lleva las notas a donde empieza la parte:
+
+```rust
+for &(start, stop, harmony) in &score.spans {
+    let (HarmonyName::Row(label), ScaleKind::Row(row)) =
+        (harmony, score.keys.key_at(start).kind)
+    else {
+        continue;
+    };
+    let written = write_row(row, &voice.writing(row, label), stop - start);
+    notes.extend(written.into_iter().map(|note| NoteEvent {
+        start: note.start + start,
+        ..note
+    }));
+}
+```
+
+`score.spans` es la hoja tal como está escrita, cada armonía desde
+donde empieza hasta donde empieza la siguiente. Los demás músicos de la
+banda ven una forma de la serie como cuatro acordes de tres notas, en
+el orden de la serie (ver [Una serie como
+tonalidad](#una-serie-como-tonalidad)), que es lo que golpean los
+golpes y las notas tenidas de la hoja; la voz de un estilo necesita la
+forma misma. Comparar con un par, `(harmony, kind)`, con `let ... else`
+desarma los dos a la vez y salta la parte salvo que ambos sean lo que
+la voz puede tocar.
+
+**Tu serie.** Un estilo trae una serie propia, pero cuando la tonalidad
+ya es una serie, toca esa: las texturas son del estilo, las notas
+tuyas. Con la casilla **Progresión de acordes** marcada, o en una
+tonalidad tonal, trae la suya, empezando en la nota de la tonalidad:
+
+```rust
+pub fn row_in(&self, key: Scale, own: bool) -> ToneRow {
+    match key.tone_row() {
+        Some(row) if !own => row,
+        _ => self.row().starting_on(key.root),
     }
 }
 ```
 
-Para saber si un patrón cambió de verdad, guarda una copia de antes
-(`cloned()` convierte el `Option<&Pattern>` en un `Option<Pattern>`) y
-compara al final. `as_ref()` vuelve a convertir la copia en un
-`Option<&Pattern>`, para que los dos lados de `!=` tengan el mismo
-tipo. Esta función, `take_over_harmony`, recibe lo que hay que escribir
-como un closure:
+La misma regla vale cuando un estilo se prueba en un patrón. Como con
+los estilos tonales, el segundo estilo probado en el mismo patrón de
+prueba toca lo que dejó el primero: el primero hizo de su serie la
+tonalidad.
+
+**El plan.** Cuando la hoja no tiene formas de la serie (una canción
+tonal, o una vacía), `apply_row_style` escribe allí el plan del estilo,
+desde el primer compás hasta el final de la canción: la serie como está
+escrita, al revés, dada vuelta y las dos cosas, cada parte tan larga
+como una pasada del estilo:
 
 ```rust
-pub(super) fn take_over_harmony(
-    project: &mut Project,
-    uses: &dyn Fn(&str) -> bool,
-    rhythm: Option<&Rhythm>,
-    mut write: impl FnMut(&mut Project, usize, usize, Option<usize>),
-) -> RhythmChange {
+let plan: Vec<ChordMarker> = bars
+    .chunks(style.bars.max(1))
+    .zip(SECTIONS.iter().cycle())
+    .map(|(part, &form)| {
+        let label = RowLabel::new(form, row.first().semitone());
+        ChordMarker::new(part[0], HarmonyName::Row(label))
+    })
+    .collect();
 ```
 
-Los dos closures se pasan de dos maneras distintas, a propósito:
+`chunks` corta los compases en partes, `cycle` repite P, R, I y RI
+tantas veces como partes haya, y `zip` los empareja, parando con el más
+corto, los compases. Una hoja que ya tiene formas de la serie
+(lo comprueba `sheet_holds_row_forms`) las conserva, salvo que
+**Progresión de acordes** esté marcada. Una banda que entra silencia
+los acordes y el bajo propios de la canción, como cualquier banda; la
+melodía sigue sonando, y un estilo con melodía propia la toca en lugar
+del solista.
 
-- `uses` solo responde una pregunta («¿el estilo toca este canal?»),
-  así que es un `&dyn Fn`: un **trait object**, una referencia a algún
-  closure cuyo tipo se decide al ejecutar. Una sola copia compilada de
-  la función sirve para todos los closures.
-- `write` se llama una vez por patrón con `&mut Project`, y hace la
-  escritura. Es un `impl FnMut`: el compilador hace una copia de la
-  función para cada tipo de closure que se le pasa, lo que es un poco
-  más rápido y deja que el closure cambie lo que capturó. `FnMut` es la
-  cota más laxa que todavía se puede llamar muchas veces.
-
-El closure recibe `project` como argumento en vez de capturarlo:
-`take_over_harmony` ya tiene `&mut Project`, y Rust solo permite un
-préstamo mutable a la vez, así que el proyecto se le presta al closure
-en cada llamada. Un [estilo de micromodo](micromodes.md) en una canción
-funciona de otra manera: la banda lo toca desde las formas de la hoja
-de acordes.
+Una forma de la hoja suele durar una parte entera, más que el compás en
+que empieza, mientras que la hoja de acordes termina al final del
+compás en que empieza su última armonía. Por eso el plan también le
+dice a la banda que toque hasta el final de la última parte
+(`band.end`). El archivo guarda por su nombre el estilo que toca la
+banda, desde el formato 31.
 
 ## Una ventana que se abre delante
 
@@ -1216,14 +1334,23 @@ fn webern_is_a_palindrome() {
 }
 ```
 
-`serial.rs` escribe una melodía en corcheas, las cuatro formas por
-turno llenando el patrón, tricordios como acordes, las tres series, y
-comprueba que ninguna nota pasa del final del patrón.
-`library/rows.rs` comprueba que cada estilo usa una serie de las
-predefinidas y escribe sus voces en cualquier tonalidad; que Pads de
-hexacordios tiene las doce notas en cada compás; que una canción toma
-un estilo de serie, y que los acordes del estilo reemplazan a los de la
-canción en su propio canal en vez de sonar encima. Una prueba une las
+`row.rs` también comprueba que cada forma de la Serie de Lineup tiene
+una compañera de su mismo tipo, con las doce notas en cada mitad de las
+dos, y que la serie 6-Z3 no tiene ninguna. `serial.rs` escribe una
+melodía en corcheas, las cuatro formas por turno llenando el patrón,
+tricordios como acordes, las tres series, una forma con su compañera
+debajo (las doce notas en cada mitad), un plan de formas, y comprueba
+que ninguna nota pasa del final del patrón. `library/rows.rs`
+comprueba que cada estilo usa una serie de las predefinidas y escribe
+sus voces en cualquier tonalidad; que toca la serie de la tonalidad
+cuando la tonalidad es una serie, y la suya con Progresión de acordes;
+y que Pads de hexacordios tiene las doce notas en cada compás.
+`band/row.rs` comprueba que la banda toca el plan de cada estilo; que
+toca un plan escrito a mano sobre la serie de Berg, forma por forma;
+que Pads de hexacordios conserva las doce notas en cada compás con otra
+serie; que una canción tonal toma un estilo de serie, parte tras parte;
+que un canal Keys bloqueado conserva su parte; y que una banda así se
+guarda y se vuelve a leer. Una prueba une las
 dos mitades de este capítulo: escribe cada estilo, sobre Do y sobre
 Fa♯, y le pasa la revisión de la conducción de voces, que tiene que
 leer cada uno como formas de su serie sin ninguna nota fuera de orden,

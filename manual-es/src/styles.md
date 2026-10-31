@@ -49,11 +49,15 @@ Debajo de los estilos hay tres grupos que se pueden abrir:
 
 - **Series dodecafónicas** y **Micromodos (Kröpfl)**: estilos que tocan
   una serie dodecafónica o un micromodo en lugar de acordes. Un estilo
-  de series convierte la tonalidad en su serie, empezando en la tónica.
-  En una canción, la banda toca un estilo de micromodo desde la hoja de
-  acordes: las formas escritas ahí cuando la tonalidad es un conjunto,
-  o si no el recorrido propio del estilo, que escribe en la hoja, y la
-  tonalidad se vuelve el micromodo, empezando en la tónica. Ver [Más
+  de series toca la serie de la tonalidad cuando la tonalidad es una
+  serie, y si no la suya, empezando en la tónica; **Progresión de
+  acordes** le da su propia serie en cualquier tonalidad. En una
+  canción, la banda toca los dos tipos desde la hoja de acordes. Un
+  estilo de series toca las formas de la serie escritas ahí (P0,
+  RI5…), o si no su propio plan, que escribe en la hoja. Un estilo de
+  micromodo toca las formas escritas ahí cuando la tonalidad es un
+  conjunto, o si no el recorrido propio del estilo, que escribe en la
+  hoja, y la tonalidad se vuelve el micromodo, empezando en la tónica. Ver [Más
   allá de las tonalidades:
   conjuntos, series y micromodos](sets-rows-micromodes.md).
 - **Rellenos**: un compás de batería cada uno: Redoble de caja, Relleno

@@ -396,6 +396,67 @@ out of the outer one by `flat_map`, and it uses `form`: `move` makes it
 take its own copy of `form` instead of borrowing a variable that is
 about to go away.
 
+### The partner
+
+`combinatorial_forms` answers for the row as written. To play any form
+with the form that completes it, each form needs its own partner, and
+`partner` finds it. It tries three kinds of form, in the order
+composers used them: upside down and going the same way (P with I, R
+with RI), which is what Schoenberg used most; then the same way up (P0
+with P6, say); and last upside down and backwards. The form's own
+retrograde, which always completes it, is never the partner, since it
+is the same notes:
+
+```rust
+pub fn partner(self, label: RowLabel) -> Option<RowLabel> {
+    let missing = PitchSet::from_semitones(&self.form(label).0[..6]).complement();
+    let shape = |inverted: bool, backwards: bool| match (inverted, backwards) {
+        (false, false) => RowForm::Prime,
+        (true, false) => RowForm::Inversion,
+        (false, true) => RowForm::Retrograde,
+        (true, true) => RowForm::RetrogradeInversion,
+    };
+    let (inverted, backwards) = (label.form.is_inverted(), label.form.is_backwards());
+    [
+        shape(!inverted, backwards),
+        shape(inverted, backwards),
+        shape(!inverted, !backwards),
+    ]
+    .into_iter()
+    .flat_map(|form| (0..12).map(move |n| RowLabel::new(form, n)))
+    .filter(|&other| other != label)
+    .find(|&other| PitchSet::from_semitones(&self.form(other).0[..6]) == missing)
+}
+```
+
+`shape` is the two switches of the [Klein four-group](#form-arithmetic)
+again, read the other way: from "upside down?" and "backwards?" to a
+form. If one form has a partner, every form has one of the same kind:
+doing the same thing to two forms (moving both, turning both upside
+down or backwards) keeps their halves complementary. For the Lineup
+row, P0 goes with I3 and R0 with RI3. A row whose first half is 6-Z3,
+C C♯ D D♯ F F♯, has none: the six notes it leaves out are another set
+class, 6-Z36, so no form of the row can start with them.
+
+The Row window's **With its partner, I3** writes the partner with the
+form, an octave under it and note for note in the same rhythm, so the
+first six notes of the two make all twelve, and so do the last six
+(`RowWriting::partner`). The partner of each form in a chain is its own,
+so P, R, I, RI with partners pairs P0 with I3, then R0 with RI3, and so
+on. Each of the partner's groups is moved down by octaves until it is
+under the form's lowest note there, as long as it stays on the
+keyboard:
+
+```rust
+if let Some(floor) = floor {
+    while pitches.iter().any(|pitch| *pitch >= floor)
+        && pitches.iter().all(|pitch| pitch.midi() >= 24 + 12)
+    {
+        pitches = pitches.iter().map(|pitch| Note::new(pitch.midi() - 12)).collect();
+    }
+}
+```
+
 ### The rows to start from
 
 The **Famous and example rows** menu holds eight rows. Four come from
@@ -583,7 +644,7 @@ The Library's **Twelve-tone rows** group has seven styles:
 |-------|--------------|
 | Row melody | the Lineup row as a tune in eighth notes, through P, R, I and RI |
 | Triad chorale | the Four triads row as chords, over its retrograde in the bass: twelve-tone music that sounds almost tonal |
-| Hexachord pads | half the row as a chord, the other six notes from I3 as a melody: every bar has all twelve notes |
+| Hexachord pads | half the row as a chord, the other six notes from its partner (I3 for the Lineup row) as a melody: every bar has all twelve notes |
 | Pointillism | single notes leaping over three octaves, durations and dynamics from the row, as in Webern |
 | Total serialism | pitches, durations, dynamics and octaves all from the all-interval row, over its retrograde inversion in two-note chords |
 | Twelve-tone lo-fi | the row's trichords over a lo-fi beat, its prime form in the bass: a row can groove too |
@@ -671,10 +732,11 @@ pub fn combine(section: RowForm, voice: RowForm) -> RowForm {
 `a.0 != b.0` on two `bool`s is an *exclusive or*: true when exactly one
 is true. Mathematicians call this little system the **Klein
 four-group**: every form undoes itself (I of I is P), and the order
-does not matter. One more detail: the Hexachord pads melody plays I3,
-three semitones *above* the row's first note. Upside down, "three
-above" becomes "three below", so in the I and RI sections that offset
-becomes 12 − 3 = 9:
+does not matter. One more detail: a voice's form can be moved too. The
+Hexachord pads melody's own form is I3, three semitones *above* the
+row's first note, which it plays when the row has no
+[partner](#the-partner). Upside down, "three above" becomes "three
+below", so in the I and RI sections that offset becomes 12 − 3 = 9:
 
 ```rust
 let offset = if inverted {
@@ -684,71 +746,120 @@ let offset = if inverted {
 };
 ```
 
-### Playing a whole song as a row
+### In a song, the band plays the forms on the sheet
 
-As with the other styles, a row style can be tried two ways: stopped,
-it is written into a pattern of its own; while the song plays, it takes
-over the whole song. `use_row_style` goes through every pattern that
-has chords, a bass line or a melody, and writes the style there,
-reading the patterns in turn as P, R, I and RI so the song does not
-repeat itself. The key becomes the row, starting on the song's key
-note, and endings stay as they are.
+Stopped, a row style is tried in a pattern of its own, as any style is.
+In a song, it is the band's, as a [micromode
+style](micromodes.md#in-a-song-the-band-plays-the-forms-on-the-sheet)
+is: the chord sheet holds the **plan** of the piece, a form of the row
+in each bar or part (`P2 | RI7 | I5 | R2`, typed like chords), and the
+style's voices play those forms, each for as long as it is written
+there. The plan is yours to write, as the chords are in a tonal style.
 
-One rule decides what happens to the song's own parts: **the style
-takes over the harmony**. Tonal chords or a tonal bass under a row only
-clash, so the chords and bass channels the style does not use go quiet
-in that pattern, and the style's chords go on the channel that was
-playing the song's chords. The melody stays, unless the style has one
-of its own:
+Each voice reads its own form the way the sheet's form reads the row,
+with the same [form arithmetic](#form-arithmetic): where the sheet says
+`I5`, the Triad chorale's chords play `I5` and its bass, which plays the
+row backwards, plays `RI5`. That is one method on the voice, given the
+row and the form of the part:
 
 ```rust
-if chords.is_some() || plays(project, bass) || melody {
-    let before = project.pattern(pattern).cloned();
-    let quiet: Vec<usize> = [(KEYS, chords), (BASS, bass)]
-        .into_iter()
-        .filter(|(name, _)| !uses(name))
-        .filter_map(|(_, channel)| channel)
-        .collect();
-    // ... empty the `quiet` channels, write the voices ...
-    if project.pattern(pattern) != before.as_ref() {
-        written += 1;
-        change.harmony += 1;
+pub fn writing(&self, row: ToneRow, section: RowLabel) -> RowWriting {
+    if self.partner
+        && let Some(partner) = row.partner(section)
+    {
+        return RowWriting {
+            label: partner,
+            ..self.writing_from(PitchClass::from_semitone(section.number), section.form)
+        };
+    }
+    self.writing_from(PitchClass::from_semitone(section.number), section.form)
+}
+```
+
+A voice that plays the **partner** (the Hexachord pads melody) plays
+the [combinatorial partner](#the-partner) of the part's form when the
+row has one, so the bar keeps all twelve notes whatever the row; a row
+without one falls back on the voice's own form, I3 of the part.
+
+The band plays them in `band/row.rs`, next to `band/micromode.rs`. The
+two kinds of style share how a band of voices comes in and how it takes
+the time signature, the tempo and the swing (`bring_a_band_of_voices`
+and `take_timing`); what differs is the music. For each part of the
+sheet that is a form of the row where the key is a row, a voice writes
+its form with [`write_row`](#from-a-row-to-notes-serialism), as long as
+the part, and moves the notes to where the part starts:
+
+```rust
+for &(start, stop, harmony) in &score.spans {
+    let (HarmonyName::Row(label), ScaleKind::Row(row)) =
+        (harmony, score.keys.key_at(start).kind)
+    else {
+        continue;
+    };
+    let written = write_row(row, &voice.writing(row, label), stop - start);
+    notes.extend(written.into_iter().map(|note| NoteEvent {
+        start: note.start + start,
+        ..note
+    }));
+}
+```
+
+`score.spans` is the sheet as written, each harmony from where it
+starts to where the next one starts. The band's other players see a
+form of the row as four chords of three notes, in the row's order (see
+[A row as the key](#a-row-as-the-key)), which is what the shots and
+holds of the sheet strike; a style's voice needs the form itself.
+Matching on a pair, `(harmony, kind)`, with `let ... else` takes both
+apart at once and skips the part unless both are what the voice can
+play.
+
+**Your row.** A style brings a row of its own, but when the key is
+already a row, it plays that one: the textures are the style's, the
+notes yours. With the **Chord progression** box ticked, or in a tonal
+key, it brings its own, starting on the key note:
+
+```rust
+pub fn row_in(&self, key: Scale, own: bool) -> ToneRow {
+    match key.tone_row() {
+        Some(row) if !own => row,
+        _ => self.row().starting_on(key.root),
     }
 }
 ```
 
-To know whether a pattern really changed, it keeps a copy from before
-(`cloned()` turns the `Option<&Pattern>` into an `Option<Pattern>`)
-and compares at the end. `as_ref()` turns the copy back into an
-`Option<&Pattern>`, so the two sides of `!=` have the same type. This
-function, `take_over_harmony`, is given what to write as a closure:
+The same rule holds when a style is tried in a pattern. As with tonal
+styles, the second style tried in the same trial pattern plays what the
+first left there: the first one made the key its row.
+
+**The plan.** When the sheet holds no forms of the row (a tonal song,
+or an empty one), `apply_row_style` writes the style's plan there, from
+the first bar to the end of the song: the row as written, backwards,
+upside down and both, each part as long as one pass of the style:
 
 ```rust
-pub(super) fn take_over_harmony(
-    project: &mut Project,
-    uses: &dyn Fn(&str) -> bool,
-    rhythm: Option<&Rhythm>,
-    mut write: impl FnMut(&mut Project, usize, usize, Option<usize>),
-) -> RhythmChange {
+let plan: Vec<ChordMarker> = bars
+    .chunks(style.bars.max(1))
+    .zip(SECTIONS.iter().cycle())
+    .map(|(part, &form)| {
+        let label = RowLabel::new(form, row.first().semitone());
+        ChordMarker::new(part[0], HarmonyName::Row(label))
+    })
+    .collect();
 ```
 
-The two closures are passed in two different ways, on purpose:
+`chunks` cuts the bars into parts, `cycle` repeats P, R, I and RI as
+often as there are parts, and `zip` pairs them, stopping with the
+shorter, the bars. A sheet that already holds forms of the row (checked
+by `sheet_holds_row_forms`) keeps them, unless **Chord progression** is
+ticked. A band coming in mutes the song's own chords and bass, as any
+band does; the melody plays on, and a style with a melody of its own
+plays it in place of the soloist.
 
-- `uses` only answers a question ("does the style play this
-  channel?"), so it is an `&dyn Fn`: a **trait object**, a reference
-  to some closure whose type is decided at run time. One compiled copy
-  of the function works for every closure.
-- `write` is called once per pattern with `&mut Project`, and does the
-  writing. It is an `impl FnMut`: the compiler makes a copy of the
-  function for each closure type passed in, which is a little faster
-  and allows the closure to change what it captured. `FnMut` is the
-  loosest bound that can still be called many times.
-
-The closure is given `project` as an argument instead of capturing it:
-`take_over_harmony` already holds `&mut Project`, and Rust allows only
-one mutable borrow at a time, so the project is lent to the closure
-for each call. A [micromode style](micromodes.md) in a song works
-otherwise: the band plays it from the forms on the chord sheet.
+A form on the sheet usually lasts a whole part, longer than the bar it
+starts in, while the chord sheet ends at the end of the bar its last
+harmony starts in. So the plan also tells the band to play to the end
+of the last part (`band.end`). The file keeps the style the band plays
+by name, from format 31.
 
 ## A window that opens in front
 
@@ -1158,13 +1269,22 @@ fn webern_is_a_palindrome() {
 }
 ```
 
-`serial.rs` writes a melody in eighth notes, the four forms in turn
-filling the pattern, trichords as chords, the three series, and checks
-that no note runs past the end of the pattern. `library/rows.rs`
-checks that every style uses a row from the presets and writes its
-voices in any key; that Hexachord pads has all twelve notes in every
-bar; that a song takes a row style, and that the style's chords replace
-the song's on their own channel instead of playing over them. One test
+`row.rs` also checks that every form of the Lineup row has a partner
+of its own kind, each half of the two holding all twelve notes, and
+that the 6-Z3 row has none. `serial.rs` writes a melody in eighth
+notes, the four forms in turn filling the pattern, trichords as chords,
+the three series, a form with its partner under it (all twelve notes
+in each half), a plan of forms, and checks that no note runs past the
+end of the pattern. `library/rows.rs` checks that every style uses a
+row from the presets and writes its voices in any key; that it plays
+the key's row when the key is a row, and its own with Chord
+progression; and that Hexachord pads has all twelve notes in every bar.
+`band/row.rs` checks that the band plays every style's plan; that it
+plays a plan written by hand on Berg's row, form by form; that Hexachord
+pads keeps all twelve notes in every bar with another row; that a
+tonal song takes a row style, part after part; that a locked Keys
+channel keeps its part; and that such a band is saved and read again.
+One test
 joins the two halves of this chapter: it writes every style, on C and
 on F♯, and runs the voice-leading check on it, which must read each one
 as forms of its row with no note out of order, so the styles and the
