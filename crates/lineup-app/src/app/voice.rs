@@ -73,8 +73,9 @@ const PITCHES: [(Pitches, &str, &str); 3] = [
     (
         Pitches::WithChords,
         "Key and chords",
-        "Each note on the nearest note of the key as the chord there colours it: over D7 \
-         in C major, F♯ instead of F. Bars with no chord keep to the key.",
+        "Each note on the nearest note of the scale the soloist plays over the chord \
+         there, in the key: over D7 in C major, F♯ instead of F. Bars with no chord keep to \
+         the key.",
     ),
 ];
 
