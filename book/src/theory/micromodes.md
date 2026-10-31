@@ -711,41 +711,43 @@ built on the notes of a scale, though: each is the key's own three notes
 moved, or turned upside down and moved. So the name says just that, how
 far and whether upside down, measured from the key.
 
-A form's **degree** is the name it would have if the whole piece were
-moved so that the key's own form were the micromode as the table writes
-it, on C. In a song in Menor 3 on D (D D♯ F♯), moving everything down a
-whole tone turns the key's form into C C♯ E, Menor 3 itself; the form E F
-G♯ becomes D D♯ F♯, Menor 3 moved up 2. So in that key E F G♯ is **T2**:
+A form's **degree** says how it is made from the key's own form:
+**T*n*** is home moved up *n* semitones, and **T*n*I** is home turned
+upside down around the key's note, then moved up *n*. Upside down means
+mirrored: each note goes as far below the key's note as it was above
+it. In a song in Menor 3 on D (D D♯ F♯), E F G♯ is **T2**; turned over
+around D, D D♯ F♯ becomes D C♯ A♯, and a semitone up from there, B D
+D♯, is **T1I**:
 
 | Degree | Means | In Menor 3 on C | In Menor 3 on D |
 |---|---|---|---|
 | T0 | the key's own form, home | C C♯ E | D D♯ F♯ |
 | T2 | home moved up 2 semitones | D D♯ F♯ | E F G♯ |
-| T1I | home upside down, moved so it starts 1 above C | A C C♯ | B D D♯ |
+| T0I | home upside down around the key's note | A♭ B C | A♯ C♯ D |
+| T1I | that, moved up 1 | A C C♯ | B D D♯ |
 | T4 | home moved up 4 | E F G♯ | F♯ G A♯ |
 
-The names are the ones the chord sheet already writes after a set or a
-micromode ("Menor 3 T4", "3-11 T7I"), only counted from the key instead
-of from C. And like ii, a degree stays the same when the whole piece
-moves: the third column is the second moved up a tone, with the same
-degrees.
+Like ii, a degree stays the same when the whole piece moves: the last
+column is the one before moved up a tone, with the same degrees. In
+Menor 3 on C the degrees are the very names the chord sheet writes
+after a micromode ("Menor 3 T4", "Menor 3 T1I"), which count from the
+table's form on C; in any other key they are counted from the key
+instead.
 
-There is another way to count that looks just as natural: the
-operation that turns the key's form into the other form, "turn it
-upside down, then move it up n". It fails the test that matters. Turning
-notes upside down mirrors them around C, so it depends on where the key
-sits. In Menor 3 on C, A C C♯ is the key's form turned over and moved up
-1 (T1I); with the whole piece a tone higher, the same form, B D D♯, would
-be the key's form turned over and moved up 5. A name that changes when
-the music moves is no use as a degree, so the app moves the piece to C
-first and names the form there.
+Where the mirror stands matters. Pitch-class set theory's T*n*I turns
+notes over around C, and with that mirror a name would change when the
+music moves: in Menor 3 on C, A C C♯ is C C♯ E turned over around C and
+moved up 1, but a tone higher the same shapes, B D D♯ from D D♯ F♯,
+would be "turned over around C and moved up 5". The key's own note
+moves with the piece, so the app mirrors around it, and B D D♯ in
+Menor 3 on D is T1I, as A C C♯ is in Menor 3 on C.
 
-When the key's own form is itself the upside-down one, home is **T0I**.
-That is the case of a major triad: the table writes the triads'
-micromode as the minor triad C E♭ G, and the major triad is that upside
-down. In a key of C major as a set, home is T0I, the major triad a
-fifth up is T7I and the one a fourth up T5I, and the minor triads are
-the forms without I.
+Home is always T0, whichever way up the key's own form is. For the
+triads, the parallel chord is T7I from either side: in C major as a
+key, C E G turned over around C is C A♭ F, F minor, and a fifth up that
+is C minor; in C minor as a key, C major is T7I too. The relative minor
+of C major, A minor, is T4I, and the relative major of C minor, E♭
+major, is T10I.
 
 ### How near a form is: the notes it keeps
 
@@ -785,7 +787,7 @@ A degree is two facts, so it is a struct of two fields, in
 pub struct Degree {
     /// How many semitones it is moved, from 0 to 11.
     pub up: u8,
-    /// Whether it is upside down from the set's prime form.
+    /// Whether it is turned upside down first, around the key's note.
     pub inverted: bool,
 }
 ```
@@ -793,29 +795,48 @@ pub struct Degree {
 It is `Copy` because it is two bytes: passing it by value costs nothing,
 and code can use it after passing it without thinking about ownership.
 
-Finding the degree is two moves. `moved_to` (from [Pitch-class
-sets](sets.md)) answers "how is the prime form moved to give this
-set?", as an `Option<(u8, bool)>`: `None` if the set is not a form of
-it. The first call finds how far the key is moved; the form is moved
-down by that much; the second call names what is left:
+Finding the degree is a search: home moved up 0 to 11 semitones, and
+then, only if none of those is the form, home turned over and moved:
 
 ```rust
-pub fn of(key: PitchSet, form: PitchSet) -> Option<Degree> {
-    let prime = key.prime_form();
-    if key.is_empty() || form.prime_form() != prime {
+pub fn of(key: Scale, form: PitchSet) -> Option<Degree> {
+    let own = key.pitch_set();
+    if own.is_empty() || own.len() != form.len() {
         return None;
     }
-    let (up, _) = prime.moved_to(key)?;
-    let (up, inverted) = prime.moved_to(form.transpose((12 - up) % 12))?;
-    Some(Degree { up, inverted })
+    let mirrored = mirror(own, key.root);
+    let moved = |shape: PitchSet| (0..12u8).find(|&up| shape.transpose(up) == form);
+    moved(own)
+        .map(|up| Degree {
+            up,
+            inverted: false,
+        })
+        .or_else(|| moved(mirrored).map(|up| Degree { up, inverted: true }))
 }
 ```
 
-`(12 - up) % 12` moves down by `up` without a negative number: a `u8`
-cannot be below zero, and moving up 12 − n semitones lands on the same
-notes as moving down n. The `?` after each `moved_to` returns `None`
-from the whole function if the set is not a form, so the happy path
-reads straight down.
+The closure `moved` tries the twelve moves of a shape; `find` stops at
+the first that matches and gives it as `Some(up)`, or `None`. `map` turns
+`Some(up)` into `Some(Degree { .. })` and leaves `None` alone, and
+`or_else` runs its closure only on `None`, so the mirrored shape is only
+tried when home moved could not make the form. That order matters for a
+set that is the same upside down, such as the augmented triad or C
+major as a set: every form of it is home moved, so it gets the plainer
+name.
+
+The mirror itself is one line:
+
+```rust
+pub fn mirror(set: PitchSet, note: PitchClass) -> PitchSet {
+    set.invert().transpose((2 * note.semitone()) % 12)
+}
+```
+
+`invert` turns a set over around C, each note *n* semitones above C
+going to *n* below. Moving the result up twice the distance from C to
+the key's note puts the mirror on that note instead: a note *n* above D
+lands *n* below D. The `% 12` keeps the move under an octave; a `u8`
+times two can be up to 22.
 
 `Display` writes a degree as "T2" or "T5I", and `parse` reads it back.
 `strip_prefix` and `strip_suffix` take a pattern, and an array of
@@ -845,17 +866,17 @@ the rules in order:
 
 ```rust
 forms.sort_by_key(|&(form, degree)| {
-    let home = form == key;
     (
-        !home,
-        std::cmp::Reverse(kept(key, form)),
+        degree != Degree::HOME,
+        std::cmp::Reverse(kept(own, form)),
         degree.inverted,
         degree.up,
     )
 });
 ```
 
-`false` sorts before `true`, so `!home` puts home first. `Reverse` flips
+`false` sorts before `true`, and `degree != Degree::HOME` is `false` only
+for home, so home comes first. `Reverse` flips
 the order of what it wraps, so the forms that keep *more* notes come
 first, without negating a count. Then the forms the right way up come
 before the upside-down ones, and finally they go by degree. `kept`
@@ -1056,8 +1077,9 @@ no triad, so its bass is the first note of its normal form, C; and B C
 E♭ is no triad either, starting on B.
 
 `harmony/degree.rs` checks the degrees: counted from the key's own
-form, the same when the whole piece moves, T0I as home for a major
-triad, read as written ("T2", "t7i") and never T12; the 24 forms of
+form and mirrored around its note, the same when the whole piece moves,
+home T0 whichever way up the key is (C major and C minor each the
+other's T7I), read as written ("T2", "t7i") and never T12; the 24 forms of
 Menor 3 in order of nearness (3, 9 and 11 forms keeping two, one and no
 notes), the augmented triad's four forms with no smooth link; and the
 names of the P, L and R moves.

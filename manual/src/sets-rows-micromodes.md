@@ -263,12 +263,13 @@ Roman numeral is:
 
 - **T0** is the key's own form, home. In Menor 3 on C it is C C♯ E.
 - **T2** is home moved up 2 semitones: D D♯ F♯.
-- **T1I** is home turned upside down and moved: A C C♯.
+- **T0I** is home turned upside down around the key's note, each note
+  as far below C as it was above: C B A♭.
+- **T1I** is that moved up a semitone: A C C♯.
 
 Move the whole song to D and every form keeps its degree, as ii stays
-ii in any major key. When the key's own form is the upside-down one, as
-a major triad is (the micromode's table writes the minor triad), home
-is **T0I**.
+ii in any major key. Home is always T0. With the triads, the parallel
+chord is T7I: C minor in C major, and C major in C minor.
 
 ![The harmony keys in a key of Menor 3 on C after T1I was played: T0, T1I, T4I and T5I, then the forms that keep one note of home, each with its notes and its name; T0, T8 and T9 are outlined because they keep two notes of A C C♯, and the hint below says so](images/micromode-keys.png)
 

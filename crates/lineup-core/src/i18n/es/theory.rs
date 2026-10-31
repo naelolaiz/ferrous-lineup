@@ -2291,8 +2291,16 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "la forma de la tonalidad transportada {} semitonos hacia arriba",
     ),
     (
-        "the key's form turned upside down",
-        "la forma de la tonalidad dada vuelta",
+        "the key's form upside down around {}",
+        "la forma de la tonalidad dada vuelta alrededor de {}",
+    ),
+    (
+        "the key's form upside down around {}, moved up a semitone",
+        "la forma de la tonalidad dada vuelta alrededor de {}, transportada un semitono hacia arriba",
+    ),
+    (
+        "the key's form upside down around {}, moved up {} semitones",
+        "la forma de la tonalidad dada vuelta alrededor de {}, transportada {} semitonos hacia arriba",
     ),
     ("In {} it is {}: {}.", "En {} es {}: {}."),
     ("Near home", "Cercanas"),

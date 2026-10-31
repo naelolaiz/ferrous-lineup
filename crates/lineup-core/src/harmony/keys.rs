@@ -458,7 +458,7 @@ pub fn form_keys(scale: Scale, all: bool) -> Option<Vec<GroupKey>> {
     if key.len() != 3 {
         return None;
     }
-    let forms = degree::forms_by_nearness(key);
+    let forms = degree::forms_by_nearness(scale);
     let near = forms
         .iter()
         .filter(|&&(form, _)| degree::kept(key, form) > 0)
