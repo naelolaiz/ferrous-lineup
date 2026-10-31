@@ -447,7 +447,7 @@ impl HarmonyName {
         let ScaleKind::Set(_) = key.kind else {
             return None;
         };
-        let form = degree.form(key.pitch_set())?;
+        let form = degree.form(key)?;
         Some(match Micromode::of(form) {
             Some(_) => HarmonyName::Micromode(form),
             None => HarmonyName::Set(form),
@@ -462,7 +462,7 @@ impl HarmonyName {
             return None;
         };
         match self {
-            HarmonyName::Set(set) | HarmonyName::Micromode(set) => Degree::of(key.pitch_set(), set),
+            HarmonyName::Set(set) | HarmonyName::Micromode(set) => Degree::of(key, set),
             _ => None,
         }
     }
@@ -659,20 +659,20 @@ impl HarmonyName {
         let Some(degree) = self.degree(key) else {
             return String::new();
         };
-        let set = key.pitch_set();
-        // The key's own form is T0, or T0I when it is the prime form
-        // upside down: a form the same way up is the key's form moved up
-        // as many semitones as its degree says.
-        let home = Degree::of(set, set).unwrap_or(Degree::HOME);
-        let what = if degree.is_home(set) {
-            tr("the key's own form").to_string()
-        } else if degree.inverted == home.inverted {
-            match degree.up {
-                1 => tr("the key's form moved up a semitone").to_string(),
-                up => trf("the key's form moved up {} semitones", &[&up]),
-            }
-        } else {
-            tr("the key's form turned upside down").to_string()
+        let note = key.spell(key.root);
+        let what = match (degree.inverted, degree.up) {
+            (false, 0) => tr("the key's own form").to_string(),
+            (false, 1) => tr("the key's form moved up a semitone").to_string(),
+            (false, up) => trf("the key's form moved up {} semitones", &[&up]),
+            (true, 0) => trf("the key's form upside down around {}", &[&note]),
+            (true, 1) => trf(
+                "the key's form upside down around {}, moved up a semitone",
+                &[&note],
+            ),
+            (true, up) => trf(
+                "the key's form upside down around {}, moved up {} semitones",
+                &[&note, &up],
+            ),
         };
         format!(
             " {}",

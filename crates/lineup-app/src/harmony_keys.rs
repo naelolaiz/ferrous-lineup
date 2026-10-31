@@ -433,19 +433,18 @@ impl HarmonyKeys {
     ) -> Vec<HarmonyAction> {
         let mut actions = Vec::new();
         let scale = here;
-        let key = scale.pitch_set();
         let set_of =
             |notes: &[Note]| -> PitchSet { notes.iter().map(|n| n.pitch_class()).collect() };
         let playing = [set_of(held), set_of(heard)]
             .into_iter()
-            .find(|&set| set.len() == 3 && Degree::of(key, set).is_some());
+            .find(|&set| set.len() == 3 && Degree::of(scale, set).is_some());
         if playing.is_some() {
             self.last_form = playing;
         }
         // A form of another key's micromode means nothing here.
         let last = self
             .last_form
-            .filter(|&form| Degree::of(key, form).is_some());
+            .filter(|&form| Degree::of(scale, form).is_some());
         let next = last.map(degree::smooth_links).unwrap_or_default();
         let mut pressed = None;
         ui.add_space(4.0);
@@ -471,7 +470,7 @@ impl HarmonyKeys {
             self.hints_menu(ui);
             let keys = trf("1 to {}", &[&forms.len().min(7)]);
             let from = last
-                .and_then(|form| Degree::of(key, form))
+                .and_then(|form| Degree::of(scale, form))
                 .map(|degree| degree.to_string());
             let hint = match (self.hints, from) {
                 (HintLevel::Minimal, _) => String::new(),
@@ -1322,9 +1321,8 @@ fn describe_form(
     if level == HintLevel::Minimal {
         return text;
     }
-    let key = scale.pitch_set();
     if let Some(last) = last.filter(|&last| last != set)
-        && let Some(from) = Degree::of(key, last)
+        && let Some(from) = Degree::of(scale, last)
     {
         let mut link = degree::describe_link(last, set, |p| scale.spell(p).to_string());
         // Between triads, the neo-Riemannian name of the move.
