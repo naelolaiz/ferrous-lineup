@@ -15,14 +15,15 @@ use eframe::egui::{
     Response, Sense, Stroke, StrokeKind, TextStyle, Ui, Vec2, pos2, vec2,
 };
 use lineup_core::band::solo::{NoteRole, Over};
+use lineup_core::chord_sheet::notation::{Notation, stacked_classes, stacked_text};
 use lineup_core::harmony::keys::{self, ChordSize};
 use lineup_core::harmony::voice_leading::{self, Rules, Slip, VoiceLeading};
 use lineup_core::harmony::voice_motion::{self, Change};
 use lineup_core::harmony::{Harmony, HintLevel, analyze, next_chords_over};
 use lineup_core::tools::{self, ArpeggioOrder};
 use lineup_core::{
-    Chord, ChordQuality, ChordStamp, Note, NoteEvent, Pattern, PitchClass, PitchSet, Project,
-    Scale, ScaleKind, Spelling, TICKS_PER_STEP, TimeSignature, tidy_notes,
+    Chord, ChordQuality, ChordStamp, HarmonyName, Note, NoteEvent, Pattern, PitchClass, PitchSet,
+    Project, Scale, ScaleKind, Spelling, TICKS_PER_STEP, TimeSignature, tidy_notes,
 };
 
 use crate::i18n::{tr, tr_name, tr_str, trf};
@@ -501,6 +502,9 @@ pub struct PianoRoll {
     /// and the last check, with what it was made from.
     voice_leading: bool,
     voice_check: Option<(VoiceInput, Rc<VoiceLeading>)>,
+    /// How the chord lane names the harmony: as chords, as pitch-class
+    /// sets or as micromodes, the same notes in each.
+    notation: Notation,
     arpeggio: ArpeggioOrder,
     arpeggio_rate: usize,
     /// Scroll to the channel's notes the next time the grid is drawn.
@@ -576,6 +580,7 @@ impl PianoRoll {
             ghosts: true,
             voice_leading: false,
             voice_check: None,
+            notation: Notation::Chords,
             arpeggio: ArpeggioOrder::Up,
             arpeggio_rate: 1,
             scroll_to_notes: true,
@@ -1329,6 +1334,11 @@ impl PianoRoll {
             }
             _ => String::new(),
         };
+        // As sets or micromodes, what the lane shows, named in full.
+        let named = match self.notation.name_heard(&all, hearing.notes(), scale) {
+            Some(names) => format!(" {}: {}.", tr(self.notation.name()), stacked_text(&names)),
+            None => String::new(),
+        };
         (
             format!(
                 "{} {own}{}{}{}",
@@ -1340,7 +1350,7 @@ impl PianoRoll {
                 String::new()
             } else {
                 trf(" (or {})", &[&or])
-            },
+            } + &named,
             set,
         )
     }
@@ -1729,8 +1739,40 @@ impl PianoRoll {
                 ui.checkbox(&mut self.voice_leading, tr("Voice leading"))
                     .on_hover_text(tr(VOICE_LEADING_HELP));
             });
+            self.notation_choice(ui);
         });
         picked
+    }
+
+    /// The switch for how the chord lane names the harmony, as the chord
+    /// sheet's Show does: chords, pitch-class sets or micromodes.
+    fn notation_choice(&mut self, ui: &mut Ui) {
+        theme::keep_together(ui, 200.0, |ui| {
+            ui.label(tr("Show"));
+            let combo = egui::ComboBox::from_id_salt("piano-roll-notation")
+                .selected_text(tr(self.notation.name()))
+                .show_ui(ui, |ui| {
+                    for choice in [Notation::Chords, Notation::Sets, Notation::Micromodes] {
+                        let hint = match choice {
+                            Notation::Chords => tr(
+                                "Chord symbols, with the bass after a slash: C/E. Notes that \
+                                 make no chord the app knows are named by their set class",
+                            ),
+                            other => tr(other.describe()),
+                        };
+                        let item =
+                            ui.selectable_value(&mut self.notation, choice, tr(choice.name()));
+                        theme::hint(item, hint);
+                    }
+                });
+            theme::hint(
+                combo.response,
+                tr(
+                    "How the chord lane names the harmony. The notes stay as they are: a set or \
+                     a micromode is another way to write the same chord",
+                ),
+            );
+        });
     }
 
     /// The Tools menu. Returns the tool picked, if any.
@@ -2058,11 +2100,15 @@ impl PianoRoll {
             .map_or(tr("Track"), |channel| channel.name.as_str());
         let track_name = tr_name(track_name);
         let channel = [self.channel];
-        let rows: [(&str, Vec<Harmony>); 2] = [
+        let rows: [(&str, Vec<(Harmony, PitchSet)>); 2] = [
             (
                 &track_name,
                 (0..length)
-                    .map(|step| analyze(sounding(pattern, &channel, step)))
+                    .map(|step| {
+                        let notes: Vec<Note> = sounding(pattern, &channel, step).collect();
+                        let set = notes.iter().map(|note| note.pitch_class()).collect();
+                        (analyze(notes), set)
+                    })
                     .collect(),
             ),
             (tr("All"), heard_by_beat(project, self.pattern, length)),
@@ -2324,7 +2370,7 @@ impl PianoRoll {
         rect: Rect,
         response: &Response,
         name: &str,
-        harmonies: &[Harmony],
+        harmonies: &[(Harmony, PitchSet)],
         scale: Scale,
         lanes: Lanes,
         playhead: Option<usize>,
@@ -2343,12 +2389,26 @@ impl PianoRoll {
         painter.rect_filled(cells, 2.0, LANE_BACKGROUND);
         let painter = painter.with_clip_rect(cells);
 
-        // `chunk_by` splits a slice wherever two neighbours differ. A
-        // harmony holds its bass, so C and C/E are two blocks.
+        // `chunk_by` splits a slice wherever two neighbours differ. As
+        // chords, a harmony holds its bass, so C and C/E are two blocks;
+        // as sets, they are one, the same notes.
+        let steps: Vec<LaneName> = harmonies
+            .iter()
+            .map(
+                |&(harmony, notes)| match self.notation.name_heard(&harmony, notes, scale) {
+                    Some(names) => LaneName::Named(names),
+                    None => LaneName::Heard(harmony),
+                },
+            )
+            .collect();
         let mut start = 0;
-        for run in harmonies.chunk_by(|a, b| a == b) {
+        for run in steps.chunk_by(|a, b| a == b) {
             let end = start + run.len();
-            if let Some(label) = run[0].label_in(scale) {
+            let (label, short) = match &run[0] {
+                LaneName::Heard(harmony) => (harmony.label_in(scale), None),
+                LaneName::Named(names) => (Some(stacked_text(names)), stacked_classes(names)),
+            };
+            if let Some(label) = label {
                 let chord_rect = Rect::from_min_max(
                     pos2(lane.x(start), lane.rect.top()),
                     pos2(lane.x(end), lane.rect.bottom()),
@@ -2356,10 +2416,20 @@ impl PianoRoll {
                 .shrink2(vec2(1.0, 1.0));
                 painter.rect_filled(chord_rect, 3.0, LANE_CHORD);
                 // A name too long for its block is left out: cut short,
-                // "E7/B" would read "7/", another chord. Pointing at the
-                // block names it in full, under the toolbar.
-                let name = painter.layout_no_wrap(label, FontId::proportional(11.0), LANE_TEXT);
-                if name.size().x <= chord_rect.width() - 2.0 {
+                // "E7/B" would read "7/", another chord. A set or a
+                // micromode is named by its class alone first, "3-11"
+                // for "3-11 T7I". Pointing at the block names it in full,
+                // under the toolbar.
+                let font = FontId::proportional(11.0);
+                let fits =
+                    |name: &std::sync::Arc<egui::Galley>| name.size().x <= chord_rect.width() - 2.0;
+                let mut name = painter.layout_no_wrap(label, font.clone(), LANE_TEXT);
+                if !fits(&name)
+                    && let Some(short) = short
+                {
+                    name = painter.layout_no_wrap(short, font, LANE_TEXT);
+                }
+                if fits(&name) {
                     // A long chord's name stays in view while it scrolls.
                     let shown = chord_rect.intersect(cells);
                     painter.with_clip_rect(chord_rect).galley(
@@ -3378,26 +3448,34 @@ fn paint_slips(painter: &Painter, grid: Grid, check: &VoiceLeading, step: Option
     }
 }
 
+/// What a step of the chord lane names: the harmony heard, by its chord
+/// name, or the sets or micromodes it is made of, by the Show switch.
+#[derive(PartialEq)]
+enum LaneName {
+    Heard(Harmony),
+    Named(Vec<HarmonyName>),
+}
+
 /// The harmony of all the tracks at every step of pattern `pattern`,
 /// `length` steps long, heard beat by beat with the whole band (see
-/// [`Project::hearing_with_pattern`]).
-fn heard_by_beat(project: &Project, pattern: usize, length: usize) -> Vec<Harmony> {
+/// [`Project::hearing_with_pattern`]), with the pitch classes it is
+/// heard from.
+fn heard_by_beat(project: &Project, pattern: usize, length: usize) -> Vec<(Harmony, PitchSet)> {
     let mut beats = project
         .hearings_with_pattern(pattern)
         .into_iter()
         .peekable();
     let mut heard = Vec::with_capacity(length);
-    let mut harmony = Harmony::Silence;
+    let mut harmony = (Harmony::Silence, PitchSet::EMPTY);
     for step in 0..length {
         while let Some((_, hearing)) = beats.next_if(|(start, _)| *start <= step) {
-            harmony = hearing.best();
+            harmony = (hearing.best(), hearing.notes());
         }
         heard.push(harmony);
     }
     heard
 }
 
-/// The pitches held during `step` on any of `channels`.
 /// What the notes of a pattern are named by: the chord heard as each
 /// starts, or else the key.
 #[derive(Clone, Copy)]
@@ -3435,6 +3513,7 @@ impl Chords<'_> {
     }
 }
 
+/// The pitches held during `step` on any of `channels`.
 fn sounding<'a>(
     pattern: &'a Pattern,
     channels: &'a [usize],
