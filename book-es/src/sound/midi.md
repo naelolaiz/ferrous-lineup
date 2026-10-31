@@ -29,7 +29,7 @@ habla en los dos sentidos:
 
 Cómo se usa todo esto está en las páginas del manual
 [Teclados y sintetizadores MIDI](https://naelolaiz.github.io/ferrous-lineup/es/manual/midi.html),
-[Abrir archivos MIDI y grabaciones](https://naelolaiz.github.io/ferrous-lineup/es/manual/importing.html)
+[Abrir archivos MIDI y hojas de acordes](https://naelolaiz.github.io/ferrous-lineup/es/manual/importing.html)
 y [Exportar](https://naelolaiz.github.io/ferrous-lineup/es/manual/exporting.html).
 Este capítulo sigue a una tecla en su camino: los bytes, los hilos que
 cruza, la nota en que se convierte y el archivo que la guarda.
@@ -2028,8 +2028,8 @@ le pasa su valor. `and_then` conserva el tipo de error, así que cada
 paso convierte primero su propio error en un `String` con `map_err`. Un
 solo `match` al final muestra el aviso o el error. Leer tarda unas
 milésimas de segundo, así que, a diferencia de
-[importar una grabación](../theory/listen.md), se hace en el acto en
-el hilo de la interfaz.
+[oír las notas de una toma](../theory/listen.md#en-la-aplicación), se
+hace en el acto en el hilo de la interfaz.
 
 ### Los ticks del archivo en los nuestros
 

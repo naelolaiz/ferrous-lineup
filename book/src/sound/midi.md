@@ -27,7 +27,7 @@ this hard" or "this key came up". Ferrous Lineup speaks it both ways:
 
 How to use all this is in the manual's
 [MIDI keyboards and synths](https://naelolaiz.github.io/ferrous-lineup/manual/midi.html),
-[Opening MIDI files and recordings](https://naelolaiz.github.io/ferrous-lineup/manual/importing.html)
+[Opening MIDI files and chord sheets](https://naelolaiz.github.io/ferrous-lineup/manual/importing.html)
 and [Exporting](https://naelolaiz.github.io/ferrous-lineup/manual/exporting.html).
 This chapter follows a key on its way: the bytes, the threads they
 cross, the note they become, and the file that keeps them.
@@ -1963,8 +1963,8 @@ let imported = std::fs::read(path)
 passes its value on. `and_then` keeps the error type, so each step turns
 its own error into a `String` with `map_err` first. One `match` at the
 end shows the notice or the error. Reading takes a few thousandths of a
-second, so unlike [importing a recording](../theory/listen.md), it is
-done straight away on the UI thread.
+second, so unlike [hearing the notes of a take](../theory/listen.md#in-the-app),
+it is done straight away on the UI thread.
 
 ### Ticks into our ticks
 

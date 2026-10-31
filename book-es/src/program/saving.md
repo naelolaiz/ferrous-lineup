@@ -801,10 +801,10 @@ Linux permite. `skip(1)` se salta el primer argumento, que es el nombre
 del propio programa.
 
 Un archivo `.lineup` soltado sobre la ventana también se abre, tras la
-misma pregunta «¿Guardar cambios?», y un archivo MIDI, una hoja de
-acordes o una grabación se importan. Los demás archivos WAV soltados
-van al rack de canales (en [Importar
-grabaciones](../theory/listen.md#desde-el-menú-la-línea-de-comandos-o-soltada)
+misma pregunta «¿Guardar cambios?», un archivo MIDI o una hoja de
+acordes se importan, y una grabación se añade a la canción como toma.
+Los demás archivos WAV soltados van al rack de canales (en
+[Tomas](../theory/listen.md#desde-el-menú-la-línea-de-comandos-o-soltada)
 está cuál WAV es cuál).
 
 ## Archivo > Abrir recientes

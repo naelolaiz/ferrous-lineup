@@ -1,8 +1,8 @@
-# Opening MIDI files and recordings
+# Opening MIDI files and chord sheets
 
 Ferrous Lineup can open music that was made somewhere else: a **MIDI
-file** of a piece, a **chord sheet** saved as text, or, as an
-experiment, a **recording**. Each becomes a new song, with its chords on
+file** of a piece, or a **chord sheet** saved as text. Each becomes a
+new song, with its chords on
 the chord sheet and its key on the harmony keys, so you can study it as
 you would a demo. When the song open before has unsaved changes, you
 are asked first.
@@ -57,34 +57,9 @@ and type the right chord (see [The chord sheet](chord-sheet.md)).
 and on websites. The format is in [The chord
 sheet](chord-sheet.md#chord-sheets-as-text).
 
-## Recordings (experimental)
+## Recordings
 
-**File > Import recording…** opens a sound file (MP3, WAV, FLAC or
-Ogg) and tries to play along with it. You can also drop the file on
-the window, or open it with Ferrous Lineup from your file manager. (A
-WAV file of ten seconds or less dropped on the window is taken as a
-sound for a channel instead: see [The channel
-rack](channel-rack.md#your-own-sounds).) It listens for a few seconds
-(*Listening to …* in the status bar), then makes a song with two
-tracks:
-
-- **Recording**: a channel that plays the whole recording;
-- **Harmony**: a chord on every beat, on the chords it heard.
-
-It also guesses the tempo, the time signature, the key and the key
-changes, so the bar lines, the chord sheet and the harmony keys follow
-the music. The song's key is the one the recording stays in longest. The
-recording plays wherever you start: from the beginning, from a bar you
-click, or after a jump. The status bar says what it found, as in *canon-in-d: 63.9 BPM, 4/4,
-D major, chords on 43 of 43 beats*.
-
-Hearing a full recording is much harder than reading a MIDI file, and
-the result is often wrong: the tempo may come out at half or double
-speed, and chords may be heard where a passing melody note sits. Treat
-it as a starting point to correct, and trust your ears over it.
-
-The recording is saved again as a WAV file next to the original, named
-like *song.ferrous-lineup.wav* (or in the system's temporary folder if
-that folder can't be written to), with a little silence in front so its
-first downbeat falls on a bar line. The song plays that file and only
-says where it is, so keep it with the song.
+A sound file (MP3, WAV, FLAC or Ogg) is not opened as a song of its
+own: **File > Add a recording…** lays it on the song you have open, and
+writes the notes sung or played in it, as a take (see
+[Takes](takes.md#adding-a-recording-made-before)).

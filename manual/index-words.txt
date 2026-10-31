@@ -22,6 +22,7 @@
 About window: main-window.md#keys-that-work-everywhere
 Accelerando: tempo-meter-key.md#changing-tempo-partway-through
 Accompaniment follows chords: harmony-keys.md#playing-chords-to-the-band, midi.md#playing-chords-to-the-band
+Add a recording: takes.md#adding-a-recording-made-before
 Aksak: see Odd meter
 Andalusian cadence: tango-and-latin-america.md#flamenco, folk-and-misa-criolla.md#elsewhere-in-latin-america
 Another solo: soloist.md#trying-it
@@ -125,7 +126,6 @@ Huayno: folk-and-misa-criolla.md#the-andes
 ii–V–I: chord-functions.md#roots-that-fall-a-fifth, jazz-and-pop.md#the-standards-and-the-big-bands
 Import chord sheet: importing.md#chord-sheets-as-text
 Import MIDI file: importing.md#midi-files
-Import recording: importing.md#recordings-experimental
 Installing: installing.md
 Instrument: sounds.md#an-instrument-for-each-channel
 Instrument lineup: bigger-band.md#the-band-menu
@@ -158,6 +158,7 @@ Menus: main-window.md#the-menus
 Meter: rhythm-and-meter.md
 Metronome: practising.md#count-in-and-metronome
 Micromode: sets-rows-micromodes.md#micromodes, not finding-a-demo.md
+Microphone: takes.md#what-you-need, settings.md#audio
 MIDI: midi.md
 MIDI channel: midi.md#sending-to-a-synthesizer
 MIDI file: importing.md#midi-files, exporting.md#a-midi-file
@@ -210,8 +211,7 @@ Progression: styles.md#progressions-from-the-library
 Push: stops.md
 Quantize: piano-roll.md#tools, midi.md#recording
 Ragtime: jazz-and-pop.md#ragtime, not finding-a-demo.md
-Recording: midi.md#recording
-Recording import: importing.md#recordings-experimental
+Recording: midi.md#recording, takes.md#recording-a-take
 Recovering unsaved work: saving.md#recovering-unsaved-work
 Rehearsal mark: lead-sheets.md#reading-a-lead-sheet
 Relative key: keys-and-modes.md#major-and-minor-keys
@@ -243,6 +243,7 @@ Seventh chord: chords.md#seventh-chords
 Shot: stops.md
 Show (chord sheet): sets-rows-micromodes.md#one-harmony-four-names
 Shuffle: swing.md#where-swing-doesnt-apply
+Singing a part: see Take
 Slash chord: chords.md#slash-chords-and-inversions
 Snap: patterns-and-playlist.md#placing-and-moving-clips
 Snap to scale: piano-roll.md#writing-notes
@@ -269,6 +270,7 @@ Suspended chord: chords.md#suspended-chords
 Swing: swing.md, styles.md#trying-a-style
 Syncopation: stops.md#the-music, rhythm-and-meter.md#strong-beats-weak-beats-and-syncopation, jazz-and-pop.md#ragtime
 Synthesizer: midi.md#sending-to-a-synthesizer
+Take: takes.md
 Tango: tango-and-latin-america.md#tango, not finding-a-demo.md
 Tap tempo: tempo-meter-key.md#tempo, practising.md#speed-and-tap-tempo
 Tempo: first-song.md#5-the-tempo-and-the-key, main-window.md#the-toolbar, tempo-meter-key.md#tempo
@@ -305,6 +307,7 @@ Voice leading: piano-roll.md#seeing-the-other-parts, voice-leading.md
 WAV: channel-rack.md#your-own-sounds, exporting.md#a-sound-file
 Wet / dry: mixer.md#the-reverb
 What often comes next: chord-functions.md#what-often-comes-next
+Whistling a part: see Take
 Windows: settings.md#windows
 Write the chords the song plays: chord-sheet.md#writing-what-the-song-plays
 You play: locks.md#you-play

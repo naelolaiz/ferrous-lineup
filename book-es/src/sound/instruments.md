@@ -311,21 +311,26 @@ gate: como una caja de ritmos, toca su sonido entero cada vez, y como
 tiene voces, un golpe nuevo no corta el anterior.
 
 Eso está bien para la batería y mal para una cosa: una grabación larga,
-como una canción entera importada como audio, seguiría sonando después
-de Detener. Así que `release_all` apaga en unos 15 ms las voces de un
-sonido de más de diez segundos, y deja resonar los golpes cortos:
+como una canción entera añadida como toma, seguiría sonando después de
+Detener. Así que `release_all` apaga en unos 15 ms las voces de un
+sonido largo, y deja resonar los golpes cortos:
 
 ```rust
 pub fn release_all(&mut self) {
-    let long = self.sample.frames().len() as u64
-        > u64::from(self.sample.sample_rate()) * LONG_SAMPLE_SECONDS;
-    if long {
+    if self.is_long() {
         for voice in self.voices.iter_mut().filter(|voice| !voice.is_idle()) {
             voice.fading.get_or_insert(1.0);
         }
     }
 }
 ```
+
+Un sonido es largo cuando dura más de diez segundos
+(`LONG_SAMPLE_SECONDS`), o cuando es una toma, por corta que sea: el
+sampler de una toma se construye con `playing_along()`, que pone una
+marca que lee `is_long`, porque una toma de dos compases tiene que
+detenerse con la canción y empezar por la mitad tan seguro como una
+canción entera (ver [Tomas](../theory/listen.md#escribirla)).
 
 `release_unless`, para un clip que se quita o una pista que se silencia
 mientras suena, apaga los sonidos de la canción sea cual sea su
@@ -335,7 +340,7 @@ longitud.
 
 Una nota suena cuando la reproducción llega al paso en que empieza.
 Para un golpe de batería eso es todo, pero una grabación es una nota en
-el primer paso de una canción: empezada desde el compás 20, la canción
+el primer paso de una toma: empezada desde el compás 20, la canción
 sonaría sin ella. Así que cuando la reproducción empieza, salta o
 vuelve al comienzo del bucle, `resume_long_sounds`, en el motor, mira
 hacia atrás en la canción las notas que empezaron antes del cursor de
