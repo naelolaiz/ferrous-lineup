@@ -2471,4 +2471,66 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ),
     ("every note in the colour", "todas las notas en el color"),
     ("Colour of {}, {}: {}.", "Color de {}, {}: {}."),
+    ("As a chord", "Como acorde"),
+    ("As a line", "Como línea"),
+    (
+        "As chords, {} became {}.",
+        "Como acordes, {} pasó a ser {}.",
+    ),
+    ("Both are forms of {}.", "Las dos son formas de {}."),
+    ("From pieces", "De obras"),
+    ("Its family", "Su familia"),
+    (
+        "Moved: {} became {}, {}. Every step stays the same: {}.",
+        "Transportada: {} pasó a ser {}, {}. Cada paso queda igual: {}.",
+    ),
+    (
+        "Moved: {} became {}, {}. From the bottom up, the intervals stay the same: {}.",
+        "Transportada: {} pasó a ser {}, {}. De abajo hacia arriba, los intervalos quedan iguales: {}.",
+    ),
+    ("Random", "Al azar"),
+    ("Rows", "Series"),
+    ("The row of {}.", "La serie de {}."),
+    (
+        "The same notes are also {}, so that answer is right too.",
+        "Las mismas notas son también {}, así que esa respuesta también es correcta.",
+    ),
+    (
+        "Upside down: {} became {}. Every step goes the other way: {} became {}.",
+        "Dada vuelta: {} pasó a ser {}. Cada paso va hacia el otro lado: {} pasó a ser {}.",
+    ),
+    (
+        "Upside down: {} became {}. From the bottom up, the intervals come in the other order: {} became {}.",
+        "Dada vuelta: {} pasó a ser {}. De abajo hacia arriba, los intervalos vienen en el otro orden: {} pasó a ser {}.",
+    ),
+    ("down a semitone", "un semitono hacia abajo"),
+    ("down {}", "baja {}"),
+    ("down {} semitones", "{} semitonos hacia abajo"),
+    (
+        "the row backwards: from its last note to its first",
+        "la serie hacia atrás: de su última nota a la primera",
+    ),
+    (
+        "the row moved: every step stays the same",
+        "la serie transportada: cada paso queda igual",
+    ),
+    (
+        "the row upside down and backwards",
+        "la serie dada vuelta y hacia atrás",
+    ),
+    (
+        "the row upside down: every step goes the other way",
+        "la serie dada vuelta: cada paso va hacia el otro lado",
+    ),
+    ("up a semitone", "un semitono hacia arriba"),
+    ("up {}", "sube {}"),
+    ("up {} semitones", "{} semitonos hacia arriba"),
+    (
+        "{}: {}, with {}. Family: {}. {} {}",
+        "{}: {}, con {}. Familia: {}. {} {}",
+    ),
+    (
+        "{}: {}. The row: {}. {}: {}.",
+        "{}: {}. La serie: {}. {}: {}.",
+    ),
 ];
