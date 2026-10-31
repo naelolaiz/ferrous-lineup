@@ -106,6 +106,66 @@ Comping::Habanera => (
 ),
 ```
 
+### The candombe's blocks
+
+A candombe's guitar or piano plays what candombe guitarists call
+**bloques**, blocks: chords struck in the clave the repique plays on
+its wooden shell, on 1, 4, 7, 11 and 13 counted in sixteenths. The
+table is the first exercise of a candombe guitar method ("Bloques", by
+Federico A. Rosso), a whole bar long:
+
+```rust
+Comping::Bloques => (
+    16,
+    &[
+        hit!(0, 3, All, 100),
+        hit!(3, 1, All, 82),
+        hit!(6, 4, All, 96),
+        hit!(10, 2, All, 84),
+        hit!(12, 4, All, 94),
+    ],
+),
+```
+
+The chord on the "and" of 2 lasts four steps, tied over beat 3 as the
+method writes it, and the one just before beat 2 is short. The bass the
+method writes under the blocks, on 1, on the "and" of 2 held over beat
+3, and on 4, is the tresillo the tango already had, `Bass::Tresillo`.
+
+The method's third exercise pushes the blocks: a sixteenth after beats
+2, 3 and 4 and just before the next bar, `Comping::BloquesPushed`, with
+the bass's middle note a sixteenth early and a pickup on the "and" of 4,
+`Bass::TresilloPushed`. A part of another kind, such as a refrain after
+the verse, plays them, and so does variation b:
+
+```rust
+pub fn in_contrast(self) -> Comping {
+    match self {
+        Comping::Bloques => Comping::BloquesPushed,
+        comping => comping,
+    }
+}
+```
+
+`Bass::in_contrast(comping)` does the same for the bass under the
+blocks. Every other way of comping plays on as it is, so only the
+candombe changes. "Another kind" is the drums' own: an odd kind from
+`section_kinds`, the same parts whose drums move to the ride
+(`drum_form::contrasts`, see [Drums by
+part](song-form.md#drums-by-part)). Each player asks in its own way:
+
+- The band plays the song in **runs**, stretches of bars in one
+  variation of one style. `runs` in `band.rs` also starts a run where
+  the song goes into or out of a part of another kind, and `Run`
+  carries `contrast`. It does so only when a style that `contrasts`
+  plays, so every other style's runs, and its notes, stay as they were.
+- **Library > Apply** asks where each pattern first plays
+  (`first_played`), as it does for the pattern's drums.
+- A **demo** asks by the part's name in the song's form
+  (`drum_form::name_kinds`): in *Candombe para Gardel* the refrain and
+  the link push their blocks, and the verses and the bridge, a third
+  kind, play them in the clave.
+
 ### `macro_rules!`, and why not a function
 
 `hit!` is a small **declarative macro**:
@@ -963,11 +1023,17 @@ crashing anything. So the tests read the whole library:
 `an_odd_meter_gets_a_rhythm_grouped_its_way` and
 `a_time_signature_with_no_rhythm_gets_a_basic_beat` follow `for_time`
 down its chain.
+`the_candombes_play_their_chords_in_the_clave` checks the two candombe
+styles, and `comping.rs` checks the blocks themselves
+(`the_candombe_blocks_follow_the_clave_and_the_bass_its_tresillo`,
+`a_part_of_another_kind_pushes_the_candombe_blocks`).
 
 `apply.rs` checks where notes go (`styles_go_to_keys_and_bass`,
 `chords_go_around_a_locked_channel`), that `recomping_keeps_the_chords`,
 that a whole song takes a new rhythm or a style, that a waltz puts the
-song in 3/4, and, the widest, that
+song in 3/4, that
+`the_candombe_style_pushes_its_blocks_where_the_song_goes_on_to_another_part`,
+and, the widest, that
 `every_demo_takes_every_kind_of_library_click`. `sources.rs` checks a
 part that comes, is edited, and is undone:
 

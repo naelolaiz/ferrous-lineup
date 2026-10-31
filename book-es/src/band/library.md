@@ -112,6 +112,71 @@ Comping::Habanera => (
 ),
 ```
 
+### Los bloques del candombe
+
+La guitarra o el piano de un candombe tocan lo que los guitarristas de
+candombe llaman **bloques**: acordes golpeados en la clave que el
+repique toca en la madera del tambor, en 1, 4, 7, 11 y 13 contando en
+semicorcheas. La tabla es el primer ejercicio de un método de guitarra
+de candombe ("Bloques", de Federico A. Rosso), de un compás entero:
+
+```rust
+Comping::Bloques => (
+    16,
+    &[
+        hit!(0, 3, All, 100),
+        hit!(3, 1, All, 82),
+        hit!(6, 4, All, 96),
+        hit!(10, 2, All, 84),
+        hit!(12, 4, All, 94),
+    ],
+),
+```
+
+El acorde del "y" del 2 dura cuatro pasos, ligado sobre el pulso 3 como
+lo escribe el método, y el de justo antes del pulso 2 es corto. El bajo
+que el método escribe bajo los bloques, en el 1, en el "y" del 2
+sostenido sobre el pulso 3, y en el 4, es el tresillo que el tango ya
+tenía, `Bass::Tresillo`.
+
+El tercer ejercicio del método empuja los bloques: una semicorchea
+después de los pulsos 2, 3 y 4 y justo antes del compás siguiente,
+`Comping::BloquesPushed`, con la nota del medio del bajo una
+semicorchea antes y una anacrusa en el "y" del 4,
+`Bass::TresilloPushed`. Los toca una parte de otra clase, como un
+estribillo después de la estrofa, y también la variación b:
+
+```rust
+pub fn in_contrast(self) -> Comping {
+    match self {
+        Comping::Bloques => Comping::BloquesPushed,
+        comping => comping,
+    }
+}
+```
+
+`Bass::in_contrast(comping)` hace lo mismo con el bajo bajo los
+bloques. Todas las demás maneras de acompañar siguen como están, así que
+solo cambia el candombe. "Otra clase" es la de la batería: una clase
+impar de `section_kinds`, las mismas partes en las que la batería pasa al
+ride (`drum_form::contrasts`, ver [La batería por
+partes](song-form.md#la-batería-por-partes)). Cada intérprete lo pregunta
+a su manera:
+
+- La banda toca la canción en **tramos**, compases seguidos en una
+  variación de un estilo. `runs`, en `band.rs`, también empieza un tramo
+  donde la canción entra en una parte de otra clase o sale de ella, y
+  `Run` lleva `contrast`. Lo hace solo cuando toca un estilo que
+  `contrasts`, así que los tramos de todos los demás estilos, y sus
+  notas, quedan como estaban.
+- **Biblioteca > Aplicar** pregunta dónde suena primero cada patrón
+  (`first_played`), como hace para la batería del patrón.
+- Una **demo** lo pregunta por el nombre de la parte en la forma de la
+  canción (`drum_form::name_kinds`): en *Candombe para Gardel* el
+  estribillo (*Refrain*) y el enlace (*Link*) empujan sus bloques, y
+  las estrofas y el puente (*Bridge*), una tercera clase, los tocan en
+  la clave.
+
 ### `macro_rules!`, y por qué no una función
 
 `hit!` es una pequeña **macro declarativa**:
@@ -1008,11 +1073,17 @@ biblioteca entera: `every_style_parses_and_fits_in_a_pattern`,
 `an_odd_meter_gets_a_rhythm_grouped_its_way` y
 `a_time_signature_with_no_rhythm_gets_a_basic_beat` siguen a
 `for_time` por su cadena.
+`the_candombes_play_their_chords_in_the_clave` comprueba los dos estilos
+de candombe, y `comping.rs` comprueba los bloques mismos
+(`the_candombe_blocks_follow_the_clave_and_the_bass_its_tresillo`,
+`a_part_of_another_kind_pushes_the_candombe_blocks`).
 
 `apply.rs` comprueba adónde van las notas (`styles_go_to_keys_and_bass`,
 `chords_go_around_a_locked_channel`), que `recomping_keeps_the_chords`,
 que una canción entera toma un ritmo o un estilo nuevos, que un vals
-pone la canción en 3/4 y, la más amplia,
+pone la canción en 3/4, que
+`the_candombe_style_pushes_its_blocks_where_the_song_goes_on_to_another_part`
+y, la más amplia,
 `every_demo_takes_every_kind_of_library_click`. `sources.rs` comprueba
 una parte que llega, se edita y se deshace:
 

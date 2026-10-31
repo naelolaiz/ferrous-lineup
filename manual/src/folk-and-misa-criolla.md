@@ -104,7 +104,11 @@ the dominant's bass and leads to E.
   to G minor and back. The Library's **Candombe** and **Candombe
   Ansina** play the three drums of a candombe group: the repique opens
   the song with the clave on the drum's wooden shell, and the phrases
-  take turns, so no two in a row sound the same.
+  take turns, so no two in a row sound the same. The piano plays its
+  chords in that clave, as a candombe guitarist's **blocks** (*bloques*),
+  over the bass's tresillo. In a part of another kind, such as a refrain
+  after the verse, and in variation b, piano and bass push the blocks:
+  they come a sixteenth earlier, and more often.
 - **Brazil**: the songs of the gaúchos of Rio Grande do Sul, such as
   *Boi barroso*, and *Luar do sertão*, a *toada* about the moonlight of
   the backlands.

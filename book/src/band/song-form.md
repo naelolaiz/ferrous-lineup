@@ -921,6 +921,9 @@ pub struct DrumPart<'a> {
   sections of the same name, by `section_kinds`, so "Verse 2" plays
   like "Verse". An odd kind plays `contrasting` drums, the hi-hat moved
   to the ride, unless the song's own variations say what plays where.
+  `contrasts` says which kinds those are, and the candombe's piano and
+  bass push their chord blocks there too (see [The candombe's
+  blocks](library.md#the-candombes-blocks)).
 - **Turns.** `turn` counts the phrases of that kind the song has played
   (`Turns`), for rhythms laid out with grooves and closings that take
   turns, such as the candombe's (see [Laid out over a song's
@@ -991,8 +994,11 @@ Each module tests its own part:
   `folklore_fills_on_its_own_drums_and_the_tango_not_at_all`,
   `the_part_after_a_fill_lands_with_a_crash` and
   `the_candombe_phrases_take_turns`.
-- `band.rs`: `the_band_starts_its_patterns_where_the_parts_start` and
-  `a_chord_held_over_a_section_start_is_not_struck_again`.
+- `band.rs`: `the_band_starts_its_patterns_where_the_parts_start`,
+  `a_chord_held_over_a_section_start_is_not_struck_again` and
+  `the_candombe_band_pushes_its_blocks_in_a_part_of_another_kind`, and
+  `demo.rs` the same for a demo,
+  `the_candombe_pushes_its_blocks_in_its_refrain`.
 
 In the app, `ux_tests.rs` clicks the rack's lock and undoes it
 (`the_rack_locks_a_channel_and_undo_unlocks_it`), tries Doo-wop and

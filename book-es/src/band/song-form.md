@@ -975,7 +975,10 @@ pub struct DrumPart<'a> {
   las secciones del mismo nombre, según `section_kinds`, así que
   «Verse 2» se toca como «Verse». Una clase impar toca la batería
   `contrasting`, el hi-hat pasado al ride, salvo que las variaciones de
-  la canción digan qué se toca dónde.
+  la canción digan qué se toca dónde. `contrasts` dice qué clases son
+  esas, y el piano y el bajo del candombe empujan allí también sus
+  bloques de acordes (ver [Los bloques del
+  candombe](library.md#los-bloques-del-candombe)).
 - **Turnos.** `turn` cuenta las frases de esa clase que la canción ya
   tocó (`Turns`), para los ritmos repartidos en grooves y cierres que se
   turnan, como los del candombe (ver [Repartido sobre las partes de una
@@ -1048,8 +1051,11 @@ Cada módulo prueba su parte:
   `folklore_fills_on_its_own_drums_and_the_tango_not_at_all`,
   `the_part_after_a_fill_lands_with_a_crash` y
   `the_candombe_phrases_take_turns`.
-- `band.rs`: `the_band_starts_its_patterns_where_the_parts_start` y
-  `a_chord_held_over_a_section_start_is_not_struck_again`.
+- `band.rs`: `the_band_starts_its_patterns_where_the_parts_start`,
+  `a_chord_held_over_a_section_start_is_not_struck_again` y
+  `the_candombe_band_pushes_its_blocks_in_a_part_of_another_kind`, y
+  `demo.rs` lo mismo para una demo,
+  `the_candombe_pushes_its_blocks_in_its_refrain`.
 
 En la aplicación, `ux_tests.rs` hace clic en el candado del rack y lo
 deshace (`the_rack_locks_a_channel_and_undo_unlocks_it`), prueba

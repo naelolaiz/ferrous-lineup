@@ -156,6 +156,9 @@ donde oyó una parte en un lugar equivocado, marca tú las correctas.
 - Una parte de otra clase que la anterior, una B después de una A o un
   estribillo después de una estrofa, lleva al baterista del hi-hat al
   platillo ride.
+- En un candombe, una parte así también empuja los bloques de acordes
+  del piano y el bajo debajo de ellos (ver el candombe en [El folclore
+  sudamericano y la Misa Criolla](folk-and-misa-criolla.md)).
 - Los ritmos folclóricos hacen sus rellenos en sus propios tambores,
   como el parche y el aro del bombo. Los ritmos de tango, de orquesta y
   de ranchera ocupan el lugar de conjuntos sin baterista, así que no

@@ -110,7 +110,11 @@ el bajo de la dominante y lleva a Mi.
   **Candombe Ansina**, de la Biblioteca, tocan los tres tambores de una
   cuerda de candombe: el repique abre la canción con la clave en la
   madera del tambor, y las frases se turnan, para que nunca suenen dos
-  iguales seguidas.
+  iguales seguidas. El piano toca sus acordes en esa clave, como los
+  **bloques** de un guitarrista de candombe, sobre el tresillo del bajo.
+  En una parte de otra clase, como un estribillo después de la estrofa,
+  y en la variación b, el piano y el bajo empujan los bloques: llegan
+  una semicorchea antes, y más seguido.
 - **Brasil**: las canciones de los gaúchos de Rio Grande do Sul, como
   *Boi barroso*, y *Luar do sertão*, una *toada* sobre la luna del
   sertón.

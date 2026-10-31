@@ -142,6 +142,9 @@ yourself.
 - A part of another kind than the one before, a B after an A or a
   refrain after a verse, moves the drummer from the hi-hat to the ride
   cymbal.
+- In a candombe, such a part also pushes the piano's chord blocks and
+  the bass under them (see the candombe in [Folk music of South
+  America, and the Misa Criolla](folk-and-misa-criolla.md)).
 - Folk rhythms fill on their own drums, such as the bombo's head and
   rim. The tango, orchestra and ranchera rhythms stand in for bands
   without a drummer, so they don't fill.
