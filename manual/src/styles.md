@@ -101,11 +101,18 @@ The three accompaniment options go together as you like:
   sounds. The tracks named Keys and Bass, or the one chosen in the
   rack, take its piano and its bass. In a song without them, such as an
   imported MIDI file, each track but the tune takes the style's sound
-  for its family: a bass its bass, a piano its piano, a guitar its
+  for its part: a bass its bass, a piano its piano, a guitar its
   guitar, an organ or an accordion its organ (or its piano), and
-  strings its strings.
+  strings its strings. A track's name says which it is ("slapbass",
+  "drive guitar", "organ"), or else the sound it has.
 
 So you can take one style's drums and another's chord and bass parts.
+
+On an imported MIDI file with all three ticked, the style comes in as
+the band: its bass and its drums take the place of the file's own,
+which fall silent while the band plays, and the file's other tracks
+take its sounds. Each style you click after it changes them again; the
+melody keeps its own sound throughout.
 
 ## Where a style goes
 
