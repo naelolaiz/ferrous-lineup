@@ -80,7 +80,7 @@ otro programa de música, un programa de notación o un sintetizador:
 desde su primer paso: un ritmo o una parte para usar en otro lugar.
 
 Ferrous Lineup puede volver a abrir el archivo (ver [Abrir archivos
-MIDI y grabaciones](importing.md)), y conserva la tonalidad exacta en
+MIDI y hojas de acordes](importing.md)), y conserva la tonalidad exacta en
 la que estaba.
 
 ## Una hoja de acordes en texto
