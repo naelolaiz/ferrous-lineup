@@ -289,8 +289,11 @@ T3I its inversion moved up three. Then:
   naming and inversions](chords.md#chord-stamps));
 - **Use as the key** makes the set the song's key: the piano roll
   highlights its notes and the harmony keys play chords stacked from it
-  (or, for a set of three notes, a micromode, its forms by degree: see
-  [Micromodes](micromodes.md#a-micromode-as-the-key-degrees)).
+  (or, for a set of three notes, its forms by degree, as for a
+  micromode: see [Micromodes](micromodes.md#a-micromode-as-the-key-degrees)).
+  Picked here, a set of three notes is named as a set, 3-3, not as the
+  micromode it also is (see [Three notes: a set or a
+  micromode](#three-notes-a-set-or-a-micromode)).
 
 A set of three notes is also one of Kröpfl's micromodes, and the window
 links to it (see [Micromodes](micromodes.md)).
@@ -336,13 +339,16 @@ choose in the set browser with **Use as the key** may be any set at all.
 `set_key`, in the app, picks the set the menu switches to:
 
 ```rust
-fn set_key(ctx: &egui::Context, scale: Scale, root: PitchClass) -> Scale {
+pub(crate) fn set_key(ctx: &egui::Context, scale: Scale, root: PitchClass) -> Scale {
     let up = scale.root.semitones_up_to(root);
     if let Some(group) = scale
         .tone_row()
         .and_then(|row| row.segments(3).first().copied())
     {
-        return Scale::set(root, group.transpose(up));
+        return Scale::set(root, group.transpose(up)).named_as_set();
+    }
+    if let ScaleKind::Set(_) = scale.kind {
+        return Scale::set(root, scale.pitch_set().transpose(up)).named_as_set();
     }
     if scale.kind.is_tonal() && scale.kind != ScaleKind::Chromatic {
         let set = Scale::set(root, scale.pitch_set().transpose(up));
@@ -355,17 +361,58 @@ fn set_key(ctx: &egui::Context, scale: Scale, root: PitchClass) -> Scale {
     }
     let set = remembered_set(ctx);
     let start = set.normal_form().first().copied().unwrap_or(root);
-    Scale::set(root, set.transpose(start.semitones_up_to(root)))
+    Scale::set(root, set.transpose(start.semitones_up_to(root))).named_as_set()
 }
 ```
 
 From a key it is the key's own scale; from a twelve-tone row, the row's
-first three notes, which are what the harmony keys were playing; from
-the chromatic scale, which holds every note and says nothing about the
-harmony, the set used last. A set whose notes are exactly a scale on its
-root is spelled as that scale, and moves on as that key when the key
-changes again (`set_as_scale` and `as_key`, in [Scales, modes and
-keys](scales.md)).
+first three notes, which are what the harmony keys were playing; from a
+micromode, its own three notes; from the chromatic scale, which holds
+every note and says nothing about the harmony, the set used last. A set
+whose notes are exactly a scale on its root is spelled as that scale,
+and moves on as that key when the key changes again (`set_as_scale` and
+`as_key`, in [Scales, modes and keys](scales.md)).
+
+### Three notes: a set or a micromode
+
+Every group of three notes is one of Kröpfl's twelve micromodes (see
+[Micromodes](micromodes.md)), so three notes alone cannot say whether
+the key is the set 3-3 or the micromode Menor 3: both are C C♯ E. The
+key says it, with a field of `Scale` next to the one that writes G♭
+major the other way round:
+
+```rust
+/// Whether a key of three notes is named as a pitch-class set, "set
+/// 3-3 on C", rather than as the micromode it also is, "Menor 3 on
+/// C" (see [`Scale::micromode`]).
+#[serde(default, skip_serializing_if = "std::ops::Not::not")]
+as_set: bool,
+```
+
+`Scale::micromode` gives the micromode a key is named as, or `None`, and
+everything that names a key or its forms asks it: the key's name on the
+bar numbers, the harmony keys, the forms the chord sheet writes
+(`HarmonyName::form_in`) and the colour check. `named_as_set` and
+`named_as_micromode` give the same key named the other way, so picking
+**pitch-class set** in a Key menu while the key is Menor 3 names its
+three notes 3-3, and picking **Menor 3** names them back. Neither moves
+a note. A key change named as the song's key is follows it
+(`key_map::moved_key`), and one moved to another root keeps its name
+(`named_like`).
+
+`serde` writes the field only when it is `true`, so a key named as its
+micromode writes what it always did, and a version of Ferrous Lineup
+from before reads `as_set:true` as nothing it knows, and names the key
+as its micromode, with the same notes.
+
+Which choice a Key menu shows as picked is one function,
+`KindChoice::of`, and what a choice does is another, `KindChoice::key`,
+used by both Key menus and by the key change menu on the bar numbers.
+A test picks every choice from every kind of key (a major key, a key
+written the other way round, the chromatic scale, a row, a micromode, a
+set, the same notes named both ways) and checks that the choice picked
+is the one shown: the bug that hid **pitch-class set** behind Menor 3
+cannot come back unnoticed.
 
 ## A set as the key: its forms
 
@@ -554,9 +601,9 @@ everything it needs is passed in.
 ## One harmony, four names
 
 The chord sheet applies the same rule to every harmony on it. Its top
-row has a **Show** menu: **As written**, **Chords**, **Pitch-class
-sets** or **Micromodes**. The notes stay the same, only their names
-change, and nothing in the song is touched:
+row has a **Show** menu: **As the key**, **As written**, **Chords**,
+**Pitch-class sets** or **Micromodes**. The notes stay the same, only
+their names change, and nothing in the song is touched:
 
 | Written | Chords | Pitch-class sets | Micromodes |
 |---------|--------|------------------|------------|
@@ -593,6 +640,36 @@ How to read it:
   N.C. in every view, and a row form (P0, RI7) stays a row form: a row is a line
   of twelve notes, not one group.
 
+Every song opens **As the key**: each harmony is named in the notation
+of the key it is in. In a major or minor key, or a mode, that is
+chords; in a pitch-class set or a twelve-tone row, sets; in a
+micromode, micromodes. The sheet of a song in C major shows C, Am and
+F, the sheet of a micromode demo its forms, Menor 3 T2, and a song that
+changes key partway through changes notation with it. Another choice
+holds for the song on screen only: the next song opens as its key
+again, so a song in C major is not shown in micromodes because the one
+before was. `Notation::in_key` is the rule:
+
+```rust
+pub fn in_key(self, key: Scale) -> Notation {
+    match self {
+        Notation::Key if key.micromode().is_some() => Notation::Micromodes,
+        Notation::Key if matches!(key.kind, ScaleKind::Set(_) | ScaleKind::Row(_)) => {
+            Notation::Sets
+        }
+        Notation::Key => Notation::Chords,
+        other => other,
+    }
+}
+```
+
+The arms of a `match` are tried in order, and an arm with a **guard**
+(`if` after the pattern) fits only when the guard is true too. A
+micromode key is also a set, so the first arm must come before the
+second. Every function that names a harmony (`rename`, `name_group`,
+`name_heard`) starts with `self.in_key(key)`, with the key of the bar
+the harmony is in, so none of them has to know about `Notation::Key`.
+
 A polychord is two groups of notes, one over the other, and merging them
 into one set would lose what makes it a polychord. So each chord is
 named on its own, written upper first as the polychord is:
@@ -603,16 +680,18 @@ Eb7|Fb   →   4-27 T3I|3-11 T11I
 
 ### In Rust: one `match` decides
 
-`Notation` is an enum of four variants, `#[default]` on `Written` so the
-sheet starts as it always was. Renaming a harmony is one `match` on a
-**tuple** of the notation and the harmony. Rust tries the arms from the
-top, so their order is the rule: first what never changes, then the
+`Notation` is an enum of five variants, `#[default]` on `Key` so every
+song starts as its key. Renaming a harmony first turns `Key` into the
+notation of the harmony's key (`in_key`, above), then is one `match` on
+a **tuple** of the notation and the harmony. Rust tries the arms from
+the top, so their order is the rule: first what never changes, then the
 Chords view, then two chords at once, then everything else.
 
 ```rust
 pub fn rename(self, harmony: HarmonyName, key: Scale) -> Vec<HarmonyName> {
-    let group = |set: PitchSet| self.name_group(set, key);
-    match (self, harmony) {
+    let notation = self.in_key(key);
+    let group = |set: PitchSet| notation.name_group(set, key);
+    match (notation, harmony) {
         (Notation::Written, _)
         | (_, HarmonyName::NoChord)
         | (_, HarmonyName::Row(_))
@@ -672,9 +751,9 @@ gives `&PitchClass`, and `find` passes its closure a reference to that.
 ### In the piano roll
 
 The piano roll's chord lane, above the grid, has a **Show** menu too,
-next to **Voice leading**: **Chords**, **Pitch-class sets** or
-**Micromodes**. (There is no As written: the lane names what it hears,
-and nothing there was written.)
+next to **Voice leading**: **As the key**, which it starts with,
+**Chords**, **Pitch-class sets** or **Micromodes**. (There is no As
+written: the lane names what it hears, and nothing there was written.)
 
 ![The piano roll of the demo Whole-tone haze with Show set to Pitch-class sets: the Keys row names single notes, and the All row names 2-2, 3-6, 2-2, 2-2 T2, 3-6 T2 and so on, a block for each beat; the line under the toolbar says "Step 22: Keys: D. All: D up to E: a major second. Pitch-class sets: 2-2 T2."](../images/step-9-piano-roll-sets.png)
 

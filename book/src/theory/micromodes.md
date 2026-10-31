@@ -1214,14 +1214,17 @@ you. `saturating_add` stops at 255 instead of overflowing.
 ### Key changes in any colour
 
 A key change on the playlist names the key from a bar on, without
-moving a note, and it can now be a micromode, or a set or a row the
-song is in: a piece can be in Menor 3 and turn to Menor 5 at bar 9.
-The harmony keys and the degrees on the sheet read the key at each
-bar, so from bar 9 they offer and count Menor 5's forms; what is
-already written there stays as it is, until Menor 5's forms are
-written in its place. A key of three notes
-is named by its micromode everywhere, "Menor 5 on C", since every
-group of three notes is one of the twelve.
+moving a note, and it can now be a micromode, a twelve-tone row or a
+pitch-class set (made as the Key menus make them, by `KindChoice::key`),
+or a set or a row the song is in: a piece can be in Menor 3 and turn to
+Menor 5 at bar 9. The harmony keys and the degrees on the sheet read
+the key at each bar, so from bar 9 they offer and count Menor 5's
+forms; what is already written there stays as it is, until Menor 5's
+forms are written in its place. A key of three notes is named by its
+micromode, "Menor 5 on C", since every group of three notes is one of
+the twelve, unless it was picked as a pitch-class set: then it is "set
+3-5 on C", the same notes (see [Three notes: a set or a
+micromode](sets.md#three-notes-a-set-or-a-micromode)).
 
 ## Checking the colour
 
@@ -1409,6 +1412,27 @@ Each has a **Use as the key** button, which makes it the key of those
 bars with key markers. No note moves, as when you pick
 **pitch-class set** in the Key menu; Undo takes it back. Where the
 colour is the key already, the line says **(the key)** instead.
+
+The line is there only where the key is a set, a micromode, a row or
+the chromatic scale. A song in a major or minor key or a mode is shown
+in chords, here as on the chord sheet and in the piano roll: tonal
+music is made of two micromodes, the major and minor triads (**Acorde
+menor-mayor**) and the diminished one (**Acorde disminuido**), and
+naming them as micromodes says nothing new; the starting song in C
+major would read "Acorde menor-mayor on C". To find the colour of a
+passage in such a song, an imported piece that turns out not to be
+tonal, say, make the key **chromatic** first. `shows_colours`, in the
+app, makes the choice, before anything is read:
+
+```rust
+fn shows_colours(key: Scale) -> bool {
+    !key.kind.is_tonal() || key.kind == ScaleKind::Chromatic
+}
+```
+
+`is_tonal` is true for every scale but a row or a set, the chromatic
+scale too; but the chromatic scale holds every note and says nothing
+about the harmony, so it is let through.
 
 ![Find the key on the demo Whole-tone haze: "Sounds in the notes here: D major, or A minor, or C major", and under it "Colour in bars 1 to 8: Mayor 1 on C (the key), made of 6-35 (whole-tone scale)" with a Use as the key button](../images/step-9-find-colour.png)
 
