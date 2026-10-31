@@ -506,8 +506,8 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Haz clic para abrir el piano roll",
     ),
     (
-        "Click to place \"{}\". Double-click a clip to edit it, drag to move it, drag its right edge to repeat it, right-click to delete. Drag along the top strip to mark a section, along the bar numbers to loop.",
-        "Haz clic para colocar «{}». Doble clic en un clip para editarlo, arrástralo para moverlo, arrastra su borde derecho para repetirlo, clic derecho para eliminarlo. Arrastra por la franja de arriba para marcar una sección, por los números de compás para repetir.",
+        "Click to place \"{}\". Double-click a clip to edit it, drag to move it, drag its right edge to repeat it, right-click it for its menu. Drag along the top strip to mark a section, along the bar numbers to loop.",
+        "Haz clic para colocar «{}». Doble clic en un clip para editarlo, arrástralo para moverlo, arrastra su borde derecho para repetirlo, clic derecho para ver su menú. Arrastra por la franja de arriba para marcar una sección, por los números de compás para repetir.",
     ),
     (
         "Click to rename. Right-click to insert, delete or move tracks",
@@ -630,6 +630,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("Delete the channel", "Eliminar el canal"),
     ("Delete this bar", "Eliminar este compás"),
     ("delete track", "eliminar pista"),
+    ("Delete {} clips", "Eliminar {} clips"),
     ("Delete track", "Eliminar la pista"),
     (
         "Deletes its clips too. Undo brings them back",
@@ -720,6 +721,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("Edit defaults…", "Editar valores por defecto…"),
     ("Edit in channel rack…", "Editar en el rack de canales…"),
     ("edit style", "editar estilo"),
+    ("Edit its pattern", "Editar su patrón"),
     ("Edit style…", "Editar estilo…"),
     ("edited, was {}", "editado, era {}"),
     ("Editor zoom", "Zoom del editor"),
@@ -857,6 +859,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     (
         "Hear only this channel; click again to clear solo",
         "Escuchar solo este canal; haz clic otra vez para quitar el solo",
+    ),
+    (
+        "Hear the notes in this recording again, and write them with other choices: they take the place of the ones written before",
+        "Oír otra vez las notas de esta grabación y escribirlas con otras opciones: ocupan el lugar de las escritas antes",
     ),
     ("Hear the key", "Escuchar la tonalidad"),
     ("Heard: the notes {}", "Se escuchan las notas {}"),
@@ -1039,6 +1045,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Su propio ecualizador, compresor y delay, que dan forma a su sonido antes de que se una a los demás",
     ),
     ("Jazz ballad", "Balada de jazz"),
+    (
+        "It stays on {}, as it is.",
+        "Se queda en {}, tal como está.",
+    ),
     ("Keep editing", "Seguir editando"),
     ("Keep it", "Conservarla"),
     (
@@ -2386,6 +2396,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("Together", "Juntas"),
     ("Tools", "Herramientas"),
     ("top", "superior"),
+    ("Transcribe again…", "Transcribir otra vez…"),
     ("Trace", "Registro"),
     ("Track", "Pista"),
     ("Track height", "Alto de la pista"),
