@@ -240,6 +240,10 @@ pub fn kind_menu(
     width: f32,
 ) -> Option<Scale> {
     let ctx = ui.ctx().clone();
+    // The song's own row or set is the one to come back to: Webern's
+    // trichords, picked as a set and then as a row again, is Webern's
+    // row, not the Lineup row.
+    remember(&ctx, scale);
     let mut picked = None;
     // A key of three notes is one of the micromodes, named as one unless
     // it was picked as a pitch-class set.
@@ -1601,6 +1605,8 @@ mod tests {
         );
         let pick = |project: &mut Project, choice: KindChoice| {
             let key = project.scale;
+            // As the key menu does each time it is drawn.
+            remember(&ctx, key);
             let new = choice
                 .key(&ctx, key, key.spell(key.root))
                 .expect("a new choice");
@@ -1611,6 +1617,7 @@ mod tests {
 
         let mut webern = demo::row_demo(RowStyle::named("Webern's trichords").unwrap());
         let written = notes(&webern);
+        let row_key = webern.scale;
         pick(&mut webern, KindChoice::Set);
         assert_eq!(notes(&webern), written);
         assert_eq!(
@@ -1625,6 +1632,10 @@ mod tests {
         assert_eq!(crate::i18n::key_name(webern.scale), "Menor 3 on C");
         pick(&mut webern, KindChoice::Set);
         assert_eq!(webern.scale.pitch_set(), set);
+        assert_eq!(notes(&webern), written);
+        // And "twelve-tone row" brings back Webern's row, not another.
+        pick(&mut webern, KindChoice::Row);
+        assert_eq!(webern.scale, row_key);
         assert_eq!(notes(&webern), written);
 
         // From a micromode demo: the same three notes as a set, and the
