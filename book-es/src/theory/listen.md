@@ -1,120 +1,48 @@
-# Importar una grabación (experimental)
+# Tomas: oír una melodía cantada
 
-Archivos: [`crates/lineup-listen/`](https://github.com/naelolaiz/ferrous-lineup/tree/main/crates/lineup-listen)
-y [`crates/lineup-app/src/app/import.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/import.rs)
+Archivos: [`crates/lineup-listen/src/voice.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-listen/src/voice.rs),
+[`crates/lineup-audio/src/input.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-audio/src/input.rs),
+[`crates/lineup-core/src/take.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/take.rs)
+y [`crates/lineup-app/src/app/voice.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/voice.rs)
 
-**Archivo > Importar grabación…**, o `ferrous-lineup song.mp3` en la
-línea de comandos, abre un archivo MP3, WAV, FLAC u Ogg como un proyecto
-nuevo, e intenta tocar junto con él. La grabación misma va a un canal
-sampler, y un canal **Armonía** toca el acorde oído en cada pulso. El
-tempo, el compás, la tonalidad y los cambios de tonalidad se fijan a
-partir de lo oído, así que las líneas de compás caen sobre los compases
-de la grabación, la hoja de acordes se llena, y las teclas de armonía
-se iluminan con el acorde que suena. Cómo usarlo está en
-[Grabaciones](https://naelolaiz.github.io/ferrous-lineup/es/manual/importing.html#grabaciones-experimental),
+Una **toma** es una melodía cantada o silbada junto con la canción. El
+botón del micrófono, junto a Rec, graba una mientras suena la canción;
+**➕ Grabación**, en la lista de reproducción, o un archivo soltado
+sobre una pista, pone sobre la canción una grabación hecha antes. En
+los dos casos la
+aplicación oye sus notas, con su altura, su momento y la fuerza con que
+se cantó cada una, y la ventana **Tu toma** pregunta adónde van: en
+lugar de lo que tocaba la Melodía en ese lugar, a otro canal, a uno
+nuevo o a ninguna parte. La grabación misma se queda en una pista de la
+lista de reproducción, dibujada como su forma de onda, donde suena con
+la canción como referencia. Cómo
+usarlo está en
+[Tomas](https://naelolaiz.github.io/ferrous-lineup/es/manual/takes.html),
 en el manual.
 
-![Vibe Ace importado, con las teclas de armonía siguiendo sus acordes](../images/spike-listen-vibe-ace.png)
+![La ventana Tu toma sobre la lista de reproducción: las notas oídas y los compases donde se cantaron, las primeras con su nombre, Las notas van a Melodía, la cuadrícula en semicorcheas, las alturas como se cantó, y la grabación conservada en una pista propia](../images/take-review.png)
 
-Es experimental, y el título del capítulo lo dice: el tempo, los
-acordes, los cambios de tonalidad y el primer tiempo fuerte son
-estimaciones, no una partitura leída del sonido. Un archivo de notas,
-MIDI, dice exactamente qué se toca; una grabación es una sola onda, con
-todos los instrumentos sumados, y todo hay que deducirlo de ella.
+Para eso hay que responder tres preguntas, y cada una se responde en un
+crate distinto:
 
-El trabajo es un crate propio, `lineup-listen`, que no sabe nada de
-ventanas, más un archivo en la aplicación. Este capítulo sigue al sonido
-desde el archivo hasta el proyecto: una transformada de Fourier para ver
-las notas, y **programación dinámica** tres veces, para los pulsos, los
-acordes y los cambios de tonalidad.
+1. **¿Qué notas?** `lineup-listen` oye la altura de la voz, instante a
+   instante, y la corta en notas, en segundos desde el principio de la
+   grabación. No sabe nada de canciones.
+2. **¿Cuándo se cantaron?** `lineup-audio` sabe cuándo tocó la tarjeta
+   de sonido cada trozo de la canción y cuándo oyó el micrófono cada
+   trozo de la voz, y anota, cada pocos milisegundos, dónde se oía la
+   canción. No sabe nada de notas.
+3. **¿Adónde van?** `lineup-core` convierte esos segundos en lugares de
+   la lista de reproducción, redondea las notas a la cuadrícula y a la
+   tonalidad, y las escribe en la canción.
 
-## El recorrido
+La aplicación los une, en hilos propios, para que la ventana nunca
+espere.
 
-`analyze` es toda la escucha, como funciones simples, cada una en su
-propio módulo, cada una tomando los datos que hizo la anterior:
+## Leer una grabación
 
-```rust
-pub fn analyze(recording: &Recording) -> Analysis {
-    let beats = beats::track(&recording.samples, recording.sample_rate).times;
-    let bpm = tempo_of(&beats);
-
-    let whole = bpm_key::analyze(
-        &recording.samples,
-        1,
-        recording.sample_rate,
-        &bpm_key::Config::default(),
-    )
-    .ok()
-    .and_then(|features| features.key)
-    .map(|estimate| {
-        let tonic = PitchClass::from_semitone(estimate.key.tonic.index());
-        let kind = if estimate.key.is_minor() {
-            ScaleKind::NaturalMinor
-        } else {
-            ScaleKind::Major
-        };
-        Scale::new(tonic, kind)
-    });
-
-    let frames = chroma::frames(recording);
-    let beat_chromas: Vec<_> = beats
-        .iter()
-        .enumerate()
-        .map(|(i, &start)| {
-            let end = beats.get(i + 1).copied().unwrap_or(start + 60.0 / bpm);
-            chroma::average(&frames, start, end)
-        })
-        .collect();
-    let chords = chords::chords_per_beat(&beat_chromas, whole);
-    let (beats_per_bar, first_downbeat) = meter::guess(&chords);
-    let keys = keys::key_spans(&beat_chromas, beats_per_bar, first_downbeat);
-    let scale = keys::main_key(&keys).or(whole);
-
-    Analysis {
-        beats,
-        bpm,
-        beats_per_bar,
-        first_downbeat,
-        scale,
-        keys,
-        chords,
-    }
-}
-```
-
-En orden:
-
-1. **Pulsos** (`beats.rs`): cuándo cae cada pulso, en segundos, y a
-   partir de ellos el tempo.
-2. **Tonalidad** (el crate `bpm-key`): la tonalidad de toda la
-   grabación, que ayuda a nombrar los acordes.
-3. **Chroma** (`chroma.rs`): con qué fuerza suena cada una de las doce
-   clases de altura, ventana a ventana, y luego promediado en cada
-   pulso.
-4. **Acordes** (`chords.rs`): el acorde de cada pulso.
-5. **Compás** (`meter.rs`): tres o cuatro pulsos por compás, y qué pulso
-   es el primer tiempo fuerte.
-6. **Cambios de tonalidad** (`keys.rs`): la tonalidad de cada compás,
-   encontrada por el mismo código que encuentra la tonalidad de las
-   notas de una canción. La tonalidad del tramo más largo en una sola
-   tonalidad, `keys::main_key`, pasa a ser la tonalidad del proyecto;
-   `or(whole)` se queda con la tonalidad de toda la grabación cuando
-   nada suena lo bastante como para tener una.
-
-Luego `arrange.rs` convierte el `Analysis` en un `Project`, con los tipos
-que usa el resto de Ferrous Lineup: `Channel`, `Pattern`, `NoteEvent`,
-`Clip`. Nada de lo que viene después sabe que las notas salieron de una
-grabación.
-
-La cadena después de `bpm_key::analyze` se lee tal como se ejecuta. El
-crate devuelve un `Result`; `.ok()` lo convierte en un `Option` y
-descarta el error, ya que una grabación sin una tonalidad clara no es un
-fallo. `and_then` sigue solo si hay un valor, y las características
-pueden no tener tonalidad (`features.key` es a su vez un `Option`).
-`map` convierte la tonalidad del crate en una de las nuestras. Si algún
-paso no tiene nada, `whole` es `None`, sin ningún `if` ni ningún
-`match`. El último pulso no tiene un pulso siguiente donde terminar, así
-que `unwrap_or` le da la duración de un pulso.
+Una grabación añadida desde un archivo se convierte primero en
+muestras.
 
 ### Decodificar con Symphonia
 
@@ -179,16 +107,16 @@ loop {
 Un error de entrada y salida al final quiere decir un archivo cortado,
 así que el bucle se queda con lo que tiene; un error de decodificación
 quiere decir un paquete dañado, así que lo salta; cualquier otro error
-termina la importación. `format_error` es un closure definido justo
-antes, `|err: SymphoniaError| DecodeError::Format(err.to_string())`, que
+termina la lectura. `format_error` es un closure definido justo antes,
+`|err: SymphoniaError| DecodeError::Format(err.to_string())`, que
 convierte el error de Symphonia en el nuestro.
 
 Las muestras vienen **entrelazadas**: izquierda, derecha, izquierda,
 derecha. `chunks(channels)` corta la lista en un slice por instante, y
-el promedio de cada slice es una muestra de una grabación mono: a los
-acordes no les importan la izquierda y la derecha. Una grabación más
-larga que `MAX_SECONDS`, diez minutos, se rechaza mientras se decodifica,
-ya que el análisis tiene en memoria la grabación y una copia de ella.
+el promedio de cada slice es una muestra de una grabación mono: a una
+voz no le importan la izquierda y la derecha. Una grabación más larga
+que `MAX_SECONDS`, diez minutos, se rechaza mientras se decodifica, ya
+que se tiene en memoria mientras se oyen sus notas.
 
 Los códecs de Symphonia son **features** de Cargo, activadas en el
 `Cargo.toml` del workspace, para que una compilación solo lleve las que
@@ -198,652 +126,696 @@ usa:
 symphonia = { version = "0.6", default-features = false, features = ["mp3", "wav", "pcm", "flac", "ogg", "vorbis"] }
 ```
 
-### De las muestras al chroma
+## Oír la altura
 
-Un acorde es un conjunto de clases de altura: Do mayor es Do, Mi y Sol
-en cualquier octava (mira [Clases de altura, notas y su
-escritura](pitch.md)). Para encontrar acordes en el sonido
-hace falta saber, momento a momento, con qué fuerza suena cada una de
-las doce clases de altura. Esos doce números se llaman el **chroma**, y
-salen de una **transformada de Fourier**, que toma un tramo de muestras
-y dice cuánto hay en él de cada frecuencia.
-
-`chroma::frames` corta la grabación en **ventanas** superpuestas de
-8.192 muestras, unos 0,19 s cada una a 44,1 kHz, y empieza una nueva
-cada 2.048 muestras (46 ms). Cada ventana se multiplica por una
-**ventana de Hann**, una joroba suave que la hace entrar y salir
-gradualmente: sin ella, el corte brusco en cada extremo le parecería a
-la transformada un clic, que contiene todas las frecuencias. La FFT (la
-transformada rápida de Fourier, del crate `realfft`) dice entonces qué
-tan fuerte suena cada **bin** de frecuencia en la ventana. El bin `k` es
-la frecuencia `k × sample_rate / 8192`, así que a 44,1 kHz los bins
-están a 5,4 Hz uno de otro. Las notas vecinas están más separadas que
-eso desde más o menos Sol2 (98 Hz) hacia arriba; la ventana es larga
-porque las notas graves lo necesitan.
-
-Cada bin pertenece a una nota. La fórmula `69 + 12 × log2(f / 440)`
-convierte una frecuencia en un número de nota MIDI: 69 es La4, a 440
-Hz, y cada semitono hacia arriba multiplica la frecuencia por la raíz
-duodécima de dos. El redondeo da la nota más cercana, y el resto de
-dividir por 12 su clase de altura:
+`voice::pitch_track` da la altura de la toma cada 10 ms, como un
+**número de nota MIDI con fracción**: 69.0 es La4 (440 Hz), 69.5 un
+cuarto de tono más arriba, y `None` donde no hay voz:
 
 ```rust
-let pitch_class_of = |bin: usize| {
-    let frequency = bin as f32 * rate / FRAME as f32;
-    let midi = 69.0 + 12.0 * (frequency / 440.0).log2();
-    (midi.round() as i32).rem_euclid(12) as usize
-};
-```
-
-`rem_euclid` es el resto que nunca es negativo: `-3 % 12` es `-3` en
-Rust, `(-3).rem_euclid(12)` es `9`. Aquí ningún bin queda por debajo de
-la nota MIDI 0, pero el closure no necesita saberlo.
-
-La intensidad de cada bin se suma a su clase de altura. Tres detalles
-hacen que esto funcione con música real:
-
-- La intensidad se toma como `ln(1 + 100 × magnitud)`, porque oímos la
-  intensidad en una escala más o menos logarítmica: una nota suave una
-  octava más arriba debe seguir contando, y la nota más fuerte no debe
-  tapar todo lo demás.
-
-  ```rust
-  let level = |bin: usize| (1.0 + 100.0 * spectrum[bin].norm()).ln();
-  ```
-
-- Las notas agudas están más separadas en Hz, así que reciben más bins
-  que las graves. Cada clase de altura se divide por su número de bins,
-  o Si siempre parecería más fuerte que Do.
-- Se guardan dos chromas por ventana. El **agudo**, de 130 a 2.100 Hz
-  (más o menos de Do3 a Do7), es donde está el acorde. El **grave**, de
-  40 a 260 Hz (más o menos de Mi1 a Do4), dice sobre todo qué nota es la
-  más grave, y la nota más grave suele ser la fundamental del acorde.
-
-A qué clase de altura suma cada bin se calcula una sola vez, antes del
-bucle sobre las ventanas, como una lista de pares `(bin, clase de
-altura)`:
-
-```rust
-let bins = |(low, high): (f32, f32)| {
-    let first = (low * FRAME as f32 / rate).ceil() as usize;
-    let last = ((high * FRAME as f32 / rate).floor() as usize).min(FRAME / 2);
-    (first.max(1)..=last)
-        .map(|bin| (bin, pitch_class_of(bin)))
-        .collect::<Vec<_>>()
-};
-let treble_bins = bins(TREBLE);
-let bass_bins = bins(BASS);
-```
-
-El parámetro del closure es un **patrón**: `|(low, high): (f32, f32)|`
-recibe una tupla y nombra sus dos mitades, como lo haría
-`let (low, high) = range;`. `TREBLE` y `BASS` son tuplas así. Con la
-tabla hecha, el bucle sobre miles de ventanas no hace más que sumas.
-
-La FFT misma también se planifica una sola vez. `RealFftPlanner` elige
-la manera más rápida de transformar 8.192 números reales y la devuelve
-como un `Arc<dyn RealToComplex<f32>>`, otro trait object, que el bucle
-ejecuta en cada ventana con buffers creados una sola vez:
-
-```rust
-let mut planner = RealFftPlanner::<f32>::new();
-let fft: Arc<dyn RealToComplex<f32>> = planner.plan_fft_forward(FRAME);
-let mut input = fft.make_input_vec();
-let mut spectrum = fft.make_output_vec();
-let mut scratch = fft.make_scratch_vec();
-```
-
-`chroma::average` da luego un chroma por pulso: el promedio de las
-ventanas cuyo centro cae entre este pulso y el siguiente.
-
-### Del chroma a los acordes: plantillas y Viterbi
-
-`chords::chords_per_beat` nombra el acorde de cada pulso. Hay dos ideas,
-la manera clásica de hacerlo sin aprendizaje automático.
-
-**Plantillas.** Cada acorde que podemos reconocer es una **plantilla**:
-doce números, 1 para sus notas y 0 para el resto. Hay seis cualidades
-sobre doce fundamentales, 72 acordes, más «ningún acorde»:
-
-```rust
-const QUALITIES: [ChordQuality; 6] = [
-    ChordQuality::Major,
-    ChordQuality::Minor,
-    ChordQuality::Dominant7,
-    ChordQuality::Minor7,
-    ChordQuality::Major7,
-    ChordQuality::Diminished,
-];
-```
-
-El chroma del pulso se compara con cada plantilla por **correlación**:
-los dos se llevan a un promedio de 0 y una longitud de 1, y su producto
-escalar es entonces 1 si suben y bajan juntos y 0 si no tienen relación.
-Es la misma comparación que hace el buscador de tonalidades con sus
-perfiles (mira [Oír la
-armonía](hearing.md#comparar-el-método-de-krumhansl-schmuckler)).
-Después, tres ajustes pequeños:
-
-```rust
-let Some(chord) = candidate.chord else {
-    return NO_CHORD_SCORE;
-};
-let mut score = dot(&treble, &normalized(&candidate.template));
-score += BASS_WEIGHT * bass[usize::from(chord.root.semitone())] / bass_peak;
-if scale.is_some_and(|scale| chord.pitch_set().is_subset_of(scale.pitch_set())) {
-    score += KEY_WEIGHT;
-}
-if chord.quality.intervals().len() > 3 {
-    score -= SEVENTH_COST;
-}
-score
-```
-
-- Una nota grave fuerte en la fundamental del acorde suma hasta 0,15
-  (`BASS_WEIGHT`), y una débil resta un poco, ya que el chroma grave
-  también está centrado en su promedio.
-- Un acorde cuyas notas pertenecen todas a la tonalidad suma 0,08
-  (`KEY_WEIGHT`). La mayoría de los acordes de una canción cumplen eso,
-  así que la tonalidad es un **prior** útil: lo que esperamos antes de
-  escuchar.
-- Un acorde de cuatro notas pierde 0,03 (`SEVENTH_COST`), así que gana
-  una tríada simple salvo que la séptima esté de verdad. C7 contiene
-  entero el acorde de Do mayor, y sin esto ganaría cada vez que un Si♭ flotara débil en
-  el aire.
-
-«Ningún acorde» puntúa siempre 0,25 (`NO_CHORD_SCORE`): un pulso donde
-ningún acorde lo supera, como el silencio, la batería sola o una voz
-hablada, no tiene acorde.
-
-**Suavizado.** Solo, el mejor acorde de cada pulso salta de un lado a
-otro: una nota de paso de la melodía hace que C parezca Am durante un
-pulso. Los acordes reales duran. Así que cambiar de acorde cuesta 0,25
-(`CHANGE_COST`), y el **algoritmo de Viterbi** encuentra la sucesión de
-acordes con la mejor puntuación total. Es programación dinámica: para
-cada pulso y cada uno de los 73 candidatos guarda la mejor puntuación de
-cualquier sucesión que termine ahí, hecha con los mejores del pulso
-anterior, y recuerda qué acorde vino antes:
-
-```rust
-let mut best = scores(&beats[0], &candidates, scale);
-let mut from = vec![vec![0_usize; count]; beats.len()];
-for (b, beat) in beats.iter().enumerate().skip(1) {
-    let here = scores(beat, &candidates, scale);
-    // Changing chord costs the same from anywhere, so the best way to
-    // change into any chord is from the overall best one.
-    let (leader, leader_score) = best
-        .iter()
-        .copied()
-        .enumerate()
-        .fold((0, f32::MIN), |a, (i, s)| if s > a.1 { (i, s) } else { a });
-    let mut next = vec![0.0; count];
-    for c in 0..count {
-        let (previous, total) = if best[c] >= leader_score - CHANGE_COST {
-            (c, best[c])
-        } else {
-            (leader, leader_score - CHANGE_COST)
-        };
-        from[b][c] = previous;
-        next[c] = total + here[c];
-    }
-    best = next;
+pub struct PitchFrame {
+    pub time: f64,
+    pub pitch: Option<f32>,
+    pub loudness: f32,
 }
 ```
 
-A cada acorde del pulso `b` se llega o quedándose en él, o cambiando
-desde algún acorde y pagando la penalización. Comparar todos los pares
-serían 73 × 73 comparaciones por pulso. Pero cambiar cuesta lo mismo
-desde cualquier lado, así que el mejor cambio hacia cualquier acorde
-viene del mejor de todos en el pulso anterior, el `leader`: una
-comparación por acorde, 73 por pulso. Al final, el código toma el mejor
-último acorde y recorre `from` hacia atrás para leer la sucesión entera.
-El buscador de tonalidades usa el mismo bucle sobre compases y
-tonalidades (mira [Dónde cambia la
-tonalidad](hearing.md#dónde-cambia-la-tonalidad)).
-
-Encontrar el líder necesita el `f32` más grande, y `f32` no tiene un
-`max` para un iterador: los números de coma flotante no son `Ord`,
-porque `NaN` no se compara con nada. `fold` lo hace a mano, llevando el
-mejor `(índice, puntuación)` hasta el momento. El seguidor de pulsos de
-más abajo hace lo mismo con `max_by` y `total_cmp`, una comparación que
-pone a todos los números de coma flotante, también a `NaN`, en algún
-orden.
-
-### Pulsos: arranques, autocorrelación y programación dinámica
-
-`beats::track` es el seguidor de pulsos de D. P. W. Ellis, «Beat
-Tracking by Dynamic Programming» (2007), con los valores que la
-biblioteca librosa documenta como sus valores por defecto, para que los
-resultados se puedan comparar con ella. Tiene tres etapas.
-
-**La fuerza de los arranques.** Cuánto sonido *nuevo* empieza en cada
-ventana corta: 2.048 muestras, una nueva cada 512 (12 ms a 44,1 kHz).
-Se toma un espectrograma en la **escala mel**, 128 bandas espaciadas
-como las oye el oído, estrechas abajo y anchas arriba, en decibelios, y
-para cada ventana se suman los aumentos de cada banda desde la ventana
-anterior. Las disminuciones no cuentan: una nota que se apaga no es un
-arranque. El resultado, un número por ventana, es la **envolvente de
-arranques**, que tiene un pico en cada golpe de batería y en cada
-comienzo de nota.
-
-**El tempo.** La envolvente se compara consigo misma desplazada en cada
-duración de pulso posible, de 30 a 320 BPM: su **autocorrelación**. Con
-el desplazamiento correcto, los picos caen sobre picos y la correlación
-es alta. Los desplazamientos cerca de 120 BPM reciben una ventaja, una
-campana de una octava de ancho, porque si no, los seguidores eligen la
-mitad o el doble del tempo con la misma facilidad que el tempo mismo:
+Un número MIDI es la unidad adecuada porque el oído oye la altura como
+proporciones: de 220 a 440 Hz hay una octava, y de 440 a 880 también.
+En la escala MIDI las dos valen 12. La conversión es una línea:
 
 ```rust
-let bpm = frame_rate * 60.0 / lag as f64;
-let octaves = (bpm / LIKELY_BPM).log2();
-let pull = (-0.5 * (octaves / LIKELY_SPREAD_OCTAVES).powi(2)).exp();
-let score = correlation(lag) * pull;
-```
-
-A 60 o a 240 BPM, a una octava, una correlación cuenta 0,61 veces lo
-que cuenta la misma correlación a 120.
-
-**Los pulsos.** De todas las maneras de colocar pulsos, el seguidor
-quiere aquella en que los pulsos caen sobre arranques fuertes y están
-separados más o menos una duración de pulso. Probar todas las
-colocaciones es imposible, pero la programación dinámica lo hace barato.
-La mejor puntuación de una cadena de pulsos que termina en la ventana
-`i` es la fuerza del arranque ahí, más la mejor puntuación de una cadena
-que termina una duración de pulso antes, más o menos, menos una
-penalización por ese más o menos:
-
-```rust
-for i in 1..envelope.len() {
-    // The previous beat is between half a beat and two beats back.
-    let earliest = i.saturating_sub(period * 2);
-    let latest = i.saturating_sub((period / 2).max(1)).min(i - 1);
-    let mut best: Option<(usize, f64)> = None;
-    for (tau, &earlier) in score.iter().enumerate().take(latest + 1).skip(earliest) {
-        let spacing = (i - tau) as f64 / period as f64;
-        let candidate = earlier - TIGHTNESS * spacing.ln().powi(2);
-        if best.is_none_or(|(_, b)| candidate > b) {
-            best = Some((tau, candidate));
-        }
-    }
-    match best {
-        // A chain worth continuing: positive, so silence does not
-        // chain beats that are not there.
-        Some((tau, total)) if total > 0.0 => {
-            score[i] = strength[i] + total;
-            from[i] = Some(tau);
-        }
-        _ => score[i] = strength[i],
-    }
+pub fn midi_of(hz: f32) -> f32 {
+    69.0 + 12.0 * (hz / 440.0).log2()
 }
 ```
 
-`spacing` es 1 para una separación de exactamente un pulso, y su
-logaritmo es entonces 0: ninguna penalización. Medio pulso o dos pulsos
-dan `ln 2` al cuadrado, unos 0,48, por `TIGHTNESS` (100): un pulso en el
-lugar equivocado tiene que ser mucho más fuerte para ganar.
-`saturating_sub` resta pero se detiene en 0 en lugar de dar la vuelta,
-cosa que los números sin signo harían cerca del principio. `is_none_or`
-es verdadero para `None` o cuando el closure lo dice: «todavía no hay
-mejor, o este es mejor», en una sola llamada. Cada ventana recuerda en
-`from` qué pulso anterior eligió, y al final se sigue la mejor última
-ventana hacia atrás hasta el principio:
+### Preparar el sonido
+
+Antes de buscar una altura, `prepare` limpia el sonido y lo aligera. Un
+**filtro pasa altos** quita lo que está por debajo de unos 40 Hz: el
+pequeño desplazamiento respecto de cero que tienen muchos micrófonos, y
+el retumbar de la habitación. Es un *biquad*, un filtro que recuerda
+sus dos últimas entradas y sus dos últimas salidas, con los
+coeficientes de la receta clásica del «audio EQ cookbook» de Robert
+Bristow-Johnson. Su corazón es una línea dentro de un `map`, y una
+asignación de tupla que corre los cuatro valores que recuerda:
 
 ```rust
-let mut at = (0..envelope.len())
-    .max_by(|&a, &b| score[a].total_cmp(&score[b]))
-    .unwrap_or(0);
+let y = b0 * x + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2;
+(x2, x1, y2, y1) = (x1, x, y1, y);
 ```
 
-La autocorrelación solo conoce ventanas enteras. A 44,1 kHz, 86 ventanas
-por segundo, los desplazamientos alrededor de 120 BPM son 42, 43 y 44
-ventanas: 123,0, 120,2 y 117,5 BPM, nada entre medio. Así que el tempo
-que recibe el proyecto no es el del seguidor sino la pendiente de los
-pulsos mismos, la recta más cercana a «el momento del pulso n», un
-**ajuste por mínimos cuadrados**:
+Después el sonido se **diezma**: solo se conserva una de cada dos o tres
+muestras, así que 48 kHz pasa a 16 kHz y 44,1 kHz a 22,05 kHz. La
+altura más aguda que se busca es más o menos Mi7 (2 600 Hz), muy por
+debajo de la mitad de 16 kHz, así que no se pierde nada de lo que hace
+falta, y el trabajo es un tercio o la mitad. Quedarse con una de cada
+tres muestras de un sonido que tiene algo por encima de la nueva mitad
+lo doblaría hacia abajo como alturas falsas (*aliasing*), así que antes
+va un filtro pasa bajos: un **sinc con ventana**, la forma ideal del
+pasa bajos recortada a unas decenas de muestras y suavizada en sus
+extremos con una ventana de Hann.
 
-```rust
-fn tempo_of(beats: &[f64]) -> f64 {
-    let n = beats.len() as f64;
-    if beats.len() < 2 {
-        return 120.0;
-    }
-    let mean_index = (n - 1.0) / 2.0;
-    let mean_time = beats.iter().sum::<f64>() / n;
-    let (mut covariance, mut variance) = (0.0, 0.0);
-    for (i, &time) in beats.iter().enumerate() {
-        let di = i as f64 - mean_index;
-        covariance += di * (time - mean_time);
-        variance += di * di;
-    }
-    let seconds_per_beat = covariance / variance;
-    if seconds_per_beat > 0.0 {
-        60.0 / seconds_per_beat
-    } else {
-        120.0
-    }
-}
+### YIN: un sonido comparado consigo mismo
+
+Una nota cantada o silbada es un sonido que se repite: la misma forma
+de onda vuelve cada *período*, 1/440 de segundo para La4. El método
+**YIN** (de Cheveigné y Kawahara, 2002) encuentra el período comparando
+un trozo corto del sonido, aquí 25 ms, consigo mismo desplazado en cada
+retardo τ, desde el período más corto que se busca hasta el más largo
+(60 Hz, un poco por debajo de Si1):
+
+```text
+d(τ) = Σ (x[j] − x[j + τ])²        sobre los 25 ms
 ```
 
-La pendiente de la mejor recta es la covarianza del índice y el tiempo
-dividida por la varianza del índice: segundos por pulso, promediados
-sobre toda la canción, con las pequeñas desviaciones de cada pulso
-compensándose entre sí.
+Donde la copia desplazada coincide con la original, la diferencia es
+casi cero, y ese retardo es el período. Los retardos cortos también dan
+diferencias pequeñas, porque el sonido cambia poco en unas pocas
+muestras, así que YIN divide cada diferencia por el promedio de las
+anteriores, la *diferencia normalizada por la media acumulada*:
 
-### El compás: dónde están los compases
+```text
+d′(τ) = d(τ) · τ / (d(1) + d(2) + … + d(τ))
+```
 
-Los acordes cambian sobre todo en el primer pulso de un compás. Así que
-`meter::guess` cuenta, para cada manera de agrupar los pulsos (de tres
-en tres o de cuatro en cuatro, empezando en cualquier pulso), cuántos
-cambios de acorde caen en el primer pulso de un grupo, y se queda con la
-agrupación que más supera al azar:
+Empieza cerca de 1 y baja hacia 0 en el período, y otra vez en el doble
+del período (la onda también coincide ahí, una octava más abajo), y en
+el triple.
+
+Calcular `d(τ)` para cada retardo uno por uno llevaría una suma sobre
+la ventana por cada retardo. Desarrollando el cuadrado, queda
+
+```text
+d(τ) = energía de x[0..W] + energía de x[τ..τ+W] − 2 · r(τ)
+```
+
+donde `r(τ)`, la suma de `x[j] · x[j + τ]`, es una *correlación*. Las
+energías salen de una suma acumulada de cuadrados, y una
+**transformada de Fourier** da todas las correlaciones de una vez:
+transformas la ventana y el trozo entero, multiplicas un espectro por
+la imagen en espejo del otro (`conj`), y transformas de vuelta.
 
 ```rust
-pub fn guess(chords: &[Option<Chord>]) -> (usize, usize) {
-    let changes: Vec<usize> = (1..chords.len())
-        .filter(|&i| chords[i] != chords[i - 1] && chords[i].is_some())
+let mut product: Vec<Complex<f32>> = a.iter().zip(&b).map(|(a, b)| a.conj() * b).collect();
+```
+
+El crate `realfft` hace las transformadas. Se planifican una vez por
+frecuencia de muestreo y se guardan en la struct `Yin` como
+`Arc<dyn RealToComplex<f32>>`: un trait object compartido con conteo de
+referencias, que es como el planificador entrega sus planes.
+
+### pYIN: cada valle, un candidato
+
+YIN a secas toma el primer valle por debajo de un umbral de alrededor
+de 0,1. Eso falla de dos maneras: una nota con mucho aire puede no bajar
+tanto, y el valle del doble del período puede ser más hondo que el
+correcto. **YIN probabilístico** (pYIN, Mauch y Dixon, 2014) guarda cada
+valle como una altura *candidata*, con una probabilidad. Prueba cien
+umbrales, de 0,01 a 1, y para cada uno le da su peso al primer valle por
+debajo (el retardo más corto, la altura más aguda). Los pesos siguen una
+*distribución beta* con su media en 0,1, donde los autores de YIN
+encontraron el mejor umbral:
+
+```rust
+fn threshold_weights() -> Vec<(f32, f32)> {
+    let (alpha, beta) = (2.0_f32, 18.0_f32);
+    let raw: Vec<(f32, f32)> = (1..=100)
+        .map(|i| {
+            let x = i as f32 / 100.0;
+            (x, x.powf(alpha - 1.0) * (1.0 - x).max(0.0).powf(beta - 1.0))
+        })
         .collect();
-    if changes.len() < 4 {
-        return (4, 0);
-    }
-    let mut best = (4, 0, f64::MIN);
-    for beats in [4, 3] {
-        for phase in 0..beats {
-            let on_phase = changes.iter().filter(|&&i| i % beats == phase).count();
-            let mut score = on_phase as f64 / changes.len() as f64 - 1.0 / beats as f64;
-            if beats == 4 {
-                score += FOUR_PRIOR;
-            }
-            if score > best.2 {
-                best = (beats, phase, score);
-            }
-        }
-    }
-    (best.0, best.1)
+    let total: f32 = raw.iter().map(|&(_, weight)| weight).sum();
+    raw.into_iter()
+        .map(|(threshold, weight)| (threshold, weight / total))
+        .collect()
 }
 ```
 
-Si los acordes cambiaran al azar, un cuarto de los cambios caería en
-cada pulso de cuatro, y un tercio en cada pulso de tres. Restar ese
-azar, `1.0 / beats`, hace comparables los dos compases: sin eso, agrupar
-de tres en tres siempre parecería mejor, ya que el primer pulso de cada
-grupo se lleva una parte mayor. Una pequeña ventaja, `FOUR_PRIOR`
-(0,05), va al 4/4, ya que la mayor parte de la música popular está en
-cuatro. Con menos de cuatro cambios no hay de dónde sacar nada, y la
-respuesta es 4/4 desde el primer pulso. El resultado es
-`(pulsos por compás, primer tiempo fuerte)`, y el tiempo fuerte es un
-índice de pulso: `phase`, el primer pulso de la grabación donde empieza
-un compás.
+Una nota clara recibe un candidato con una probabilidad cercana a 1. Un
+instante dudoso recibe varios, cada uno con un poco, y lo que falta
+para 1 es la probabilidad de que no tenga altura. El retardo de cada
+valle se afina entre muestras con una parábola por los tres puntos que
+lo rodean, para que la altura no quede atada a muestras enteras: a
+16 kHz, un período de 36 o de 37 muestras es La4 o un tercio de
+semitono más abajo.
 
-### Los cambios de tonalidad
+### Viterbi: un solo camino por toda la toma
 
-`bpm-key` da una sola tonalidad para toda la grabación. Para saber
-dónde cambia la tonalidad, `keys.rs` le pasa el trabajo a
-`lineup_core::harmony::key_finding`, el código que encuentra los cambios
-de tonalidad en las notas de una canción (mira [Dónde cambia la
-tonalidad](hearing.md#dónde-cambia-la-tonalidad)). Ese
-código pide un chroma por compás. Una grabación no tiene notas, pero
-tiene el chroma de cada pulso, así que los pulsos se juntan en compases,
-y el chroma de cada compás hace de las notas que hay en él:
+Elegir en cada instante su candidato más probable, por separado, dejaría
+que un instante saltara una octava y volviera. En cambio, `viterbi`
+elige un candidato por instante, o «sin altura», para **toda la toma a
+la vez**: el camino que menos cuesta, donde cada instante cuesta lo
+improbable que es su elección (`-ln` de su probabilidad), cada paso al
+instante siguiente cuesta lo que salta la altura (0,6 por cada semitono
+más allá del primer tercio de uno), y empezar o parar la voz cuesta un
+precio fijo. Un instante mucho más suave que la parte fuerte de la toma
+cuesta más como altura: es más probable que sea aire, la habitación o
+la base que se escapa de los auriculares.
+
+Es la programación dinámica que también encuentra dónde cambia la
+tonalidad de una canción (mira [Dónde cambia la
+tonalidad](hearing.md#dónde-cambia-la-tonalidad)): para cada instante
+y cada uno de sus estados, el camino más barato que termina ahí, y de
+qué estado del instante anterior venía. Después, desde el final más
+barato, hacia atrás instante por instante:
 
 ```rust
-fn bar_chroma(beats: &[Frame]) -> key_finding::Chroma {
-    let mut sum = [0.0; 12];
-    for beat in beats {
-        let floor = beat.treble.iter().copied().fold(f32::MAX, f32::min);
-        let chroma = beat.treble.map(|v| v - floor);
-        for (pc, s) in sum.iter_mut().enumerate() {
-            // The note a fifth below `pc` is five semitones above it.
-            *s += (chroma[pc] - FIFTH_OVERTONE * chroma[(pc + 5) % 12]).max(0.0);
-        }
-    }
-    sum
+let mut state = last
+    .iter()
+    .enumerate()
+    .min_by(|a, b| a.1.total_cmp(b.1))
+    .map_or(0, |(index, _)| index);
+for t in (0..candidates.len()).rev() {
+    path[t] = candidates[t].get(state).map(|c| c.pitch);
+    state = from[t][state];
 }
 ```
 
-Dos correcciones hacen que el chroma de un sonido se parezca más al de
-una partitura. Primero, en un espectro logarítmico toda clase de altura
-tiene algo de energía, por el ruido y por los armónicos de otras notas;
-quitar la clase de altura más débil de cada pulso, su **piso**, deja las
-notas que sobresalen.
+El último estado de cada instante es «sin altura», uno más allá de sus
+candidatos, así que `candidates[t].get(state)` es `None` ahí, que es
+justo el `Option` que guarda la línea de altura. `total_cmp` ordena los
+números de coma flotante del todo, `NaN` incluido, cosa que `<` solo no
+puede, así que `min_by` puede usarlo.
 
-Segundo, los armónicos mismos. Una nota tocada en un instrumento no es
-una sola frecuencia sino muchas: la nota, el doble, el triple, y así.
-El triple de la frecuencia está una octava y una quinta más arriba (una
-razón de 3 son 1.902 cents, apenas más de 19 semitonos). Así que una
-grabación en Do mayor está llena de Sol (de Do), Re (de Sol) y Si (de
-Mi) que nadie tocó, y la tonalidad sale una quinta demasiado alta, Sol
-por Do, más a menudo que no. Por eso cada clase de altura pierde 0,3
-(`FIFTH_OVERTONE`) de la clase de altura una quinta por debajo. Una
-quinta por debajo son siete semitonos hacia abajo, que en un círculo de
-doce son cinco hacia arriba: `(pc + 5) % 12`. El comentario lo dice,
-porque esa línea es fácil de escribir mal.
+## De una línea de altura a notas
 
-Aquí solo cuenta el chroma agudo. Los armónicos de las notas graves
-llenan el chroma grave de quintas, y con él la tonalidad acertaba menos
-a menudo: el 80% de los pulsos frente al 84%, como deja anotado el
-comentario del código.
-
-`key_spans` corta los pulsos en compases con el compás recién
-encontrado, y los pulsos antes del primer tiempo fuerte forman un compás
-propio; luego le pide a `key_finding` sus tramos, contados en compases.
-Cada tramo se lleva después de vuelta a pulsos:
+La línea de altura de una voz nunca es plana: se desliza hacia las
+notas, ondula con el vibrato y se corta en las consonantes.
+`voice::notes` la corta en notas:
 
 ```rust
-let bars: Vec<_> = edges
-    .windows(2)
-    .map(|bar| bar_chroma(&beats[bar[0]..bar[1]]))
-    .collect();
-key_finding::key_spans(&bars)
-    .into_iter()
-    .map(|span| KeySpan {
-        start: edges[span.start],
-        end: edges[span.end],
-        ..span
-    })
-    .collect()
-```
-
-`edges` guarda el pulso donde empieza cada compás, y uno más allá del
-último pulso. `windows(2)` lo recorre de dos en dos, solapando,
-`[0, 2]`, `[2, 6]`, `[6, 10]`..., que es el primer pulso de cada compás y
-el del compás siguiente. `KeySpan { start, end, ..span }` es la
-**sintaxis de actualización de structs**: un `KeySpan` nuevo con estos
-dos campos, y todos los demás (las tonalidades en orden, qué tan
-seguro) tomados de `span`.
-
-La tonalidad de la canción, la que recibe el proyecto, es la del más
-largo de estos tramos:
-
-```rust
-pub fn main_key(spans: &[KeySpan]) -> Option<Scale> {
-    spans
-        .iter()
-        .max_by_key(|span| span.end - span.start)
-        .and_then(KeySpan::key)
+pub struct SungNote {
+    pub start: f64,
+    pub end: f64,
+    pub pitch: f32,
+    pub loudness: f32,
 }
 ```
 
-`max_by_key` da el elemento con la clave más grande, aquí el de más
-pulsos. Acierta más a menudo que la tonalidad única de `bpm-key` (ver
-[Qué tan bien funciona](#qué-tan-bien-funciona)): una canción que
-modula, o que empieza en otra tonalidad, aleja las notas de toda la
-grabación de su tonalidad principal, y la tonalidad principal suele ser
-donde la canción pasa más tiempo.
+(`SungNote` vive en `lineup-core`, que pone las notas en la canción, y
+`lineup-listen` la reexporta con `pub use`.)
 
-### El arreglo
+1. **Tramos.** Los instantes con altura se agrupan en tramos donde la
+   voz suena sin parar. Los huecos de uno o dos instantes, donde el
+   buscador de alturas perdió la voz un momento, quedan dentro.
+2. **Suavizado.** Cada altura se reemplaza por el valor del medio de
+   las cinco que la rodean, un *filtro de mediana*: un instante
+   equivocado desaparece, mientras que un cambio de nota de verdad, que
+   dura, se queda.
+3. **Cortes.** Un tramo se corta donde la altura se aleja más de tres
+   cuartos de semitono de donde se asentó la nota y se queda lejos
+   70 ms, toda en la misma dirección (el vibrato vuelve antes); donde la
+   intensidad baja 5 dB y vuelve, como en una nota cantada otra vez a la
+   misma altura («la, la»); y donde sube 6 dB en menos de 30 ms, como
+   cuando la lengua de un silbido ataca otra vez una nota.
+4. **La altura de cada trozo** es el medio de donde se asentó: la
+   mediana de sus alturas, dejando fuera el primer cuarto (el
+   deslizamiento hacia ella) y el último décimo. Su intensidad es su
+   momento más fuerte.
+5. **Ordenar.** Un *portamento de entrada*, un deslizamiento rápido de
+   menos de 120 ms hacia la nota siguiente desde un poco más abajo o más
+   arriba, pertenece a esa nota, que empieza donde empieza el
+   deslizamiento; también menos de 120 ms a una octava, porque el
+   principio de una nota puede oírse una octava desplazado. Cualquier
+   otra cosa de menos de 60 ms va a la nota anterior. Dos notas seguidas
+   a la misma altura se vuelven una, salvo que la segunda se haya
+   cantado otra vez.
 
-`arrange.rs` construye el proyecto. La grabación pasa a ser un canal
-sampler con una sola nota, en el primer paso de la canción. El sampler
-toca su archivo desde el principio a su propia velocidad, así que el
-primer tiempo fuerte de la grabación tiene que caer en una línea de
-compás de la canción. Rara vez lo hace, así que la grabación se guarda
-de nuevo con silencio delante, la **entrada**: lo justo para que su
-primer tiempo fuerte caiga al comienzo del siguiente compás entero.
+El momento más fuerte de un trozo es un **fold**: empiezas por el valor
+más bajo posible y te quedas con el mayor entre él y cada intensidad.
 
 ```rust
-pub fn lead_in(analysis: &Analysis) -> LeadIn {
-    let downbeat = analysis
-        .beats
-        .get(analysis.first_downbeat)
-        .copied()
-        .unwrap_or(0.0)
-        .max(0.0);
-    let bar = analysis.beat_seconds() * analysis.beats_per_bar as f64;
-    let bars = (downbeat / bar).ceil() as usize;
-    LeadIn {
-        bars,
-        seconds: bars as f64 * bar - downbeat,
-    }
+loudness: frames
+    .iter()
+    .map(|frame| frame.loudness)
+    .fold(f32::MIN, f32::max),
+```
+
+`f32::max` se pasa como la función misma, sin un closure alrededor: en
+Rust el nombre de una función es un valor.
+
+### Afinada: un promedio que da la vuelta
+
+Alguien puede cantar un poco alto todo el tiempo, o silbar un cuarto de
+tono bajo. `voice::tuning` mide cuánto se aleja la toma entera de las
+notas del piano, para que cada nota se redondee a la nota que se quiso
+cantar y no a la más cercana. Las distancias de las notas a su semitono
+más cercano están entre −0,5 y 0,5, pero dan la vuelta en un círculo:
++0,45 y −0,45 están cerca, a 0,1 pasando por la mitad, no a 0,9. Así que
+cada distancia se convierte en un ángulo, los ángulos se promedian como
+flechas, las notas largas cuentan más, y la flecha promedio se convierte
+de vuelta en una distancia:
+
+```rust
+for note in notes {
+    let angle = f64::from(note.pitch - note.pitch.round()) * std::f64::consts::TAU;
+    let weight = note.seconds().min(1.0);
+    x += angle.cos() * weight;
+    y += angle.sin() * weight;
+}
+(y.atan2(x) / std::f64::consts::TAU) as f32
+```
+
+Es una *media circular*, el mismo promedio que se usa para las
+direcciones del viento o las horas del día.
+
+## Cuándo se cantó: dos relojes
+
+Una nota oída a los 3,2 s de la grabación se cantó en algún lugar de la
+canción. Para saber cuál, cada instante de la grabación tiene que atarse
+a un instante de la canción, y hay dos retrasos en el camino. El sonido
+que el hilo de audio hace ahora sale de los altavoces un poco después
+(la *latencia* de la salida), así que quien canta oye el compás 5
+después de que el motor lo tocó. Y el sonido que el micrófono oye ahora
+llega al programa un poco después (la latencia de la entrada). Juntos
+pueden ser de 20 a 100 ms, lo que dura una semicorchea a un tempo
+rápido.
+
+La tarjeta de sonido dice los dos. Con cada bloque de salida, cpal da
+una marca de tiempo de cuándo corre la función de retorno y de cuándo se
+tocará el bloque; con cada bloque de entrada, cuándo corre y cuándo se
+captó el sonido. Las dos se convierten en `Instant`s, instantes del
+reloj constante del ordenador, y entonces se pueden comparar.
+
+En el hilo de audio, mientras se graba una toma, el motor anota para
+cada bloque **cuándo se oirá** y dónde está entonces la canción:
+
+```rust
+pub struct Heard {
+    pub at: Instant,
+    pub position: f64,
+    pub steps_per_second: f64,
 }
 ```
 
-A 120 BPM en 4/4 un compás dura 2 s. Un primer tiempo fuerte a 1,3 s se
-mueve a 2 s, el comienzo del compás 2: un compás, y 0,7 s de silencio.
-`write_wav` guarda la copia, con muestras de coma flotante de 32 bits y
-el crate `hound`, junto al original como `song.ferrous-lineup.wav`. Los
-pulsos que haya antes del tiempo fuerte caen en ese primer compás, como
-una anacrusa en una partitura.
+Van a un `SongClock`, una cola sin bloqueos (`rtrb`, como los demás
+mensajes del hilo de audio; mira [Dos hilos](../program/threads.md)),
+que el motor entrega con `take_song_clock` y recupera con
+`give_back_song_clock`. No se anota nada mientras nadie escucha: un
+`Arc<AtomicBool>` dice si alguien lo hace, para que el hilo de audio no
+llene una cola que nadie vacía. Tampoco se anota nada durante una
+cuenta previa, cuando la canción todavía no avanza.
 
-Los acordes pasan a ser **tramos**, un acorde sostenido a lo largo de
-pulsos seguidos, en pulsos de la canción. Un pulso de la grabación se
-desplaza según la entrada y el tiempo fuerte; uno que caería antes de
-que empiece la canción se deja fuera:
+El micrófono tiene su propia función de retorno, en su propio hilo, que
+no debe esperar más de lo que puede esperar el hilo de audio. Solo
+mezcla los canales en uno, mete las muestras en un ring buffer y anota
+para cada bloque cuándo se oyó:
 
 ```rust
-for (beat, chord) in analysis.chords.iter().enumerate() {
-    let Some(song_beat) = (beat + offset).checked_sub(analysis.first_downbeat) else {
-        continue;
-    };
-    let Some(chord) = *chord else {
-        continue;
-    };
-    match spans.last_mut() {
-        Some(last) if last.chord == chord && last.first_beat + last.beats == song_beat => {
-            last.beats += 1;
-        }
-        _ => spans.push(Span {
-            chord,
-            first_beat: song_beat,
-            beats: 1,
-        }),
-    }
+let stamp = info.timestamp();
+let delay = stamp.callback.duration_since(stamp.capture);
+let at = Instant::now()
+    .checked_sub(delay)
+    .unwrap_or_else(Instant::now);
+```
+
+Un hilo `Recorder` vacía las dos colas cada 5 ms, guarda las muestras,
+y para cada bloque del micrófono busca el último instante de la canción
+oído en ese momento o antes. Entre dos instantes la canción avanza a
+velocidad constante, así que el lugar del bloque en la canción se
+deduce:
+
+```rust
+let moment = heard.iter().rev().find(|moment| moment.at <= at)?;
+let since = at.duration_since(moment.at);
+if since > LONGEST_GAP {
+    return None;
+}
+Some(Mark {
+    frame,
+    position: moment.position + since.as_secs_f64() * moment.steps_per_second,
+    steps_per_second: moment.steps_per_second,
+})
+```
+
+Una **marca** dice: en esta muestra de la grabación, la canción se oía
+en esta posición, avanzando a esta velocidad. Un bloque sin ningún
+instante de la canción en los últimos 100 ms (`LONGEST_GAP`) se cantó
+mientras la canción no sonaba, y no recibe marca. Algunas tarjetas de
+sonido informan mal sus retrasos, así que **Ajustes > Audio >
+Micrófono** tiene un ajuste fino, en milisegundos, que corre cada marca
+más tarde o más temprano.
+
+Cuando la toma termina, el hilo acaba y **devuelve** lo que hizo, la
+grabación y el reloj de la canción, a través de su `JoinHandle`. El
+reloj vuelve al motor para la toma siguiente. La propiedad lo deja
+ordenado: el reloj se movió al hilo cuando empezó, y sale de él cuando
+termina, así que nunca lo tienen dos hilos a la vez, y no hace falta
+ningún cerrojo.
+
+Una grabación añadida desde un archivo no tiene tarjeta de sonido a la
+que preguntar. `Take::laid` hace sus marcas como si se hubiera oído
+desde el paso donde se pone, sin parar al tempo de la canción, a través
+de sus cambios de tempo, una marca cada 10 ms. Desde ahí es una toma
+como cualquier otra.
+
+## Dónde en la canción: tramos
+
+La canción tal como suena no es la lista de reproducción tal como se
+dibuja: un estribillo marcado ×2 suena dos veces, y una región de bucle
+da vueltas y vueltas (mira [Secciones, repeticiones y
+bucles](../program/project.md#secciones-repeticiones-y-bucles)). Así
+que la posición de una marca en la canción se convierte de vuelta en un
+lugar de la lista de reproducción con el `pass_at` del arreglo, como se
+hace con el cursor de reproducción (mira [De vuelta de la canción a la
+lista de
+reproducción](../program/project.md#de-vuelta-de-la-canción-a-la-lista-de-reproducción)),
+y la toma se corta donde ese lugar salta, en **tramos**.
+
+Las marcas llegan cada pocos milisegundos, y los relojes de la tarjeta
+de sonido tiemblan unos milisegundos de bloque a bloque, así que la
+canción puede parecer que retrocede un poco, o que avanza un poco más
+de lo que debe. `goes_on` admite 20 ms de eso antes de llamarlo salto.
+`runs` revisa cada 5 ms, y encuentra un salto hasta la muestra partiendo
+por la mitad el hueco entre la última muestra que siguió y la primera
+que no, una **búsqueda binaria**.
+
+Donde dos tramos cubren los mismos compases, un estribillo cantado dos
+veces o un bucle cantado otra vuelta, **gana el último**: `kept` recorre
+los tramos del último al primero y le quita a cada uno lo que cubre uno
+posterior. Cántalo otra vez hasta que salga bien. Cada parte que se
+conserva se vuelve un **trozo** de la grabación, que empieza en el
+primer paso entero dentro de ella.
+
+## Qué notas: transcribir
+
+`take::transcribe` lo junta todo. Para cada nota oída:
+
+- su principio y su final se vuelven lugares de la lista de
+  reproducción (o del patrón); una nota oída menos de 150 ms antes de
+  que empiece la canción empieza con la canción, porque el buscador de
+  alturas puede oír el principio de una nota uno o dos instantes antes;
+- se redondean a la cuadrícula pedida: semicorcheas, corcheas o negras;
+- su altura, menos la afinación de la toma, se redondea a un semitono;
+  una altura justo entre dos (de 0,35 a 0,65 del camino) va a la que
+  está en la tonalidad de ese lugar; o va a una nota de la tonalidad, o
+  de la escala del acorde, según pida la ventana (mira [Alturas: como
+  se cantó, en la tonalidad o con los
+  acordes](#alturas-como-se-cantó-en-la-tonalidad-o-con-los-acordes));
+- la fuerza con que se cantó fija su **velocidad**: una nota tan fuerte
+  como la del medio de la toma suena a 100, las más fuertes con más
+  fuerza, las más suaves más suave.
+
+Lo fuerte y lo suave de una voz están más separados que los de un
+instrumento, así que la diferencia se aprieta:
+
+```rust
+pub fn velocity(loudness: f32, usual: f32) -> u8 {
+    let gain = 10.0_f32.powf(0.35 * (loudness - usual) / 20.0);
+    (100.0 * gain).round().clamp(20.0, 127.0) as u8
 }
 ```
 
-`checked_sub` devuelve `None` donde un `-` normal sobre números sin
-signo se saldría por debajo de cero, y `let ... else` salta ese pulso.
-El `match` sobre `spans.last_mut()` alarga el último tramo cuando el
-mismo acorde sigue desde el pulso inmediatamente siguiente, y empieza un
-tramo nuevo si no. Un pulso sin acorde termina un tramo, ya que el
-acorde siguiente ya no viene justo después.
+Los decibelios son logarítmicos, así que `10^(dB / 20)` convierte una
+diferencia en dB en una proporción de amplitudes, y el `0.35` la
+aprieta: 6 dB más fuerte suena a 127, 20 dB más suave a 45, más o menos
+de forte a piano.
 
-`follow` hace el proyecto. Fija el tempo, el compás y la tonalidad,
-añade el canal sampler, con el nombre del archivo, y un canal de Lineup
-Osc llamado «Armonía», y pone las voces de cada tramo con el mismo
-`library::voicing::voice` que usa la banda, para que cada acorde se
-mueva lo menos posible desde el anterior (mira [Cómo toca la banda una
-hoja de acordes](../band/band.md)). Los acordes van a patrones de 16
-compases, «Acordes 1», «Acordes 2»..., colocados uno tras otro en una
-pista llamada «Armonía»; el patrón de la grabación está en una pista
-llamada «Grabación». Un tramo que cruza al patrón siguiente se corta en
-dos:
+Por último, una toma es una sola voz, así que las notas se hacen de a
+una: de dos en el mismo paso se queda la que se cantó más larga, una
+nota termina donde empieza la siguiente, y un hueco de un paso o dos
+(una respiración, una consonante) se cierra en lugar de escribirse
+como silencio.
+
+### Alturas: como se cantó, en la tonalidad o con los acordes
+
+Alguien que canta un poco desafinado, o un silbido que se desliza,
+puede caer más cerca de un semitono equivocado que del correcto.
+`take::transcribe_with` recibe un `Pitches` que dice cuán estricto
+ser:
 
 ```rust
-// A span that crosses into the next pattern is cut in two.
-while start < end {
-    let index = start / pattern_steps;
-    let pattern_end = (index + 1) * pattern_steps;
-    let length = end.min(pattern_end) - start;
-    if notes_by_pattern.len() <= index {
-        notes_by_pattern.resize(index + 1, Vec::new());
-    }
-    for &pitch in &voicing {
-        notes_by_pattern[index].push(NoteEvent {
-            velocity: CHORD_VELOCITY,
-            ..NoteEvent::new(pitch, start - index * pattern_steps, length)
-        });
-    }
-    start += length;
+pub enum Pitches {
+    #[default]
+    AsSung,
+    InKey,
+    WithChords,
 }
 ```
 
-Los acordes se tocan con velocidad 80, más suave que la de por defecto,
-para quedar detrás de la grabación. Por último, `arrange::key_spans`
-lleva los tramos de tonalidad de pulsos a pasos de la canción de la
-misma manera, para que la aplicación pueda mostrarlos y marcarlos en la
-lista de reproducción.
+**Como se cantó** es el redondeo de arriba. **En la tonalidad** escribe
+la nota de la tonalidad más cercana en ese lugar: en re mayor, un re♯
+cantado un cuarto de semitono alto es un mi, porque re♯ no está en la
+tonalidad. **Tonalidad y acordes** escribe la nota más cercana de la
+escala que un solista toca sobre el acorde de la hoja de acordes en ese
+lugar, en la tonalidad: la **escala de acorde** que `chord_scale` elige
+para el [solista](../band/soloist.md#elegir-una-escala-de-acorde). Sobre
+D7 en do mayor, el V7 de sol, es sol mayor, do re mi fa♯ sol la si, así
+que un fa cantado se escribe fa♯, mientras que sol, la nota adonde
+lleva D7, se queda. Sobre Fm, prestado de do menor, es fa sol la♭ si♭ do
+re mi♭. Los compases sin acorde se quedan en la tonalidad; un micromodo
+en la hoja de acordes es la escala de ese lugar.
 
-## La importación en la aplicación
-
-Escuchar una canción tarda unos segundos, así que `app/import.rs` lo
-hace en un hilo propio, como la exportación a WAV (mira [Saber cuándo ha
-terminado](../sound/export.md#saber-cuándo-ha-terminado)). El closure
-del hilo devuelve todo lo que la ventana necesita:
+`allowed_at` da dos [conjuntos de clases de
+altura](pitch.md#un-conjunto-de-clases-de-altura-en-doce-bits) para un
+paso: las notas como las que se puede escribir una altura, y las
+preferidas justo entre dos, las del acorde:
 
 ```rust
-type Outcome = Result<(Project, String, Vec<KeySpan>), String>;
+let allowed = match harmony {
+    Some(HarmonyName::Chord(symbol)) => {
+        let mut allowed = chord_scale(symbol.chord(), scale);
+        allowed.insert(symbol.bass_pitch_class());
+        allowed
+    }
+    // A micromode is the scale there.
+    Some(HarmonyName::Micromode(set)) => set,
+    // A set, or two chords at once: the key with their notes.
+    _ => PitchSet::from_bits(key.bits() | chord.bits()),
+};
 ```
 
-El proyecto, un resumen de lo oído para la barra de estado, y los
-cambios de tonalidad en pasos de la canción; o por qué falló. `type` le
-da un nombre corto al tipo largo. El resumen es una frase como «canción:
-98.2 BPM, 4/4, Mi menor, acordes en 310 de 312 pulsos», y se escribe en
-el hilo del trabajo, así que ese hilo toma primero el idioma y los
-nombres de las notas de la ventana, que son [ajustes que viven en un
-hilo](../sound/export.md#ajustes-que-viven-en-un-hilo):
+Se añade el bajo de un acorde con barra, porque G/F♯ tiene debajo un
+fa♯ que la escala del acorde de G puede no tener.
+`PitchSet::from_bits(a.bits() | b.bits())` es una unión: cada conjunto
+son doce bits, uno por clase de altura, así que el «o» bit a bit de los
+dos tiene todas las notas de cualquiera de ellos.
+
+Luego `nearest_in` mira todas las notas a menos de una octava de la
+altura cantada, se queda con las permitidas y toma la más cercana; a la
+misma distancia, gana una del conjunto preferido. La ventana vuelve a
+transcribir la toma cada vez que cambia la elección, así que las notas
+que lista muestran la diferencia enseguida.
+
+## Escribirla
+
+`Project::add_take` escribe una transcripción en la canción, donde dice
+el `Target`:
 
 ```rust
-let language = crate::i18n::Language::current();
-let naming = lineup_core::NoteNaming::current();
-self.import = Some(Import {
-    worker: thread::spawn(move || {
-        language.set();
-        naming.set();
-        listen(&path)
-    }),
+pub enum Target {
+    Channel(usize),
+    New { name: String, program: u8 },
+    Nowhere,
+}
+```
+
+En el modo canción las notas van a los **patrones que ya tienen las
+notas de ese canal** donde se cantaron, en lugar de las notas que había:
+corriges la melodía una vez, y queda corregida en todos los lugares
+donde suena su patrón. `Added::shared` lista esos patrones que suenan
+más de una vez, para que la aplicación pueda decirlo. Las notas
+cantadas donde ningún patrón tiene notas del canal, y todas las notas
+para un canal nuevo, van a clips propios, en una pista **justo debajo
+de la de la grabación**, con el nombre de `Keep::notes`, como *Notas
+de Toma 1*: la grabación y sus notas quedan una al lado de la otra, y
+cada una se puede silenciar por su cuenta. Sin una grabación
+conservada, esos clips van a la pista que eligió la ventana. En el modo
+patrón las notas van al patrón.
+
+La grabación se guarda como un archivo WAV por trozo
+(`lineup_listen::wav`, en coma flotante de 32 bits, para no perder nada
+de lo grabado), en una carpeta junto a la canción que lleva su nombre,
+*canción takes*. Cada trozo suena en un canal sampler propio, un
+`SampleSource::Take`, que arranca con una nota en el primer paso del
+trozo, en patrones que empiezan en líneas de compás en la pista de la
+toma. El sampler de una toma **suena junto** con la canción como una
+grabación larga, por corta que sea: desde donde empiece la
+reproducción, por la mitad si la reproducción empieza en su segundo
+compás, y se detiene cuando se detiene la reproducción.
+
+La canción guarda la ruta completa de cada trozo. Cuando un trozo ya no
+está ahí, `file::load` lo busca de nuevo: `find_moved_take` prueba una
+carpeta del mismo nombre junto a la canción, la carpeta de tomas con el
+nombre de la canción y la carpeta de la propia canción. Así, una
+canción movida o copiada a otra computadora junto con su carpeta de
+tomas encuentra sus tomas.
+
+Una canción con una toma se guarda en el [formato
+32](../reference/project-format.md): un Ferrous Lineup más antiguo no
+sabe qué es una toma, y dice que hace falta una versión más nueva en
+lugar de abrir la canción sin ella.
+
+## En la aplicación
+
+`app/voice.rs` guarda cuatro `Option`s: la toma que se graba, la toma
+cuyas notas se están oyendo, el archivo que se está leyendo, y la toma
+que espera en la ventana **Tu toma**.
+
+El botón del micrófono abre la entrada por defecto del sistema con
+`Microphone::open`, toma el reloj de la canción, arranca el `Recorder`
+y, si la canción no suena, la hace sonar. Mientras graba, un pequeño
+panel bajo el botón muestra con qué fuerza te oye el micrófono y la
+nota que oye, con cuánto se aleja («La4 +12¢»). La altura viene del
+hilo del grabador: cada 40 ms llama a un **closure** que le dio la
+aplicación, con los últimos 60 ms de sonido, y el closure guarda la
+altura de un instante (`voice::pitch_now`) en un `AtomicU32`, como los
+bits de un `f32`:
+
+```rust
+let view: lineup_audio::input::LiveView = Box::new(move |samples, rate| {
+    let pitch = voice::pitch_now(samples, rate).unwrap_or(f32::NAN);
+    live.store(pitch.to_bits(), Ordering::Relaxed);
 });
 ```
 
-`listen` decodifica, analiza, escribe la copia WAV (en la carpeta
-temporal del sistema si no se puede escribir en la carpeta del
-original) y construye el proyecto. En cada frame, `check_import` le
-pregunta al handle `is_finished()`; cuando lo está, hace `join` del hilo
-para obtener su resultado, cambia el proyecto con el mismo
-`replace_project` que usa Archivo > Abrir, le da los cambios de
-tonalidad a **🔍 Buscar la tonalidad** y empieza a tocar la canción:
+No hay un `f32` atómico en la biblioteca estándar, pero un `f32` tiene
+32 bits, así que `to_bits` y `f32::from_bits` lo llevan a través de un
+`AtomicU32`. `lineup-audio` no sabe qué es una altura: solo llama a un
+`Box<dyn FnMut(&[f32], u32) + Send>`, y la aplicación decide qué hacer
+con el sonido.
+
+Oír las notas de una toma larga lleva un momento, así que se hace en un
+hilo propio, como la exportación WAV (mira [Saber cuándo ha
+terminado](../sound/export.md#saber-cuándo-ha-terminado)). En cada
+cuadro, `check_voice` le pregunta al handle `is_finished()`, y cuando
+terminó, hace `join` y abre la ventana. Un archivo añadido se lee y se
+oye igual; ese hilo toma primero el idioma de la ventana, para que un
+error se escriba en él (mira [Ajustes que viven en un
+hilo](../sound/export.md#ajustes-que-viven-en-un-hilo)).
+
+La ventana no cambia nada hasta **Escribirla**. Elegir otra cuadrícula,
+u otra manera de escribir las alturas, vuelve a transcribir la toma,
+cosa rápida, porque las notas ya se oyeron. **Escribirla** transcribe una vez más, por si la canción cambió
+mientras la ventana estaba abierta, guarda los trozos y escribe la toma
+con `self.edit`, así que es **un solo paso de deshacer**.
+**Descartarla**, o cerrar la ventana, no conserva nada.
+
+### Transcribir otra vez una toma
+
+Una toma ya escrita se puede volver a oír, para escribir sus notas con
+otras opciones: **Transcribir otra vez…** en el menú de su clip. La
+lista de reproducción encuentra la grabación que muestra un clip con
+`recording_in`: una cuya nota empieza en el clip o, para un clip vacío
+(el resto de una toma larga), la última antes de él en su pista. La
+aplicación lee ese archivo WAV y lo oye como oye cualquier grabación
+añadida, en un hilo, y después lo pone desde el paso donde está su nota
+con `Take::laid`. Un trozo de una toma empieza en un paso entero y
+sigue de largo al tempo de la canción, así que ponerlo ahí da el ritmo
+con el que se escribió.
+
+La revisión recuerda qué es en un `Again`: la pista de la grabación y
+el nombre de la toma. La fila **La grabación** solo dice que se queda
+tal como está, y no se guarda ni se añade nada: `Keep::recordings` está
+vacío. Las notas van adonde fueron antes: `Review::again` mira la pista
+justo debajo de la grabación y, si es la pista de notas de la toma,
+elige el canal cuyas notas están en ella; si no, el canal de la
+melodía, como para una toma nueva. Después `add_take` hace el resto,
+como para cualquier toma: las notas van a los patrones que tienen las
+notas de ese canal donde se cantó la toma, en lugar de las que había,
+que son las notas escritas la primera vez.
+
+Las notas sin un lugar ahí van a una pista propia, justo debajo de la
+grabación, como la primera vez. `Keep::under` nombra la pista de la
+grabación para eso, ya que esta vez no se hacen clips de grabación, y
+`notes_track_under` usa la pista de notas que ya está ahí cuando tiene
+lugar, o añade una.
+
+En macOS una aplicación tiene que decir para qué quiere el micrófono
+antes de que el sistema la deje escuchar, así que
+`packaging/macos/Info.plist` tiene un `NSMicrophoneUsageDescription`,
+que macOS muestra la primera vez.
+
+### Dibujar una toma: su forma de onda
+
+Los clips de una toma tienen una sola nota, en el primer paso del
+trozo, así que dibujados como notas mostrarían un punto. La lista de
+reproducción dibuja en cambio su **forma de onda**: una línea vertical
+por cada columna de píxeles, tan alta como la muestra más fuerte del
+tramo de la grabación que queda debajo.
+
+Leer una grabación larga lleva un momento, demasiado para frenar un
+cuadro, así que `Waves` lee cada archivo una sola vez en un hilo propio
+y guarda el `JoinHandle` en un `HashMap` con la ruta del archivo como
+clave. Hasta que el hilo `is_finished()`, el clip se dibuja vacío y la
+lista de reproducción pide otro cuadro en 100 ms; entonces hace `join`,
+y guarda el resultado detrás de un `Arc`, para que el dibujo pueda
+tenerlo mientras el mapa se vuelve a pedir prestado. `Wave::read`
+decodifica el archivo con `lineup_listen::decode_file` y se queda con la
+muestra más fuerte de cada 1/400 s. Después las divide todas por la más
+fuerte de toda la toma, con un piso de 0,01 para que el casi silencio
+siga siendo casi silencio: una toma cantada suave llena su clip igual
+que una cantada fuerte.
+
+Una toma larga se corta en varios clips, de a lo sumo el largo de un
+patrón, y solo el primero tiene la nota que la hace sonar. Así que
+`paint_clips` junta primero dónde empieza cada grabación, por pista, y
+dibuja cada una debajo de todos los clips de su pista bajo los que
+suena, no solo debajo del que la empieza.
+
+La grabación sigue de largo en segundos, mientras que la lista de
+reproducción se ordena en pasos, y el largo de un paso en segundos
+cambia con el tempo. `paint_wave` recorre los pasos desde el principio
+del trozo, sumando el largo de cada uno, `seconds_per_beat() / 4.0` al
+tempo de ese lugar, así que la forma de onda se queda debajo de los
+compases con los que se oye a través de cada cambio de tempo.
+
+### Oír una toma sola
+
+Cada pista tiene una **S** junto a su luz de silencio. Silencia todas
+las demás pistas, y un segundo clic les devuelve el sonido a todas. Una
+sola regla hace las dos cosas: una pista está sola cuando es la única
+que suena, y el clic alterna entre eso y que suenen todas:
 
 ```rust
-match import.worker.join() {
-    Ok(Ok((project, summary, keys))) => {
-        self.replace_project(project, None);
-        self.key_finder.new_project(&self.project, keys);
-        self.notice = Some(summary);
-        self.set_mode(PlayMode::Song);
+let alone = tracks
+    .iter()
+    .enumerate()
+    .all(|(other, t)| (other == track) != t.muted);
+for other in 0..tracks.len() {
+    if let Some(t) = project.track_mut(other) {
+        t.muted = !alone && other != track;
     }
+}
 ```
 
-La ventana nunca espera, así que la música sigue sonando mientras se
-escucha una grabación nueva. `replace_project` también llena la hoja de
-acordes con los acordes oídos en las notas de la pista Armonía, como
-hace con cualquier proyecto que llega sin acordes (mira
-[Escribirlo](hearing.md#escribirlo)).
+`(other == track) != t.muted` es verdadero cuando esta pista suena y
+todas las demás están en silencio: `!=` entre dos `bool` es «exactamente
+uno de los dos». La S se ilumina mientras su pista está sola. Es una
+sola edición, así que **Ctrl+Z** deja los silencios como estaban, y los
+silencios se guardan con la canción, como siempre se guardaron los de
+la luz.
 
-Abrir otro proyecto mientras una importación escucha la deja caer:
-`replace_project` la saca de `self.import`, y la barra de estado dice
-**Se detuvo la importación de la grabación.** Soltar un `JoinHandle` no
-detiene su hilo; lo **separa** (*detach*). El hilo sigue escuchando
-hasta el final, y su resultado se tira, que es lo que se quiere: el
-proyecto nuevo se queda, y nada tiene que interrumpir el análisis a
-medias.
+### Desde la lista de reproducción, la línea de comandos o soltada
 
-### Desde el menú, la línea de comandos o soltada
+Una grabación llega a la aplicación desde **➕ Grabación**, en la barra
+de la lista de reproducción, desde **Añadir una grabación…** en el menú
+de una pista, desde la línea de comandos o soltada sobre la ventana. El
+botón la pone sobre la canción desde el cursor de reproducción (desde
+el compás 1 en el modo patrón, que pasa al modo canción); el menú de la
+pista también, en esa pista. Soltada sobre la lista de reproducción,
+empieza donde se soltó, en el compás, el pulso o el paso que dice
+**Ajuste**, en la pista que está bajo el puntero; soltada en cualquier
+otro lugar, empieza en el cursor de reproducción.
 
-Una grabación llega a la importación desde el menú, desde la línea de
-comandos o soltada sobre la ventana. Un archivo nombrado en la línea de
-comandos pasa por `open_now`, que también abre proyectos, y que
-pregunta primero a `lineup_listen::is_audio_file`: una extensión de
-`AUDIO_EXTENSIONS`, `["mp3", "wav", "flac", "ogg"]`, en mayúsculas o
-minúsculas.
+Los archivos soltados llegan a la aplicación antes de que la lista de
+reproducción se vuelva a dibujar, así que la lista guarda un
+`DropGrid`, la cuadrícula tal como se dibujó en el último cuadro: dónde
+está en la pantalla, en qué capa, y dónde empieza cada pista.
+`recording_drop` le pregunta sobre qué paso y qué pista está el
+puntero, y solo si ninguna ventana tapa ese lugar (`ctx.layer_id_at`
+nombra la capa de más arriba ahí). Mientras se arrastra un archivo
+sobre la lista de reproducción, la misma cuadrícula ilumina el lugar
+donde empezaría. Un archivo nombrado en la línea de
+comandos, o abierto desde un gestor de archivos, pasa por `open_now`,
+que también abre proyectos, y que pregunta primero a
+`lineup_listen::is_audio_file`: una extensión de `AUDIO_EXTENSIONS`,
+`["mp3", "wav", "flac", "ogg"]`, en mayúsculas o minúsculas. Un archivo
+de audio abierto así empieza una canción nueva, vacía, con la
+grabación desde su principio.
 
 Un archivo soltado es más difícil de ubicar, porque un sonido soltado
 sobre la ventana también puede ser una muestra para el rack de canales
@@ -874,142 +846,63 @@ ser una grabación. Un WAV lo es cuando dura más de diez segundos
 sampler se desvanece cuando se detiene la reproducción: pasada esa
 línea, un sonido se trata como un trozo de música y no como un golpe.
 `reader.duration()` es la cantidad de muestras por canal, leída de la
-cabecera del archivo sin decodificarlo. `is_project_file`, que le dice
-a la ventana y al rack de canales qué archivos soltados no son
-sonidos, cuenta una grabación entre ellos.
-
-## Por qué estos crates
-
-Cada trabajo fue a lo que mejor lo hacía con las mismas grabaciones de
-prueba: demostraciones de la biblioteca renderizadas a WAV, donde se
-conocen el tempo, la tonalidad y el acorde de cada pulso, y unas pocas
-grabaciones Creative Commons con los resultados de librosa como
-referencia.
-
-- **Decodificar**: Symphonia, en Rust puro, para los cuatro formatos a
-  la vez.
-- **Pulsos**: nuestro propio módulo `beats`. El crate `beat-track-rs`
-  implementa el mismo seguidor, y el módulo da los mismos pulsos en
-  todas las grabaciones de prueba, unas diez veces más rápido. El crate
-  además decodifica archivos, así que metería una segunda copia de
-  Symphonia y el crate `ndarray` en cada compilación, por 250 líneas de
-  seguidor.
-- **Tonalidad**: `bpm-key`, con los perfiles de Krumhansl y Kessler,
-  acertaba más a menudo, y es rápido.
-- **Acordes**: ningún crate lo hacía lo bastante bien, así que
-  `chroma.rs` y `chords.rs` son nuestros, unas 300 líneas.
-- **Compás**: nada de lo disponible lo adivina, de ahí `meter.rs`.
-
-Los seguidores de pulsos neuronales, como `beat-this` y `beatnet-rs`, se
-dejaron de lado: necesitan modelos ONNX, así que la importación dejaría
-de ser Rust puro mientras corre.
+cabecera del archivo sin decodificarlo. `handle_dropped_files` reparte
+lo soltado en tres con `partition`, dos veces: archivos de proyecto,
+grabaciones y sonidos. Solo se añade una grabación a la vez, porque
+cada una abre su propia ventana **Tu toma**.
 
 ## Qué tan bien funciona
 
-El
-[README](https://github.com/naelolaiz/ferrous-lineup/tree/main/crates/lineup-listen)
-del crate tiene las tablas, medidas en 29 demostraciones de la
-biblioteca renderizadas a WAV:
+El buscador de alturas se midió con el conjunto de datos
+[vocadito](https://zenodo.org/records/5578807): 40 cantantes solistas,
+con la altura y las notas anotadas a mano (CC BY 4.0).
 
-| | |
-|---|---|
-| Tempo | correcto en 20, la mitad o el doble en 8, mal en 1 |
-| Pulsos sobre la cuadrícula del tempo verdadero | 27 de 29 |
-| Tonalidad de toda la canción (`bpm-key`) | 24 de 29 |
-| Acordes: fundamental y mayor o menor correctos | 79% de 3.887 pulsos |
-| Compás | 3/4 en las 5 demostraciones en tres, 4/4 en las otras 24 |
-| Primer tiempo fuerte sobre una línea de compás | 22 de 29 |
+- **Altura**: el 84,7 % de los instantes donde alguien canta se oyen a
+  menos de un cuarto de tono de la altura anotada.
+- **Notas**: una medida F de 0,708, contando una nota como encontrada
+  cuando empieza a menos de 50 ms de una anotada, a la misma altura con
+  un margen de un cuarto de tono. La medida F combina cuántas notas
+  anotadas se encuentran con cuántas de las notas encontradas están
+  anotadas.
 
-La mitad o el doble del tempo es la confusión clásica de todo seguidor
-de tempo, y para tocar encima importa poco: los pulsos siguen cayendo en
-el pulso. Las canciones enteras de tríadas simples salen bien; los
-fallos son acordes de séptima oídos como su tríada o al revés, melodías
-tocadas en bloques de acordes, cuyas notas de paso parecen acordes
-propios, y los acordes disminuidos de los estilos más jazzísticos.
-
-Para los cambios de tonalidad hay un informe, un test ignorado que
-renderiza a audio demostraciones de canciones, todas las que tienen
-cambios de tonalidad y una de cada cinco de las demás, y compara las
-tonalidades encontradas con las marcas de tonalidad que las
-demostraciones tienen de sus partituras:
-
-```sh
-cargo test --release -p lineup-listen --test key_changes -- --ignored --nocapture
-```
-
-Medido el 30 de octubre de 2026, en 136 canciones, contando una
-tonalidad como correcta cuando lo son su tónica y su mayor o menor:
-
-| Tonalidades, desde una grabación | |
-|---|---|
-| Pulsos en la tonalidad correcta | 73,7% de 36.306 |
-| La tonalidad de la canción (su tramo más largo en una tonalidad) | 91 de 136 |
-| Cambios de tonalidad de las partituras encontrados a menos de dos pulsos | 63 de 315 |
-| Canciones en una sola tonalidad donde igual se encuentra un cambio | 3 de 52 |
-
-Desde las notas de una canción, el buscador de tonalidades acierta el
-87% de los compases (mira [Qué tan bien
-escucha](hearing.md#qué-tan-bien-escucha)); desde el sonido
-de las mismas canciones, unos tres pulsos de cada cuatro. Los cambios
-rara vez se inventan, pero rara vez se encuentran justo en el pulso: el
-chroma de un sonido es más borroso que las notas, y una tonalidad nueva
-tiene que durar lo bastante para pagar su cambio. Muchos se encuentran
-uno o dos compases tarde, como en *Maple Leaf Rag*, donde el paso a Re♭
-mayor a los 120 s se oye a los 123 s. El informe lista cada canción con
-sus tonalidades y dónde cambian, las verdaderas y las encontradas: el
-lugar donde mirar después. En las mismas canciones, la única tonalidad
-que `bpm-key` oye en toda la grabación acertó en 82, y por eso el
-proyecto toma en su lugar la tonalidad del tramo más largo.
+El momento se midió con los altavoces grabados como micrófono (un
+*loopback*), tocando la melodía de una demostración: cada nota volvió en
+su paso, con un error mediano de unos 2 ms.
 
 ## Asperezas
 
-- **Una copia de la grabación.** La copia WAV con su entrada existe solo
-  porque una nota del sampler toca su sonido desde la primera muestra.
-  El sampler puede empezar un sonido largo por la mitad (mira [Empezar
-  por la mitad](../sound/instruments.md#empezar-por-la-mitad)), así que
-  un desplazamiento guardado con el canal podría ocupar el lugar de la
-  copia.
-- **Detener.** Un sampler toca su sonido entero pase lo que pase, lo que
-  está bien para un golpe de batería y mal para una canción, así que las
-  voces de un sonido de más de diez segundos se apagan cuando se detiene
-  la reproducción (mira [El
-  sampler](../sound/instruments.md#el-sampler)). Diez segundos es una
-  regla práctica; un ajuste por canal sería más limpio.
-- **Compases.** Solo se adivinan 3/4 y 4/4; la música en 6/8 sale como
-  3/4 al doble del tempo.
-- **La mezcla entera.** Los acordes salen de todo lo que suena. Una
-  melodía de notas sueltas no va acompañada de la armonía que sugiere, y
-  una melodía fuerte puede arrastrar el acorde hacia sus propias notas.
+- Las notas cantadas otra vez a la misma altura sin hueco y sin ataque
+  nuevo (una repetición ligada) salen como una sola nota larga.
+- Una voz a la vez: un acorde, o una voz sobre una base fuerte, se oye
+  como la altura que más suena. Los auriculares ayudan.
+- Una grabación añadida desde un archivo sigue sin parar al tempo de la
+  canción: una interpretación que acelera o se frena se aleja de los
+  compases.
 
 ## Cómo se prueba
 
-Cada módulo tiene tests unitarios sobre datos hechos en el test. El
-seguidor de pulsos recibe veinte segundos de clics a 120 BPM y tiene que
-encontrar el tempo con un error de menos de 3 BPM, y cada pulso a menos
-de 0,06 s de un clic; el silencio no tiene que dar ninguna cadena de
-pulsos; y los filtros mel tienen que cubrir el espectro, solapándose a
-la mitad. `arrange.rs` construye un `Analysis` a mano, un pulso cada
-medio segundo desde 0,3 s, el tiempo fuerte en el tercero, y comprueba
-la entrada, los tramos y el proyecto:
+Las pruebas hacen sus propias voces, para que cada caso tenga una
+respuesta conocida: una voz es un tono con armónicos cada vez más suaves
+y un poco de vibrato, un silbido es un tono puro. Una nota sostenida es
+una nota a su altura, una línea ligada se corta donde se mueve la
+altura, una nota cantada otra vez son dos notas, el silencio y el ruido
+no tienen ninguna, una toma cantada alta se oye alta. `take.rs` prueba
+la ubicación con marcas hechas a mano: un estribillo cantado dos veces
+se queda con la segunda, un reloj que tiembla no corta la toma, una
+nota oída un momento antes de que empiece la canción empieza con ella,
+una toma guardada y vuelta a abrir sigue siendo una toma. `input.rs`
+prueba las marcas con instantes hechos a mano, y las pruebas de ventana
+de `ux_tests.rs` cantan una toma en la Melodía, conservan solo las
+notas en un canal nuevo, y descartan una.
 
-```rust
-#[test]
-fn chords_join_into_spans_in_song_beats() {
-    let analysis = analysis();
-    let spans = spans(&analysis, lead_in(&analysis));
-    let firsts: Vec<_> = spans.iter().map(|s| (s.first_beat, s.beats)).collect();
-    // The two beats before the downbeat land in the lead-in bar.
-    assert_eq!(firsts, [(2, 2), (4, 4), (8, 4), (13, 1)]);
-}
+La medición con vocadito es una **prueba ignorada**, porque el conjunto
+de datos no está en el repositorio:
+
+```text
+VOCADITO=/path/to/vocadito cargo test --release -p lineup-listen \
+    --test sung_notes -- --ignored --nocapture
 ```
 
-Los acordes son G G C C C C G G G G, ningún acorde, C. Los dos pulsos
-de G antes del tiempo fuerte caen en los dos últimos pulsos del compás
-de entrada (los pulsos se cuentan desde 0); el C del final es un tramo
-propio, después del pulso sin acorde. `decode.rs` comprueba que una
-grabación una muestra más larga que diez minutos se rechaza, con el
-mensaje que ve el usuario; y la aplicación comprueba que abrir otro
-proyecto suelta una importación que todavía estaba escuchando.
-
-Los ejercicios sobre la importación están en [Ejercicios: la teoría
-musical en código](exercises.md).
+`#[ignore]` deja una prueba fuera de un `cargo test` normal, y
+`-- --ignored` corre solo esas. `--nocapture` la deja imprimir su
+tabla.

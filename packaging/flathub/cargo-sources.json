@@ -626,19 +626,6 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/bpm-key/bpm-key-0.1.0.crate",
-        "sha256": "b5a2c949429de5681f5ad1f41a6cd5b7315171ed2ceba0fd8d931535957fd70f",
-        "dest": "cargo/vendor/bpm-key-0.1.0"
-    },
-    {
-        "type": "inline",
-        "contents": "{\"package\": \"b5a2c949429de5681f5ad1f41a6cd5b7315171ed2ceba0fd8d931535957fd70f\", \"files\": {}}",
-        "dest": "cargo/vendor/bpm-key-0.1.0",
-        "dest-filename": ".cargo-checksum.json"
-    },
-    {
-        "type": "archive",
-        "archive-type": "tar-gzip",
         "url": "https://static.crates.io/crates/bumpalo/bumpalo-3.20.3.crate",
         "sha256": "72f5acc6cb2ba439de613abc23857ec3d78374d8ed5ac84e9d11336e87da8649",
         "dest": "cargo/vendor/bumpalo-3.20.3"
@@ -1055,19 +1042,6 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/dasp_frame/dasp_frame-0.11.0.crate",
-        "sha256": "b2a3937f5fe2135702897535c8d4a5553f8b116f76c1529088797f2eee7c5cd6",
-        "dest": "cargo/vendor/dasp_frame-0.11.0"
-    },
-    {
-        "type": "inline",
-        "contents": "{\"package\": \"b2a3937f5fe2135702897535c8d4a5553f8b116f76c1529088797f2eee7c5cd6\", \"files\": {}}",
-        "dest": "cargo/vendor/dasp_frame-0.11.0",
-        "dest-filename": ".cargo-checksum.json"
-    },
-    {
-        "type": "archive",
-        "archive-type": "tar-gzip",
         "url": "https://static.crates.io/crates/dasp_sample/dasp_sample-0.11.0.crate",
         "sha256": "0c87e182de0887fd5361989c677c4e8f5000cd9491d6d563161a8f3a5519fc7f",
         "dest": "cargo/vendor/dasp_sample-0.11.0"
@@ -1180,19 +1154,6 @@
         "type": "inline",
         "contents": "{\"package\": \"d8b14ccef22fc6f5a8f4d7d768562a182c04ce9a3b3157b91390b52ddfdf1a76\", \"files\": {}}",
         "dest": "cargo/vendor/dpi-0.1.2",
-        "dest-filename": ".cargo-checksum.json"
-    },
-    {
-        "type": "archive",
-        "archive-type": "tar-gzip",
-        "url": "https://static.crates.io/crates/ebur128/ebur128-0.1.10.crate",
-        "sha256": "e227cc62d64d6fe01abbef48134b9c1f17d470cef1e7a56337ad05b1f81df7f9",
-        "dest": "cargo/vendor/ebur128-0.1.10"
-    },
-    {
-        "type": "inline",
-        "contents": "{\"package\": \"e227cc62d64d6fe01abbef48134b9c1f17d470cef1e7a56337ad05b1f81df7f9\", \"files\": {}}",
-        "dest": "cargo/vendor/ebur128-0.1.10",
         "dest-filename": ".cargo-checksum.json"
     },
     {
