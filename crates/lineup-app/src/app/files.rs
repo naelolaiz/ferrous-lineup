@@ -511,6 +511,8 @@ impl LineupApp {
         // An import that is still listening would replace this project
         // when it finished: it was started for the one being left behind.
         let stopped_import = self.import.take().is_some();
+        // A take belongs to the song it was sung along with.
+        self.forget_voice();
         // The chords heard in the song are still the song's.
         project.follow_along(fill_chord_sheet);
         self.project = project;

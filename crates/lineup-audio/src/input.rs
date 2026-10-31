@@ -126,8 +126,7 @@ impl Microphone {
         let format = supported.sample_format();
         let config: StreamConfig = supported.into();
         let sample_rate = config.sample_rate;
-        let (sample_in, samples) =
-            rtrb::RingBuffer::new((sample_rate * QUEUE_SECONDS) as usize);
+        let (sample_in, samples) = rtrb::RingBuffer::new((sample_rate * QUEUE_SECONDS) as usize);
         let (block_in, blocks) = rtrb::RingBuffer::new(BLOCK_QUEUE);
         let broken = Arc::new(AtomicBool::new(false));
         let ends = Ends {
@@ -188,13 +187,18 @@ where
         // time the sound card says it took to get here.
         let stamp = info.timestamp();
         let delay = stamp.callback.duration_since(stamp.capture);
-        let at = Instant::now().checked_sub(delay).unwrap_or_else(Instant::now);
+        let at = Instant::now()
+            .checked_sub(delay)
+            .unwrap_or_else(Instant::now);
         let frames = data.len() / ends.channels;
         let lost = ends.samples.slots() < frames;
         if !lost {
             // The channels mixed into one.
             for frame in data.chunks(ends.channels) {
-                let sum: f32 = frame.iter().map(|&s| <f32 as FromSample<T>>::from_sample_(s)).sum();
+                let sum: f32 = frame
+                    .iter()
+                    .map(|&s| <f32 as FromSample<T>>::from_sample_(s))
+                    .sum();
                 let _ = ends.samples.push(sum / ends.channels as f32);
             }
         }
@@ -249,7 +253,12 @@ impl Recorder {
     /// with `clock`. `nudge` moves every moment of the take later in the
     /// song (earlier if negative), in seconds, for a sound card whose
     /// delays are not what it says.
-    pub fn start(microphone: Microphone, mut clock: SongClock, nudge: f64, mut view: LiveView) -> Self {
+    pub fn start(
+        microphone: Microphone,
+        mut clock: SongClock,
+        nudge: f64,
+        mut view: LiveView,
+    ) -> Self {
         let stop = Arc::new(AtomicBool::new(false));
         let live = Arc::new(Live::default());
         let sample_rate = microphone.sample_rate;
@@ -286,11 +295,14 @@ impl Recorder {
                     {
                         heard.pop_front();
                     }
-                    let recent = &recording.samples
-                        [recording.samples.len().saturating_sub(sample_rate as usize / 20)..];
+                    let recent = &recording.samples[recording
+                        .samples
+                        .len()
+                        .saturating_sub(sample_rate as usize / 20)..];
                     let level = recent.iter().fold(0.0_f32, |peak, s| peak.max(s.abs()));
                     live.level.store(level.to_bits(), Ordering::Relaxed);
-                    live.frames.store(recording.samples.len(), Ordering::Relaxed);
+                    live.frames
+                        .store(recording.samples.len(), Ordering::Relaxed);
                     if last_view.elapsed() >= LIVE_EVERY {
                         last_view = Instant::now();
                         let keep = (sample_rate as f32 * LIVE_SECONDS) as usize;
@@ -362,11 +374,15 @@ fn take_block(
 ) {
     let frame = recording.samples.len();
     if block.lost {
-        recording.samples.extend(std::iter::repeat_n(0.0, block.frames));
+        recording
+            .samples
+            .extend(std::iter::repeat_n(0.0, block.frames));
         recording.lost += block.frames;
     } else {
         for _ in 0..block.frames {
-            recording.samples.push(microphone.samples.pop().unwrap_or(0.0));
+            recording
+                .samples
+                .push(microphone.samples.pop().unwrap_or(0.0));
         }
     }
     if let Some(mark) = mark_at(heard, block.at, frame, nudge) {
@@ -417,9 +433,15 @@ mod tests {
         assert_eq!(mark.frame, 480);
         assert!((mark.position - 4.12).abs() < 1e-9, "{mark:?}");
         // Before the song was heard: no mark.
-        assert_eq!(mark_at(&heard, start - Duration::from_millis(1), 0, 0.0), None);
+        assert_eq!(
+            mark_at(&heard, start - Duration::from_millis(1), 0, 0.0),
+            None
+        );
         // Long after the last moment: the song had stopped.
-        assert_eq!(mark_at(&heard, start + Duration::from_millis(500), 0, 0.0), None);
+        assert_eq!(
+            mark_at(&heard, start + Duration::from_millis(500), 0, 0.0),
+            None
+        );
     }
 
     #[test]

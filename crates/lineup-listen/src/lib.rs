@@ -19,6 +19,7 @@ pub mod decode;
 pub mod keys;
 pub mod meter;
 pub mod voice;
+pub mod wav;
 
 use lineup_core::harmony::key_finding::KeySpan;
 use lineup_core::{Chord, PitchClass, Scale, ScaleKind};

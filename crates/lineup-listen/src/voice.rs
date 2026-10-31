@@ -134,6 +134,7 @@ pub fn notes(track: &[PitchFrame]) -> Vec<SungNote> {
         let loudness: Vec<f32> = run.iter().map(|frame| frame.loudness).collect();
         let mut cuts = pitch_cuts(&pitches);
         cuts.extend(loudness_cuts(&loudness));
+        cuts.extend(attack_cuts(&loudness));
         cuts.sort_unstable();
         cuts.dedup();
         let mut pieces = Vec::new();
@@ -144,7 +145,7 @@ pub fn notes(track: &[PitchFrame]) -> Vec<SungNote> {
                     note: note_of(&run[from..cut], &pitches[from..cut]),
                     // Whether the voice dipped in loudness before it: a
                     // note sung again, which stays a note of its own.
-                    sung_again: from > 0 && dips_before(&loudness, from),
+                    sung_again: from > 0 && sung_again(&loudness, from),
                 });
                 from = cut;
             }
@@ -228,8 +229,7 @@ fn decimated(samples: &[f32], factor: usize) -> Vec<f32> {
             } else {
                 (std::f32::consts::PI * cutoff * n).sin() / (std::f32::consts::PI * n)
             };
-            let hann =
-                0.5 - 0.5 * (std::f32::consts::TAU * i as f32 / (2 * half) as f32).cos();
+            let hann = 0.5 - 0.5 * (std::f32::consts::TAU * i as f32 / (2 * half) as f32).cos();
             sinc * hann
         })
         .collect();
@@ -339,8 +339,7 @@ impl Yin {
         let mut b = self.forward.make_output_vec();
         let ok = self.forward.process(&mut first, &mut a).is_ok()
             && self.forward.process(&mut whole, &mut b).is_ok();
-        let mut product: Vec<Complex<f32>> =
-            a.iter().zip(&b).map(|(a, b)| a.conj() * b).collect();
+        let mut product: Vec<Complex<f32>> = a.iter().zip(&b).map(|(a, b)| a.conj() * b).collect();
         // The inverse transform needs the first and last values real.
         if let Some(first) = product.first_mut() {
             first.im = 0.0;
@@ -349,7 +348,12 @@ impl Yin {
             last.im = 0.0;
         }
         let mut correlation = self.inverse.make_output_vec();
-        if !ok || self.inverse.process(&mut product, &mut correlation).is_err() {
+        if !ok
+            || self
+                .inverse
+                .process(&mut product, &mut correlation)
+                .is_err()
+        {
             return vec![1.0; self.longest + 1];
         }
         let scale = 1.0 / size as f32;
@@ -621,9 +625,7 @@ fn pitch_cuts(pitches: &[f32]) -> Vec<usize> {
         let settled_from = start + ((index - start) / 4).min(5);
         let settled = median(&pitches[settled_from..=index.max(settled_from)]);
         let leaves = |at: usize| (pitches[at] - settled).abs() > AWAY;
-        if index > start + 2
-            && index + STAYS <= pitches.len()
-            && (index..index + STAYS).all(leaves)
+        if index > start + 2 && index + STAYS <= pitches.len() && (index..index + STAYS).all(leaves)
         {
             // Every frame of the move goes the same way: up, or down.
             let up = pitches[index] > settled;
@@ -676,11 +678,47 @@ fn dip_at(loudness: &[f32], i: usize) -> bool {
     before - here >= DEPTH && after - here >= DEPTH
 }
 
-/// Whether the loudness dips just before frame `at` (where a note was cut
-/// off from the one before it).
-fn dips_before(loudness: &[f32], at: usize) -> bool {
-    (at.saturating_sub(2)..(at + 1).min(loudness.len()))
+/// Where a note is struck again without the voice stopping, as a
+/// whistle's tongue or an instrument does: the loudness jumps up by 6 dB
+/// or more within 30 ms. The first frame of each jump.
+fn attack_cuts(loudness: &[f32]) -> Vec<usize> {
+    let mut cuts: Vec<usize> = Vec::new();
+    for i in (ATTACK_FRAMES..loudness.len().saturating_sub(ATTACK_FRAMES))
+        .filter(|&i| attack_at(loudness, i))
+    {
+        // One jump, however many frames it takes.
+        if cuts.last().is_none_or(|&last| i - last > 6) {
+            cuts.push(i);
+        }
+    }
+    cuts
+}
+
+/// How many frames an attack takes, at most: 30 ms.
+const ATTACK_FRAMES: usize = 3;
+
+/// Whether the loudness jumps up from frame `i` (see [`attack_cuts`]).
+fn attack_at(loudness: &[f32], i: usize) -> bool {
+    const RISE: f32 = 6.0;
+    let here = loudness[i];
+    let before = loudness[i - 1];
+    let after = loudness[i + 1..=i + ATTACK_FRAMES]
+        .iter()
+        .copied()
+        .fold(f32::MIN, f32::max);
+    here <= before && after - here >= RISE
+}
+
+/// Whether the note cut off at frame `at` from the one before it was sung
+/// (or struck) again: the loudness dips just before it, or jumps up
+/// there.
+fn sung_again(loudness: &[f32], at: usize) -> bool {
+    let near = at.saturating_sub(2)..(at + 1).min(loudness.len());
+    near.clone()
         .any(|i| i > 0 && i + 1 < loudness.len() && dip_at(loudness, i))
+        || near.into_iter().any(|i| {
+            i >= ATTACK_FRAMES && i + ATTACK_FRAMES < loudness.len() && attack_at(loudness, i)
+        })
 }
 
 /// The note sung over `frames`, whose smoothed pitches are `pitches`.
@@ -727,7 +765,8 @@ struct Piece {
 ///
 /// - a quick slide into a note (a *scoop*), less than 120 ms a little
 ///   below or above it, belongs to that note, which starts where the
-///   slide does;
+///   slide does; so does less than 120 ms an octave away from it, as the
+///   pitch finder can hear the start of a note an octave off;
 /// - anything else under 60 ms (a wobble) goes into the note before it,
 ///   or the one after it at the start of a run;
 /// - two notes in a row on the same pitch become one, unless the second
@@ -745,7 +784,8 @@ fn tidy(pieces: Vec<Piece>) -> Vec<SungNote> {
     let mut scoop: Option<Piece> = None;
     for mut piece in pieces {
         if let Some(before) = scoop.take() {
-            if !piece.sung_again && (before.note.pitch - piece.note.pitch).abs() < SCOOP_RANGE {
+            let apart = (before.note.pitch - piece.note.pitch).abs();
+            if !piece.sung_again && (apart < SCOOP_RANGE || (apart - 12.0).abs() < SCOOP_RANGE) {
                 piece.note.start = before.note.start;
                 piece.note.loudness = piece.note.loudness.max(before.note.loudness);
                 piece.sung_again = before.sung_again;
@@ -906,10 +946,7 @@ mod tests {
         take.extend(voice(62.0, 0.4, 0.4));
         let notes = sung(&take);
         assert_eq!(notes.len(), 2, "{notes:?}");
-        assert!(
-            notes[1].loudness > notes[0].loudness + 12.0,
-            "{notes:?}"
-        );
+        assert!(notes[1].loudness > notes[0].loudness + 12.0, "{notes:?}");
     }
 
     #[test]
