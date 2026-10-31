@@ -876,6 +876,11 @@ pub(crate) struct AudioThread {
     pattern: usize,
     sequencer: Sequencer,
     playing: bool,
+    /// The step played last, or `None` when playback has just started or
+    /// jumped: a take's recording comes in partway through only where
+    /// playback goes straight on into a clip (see
+    /// [`AudioThread::keep_takes_to_their_clips`]).
+    last_step: Option<usize>,
     /// Where `Play` starts, set by `Seek`.
     start: usize,
     master_volume: Smoothed,
@@ -992,6 +997,7 @@ impl AudioThread {
             pattern: 0,
             sequencer: Sequencer::new(Tempo::default(), sample_rate, STEPS_PER_BAR),
             playing: false,
+            last_step: None,
             start: 0,
             master_volume: Smoothed::new(0.8, VOLUME_SMOOTHING, sample_rate),
             reverb: crate::reverb::Reverb::new(sample_rate),
@@ -1274,6 +1280,7 @@ impl AudioThread {
                 trace.jumped(self.now, step);
             }
             self.sequencer.start_at(step);
+            self.last_step = None;
             self.resume_long_sounds(step);
         }
     }
@@ -1286,17 +1293,32 @@ impl AudioThread {
     /// the region leaves out, counts too, its steps as long as the
     /// region's first.
     fn resume_long_sounds(&mut self, step: usize) {
+        self.resume_long_sounds_of(step, None, 0.0);
+    }
+
+    /// [`AudioThread::resume_long_sounds`], of channel `only` or of every
+    /// channel, `into` frames into step `step`. A take's recording only
+    /// where a clip of its track plays (see
+    /// [`AudioThread::keep_takes_to_their_clips`]).
+    fn resume_long_sounds_of(&mut self, step: usize, only: Option<usize>, into: f64) {
         if self.mode != PlayMode::Song {
             return;
         }
         let timing = (&self.song_tempos[..], self.tempo, self.sample_rate);
+        // A note on `step` itself started already, unless playback is
+        // partway through it.
+        let before = step as isize + isize::from(into > 0.0);
         for play in self.plays.iter().filter(|play| play.start <= step) {
             let length = self.pattern_lengths.get(play.pattern).copied().unwrap_or(0);
             if length == 0 {
                 continue;
             }
             for (index, channel) in self.channels.iter_mut().enumerate() {
-                if channel.muted {
+                if channel.muted
+                    || only.is_some_and(|only| only != index)
+                    || (channel.instrument.plays_a_take()
+                        && !take_heard(&self.plays, &channel.notes, step))
+                {
                     continue;
                 }
                 for note in channel.notes.get(play.pattern) {
@@ -1304,16 +1326,16 @@ impl AudioThread {
                     // `step`, counted from the piece's start, which is
                     // below zero for a time in the part of the clip the
                     // piece skips.
-                    let first = play.start as isize - play.skip as isize + note.start as isize;
-                    let times = (first..play.end().min(step) as isize).step_by(length);
-                    for at in times.filter(|&at| at < step as isize) {
+                    let first = play.origin() + note.start as isize;
+                    let times = (first..play.end().min(step + 1) as isize).step_by(length);
+                    for at in times.filter(|&at| at < before) {
                         let origin = Origin {
                             pattern: play.pattern,
                             pattern_step: note.start,
                             song_step: at.max(0) as usize,
                             over_song: false,
                         };
-                        let elapsed = frames_between(timing, at, step);
+                        let elapsed = frames_between(timing, at, step) + into;
                         let started = channel.instrument.resume(
                             origin,
                             note.pitch,
@@ -1337,6 +1359,108 @@ impl AudioThread {
                 }
             }
         }
+    }
+
+    /// Keeps each take's recording to the clips of its track, as the
+    /// playlist draws it: the recording is heard from its start on, under
+    /// every clip of its track, to its own end. Where no clip of its
+    /// track plays on `step`, it fades out. When playback goes straight
+    /// on (`straight`) into a clip that leaves out the start of a
+    /// recording (a clip trimmed at the start, or a section played again
+    /// from partway through a clip), the recording comes in there
+    /// partway through; so does one that goes on after a gap between the
+    /// clips of its track.
+    fn keep_takes_to_their_clips(&mut self, step: usize, straight: bool) {
+        if self.mode != PlayMode::Song {
+            return;
+        }
+        for index in 0..self.channels.len() {
+            let channel = &self.channels[index];
+            if channel.muted || !channel.instrument.plays_a_take() {
+                continue;
+            }
+            let heard = |step| take_heard(&self.plays, &channel.notes, step);
+            let (here, before) = (heard(step), step > 0 && heard(step - 1));
+            if !here {
+                if channel.instrument.sounds_long() {
+                    self.channels[index].instrument.release_long();
+                    if let Some(trace) = &mut self.trace {
+                        trace.cut(self.now, Some(index), |_| false);
+                    }
+                }
+                continue;
+            }
+            if !straight {
+                continue;
+            }
+            let came_in = self.start_hidden_takes(step, index);
+            if !came_in && !before && !self.channels[index].instrument.sounds_long() {
+                self.resume_long_sounds_of(step, Some(index), 0.0);
+            }
+        }
+    }
+
+    /// Starts channel `index`'s recordings that clips starting on `step`
+    /// leave out the start of, partway through, as they would be heard
+    /// had the clip been whole. The same recording still sounding from
+    /// before, as when a section is played again, stops first, so it is
+    /// not heard twice. Returns whether any started.
+    fn start_hidden_takes(&mut self, step: usize, index: usize) -> bool {
+        let timing = (&self.song_tempos[..], self.tempo, self.sample_rate);
+        let channel = &mut self.channels[index];
+        let mut started = false;
+        for play in self.plays.iter().filter(|play| play.start == step) {
+            let length = self.pattern_lengths.get(play.pattern).copied().unwrap_or(0);
+            if length == 0 || play.skip == 0 {
+                continue;
+            }
+            for note in channel.notes.get(play.pattern) {
+                let first = play.origin() + note.start as isize;
+                if first >= step as isize {
+                    continue;
+                }
+                let same = |origin: Origin| {
+                    origin.pattern == play.pattern
+                        && origin.pattern_step == note.start
+                        && !origin.over_song
+                };
+                channel.instrument.release_unless(|origin| !same(origin));
+                if let Some(trace) = &mut self.trace {
+                    trace.cut(self.now, Some(index), |origin| !same(origin));
+                }
+                for at in (first..step as isize).step_by(length) {
+                    let origin = Origin {
+                        pattern: play.pattern,
+                        pattern_step: note.start,
+                        song_step: at.max(0) as usize,
+                        over_song: false,
+                    };
+                    let elapsed = frames_between(timing, at, step);
+                    if channel.instrument.resume(
+                        origin,
+                        note.pitch,
+                        note.velocity,
+                        self.sample_rate,
+                        elapsed,
+                    ) {
+                        started = true;
+                        if let Some(trace) = self.trace.as_deref_mut() {
+                            trace.note_on(
+                                self.now,
+                                index,
+                                origin,
+                                note.pitch,
+                                note.velocity,
+                                0,
+                                0,
+                                false,
+                            );
+                        }
+                    }
+                }
+            }
+        }
+        started
     }
 
     /// Plays the selected pattern or the song from now on, from the top.
@@ -1406,6 +1530,24 @@ impl AudioThread {
         self.update_loop_length();
         if self.playing && self.mode == PlayMode::Song {
             self.release_notes_left_out();
+            self.bring_back_takes();
+        }
+    }
+
+    /// Starts again, partway through, the takes' recordings that the new
+    /// song plays where playback is and that are not sounding: a clip
+    /// whose edge was dragged back out over the playhead, or a track
+    /// turned back on.
+    fn bring_back_takes(&mut self) {
+        let Some(step) = self.last_step else {
+            return;
+        };
+        let into = (self.sequencer.step_frames() - self.sequencer.frames_to_next_step()).max(0.0);
+        for index in 0..self.channels.len() {
+            let channel = &self.channels[index];
+            if channel.instrument.plays_a_take() && !channel.instrument.sounds_long() {
+                self.resume_long_sounds_of(step, Some(index), into);
+            }
         }
     }
 
@@ -1648,8 +1790,9 @@ impl AudioThread {
     /// Stops the notes that the new song, just received, no longer plays.
     /// A note is still played if a piece of the new song plays its pattern
     /// on the song step where the note started, at the same step of the
-    /// pattern: then nothing changed under it. Otherwise its clip was moved
-    /// or taken away, or its track was muted.
+    /// pattern, or leaves it out just before it starts (a recording that
+    /// came in partway through): then nothing changed under it. Otherwise
+    /// its clip was moved or taken away, or its track was muted.
     fn release_notes_left_out(&mut self) {
         // The fields are borrowed one by one, so the closure can read the
         // song while the channels are changed.
@@ -1662,7 +1805,8 @@ impl AudioThread {
             let length = lengths.get(origin.pattern).copied().unwrap_or(0);
             plays.iter().any(|play| {
                 play.pattern == origin.pattern
-                    && play.pattern_step(origin.song_step, length) == Some(origin.pattern_step)
+                    && (play.pattern_step(origin.song_step, length) == Some(origin.pattern_step)
+                        || hidden_in(play, origin, length))
             })
         };
         for channel in &mut self.channels {
@@ -1694,6 +1838,7 @@ impl AudioThread {
     fn begin_play(&mut self) {
         if !self.count_in {
             self.sequencer.start_at(self.start);
+            self.last_step = None;
             self.playing = true;
             self.trace_play(self.start);
             self.resume_long_sounds(self.start);
@@ -1733,6 +1878,7 @@ impl AudioThread {
         if count.counted == count.steps {
             self.counting = None;
             self.sequencer.start_at(self.start);
+            self.last_step = None;
             self.playing = true;
             self.trace_play(self.start);
             self.resume_long_sounds(self.start);
@@ -1958,6 +2104,9 @@ impl AudioThread {
                             channel.instrument.release_long();
                         }
                     }
+                    let straight = !lap && self.last_step.is_some_and(|last| last + 1 == step);
+                    self.last_step = Some(step);
+                    self.keep_takes_to_their_clips(step, straight);
                     self.start_notes(step);
                     if lap {
                         self.resume_long_sounds(step);
@@ -2122,6 +2271,30 @@ fn delay(loose_frames: f64, channel: usize, song_step: usize, pitch: Note) -> f6
 /// `timing`'s tempos: the song's, one a step and the last going on, or
 /// else its single tempo, at its sample rate. A step before the loop
 /// (below zero) lasts as long as the loop's first.
+/// Whether a take's recording, played by a channel with `notes`, may be
+/// heard on song step `step`: whether a clip plays there on a track
+/// where a clip starts the recording. A recording is heard only under
+/// the clips of its track, as the playlist draws it.
+fn take_heard(plays: &[Play], notes: &ChannelNotes, step: usize) -> bool {
+    plays.iter().filter(|play| play.covers(step)).any(|play| {
+        plays
+            .iter()
+            .any(|other| other.track == play.track && !notes.get(other.pattern).is_empty())
+    })
+}
+
+/// Whether `origin` is a note of `play`'s pattern in the part of its clip
+/// that it leaves out before its start, played `length` steps at a time:
+/// a recording that started partway through (see
+/// [`AudioThread::start_hidden_takes`]).
+fn hidden_in(play: &Play, origin: Origin, length: usize) -> bool {
+    let offset = origin.song_step as isize - play.origin();
+    length > 0
+        && origin.song_step < play.start
+        && offset >= 0
+        && offset as usize % length == origin.pattern_step
+}
+
 fn frames_between(timing: (&[Tempo], Tempo, u32), from: isize, to: usize) -> f64 {
     let (tempos, tempo, sample_rate) = timing;
     let tempo_at = |step: usize| tempos.get(step).or(tempos.last()).copied().unwrap_or(tempo);
@@ -2991,6 +3164,18 @@ mod tests {
     /// rises steadily from 0 to 1, so where in it playback is can be
     /// read from its level. The song plays `plays` of it, in song mode.
     fn recording_song(plays: Vec<Play>, length: usize) -> Harness {
+        song_with_recording(plays, length, false)
+    }
+
+    /// [`recording_song`], with the recording played as a take's is
+    /// (see [`Sampler::playing_along`]): only under the clips of its
+    /// track. Pattern 0 has nothing for it, as the clips that carry a
+    /// long take on.
+    fn take_song(plays: Vec<Play>, length: usize) -> Harness {
+        song_with_recording(plays, length, true)
+    }
+
+    fn song_with_recording(plays: Vec<Play>, length: usize, take: bool) -> Harness {
         let mut h = harness();
         send(
             &mut h,
@@ -3001,13 +3186,17 @@ mod tests {
         );
         let frames = 12 * RATE as usize;
         let ramp = (0..frames).map(|i| i as f32 / frames as f32).collect();
+        let sampler = Sampler::new(Arc::new(SampleData::new(ramp, RATE)));
+        let sampler = if take {
+            sampler.playing_along()
+        } else {
+            sampler
+        };
         send(
             &mut h,
             Command::InsertChannel {
                 index: AT_END,
-                instrument: Instrument::Sampler(Sampler::new(Arc::new(SampleData::new(
-                    ramp, RATE,
-                )))),
+                instrument: Instrument::Sampler(sampler),
                 notes: ChannelNotes::new([Vec::new(), steps(&[0])]),
                 volume: 1.0,
                 muted: false,
@@ -3031,6 +3220,7 @@ mod tests {
     fn a_recording_plays_from_wherever_playback_starts() {
         let piece = Play {
             pattern: 1,
+            track: 0,
             start: 0,
             skip: 0,
             length: 256,
@@ -3059,6 +3249,7 @@ mod tests {
         // recording's clip, 32 steps into it.
         let piece = Play {
             pattern: 1,
+            track: 0,
             start: 0,
             skip: 32,
             length: 16,
@@ -3074,10 +3265,139 @@ mod tests {
         assert!((again - first).abs() < 0.001, "{first} then {again}");
     }
 
+    /// The level of a take on song step `step` (a little way into it),
+    /// played straight through from the start in one clip.
+    fn take_level(step: usize) -> f32 {
+        let whole = Play {
+            pattern: 1,
+            track: 0,
+            start: 0,
+            skip: 0,
+            length: 256,
+        };
+        let mut h = take_song(vec![whole], 256);
+        send(&mut h, Command::Play);
+        render(&mut h, step * STEP + 2_000)[step * STEP + 1_999]
+    }
+
+    #[test]
+    fn a_take_is_heard_only_under_the_clips_of_its_track() {
+        // The take's clip, cut short at step 16; nothing on its track
+        // from 16 to 32; then an empty clip on it, as the rest of a long
+        // take; then a clip on another track only.
+        let plays = vec![
+            Play {
+                pattern: 1,
+                track: 0,
+                start: 0,
+                skip: 0,
+                length: 16,
+            },
+            Play {
+                length: 16,
+                ..whole(0, 32)
+            },
+            Play {
+                track: 1,
+                ..whole(0, 48)
+            },
+        ];
+        let mut h = take_song(plays, 64);
+        send(&mut h, Command::Play);
+        let out = render(&mut h, 64 * STEP);
+        assert!(out[15 * STEP] > 0.0, "heard in its own clip");
+        assert!(
+            out[17 * STEP..32 * STEP].iter().all(|&s| s == 0.0),
+            "silent where its track has no clip"
+        );
+        let again = out[32 * STEP + 1_999];
+        let expected = take_level(32);
+        assert!(
+            (again - expected).abs() < 0.001,
+            "back under the next clip of its track, where it would be: {again} for {expected}"
+        );
+        assert!(
+            out[49 * STEP..].iter().all(|&s| s == 0.0),
+            "not under a clip of another track"
+        );
+    }
+
+    #[test]
+    fn a_take_trimmed_at_the_start_comes_in_partway_through() {
+        // The take's clip leaves out its first 8 steps.
+        let trimmed = Play {
+            pattern: 1,
+            track: 0,
+            start: 8,
+            skip: 8,
+            length: 24,
+        };
+        let expected = take_level(8);
+        // Played from the start, it comes in on step 8.
+        let mut h = take_song(vec![trimmed], 32);
+        send(&mut h, Command::Play);
+        let out = render(&mut h, 8 * STEP + 2_000);
+        assert!(out[..8 * STEP].iter().all(|&s| s == 0.0), "silent before");
+        let heard = out[8 * STEP + 1_999];
+        assert!((heard - expected).abs() < 0.001, "{heard} for {expected}");
+        // The same song sent again while it sounds leaves it playing.
+        send(
+            &mut h,
+            Command::SetSong {
+                plays: vec![trimmed],
+                length: 32,
+            },
+        );
+        let out = render(&mut h, 2 * STEP);
+        assert!(out[2 * STEP - 1] > heard, "still playing on");
+        // Played from step 12, it sounds at once, from there.
+        let mut h = take_song(vec![trimmed], 32);
+        send(&mut h, Command::Seek(12));
+        send(&mut h, Command::Play);
+        let heard = render(&mut h, 2_000)[1_999];
+        let expected = take_level(12);
+        assert!((heard - expected).abs() < 0.001, "{heard} for {expected}");
+    }
+
+    #[test]
+    fn a_take_trimmed_at_the_end_stops_there() {
+        let trimmed = Play {
+            pattern: 1,
+            track: 0,
+            start: 0,
+            skip: 0,
+            length: 20,
+        };
+        let mut h = take_song(vec![trimmed], 40);
+        send(&mut h, Command::Play);
+        let out = render(&mut h, 40 * STEP);
+        assert!(out[20 * STEP - 1] > 0.0);
+        assert!(out[21 * STEP..].iter().all(|&s| s == 0.0), "faded out");
+        // Dragged back out while the song plays on, it comes back at once,
+        // where it would be.
+        let mut h = take_song(vec![trimmed], 40);
+        send(&mut h, Command::Play);
+        render(&mut h, 24 * STEP + STEP / 2);
+        send(
+            &mut h,
+            Command::SetSong {
+                plays: vec![Play {
+                    length: 40,
+                    ..trimmed
+                }],
+                length: 40,
+            },
+        );
+        let heard = render(&mut h, STEP / 2 + 2_000)[STEP / 2 + 1_999];
+        let expected = take_level(25);
+        assert!((heard - expected).abs() < 0.001, "{heard} for {expected}");
+    }
+
     /// All 16 steps of a pattern, once, from song step `start`.
     fn whole(pattern: usize, start: usize) -> Play {
         Play {
             pattern,
+            track: 0,
             start,
             skip: 0,
             length: 16,
@@ -3096,6 +3416,7 @@ mod tests {
             },
             Play {
                 pattern: 1,
+                track: 0,
                 start: 48,
                 skip: 8,
                 length: 8,

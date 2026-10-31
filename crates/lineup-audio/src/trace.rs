@@ -915,6 +915,7 @@ mod tests {
         renderer.send(Command::SetSong {
             plays: vec![Play {
                 pattern: 0,
+                track: 0,
                 start: 0,
                 skip: 0,
                 length: 16,

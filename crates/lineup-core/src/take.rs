@@ -896,10 +896,18 @@ impl Project {
                 if length == 0 {
                     continue;
                 }
-                // Every place this clip plays the pattern inside the range.
-                let mut offset = clip.start;
-                while offset < clip.start + self.clip_length(clip) {
-                    let here = range.start.max(offset)..range.end.min(offset + length);
+                // Every place this clip plays the pattern inside the range,
+                // and where the pattern's first step is that time round. A
+                // clip trimmed at an edge leaves the steps it hides alone.
+                let rounds: Vec<(usize, Range<usize>)> = clip
+                    .rounds(length)
+                    .filter_map(|round| {
+                        let offset = round.at.checked_sub(round.steps.start)?;
+                        Some((offset, round.at..round.end()))
+                    })
+                    .collect();
+                for (offset, heard) in rounds {
+                    let here = range.start.max(heard.start)..range.end.min(heard.end);
                     if here.start < here.end {
                         let notes: Vec<Placed> = transcription
                             .notes
@@ -913,7 +921,6 @@ impl Project {
                         written +=
                             self.replace_in_pattern(clip.pattern, channel, here, offset, &notes);
                     }
-                    offset += length;
                 }
                 let uses = self
                     .playlist()

@@ -226,6 +226,21 @@ impl Instrument {
         }
     }
 
+    /// Whether it plays a take's recording (see [`Sampler::playing_along`]),
+    /// which is heard only under the clips of its track.
+    pub fn plays_a_take(&self) -> bool {
+        matches!(self, Instrument::Sampler(sampler) if sampler.along)
+    }
+
+    /// Whether a long sound of the song is playing, and not fading out:
+    /// a take's recording, say (see [`Instrument::resume`]).
+    pub fn sounds_long(&self) -> bool {
+        match self {
+            Instrument::Sampler(sampler) => sampler.is_long() && sampler.sounding(),
+            _ => false,
+        }
+    }
+
     /// Fades out the long sounds a sampler is playing (see
     /// [`Instrument::release_all`]), and nothing else: when the song
     /// comes round to the start of the loop, a recording still playing
@@ -510,6 +525,13 @@ impl Sampler {
         }
         self.start_at(position, increment, velocity, Some(origin));
         true
+    }
+
+    /// Whether any voice of the song is playing and not fading out.
+    fn sounding(&self) -> bool {
+        self.voices
+            .iter()
+            .any(|voice| voice.origin.is_some() && !voice.is_idle() && !voice.is_releasing())
     }
 
     /// Whether the sound is long, such as a whole song in a sound file:
