@@ -152,21 +152,25 @@ impl Project {
     /// Whether the chord sheet holds forms of the key and nothing else
     /// but bars of no chord: the key is a pitch-class set (a micromode
     /// is one) where each harmony is written, and each is that set moved
-    /// or turned upside down.
+    /// or turned upside down, written as a set or as the chord it is (C7
+    /// and Em7b5 are forms of C7 as a set).
     pub fn sheet_holds_forms(&self) -> bool {
         let keys = self.key_map();
         let mut forms = 0;
         for marker in &self.playlist.chord_markers {
             let key = keys.key_at(marker.start);
-            match marker.harmony {
-                HarmonyName::NoChord => {}
-                HarmonyName::Set(set) | HarmonyName::Micromode(set)
-                    if matches!(key.kind, ScaleKind::Set(_)) && Degree::of(key, set).is_some() =>
-                {
-                    forms += 1;
-                }
-                _ => return false,
+            let form = match marker.harmony {
+                HarmonyName::NoChord => continue,
+                HarmonyName::Set(set) | HarmonyName::Micromode(set) => Some(set),
+                HarmonyName::Chord(symbol) => Some(symbol.chord().pitch_set()),
+                _ => None,
+            };
+            let is_form = matches!(key.kind, ScaleKind::Set(_))
+                && form.is_some_and(|form| Degree::of(key, form).is_some());
+            if !is_form {
+                return false;
             }
+            forms += 1;
         }
         forms > 0
     }
@@ -183,48 +187,44 @@ impl Project {
     /// key note, all through the song.
     ///
     /// A band coming in mutes the song's own chords and bass, as any band
-    /// does. With `parts.rhythm`, the style's drums play, if it has any;
-    /// otherwise the drums that played go on. The time signature, the
-    /// tempo and the swing come with their boxes, as from any style.
+    /// does. With `parts.rhythm`, the style's drums play, and a style
+    /// without drums leaves the song without; otherwise the drums that
+    /// played go on. The time signature, the tempo and the swing come
+    /// with their boxes, as from any style.
     pub fn apply_micromode_style(&mut self, style: &'static MicromodeStyle, parts: StyleParts) {
         let writes = parts.progression || !self.sheet_holds_forms();
-        let rhythm = style
+        // The style's drums, or none: a style without drums brings none,
+        // as a band style without them does.
+        let drums = style
             .rhythm()
             .and_then(|rhythm| BandStyle::named(rhythm.name))
-            .filter(|_| parts.rhythm);
+            .or_else(|| BandStyle::named(WITHOUT_DRUMS))
+            .expect("the band has a style without drums");
         let mut drums_come = false;
         match &mut self.band {
             None => {
-                let base = rhythm
-                    .or_else(|| BandStyle::named(WITHOUT_DRUMS))
-                    .expect("the band has a style without drums");
-                let mut band = Band::new(base);
-                if rhythm.is_none() {
+                let mut band = Band::new(drums);
+                if !parts.rhythm {
                     band.drums = BandDrums::Song;
                 }
                 band.end = self.song_length();
                 band.since = self.channels.len();
                 if band.end > 0 {
-                    band.muted = self.mute_the_songs_own(rhythm.is_some());
+                    band.muted = self.mute_the_songs_own(parts.rhythm);
                 }
                 self.band = Some(band);
             }
             Some(band) => {
-                match rhythm {
-                    Some(rhythm) => {
-                        drums_come = band.drums == BandDrums::Song;
-                        band.style = rhythm;
-                        band.drums = BandDrums::Style;
-                    }
+                if parts.rhythm {
+                    drums_come = band.drums == BandDrums::Song;
+                    band.style = drums;
+                    band.drums = BandDrums::Style;
+                } else if band.drums == BandDrums::Style {
                     // The drums the band played stay.
-                    None => {
-                        if band.drums == BandDrums::Style {
-                            band.drums = match band.custom_rhythm.take() {
-                                Some(saved) => BandDrums::Saved(saved),
-                                None => BandDrums::Of(band.style),
-                            };
-                        }
-                    }
+                    band.drums = match band.custom_rhythm.take() {
+                        Some(saved) => BandDrums::Saved(saved),
+                        None => BandDrums::Of(band.style),
+                    };
                 }
                 band.custom_rhythm = None;
                 band.harmony_style = None;
@@ -394,11 +394,36 @@ mod tests {
         }
         let sheet = project.playlist().chord_markers().to_vec();
         assert!(project.sheet_holds_forms());
+        // A form written as the chord it is counts as a form too: Em7b5
+        // is C7 upside down, and Dm7 is not a form of it.
+        let mut chords = project.clone();
+        crate::band::tests::write(&mut chords, &["C7", "Em7b5"]);
+        assert!(chords.sheet_holds_forms());
+        crate::band::tests::write(&mut chords, &["C7", "Dm7"]);
+        assert!(!chords.sheet_holds_forms());
         let style = named("Viennese points");
+        let before_style = project.clone();
+        assert!(
+            before_style
+                .band()
+                .unwrap()
+                .players()
+                .contains(&Player::Drums)
+        );
         project.apply_micromode_style(style, StyleParts::default());
         // The sheet and the key are as they were.
         assert_eq!(project.playlist().chord_markers(), sheet.as_slice());
         assert_eq!(project.scale.pitch_set(), c7);
+        // The style has no drums: with its drums taken, none play; without,
+        // the band's go on.
+        assert!(!project.band().unwrap().players().contains(&Player::Drums));
+        let mut kept = before_style.clone();
+        let parts = StyleParts {
+            rhythm: false,
+            ..StyleParts::default()
+        };
+        kept.apply_micromode_style(style, parts);
+        assert!(kept.band().unwrap().players().contains(&Player::Drums));
         // The points play the forms of the sheet, bar by bar.
         for (index, form) in forms.iter().enumerate() {
             let bar = meter.bar(index);
