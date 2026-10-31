@@ -108,6 +108,27 @@ impl RowLabel {
             number: number % 12,
         }
     }
+
+    /// Reads a label as it is written: "P0", "I5", "R3" or "RI11", in
+    /// capitals (a small "i7" is a Roman numeral on the chord sheet).
+    /// `None` for anything else.
+    pub fn parse(text: &str) -> Option<RowLabel> {
+        let text = text.trim();
+        let forms = [
+            ("RI", RowForm::RetrogradeInversion),
+            ("P", RowForm::Prime),
+            ("I", RowForm::Inversion),
+            ("R", RowForm::Retrograde),
+        ];
+        let (form, number) = forms
+            .into_iter()
+            .find_map(|(letters, form)| Some((form, text.strip_prefix(letters)?)))?;
+        if number.is_empty() || !number.chars().all(|c| c.is_ascii_digit()) {
+            return None;
+        }
+        let number: u8 = number.parse().ok()?;
+        (number < 12).then(|| RowLabel::new(form, number))
+    }
 }
 
 impl fmt::Display for RowLabel {

@@ -22,6 +22,7 @@
 //! in step with the pitches or with each other.
 
 use crate::harmony::{RowForm, RowLabel, ToneRow};
+use crate::i18n::trf;
 use crate::pattern::NoteEvent;
 use crate::pitch::{Note, PitchClass};
 
@@ -176,6 +177,23 @@ pub fn write_plan(
         return Vec::new();
     }
     write_forms(row, writing, length, |count| Some(plan[count % plan.len()]))
+}
+
+/// Reads a plan of forms as it is typed: labels such as `P0 RI5 I7 R0`,
+/// in capitals or not, between spaces, commas or bars. An error names
+/// the first word that is not a form of a row.
+pub fn read_plan(text: &str) -> Result<Vec<RowLabel>, String> {
+    text.split(|c: char| c.is_whitespace() || matches!(c, ',' | '|' | ';'))
+        .filter(|word| !word.is_empty())
+        .map(|word| {
+            RowLabel::parse(&word.to_ascii_uppercase()).ok_or_else(|| {
+                trf(
+                    "\"{}\" is not a form of the row: write forms as P0, I5, R11 or RI3.",
+                    &[&word],
+                )
+            })
+        })
+        .collect()
 }
 
 /// Writes the form `form_after(count)` gives after `count` forms, one
@@ -512,6 +530,25 @@ mod tests {
             .collect();
         assert_eq!(forms, ["P0", "RI5", "I7", "P0"]);
         assert!(write_plan(lineup, &writing, &[], 48).is_empty());
+    }
+
+    #[test]
+    fn a_plan_is_read_as_it_is_typed() {
+        let label = |form, number| RowLabel::new(form, number);
+        assert_eq!(
+            read_plan("P0 ri5, I7 | R11").unwrap(),
+            [
+                label(RowForm::Prime, 0),
+                label(RowForm::RetrogradeInversion, 5),
+                label(RowForm::Inversion, 7),
+                label(RowForm::Retrograde, 11),
+            ]
+        );
+        assert!(read_plan("  ").unwrap().is_empty());
+        let error = read_plan("P0 X3").unwrap_err();
+        assert!(error.contains("X3"), "{error}");
+        assert!(read_plan("P12").is_err());
+        assert!(read_plan("P+5").is_err());
     }
 
     #[test]

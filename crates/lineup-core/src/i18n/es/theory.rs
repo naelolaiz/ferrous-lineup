@@ -104,6 +104,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "«{}» no es una de las clases de conjuntos de Forte.",
     ),
     (
+        "\"{}\" is not a form of the row: write forms as P0, I5, R11 or RI3.",
+        "«{}» no es una forma de la serie: escribe las formas como P0, I5, R11 o RI3.",
+    ),
+    (
         "\"{}\": \"{}\" is not a kind of chord Ferrous Lineup knows, such as m, 7, maj7, m7b5, sus4 or 13.",
         "«{}»: «{}» no es un tipo de acorde que Ferrous Lineup conozca, como m, 7, maj7, m7b5, sus4 o 13.",
     ),

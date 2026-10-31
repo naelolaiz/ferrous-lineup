@@ -286,6 +286,16 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ),
     ("Auto ({})", "Automático ({})"),
     ("Back to 100%", "Volver al 100%"),
+    ("Backwards", "Hacia atrás"),
+    (
+        "The notes in the opposite order in time, rhythm and all, as in a crab canon. A form of a row becomes its retrograde: P0 becomes R0.",
+        "Las notas en el orden contrario en el tiempo, con su ritmo también, como en un canon cangrejo. Una forma de una serie se vuelve su retrógrada: P0 se vuelve R0.",
+    ),
+    ("Pitches backwards", "Alturas hacia atrás"),
+    (
+        "The pitches in the opposite order, in the same rhythm: the first note takes the last one's pitch. P0 becomes R0, in the rhythm P0 had.",
+        "Las alturas en el orden contrario, con el mismo ritmo: la primera nota toma la altura de la última. P0 se vuelve R0, con el ritmo que tenía P0.",
+    ),
     ("Band on {}", "Banda en {}"),
     ("Bar", "Compás"),
     (
@@ -949,6 +959,13 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("Intro: {} bars", "Introducción: {} compases"),
     ("Inversions", "Inversiones"),
     ("invert chords", "invertir acordes"),
+    ("play notes backwards", "tocar las notas hacia atrás"),
+    ("turn pitches backwards", "poner las alturas hacia atrás"),
+    ("turn notes upside down", "dar vuelta las notas"),
+    (
+        "turn notes upside down in key",
+        "dar vuelta las notas en la tonalidad",
+    ),
     ("Invert chords down", "Invertir los acordes hacia abajo"),
     ("Invert chords up", "Invertir los acordes hacia arriba"),
     ("Inverted (I)", "Invertido (I)"),
@@ -2179,6 +2196,24 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ),
     ("The {}", "El {}"),
     ("Then", "Después"),
+    ("A plan of forms", "Un plan de formas"),
+    (
+        "Forms you choose, one after another, such as P0 RI5 I7 R0",
+        "Formas que eliges, una tras otra, como P0 RI5 I7 R0",
+    ),
+    ("Plan", "Plan"),
+    (
+        "The forms one after another, then again from the first until the pattern is full. Type them, or click them around the matrix.",
+        "Las formas una tras otra, y otra vez desde la primera hasta llenar el patrón. Escríbelas, o haz clic en ellas alrededor de la matriz.",
+    ),
+    (
+        "Type the forms to play, or click them around the matrix.",
+        "Escribe las formas que se tocan, o haz clic en ellas alrededor de la matriz.",
+    ),
+    (
+        "Type a plan of forms first.",
+        "Escribe primero un plan de formas.",
+    ),
     (
         "There is no folder to keep a SoundFont in",
         "No hay ninguna carpeta donde guardar un SoundFont",
@@ -2315,6 +2350,15 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("Up a note in the key", "Subir una nota de la tonalidad"),
     ("Up a semitone", "Subir un semitono"),
     ("Up an octave", "Subir una octava"),
+    (
+        "Every interval from the first note turned the other way: up a third becomes down a third, a major chord becomes minor, and P0 becomes I0.",
+        "Cada intervalo desde la primera nota, hacia el otro lado: subir una tercera se vuelve bajar una tercera, un acorde mayor se vuelve menor, y P0 se vuelve I0.",
+    ),
+    ("Upside down in the key", "Dado vuelta en la tonalidad"),
+    (
+        "Every note as many notes of the key below the first note as it was above it, so the tune stays in the key: in C major, around C, E becomes A.",
+        "Cada nota tantas notas de la tonalidad por debajo de la primera como estaba por encima, así la melodía sigue en la tonalidad: en {C} mayor, alrededor de {C}, {E} se vuelve {A}.",
+    ),
     (
         "Upside down it is the same set, moved.",
         "Dado vuelta es el mismo conjunto, transportado.",
