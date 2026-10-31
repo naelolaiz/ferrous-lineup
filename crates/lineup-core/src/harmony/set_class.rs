@@ -236,6 +236,30 @@ impl SetClass {
         }
         text
     }
+
+    /// The class's prime form, or its inversion, moved so that the first
+    /// note of its normal form goes to `root`: the set a key of this
+    /// class on `root` plays. 3-11 on C is C Eb G, the minor triad, and inverted
+    /// C E G, the major one. For a class that is the same upside down,
+    /// such as 4-28, both are the same set.
+    pub fn on(&self, root: PitchClass, inverted: bool) -> PitchSet {
+        let form = if inverted {
+            self.prime.invert()
+        } else {
+            self.prime
+        };
+        let first = form.normal_form().first().copied().unwrap_or(PitchClass::C);
+        form.transpose(first.semitones_up_to(root))
+    }
+
+    /// Whether `set`, one of this class's sets, is its inversion moved
+    /// rather than its prime form moved. For a class that is the same
+    /// upside down, it never is.
+    pub fn is_inverted(&self, set: PitchSet) -> bool {
+        self.prime
+            .moved_to(set)
+            .is_some_and(|(_, inverted)| inverted)
+    }
 }
 
 /// The pitch classes of `set` as digits, with T and E for 10 and 11.
@@ -607,6 +631,38 @@ mod tests {
         assert_eq!(set(&[0, 1, 3, 4, 6, 7, 9, 10]).set_class().name(), "8-28");
         assert_eq!(set(&[0, 1, 6]).set_class().name(), "3-5");
         assert_eq!(set(&[0, 2, 4, 7, 9]).set_class().name(), "5-35");
+    }
+
+    #[test]
+    fn a_class_is_placed_on_a_root_upright_or_inverted() {
+        let triad = set(&[0, 4, 7]).set_class();
+        // 3-11 on D: D F A upright, D F# A inverted.
+        assert_eq!(triad.on(D, false), set(&[2, 5, 9]));
+        assert_eq!(triad.on(D, true), set(&[2, 6, 9]));
+        assert!(!triad.is_inverted(triad.on(D, false)));
+        assert!(triad.is_inverted(triad.on(D, true)));
+        // Every class, both ways, holds the root and stays in its class;
+        // a class the same upside down comes out the same.
+        for class in SetClass::all().iter().filter(|c| c.cardinality > 0) {
+            for root in PitchClass::ALL {
+                for inverted in [false, true] {
+                    let placed = class.on(root, inverted);
+                    assert_eq!(placed.set_class(), class, "{}", class.name());
+                    assert!(placed.contains(root), "{}", class.name());
+                    assert_eq!(
+                        class.is_inverted(placed),
+                        inverted && !class.is_symmetric(),
+                        "{} on {root:?}",
+                        class.name()
+                    );
+                }
+            }
+        }
+        let diminished_seventh = set(&[0, 3, 6, 9]).set_class();
+        assert_eq!(
+            diminished_seventh.on(E, true),
+            diminished_seventh.on(E, false)
+        );
     }
 
     #[test]

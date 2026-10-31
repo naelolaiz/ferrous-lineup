@@ -437,6 +437,92 @@ nombradas de las dos maneras) y comprueba que la opción elegida es la
 que se muestra: el error que escondía **conjunto de clases de alturas**
 detrás de Menor 3 no puede volver sin que se note.
 
+### Cualquier conjunto, por su tamaño
+
+Debajo de **conjunto de clases de alturas**, un menú Tonalidad lista las
+clases de conjuntos de un tamaño como lista los micromodos debajo: una
+fila de tamaños de 2 a 10 notas, un interruptor **Invertido (I)** y un
+botón por clase con su nombre de Forte. Una clase todavía no es un
+conjunto: no tiene lugar. Elegir una la pone sobre la tónica:
+
+```rust
+/// The class's prime form, or its inversion, moved so that the first
+/// note of its normal form goes to `root`: the set a key of this
+/// class on `root` plays.
+pub fn on(&self, root: PitchClass, inverted: bool) -> PitchSet {
+    let form = if inverted {
+        self.prime.invert()
+    } else {
+        self.prime
+    };
+    let first = form
+        .normal_form()
+        .first()
+        .copied()
+        .unwrap_or(PitchClass::C);
+    form.transpose(first.semitones_up_to(root))
+}
+```
+
+3-11 sobre Do es Do Mi♭ Sol, la tríada menor, e invertido Do Mi Sol, la
+mayor. Una clase que es igual al revés, como 4-28, da el mismo conjunto
+de las dos maneras. `is_inverted` responde al revés, si un conjunto de
+la clase es su inversión movida, y para una clase así dice que no, de
+modo que el menú marca la clase de la tonalidad esté como esté el
+interruptor. Una prueba pone cada clase sobre cada nota, de las dos
+maneras, y comprueba que el conjunto tiene esa nota y sigue en su
+clase.
+
+La elección es `KindChoice::Class { class, inverted }`. Termina en
+`set_choice`, con las otras maneras de elegir un conjunto: si la
+tonalidad ya es ese conjunto sobre esa nota, no pasa nada, y si es el
+micromodo con esas notas, solo se nombra como conjunto.
+
+El tamaño y el interruptor viven en la memoria de egui mientras el menú
+está abierto, y empiezan desde la tonalidad cada vez que se abre: Do
+mayor se abre en los conjuntos de siete notas. Un clic en un tamaño no
+debe cerrar el menú, así que el `ComboBox` se cierra solo con un clic
+fuera de él (`PopupCloseBehavior::CloseOnClickOutside`), y una elección
+lo cierra con `ui.close()`.
+
+**El conjunto de la propia canción.** Entre los conjuntos de un tamaño,
+el que la canción usa más aparece recuadrado. `notation::song_set` lee
+las notas de las dos maneras que describe
+[Leer las propias notas](#leer-las-propias-notas): todas las notas que
+suenan juntas, y la línea de cada canal por separado, porque una
+melodía o un bajo es una sola línea, y juntar dos líneas en una
+cortaría grupos entre ellas. Solo cuentan los grupos de exactamente ese
+número de notas, porque un acorde de tres no dice nada de los conjuntos
+de cuatro. Cada grupo dura hasta que empieza el siguiente, y dos de una
+misma clase a la vez cuentan una vez, como en
+[la clase más usada](#la-clase-más-usada). Gana la lectura en la que una
+clase suena más tiempo.
+
+```rust
+pub struct SongSet {
+    pub class: &'static SetClass,
+    /// The class's set the song uses most, where it is.
+    pub set: PitchSet,
+    pub steps: usize,
+    pub length: usize,
+    /// How the notes were read: together, or in a line.
+    pub grouping: Grouping,
+    /// The channel whose line it was read in, for a line.
+    pub channel: Option<usize>,
+}
+```
+
+Además de la clase, guarda el conjunto de la clase que la canción usa
+más, donde está. En Los tricordios de Webern, de a tres, es 3-3 y Si Do
+Mi♭, el primer tricordio de la serie; de a seis es 6-20, la primera
+mitad de la serie, leída en la línea de la Melodía. Elegir el botón
+recuadrado es `KindChoice::Found(set)`, que toma ese conjunto tal como
+está, sobre la tónica si el conjunto la tiene y si no sobre su propia
+primera nota, así las notas de la canción siguen encajando en la
+tonalidad. La lectura se hace cuando el menú se abre o cambia el
+tamaño, no en cada cuadro, y se guarda en la memoria de egui con el
+tamaño para el que se leyó.
+
 ## Un conjunto como tonalidad: sus formas
 
 La música construida sobre un solo conjunto, como la de Webern y buena

@@ -5181,6 +5181,45 @@ fn a_micromode_key_names_its_forms_by_their_degrees() {
     assert!(!shows(&mut screen, "T6"));
 }
 
+/// The key menu lists the sets of each size, as it lists the micromodes:
+/// the menu opens on the key's own size with its set marked, a size
+/// changes the list without closing it, and a set picked is the key.
+#[test]
+fn the_key_menu_lists_the_sets_of_each_size() {
+    use lineup_core::{PitchClass, PitchSet};
+    let mut screen = Screen::new();
+    let mut project = Project::with_band();
+    project.scale = Scale::set(PitchClass::C, PitchSet::from_semitones(&[0, 4, 7])).named_as_set();
+    screen.app.replace_project(project, None);
+    screen.app.rack_open = false;
+    screen.app.harmony_keys.open = true;
+    let shows = |screen: &mut Screen, text: &str| {
+        screen.draw(Vec::new());
+        let output = screen.draw(Vec::new());
+        text_rect(&output, text).is_some()
+    };
+    screen.click("pitch-class set");
+    // The sets of three notes, 3-11 among them.
+    assert!(shows(&mut screen, "3-11"));
+    assert!(shows(&mut screen, "3-12"));
+    assert!(!shows(&mut screen, "6-20"));
+    // Six notes: the hexachords, and the menu still open.
+    let output = screen.draw(Vec::new());
+    let notes = text_rect(&output, "Notes").expect("the sizes");
+    let six = text_rect_in_row(&output, "6", notes.center().y).expect("six notes");
+    screen.click_at(six.center(), Modifiers::NONE);
+    assert!(shows(&mut screen, "6-20"));
+    assert!(!shows(&mut screen, "3-12"));
+    screen.click("6-20");
+    // 6-20 on C: C C# E F G# A, and the menu closed.
+    assert_eq!(
+        screen.app.project.scale.pitch_set(),
+        PitchSet::from_semitones(&[0, 1, 4, 5, 8, 9])
+    );
+    assert_eq!(screen.app.project.scale.root, PitchClass::C);
+    assert!(!shows(&mut screen, "6-1"));
+}
+
 /// A key that is any pitch-class set offers its forms too, and the chord
 /// sheet's Progression menu chains them.
 #[test]
