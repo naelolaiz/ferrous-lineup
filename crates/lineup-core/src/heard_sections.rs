@@ -93,6 +93,10 @@ pub(crate) struct Ear {
     pub eights: f32,
     /// How alike two parts must sound to get the same letter.
     pub same_part: f32,
+    /// What counting the parts from the second bar gains when the first
+    /// sounds like a pickup, and when it does not.
+    pub pickup: f32,
+    pub no_pickup: f32,
 }
 
 pub(crate) const EAR: Ear = Ear {
@@ -105,7 +109,7 @@ pub(crate) const EAR: Ear = Ear {
     something_new: 0.05,
     new_key: 1.8,
     new_time: 1.6,
-    new_tempo: 0.4,
+    new_tempo: 0.0,
     new_instruments: 0.0,
     tune_rests: 0.6,
     on_eight: 0.45,
@@ -116,6 +120,8 @@ pub(crate) const EAR: Ear = Ear {
     long_part: 0.45,
     eights: 0.0,
     same_part: 0.7,
+    pickup: 0.1,
+    no_pickup: -0.9,
 };
 
 /// What one bar sounds like.
@@ -476,10 +482,12 @@ fn cut(bars: &[Heard], ear: &Ear) -> Option<Vec<usize>> {
     }
     let likeness = likenesses(bars, ear);
     let reasons = reasons(bars, &likeness, ear);
-    // The tune may start with a pickup: a bar the harmony has not come in
-    // yet, or whose tune starts late, leading into the first downbeat.
-    let pickup = bars[first].is_pickup() && first + 1 < bars.len();
-    let anchors = if pickup {
+    // The tune may start with a pickup, a bar leading into the first
+    // downbeat: the parts are counted from the bar after it. A bar the
+    // harmony has not come in yet, or whose tune starts late, sounds
+    // like one; the parts that come back say whether it is.
+    let pickup = bars[first].is_pickup();
+    let anchors = if first + 1 < bars.len() {
         vec![first, first + 1]
     } else {
         vec![first]
@@ -488,7 +496,11 @@ fn cut(bars: &[Heard], ear: &Ear) -> Option<Vec<usize>> {
         .into_iter()
         .map(|anchor| {
             let (score, starts) = best_cut(bars.len(), anchor, &reasons, ear);
-            let leads_in = if anchor > first { 0.2 } else { 0.0 };
+            let leads_in = match (anchor > first, pickup) {
+                (false, _) => 0.0,
+                (true, true) => ear.pickup,
+                (true, false) => ear.no_pickup,
+            };
             (score + leads_in, starts)
         })
         .max_by(|a, b| a.0.total_cmp(&b.0))?;
@@ -501,13 +513,13 @@ impl Heard {
     }
 
     /// Whether it leads into the tune: its harmony silent and a tune in
-    /// it, or its tune starting in its second half.
+    /// it, or its tune coming in after its first beat.
     fn is_pickup(&self) -> bool {
         let Some(&(first, _)) = self.tune.first() else {
             return false;
         };
         let silent = self.harmony.iter().all(Harmony::is_silent);
-        silent || first >= self.length / 2
+        silent || first >= self.length / 4
     }
 }
 
@@ -538,10 +550,11 @@ fn run_likeness(likeness: &[Vec<f32>], from: usize, length: usize, lag: usize) -
         / length as f32
 }
 
-/// How many reasons each bar line gives to start a part there, before
-/// the phrases are counted.
-fn reasons(bars: &[Heard], likeness: &[Vec<f32>], ear: &Ear) -> Vec<f32> {
-    let n = bars.len();
+/// For each bar line, how surely a part starts there because bars come
+/// back.
+fn returns(likeness: &[Vec<f32>], ear: &Ear) -> Vec<f32> {
+    let same = ear.same_bar;
+    let n = likeness.len();
     // What comes back: a run of bars like the bars some way later. Where
     // it starts and where its return starts are where parts start; where
     // they end, less surely. A run that goes on longer than the distance
@@ -557,12 +570,12 @@ fn reasons(bars: &[Heard], likeness: &[Vec<f32>], ear: &Ear) -> Vec<f32> {
     for lag in 2..n {
         let mut i = 0;
         while i + lag < n {
-            if likeness[i][i + lag] < ear.same_bar {
+            if likeness[i][i + lag] < same {
                 i += 1;
                 continue;
             }
             let start = i;
-            while i + lag < n && likeness[i][i + lag] >= ear.same_bar {
+            while i + lag < n && likeness[i][i + lag] >= same {
                 i += 1;
             }
             let length = i - start;
@@ -579,8 +592,7 @@ fn reasons(bars: &[Heard], likeness: &[Vec<f32>], ear: &Ear) -> Vec<f32> {
                 && (1..lag)
                     .filter(|shorter| lag.is_multiple_of(*shorter))
                     .all(|shorter| {
-                        run_likeness(likeness, start, length + lag - shorter, shorter)
-                            < ear.same_bar
+                        run_likeness(likeness, start, length + lag - shorter, shorter) < same
                     })
             {
                 let weight = lag.min(8) as f32 / 8.0;
@@ -592,6 +604,14 @@ fn reasons(bars: &[Heard], likeness: &[Vec<f32>], ear: &Ear) -> Vec<f32> {
             }
         }
     }
+    back
+}
+
+/// How many reasons each bar line gives to start a part there, before
+/// the phrases are counted.
+fn reasons(bars: &[Heard], likeness: &[Vec<f32>], ear: &Ear) -> Vec<f32> {
+    let n = bars.len();
+    let back = returns(likeness, ear);
     // Something new: the bars on each side alike among themselves and
     // unlike across the line, beyond what is usual in the song.
     let mean = |rows: std::ops::Range<usize>, columns: std::ops::Range<usize>| {
@@ -863,19 +883,41 @@ mod tests {
         written: Vec<usize>,
     }
 
-    /// The demos to score against, three ways each (see [`Demo::mode`]):
-    /// songs, not the classical pieces, whose parts are cut finer than a
-    /// band plays.
-    fn demos() -> Vec<Demo> {
+    /// The demos to score against, each in the `modes` given (see
+    /// [`Demo::mode`]): songs, not the classical pieces, whose parts are
+    /// cut finer than a band plays.
+    fn demos(modes: &[&str]) -> Vec<Demo> {
         let mut demos = Vec::new();
-        for song in SONGS.iter().filter(|song| song.genre != Genre::Classical) {
+        // Songs whose parts are only numbered were cut where a MIDI file
+        // was, not where the music's parts start.
+        let numbered = |song: &&crate::library::song::Song| {
+            song.parts.iter().all(|part| {
+                part.name
+                    .strip_prefix("Part ")
+                    .is_some_and(|number| number.chars().all(|c| c.is_ascii_digit()))
+            })
+        };
+        for song in SONGS
+            .iter()
+            .filter(|song| song.genre != Genre::Classical && !numbered(song))
+        {
             let project = song_demo(song);
             let written = written(&project);
             let mut notes_only = project.clone();
             notes_only.playlist.chord_markers.clear();
-            let mut heard_chords = notes_only.clone();
-            heard_chords.write_heard_chords();
-            for (mode, project) in [("C", &project), ("N", &notes_only), ("H", &heard_chords)] {
+            let heard_chords = modes.contains(&"H").then(|| {
+                let mut heard_chords = notes_only.clone();
+                heard_chords.write_heard_chords();
+                heard_chords
+            });
+            for (mode, project) in [
+                ("C", Some(&project)),
+                ("N", Some(&notes_only)),
+                ("H", heard_chords.as_ref()),
+            ] {
+                let Some(project) = project.filter(|_| modes.contains(&mode)) else {
+                    continue;
+                };
                 demos.push(Demo {
                     name: song.name,
                     mode,
@@ -927,12 +969,60 @@ mod tests {
         (exact, near)
     }
 
+    /// Demos the ear hears just as their scores write them, with their
+    /// chord sheets and from their notes alone: a change to the ear must
+    /// not lose them.
+    #[test]
+    fn the_ear_hears_these_demos_as_written() {
+        for name in [
+            "Garota de Ipanema",
+            "La Cumparsita",
+            "Tea for Two",
+            "Sweet Georgia Brown",
+            "Deep River",
+            "Torna a Surriento",
+            "Chamamé del estero",
+            "Dorian Strut",
+        ] {
+            let song = SONGS.iter().find(|song| song.name == name).unwrap();
+            let project = song_demo(song);
+            let written = written(&project);
+            let mut notes_only = project.clone();
+            notes_only.playlist.chord_markers.clear();
+            for project in [&project, &notes_only] {
+                let heard = cut(&project.heard_bars(), &EAR).unwrap_or_default();
+                assert_eq!(heard, written, "{name}");
+            }
+        }
+    }
+
+    /// Over all the demos, the ear finds most parts where their scores
+    /// start them, with the chord sheet and without: it found 63.7% and
+    /// 65.1% (F1) when this test was written, and should not get worse.
+    #[test]
+    fn the_ear_hears_most_parts_of_the_demos() {
+        let demos = demos(&["C", "N"]);
+        for mode in ["C", "N"] {
+            let some: Vec<&Demo> = demos.iter().filter(|demo| demo.mode == mode).collect();
+            let mut exact = Score::default();
+            for demo in some {
+                let heard = heard(demo, &EAR);
+                let (found, right) = matches(&demo.written, &heard, 0);
+                exact.written += demo.written.len().saturating_sub(1);
+                exact.heard += heard.len().saturating_sub(1);
+                exact.found += found;
+                exact.right += right;
+            }
+            assert!(exact.f1() >= 0.63, "{mode}: {exact:?} F1 {:.3}", exact.f1());
+        }
+    }
+
     /// Scores the recognizer against the demos' written forms. Run with
     /// `--ignored --nocapture` to see each demo.
     #[test]
     #[ignore = "a report, not a check"]
     fn score_against_the_demos() {
-        let demos = demos();
+        let demos = demos(&["C", "N", "H"]);
         for demo in &demos {
             let heard = heard(demo, &EAR);
             println!(
@@ -966,9 +1056,11 @@ mod tests {
     #[test]
     #[ignore = "tunes the ear, slowly"]
     fn tune_the_ear() {
-        let demos = demos();
+        let demos = demos(&["C", "N", "H"]);
         let mut ear = EAR;
-        let fields: [Field; 20] = [
+        let fields: [Field; 22] = [
+            ("pickup", |e| &mut e.pickup),
+            ("no_pickup", |e| &mut e.no_pickup),
             ("tune_weight", |e| &mut e.tune_weight),
             ("texture_weight", |e| &mut e.texture_weight),
             ("same_bar", |e| &mut e.same_bar),
@@ -1014,5 +1106,39 @@ mod tests {
         let (exact, near) = score(&demos, &ear);
         println!("exact {exact:?} F1 {:.3}", exact.f1());
         println!("near  {near:?} F1 {:.3}", near.f1());
+    }
+}
+
+#[cfg(test)]
+mod debug {
+    use super::*;
+    use crate::library::demo::song_demo;
+    use crate::library::song::SONGS;
+
+    /// Prints what the ear hears in the demos named in `HEAR` (a comma
+    /// separated list): each bar's reasons. Run with `--ignored
+    /// --nocapture`.
+    #[test]
+    #[ignore = "a report"]
+    fn reasons_in_named_demos() {
+        let names = std::env::var("HEAR").unwrap_or_default();
+        for name in names.split(',').filter(|name| !name.is_empty()) {
+            let song = SONGS.iter().find(|song| song.name == name).unwrap();
+            let project = song_demo(song);
+            let bars = project.heard_bars();
+            let likeness = likenesses(&bars, &EAR);
+            let reasons = reasons(&bars, &likeness, &EAR);
+            println!("{name}: pickup {}", bars[0].is_pickup());
+            for (index, bar) in bars.iter().enumerate() {
+                println!(
+                    "  {index:3} reason {:5.2} tune {:?} next {:.2} lag8 {:.2}",
+                    reasons[index],
+                    bar.tune.iter().map(|(at, _)| *at).collect::<Vec<_>>(),
+                    likeness[index].get(index + 1).copied().unwrap_or(0.0),
+                    likeness[index].get(index + 8).copied().unwrap_or(0.0),
+                );
+            }
+            println!("  cut {:?}", cut(&bars, &EAR));
+        }
     }
 }
