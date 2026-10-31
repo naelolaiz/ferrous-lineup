@@ -44,8 +44,10 @@
 //! [`serial`]): the notes follow the forms of the row in order, no note
 //! comes back before the other eleven have sounded, no note is doubled
 //! in octaves, and no chord sounds like tonal harmony. Where the key is
-//! a pitch-class set, neither style's rules apply, and nothing is
-//! checked.
+//! a pitch-class set, such as one of Kröpfl's micromodes, neither
+//! style's rules apply: the check reads which forms of the set the
+//! notes make and marks what is out of the set's colour instead (see
+//! [`colour`]).
 //!
 //! ## Which notes make a part
 //!
@@ -61,7 +63,10 @@
 //! louder, not two parts in parallel octaves: such a pair is reported as
 //! a doubling, and only one of the two is checked.
 
+pub mod colour;
 pub mod serial;
+
+pub use colour::{ColourPlace, FormStatement};
 
 use super::hearing::{HeardNote, Listening};
 use super::{
@@ -247,6 +252,11 @@ pub enum SlipKind {
     /// In a row: notes that sound together as a chord of tonal music,
     /// a major or minor triad or a dominant seventh.
     TonalChord,
+    /// In a set: a note outside the form of the set heard around it.
+    OutsideColour,
+    /// In a micromode: a form that stops before its three notes have
+    /// sounded, when the next one starts.
+    FormUnfinished,
 }
 
 impl SlipKind {
@@ -265,6 +275,8 @@ impl SlipKind {
             SlipKind::RowUnfinished => "Row left unfinished",
             SlipKind::OctaveDoubling => "Octave doubling",
             SlipKind::TonalChord => "Sounds tonal",
+            SlipKind::OutsideColour => "Outside the colour",
+            SlipKind::FormUnfinished => "Form left unfinished",
         }
     }
 
@@ -278,9 +290,10 @@ impl SlipKind {
             SlipKind::Seventh => "7th",
             SlipKind::RowOrder => "order",
             SlipKind::EarlyRepeat => "rep",
-            SlipKind::RowUnfinished => "gap",
+            SlipKind::RowUnfinished | SlipKind::FormUnfinished => "gap",
             SlipKind::OctaveDoubling => "8ve",
             SlipKind::TonalChord => "tonal",
+            SlipKind::OutsideColour => "out",
         }
     }
 }
@@ -371,6 +384,8 @@ pub struct Slip {
     pub row: Option<RowPlace>,
     /// For a chord that sounds tonal: the chord, and its lowest note.
     pub chord: Option<(Chord, PitchClass)>,
+    /// For the colour check: the form of the set heard there.
+    pub colour: Option<ColourPlace>,
 }
 
 impl Slip {
@@ -386,6 +401,7 @@ impl Slip {
             notes: Vec::new(),
             row: None,
             chord: None,
+            colour: None,
         }
     }
 
@@ -477,6 +493,9 @@ impl Slip {
                         .unwrap_or_default(),
                 ],
             ),
+            (SlipKind::OutsideColour | SlipKind::FormUnfinished, _, _) => {
+                colour::what(self, voice_name)
+            }
             _ => serial::what(self, voice_name),
         }
     }
@@ -529,6 +548,7 @@ pub(crate) fn why(kind: SlipKind) -> &'static str {
             "A chord's seventh is a dissonance, and classical part writing resolves it down \
              by step into the next chord."
         }
+        SlipKind::OutsideColour | SlipKind::FormUnfinished => colour::why(kind),
         kind => serial::why(kind),
     }
 }
@@ -605,6 +625,9 @@ pub struct VoiceLeading {
     pub rules: Rules,
     /// Where the key is a row: the forms of the row played, in order.
     pub rows: Vec<RowStatement>,
+    /// Where the key is a set: the forms of the set the notes make, in
+    /// order.
+    pub forms: Vec<FormStatement>,
 }
 
 /// Which style's rules the check follows, from the key.
@@ -615,8 +638,9 @@ pub enum Rules {
     Classical,
     /// In a twelve-tone row: twelve-tone writing.
     TwelveTone,
-    /// In a pitch-class set: none.
-    Neither,
+    /// In a pitch-class set: whether the notes keep to the set's
+    /// colour.
+    Colour,
 }
 
 impl Rules {
@@ -624,7 +648,7 @@ impl Rules {
     pub fn of(key: Scale) -> Rules {
         match key.kind {
             ScaleKind::Row(_) => Rules::TwelveTone,
-            ScaleKind::Set(_) => Rules::Neither,
+            ScaleKind::Set(_) => Rules::Colour,
             _ => Rules::Classical,
         }
     }
@@ -644,13 +668,7 @@ impl VoiceLeading {
         match self.rules {
             Rules::Classical => {}
             Rules::TwelveTone => return serial::summary(self),
-            Rules::Neither => {
-                return tr(
-                    "Voice leading: the classical rules are for keys, and the twelve-tone \
-                     rules for rows; a pitch-class set has no rules of its own here.",
-                )
-                .to_string();
-            }
+            Rules::Colour => return colour::summary(self),
         }
         let parts = self.voices.len() - self.doublings.len();
         if parts < 2 {
@@ -760,6 +778,8 @@ pub fn check(
     slips.retain(|slip| Rules::of(slip.key) == Rules::Classical);
     let (row_slips, rows) = serial::check(&voices, &doublings, beats, &key_at);
     slips.extend(row_slips);
+    let (colour_slips, forms) = colour::check(&voices, beats, &key_at);
+    slips.extend(colour_slips);
     slips.sort_by_key(|slip| (slip.step(), slip.kind as usize));
     VoiceLeading {
         voices,
@@ -767,6 +787,7 @@ pub fn check(
         doublings,
         rules: Rules::of(key_at(0)),
         rows,
+        forms,
     }
 }
 
