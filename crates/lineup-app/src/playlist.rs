@@ -63,6 +63,13 @@ pub enum PlaylistAction {
     },
     /// Open the editor for a clip's pattern (a double-click on the clip).
     EditClip(usize),
+    /// Hear a take's recording again and open "Your take" for it: the
+    /// channel that plays it, the step it starts on and its track.
+    TranscribeAgain {
+        channel: usize,
+        from: usize,
+        track: usize,
+    },
     ToggleTrackMute(usize),
     /// Hear only this track (every other one muted), or, when it is the
     /// only one heard already, every track again.
@@ -349,6 +356,8 @@ pub struct PlaylistView {
     drop_grid: Option<DropGrid>,
     /// The waveforms of the takes' recordings, drawn in their clips.
     waves: Waves,
+    /// The clip whose menu is open, and the step it was right-clicked on.
+    clip_menu: Option<(usize, usize)>,
 }
 
 /// How loud a take's recording is moment by moment, to draw it.
@@ -487,6 +496,7 @@ impl PlaylistView {
             area: Rect::NOTHING,
             drop_grid: None,
             waves: Waves::default(),
+            clip_menu: None,
         }
     }
 
@@ -672,8 +682,8 @@ impl PlaylistView {
             // sentence shows when you point at it.
             let help = trf(
                 "Click to place \"{}\". Double-click a clip to edit it, drag to \
-                 move it, drag its right edge to repeat it, right-click to delete. Drag along \
-                 the top strip to mark a section, along the bar numbers to loop.",
+                 move it, drag its right edge to repeat it, right-click it for its menu. Drag \
+                 along the top strip to mark a section, along the bar numbers to loop.",
                 &[&tr_name(current_name)],
             );
             ui.add(egui::Label::new(egui::RichText::new(&help).weak()).truncate());
@@ -1219,7 +1229,8 @@ impl PlaylistView {
     ///   keep the button down to drag it. On the spare row below the last
     ///   track, the clip adds a track
     /// - left drag a clip: move it (and select its pattern)
-    /// - right click (or right drag over) clips: delete them
+    /// - right click a clip: its menu (transcribe a take again, edit,
+    ///   delete)
     #[allow(clippy::too_many_arguments)]
     fn handle_input(
         &mut self,
@@ -1240,12 +1251,11 @@ impl PlaylistView {
             return;
         }
         let clips = project.playlist().clips();
-        let (primary_pressed, primary_down, secondary, pointer, press_origin) = ui.input(|input| {
+        let (primary_pressed, primary_down, pointer, press_origin) = ui.input(|input| {
             let pointer = &input.pointer;
             (
                 pointer.primary_pressed(),
                 pointer.primary_down(),
-                pointer.secondary_pressed() || pointer.secondary_down(),
                 pointer.interact_pos(),
                 widgets::press_pos(input, Some(egui::PointerButton::Primary)),
             )
@@ -1325,14 +1335,25 @@ impl PlaylistView {
             actions.push(PlaylistAction::EditClip(clips[index].pattern));
         }
 
-        // Deleting follows the pointer, so a right-drag sweeps clips away.
+        // A right-click on a clip opens its menu; elsewhere it closes one.
         let hovered = response.hover_pos().filter(|pos| cells.contains(*pos));
-        if secondary
-            && !dismissing
-            && let Some(pos) = hovered
-            && let Some(index) = clip_at(project, layout, pos)
-        {
-            actions.push(PlaylistAction::RemoveClip(index));
+        let mut open = None;
+        if response.secondary_clicked() {
+            self.clip_menu = response
+                .interact_pointer_pos()
+                .filter(|pos| cells.contains(*pos))
+                .and_then(|pos| {
+                    clip_at(project, layout, pos).map(|index| (index, layout.step_at(pos.x)))
+                });
+            open = Some(egui::SetOpenCommand::Bool(self.clip_menu.is_some()));
+        } else if response.clicked() {
+            open = Some(egui::SetOpenCommand::Bool(false));
+        }
+        if let Some((index, step)) = self.clip_menu {
+            let selected = &self.selected;
+            egui::Popup::context_menu(response)
+                .open_memory(open)
+                .show(|ui| clip_menu(ui, project, index, step, selected, actions));
         }
 
         // The right edge of a clip stretches it: show it with the cursor.
@@ -1648,6 +1669,136 @@ fn clip_at(project: &Project, layout: Layout, pos: Pos2) -> Option<usize> {
     })
 }
 
+/// The channels that play takes' recordings, with each one's file.
+fn take_channels(project: &Project) -> Vec<(usize, &std::path::Path)> {
+    project
+        .channels()
+        .iter()
+        .enumerate()
+        .filter_map(|(channel, c)| match &c.kind {
+            lineup_core::ChannelKind::Sampler(lineup_core::SampleSource::Take(path)) => {
+                Some((channel, path.as_path()))
+            }
+            _ => None,
+        })
+        .collect()
+}
+
+/// A take's recording on the playlist.
+#[derive(Debug, Clone, Copy)]
+struct Recorded<'a> {
+    /// The track and the step it starts on.
+    track: usize,
+    from: usize,
+    /// The channel that plays it, and its file.
+    channel: usize,
+    path: &'a std::path::Path,
+}
+
+/// Every take's recording on the playlist, where each one starts: the
+/// note that starts it, in each clip and each time round.
+fn recordings(project: &Project) -> Vec<Recorded<'_>> {
+    let takes = take_channels(project);
+    let mut recordings = Vec::new();
+    for clip in project.playlist().clips() {
+        let Some(pattern) = project.pattern(clip.pattern) else {
+            continue;
+        };
+        for repeat in 0..clip.repeats {
+            for &(channel, path) in &takes {
+                for note in pattern.notes(channel) {
+                    recordings.push(Recorded {
+                        track: clip.track,
+                        from: clip.start + repeat * pattern.length() + note.start,
+                        channel,
+                        path,
+                    });
+                }
+            }
+        }
+    }
+    recordings
+}
+
+/// The recording a clip shows, for its menu: one that starts in it (the
+/// last one started by `step`, the place clicked, or else the first), or,
+/// for an empty clip (the rest of a long take), the last one before it
+/// on its track.
+fn recording_in<'a>(
+    project: &Project,
+    recordings: &[Recorded<'a>],
+    clip: &Clip,
+    step: usize,
+) -> Option<Recorded<'a>> {
+    let end = clip.start + project.clip_length(clip);
+    let empty = project
+        .pattern(clip.pattern)
+        .is_none_or(|pattern| pattern.all_notes().next().is_none());
+    let mut here: Vec<Recorded> = recordings
+        .iter()
+        .copied()
+        .filter(|r| r.track == clip.track && r.from < end && (r.from >= clip.start || empty))
+        .collect();
+    here.sort_by_key(|r| r.from);
+    here.iter()
+        .rev()
+        .find(|r| r.from <= step)
+        .or_else(|| here.first())
+        .copied()
+}
+
+/// The menu on a clip (a right-click on it): transcribe a take's
+/// recording again, open the clip's pattern, or delete it, or every
+/// selected clip when it is one of them.
+fn clip_menu(
+    ui: &mut Ui,
+    project: &Project,
+    index: usize,
+    step: usize,
+    selected: &std::collections::BTreeSet<usize>,
+    actions: &mut Vec<PlaylistAction>,
+) {
+    let Some(clip) = project.playlist().clips().get(index) else {
+        ui.close();
+        return;
+    };
+    if let Some(recording) = recording_in(project, &recordings(project), clip, step) {
+        if ui
+            .button(tr("Transcribe again…"))
+            .on_hover_text(tr(
+                "Hear the notes in this recording again, and write them with other choices: \
+                 they take the place of the ones written before",
+            ))
+            .clicked()
+        {
+            actions.push(PlaylistAction::TranscribeAgain {
+                channel: recording.channel,
+                from: recording.from,
+                track: recording.track,
+            });
+            ui.close();
+        }
+    } else if ui.button(tr("Edit its pattern")).clicked() {
+        actions.push(PlaylistAction::EditClip(clip.pattern));
+        ui.close();
+    }
+    ui.separator();
+    let many = selected.len() > 1 && selected.contains(&index);
+    let delete = if many {
+        trf("Delete {} clips", &[&selected.len()])
+    } else {
+        tr("Delete").to_owned()
+    };
+    if ui.button(delete).clicked() {
+        actions.push(if many {
+            PlaylistAction::RemoveClips(selected.iter().copied().collect())
+        } else {
+            PlaylistAction::RemoveClip(index)
+        });
+        ui.close();
+    }
+}
+
 /// Row backgrounds and the lines for beats and bars, `steps` long.
 fn paint_tracks(painter: &Painter, layout: Layout, steps: usize, meter: &Meter) {
     let right = layout.x(steps);
@@ -1706,35 +1857,11 @@ fn paint_clips(
 ) {
     let tracks = project.playlist().tracks();
     let tempo = project.tempo_map();
-    // The takes' channels, and where each of their recordings starts, by
-    // track: a recording is drawn under every clip it plays under, not
-    // only the one whose note starts it (a long take is cut into clips
-    // of at most a pattern's length).
-    let takes: Vec<(usize, &std::path::Path)> = project
-        .channels()
-        .iter()
-        .enumerate()
-        .filter_map(|(channel, c)| match &c.kind {
-            lineup_core::ChannelKind::Sampler(lineup_core::SampleSource::Take(path)) => {
-                Some((channel, path.as_path()))
-            }
-            _ => None,
-        })
-        .collect();
-    let mut recordings: Vec<(usize, usize, &std::path::Path)> = Vec::new();
-    for clip in project.playlist().clips() {
-        let Some(pattern) = project.pattern(clip.pattern) else {
-            continue;
-        };
-        for repeat in 0..clip.repeats {
-            for &(channel, path) in &takes {
-                for note in pattern.notes(channel) {
-                    let from = clip.start + repeat * pattern.length() + note.start;
-                    recordings.push((clip.track, from, path));
-                }
-            }
-        }
-    }
+    // A recording is drawn under every clip it plays under, not only the
+    // one whose note starts it (a long take is cut into clips of at most
+    // a pattern's length).
+    let takes = take_channels(project);
+    let recordings = recordings(project);
     for clip in project.playlist().clips() {
         let length = project.clip_length(clip);
         let rect = layout.clip_rect(clip, length).shrink2(vec2(0.5, 1.5));
@@ -1784,11 +1911,12 @@ fn paint_clips(
             // as notes.
             let start = clip.start + repeat * pattern.length();
             let end = start + pattern.length();
-            for &(track, from, path) in &recordings {
-                if track != clip.track || from >= end {
+            for recording in &recordings {
+                let from = recording.from;
+                if recording.track != clip.track || from >= end {
                     continue;
                 }
-                if let Some(wave) = waves.get(painter.ctx(), path) {
+                if let Some(wave) = waves.get(painter.ctx(), recording.path) {
                     paint_wave(&notes_painter, body, layout, &wave, from, |step| {
                         tempo.tempo_at(step)
                     });

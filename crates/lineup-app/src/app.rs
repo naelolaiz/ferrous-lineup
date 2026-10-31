@@ -1291,6 +1291,11 @@ impl LineupApp {
                 });
             }
             PlaylistAction::EditClip(pattern) => self.edit_clip(pattern),
+            PlaylistAction::TranscribeAgain {
+                channel,
+                from,
+                track,
+            } => self.transcribe_again(channel, from, track),
             PlaylistAction::RemoveClip(index) => {
                 self.edit("delete clips", |project| project.remove_clip(index));
             }
