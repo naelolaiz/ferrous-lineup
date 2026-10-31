@@ -733,42 +733,45 @@ tonalidad movido, o dado vuelta y movido. Así que el nombre dice
 justamente eso, cuánto y si está dado vuelta, medido desde la
 tonalidad.
 
-El **grado** de una forma es el nombre que tendría si toda la pieza se
-moviera para que la forma propia de la tonalidad fuera el micromodo tal
-como lo escribe la tabla, sobre Do. En una canción en Menor 3 sobre Re
-(Re Re♯ Fa♯), bajar todo un tono convierte la forma de la tonalidad en
-Do Do♯ Mi, el propio Menor 3; la forma Mi Fa Sol♯ pasa a ser Re Re♯
-Fa♯, Menor 3 subido 2. Así que en esa tonalidad Mi Fa Sol♯ es **T2**:
+El **grado** de una forma dice cómo se hace a partir de la forma propia
+de la tonalidad: **T*n*** es casa subida *n* semitonos, y **T*n*I** es
+casa dada vuelta alrededor de la nota de la tonalidad y después subida
+*n*. Dada vuelta quiere decir reflejada: cada nota queda tan por debajo
+de la nota de la tonalidad como estaba por encima. En una canción en
+Menor 3 sobre Re (Re Re♯ Fa♯), Mi Fa Sol♯ es **T2**; dada vuelta
+alrededor de Re, Re Re♯ Fa♯ se convierte en Re Do♯ La♯, y un semitono
+más arriba, Si Re Re♯, es **T1I**:
 
 | Grado | Quiere decir | En Menor 3 sobre Do | En Menor 3 sobre Re |
 |---|---|---|---|
 | T0 | la forma propia de la tonalidad, casa | Do Do♯ Mi | Re Re♯ Fa♯ |
 | T2 | casa subida 2 semitonos | Re Re♯ Fa♯ | Mi Fa Sol♯ |
-| T1I | casa dada vuelta, movida para empezar 1 sobre Do | La Do Do♯ | Si Re Re♯ |
+| T0I | casa dada vuelta alrededor de la nota de la tonalidad | La♭ Si Do | La♯ Do♯ Re |
+| T1I | eso, subido 1 | La Do Do♯ | Si Re Re♯ |
 | T4 | casa subida 4 | Mi Fa Sol♯ | Fa♯ Sol La♯ |
 
-Los nombres son los que la hoja de acordes ya escribe después de un
-conjunto o un micromodo («Menor 3 T4», «3-11 T7I»), solo que contados
-desde la tonalidad en vez de desde Do. Y como ii, un grado sigue igual
-cuando toda la pieza se mueve: la tercera columna es la segunda subida
-un tono, con los mismos grados.
+Como ii, un grado sigue igual cuando toda la pieza se mueve: la última
+columna es la anterior subida un tono, con los mismos grados. En Menor
+3 sobre Do los grados son justamente los nombres que la hoja de acordes
+escribe después de un micromodo («Menor 3 T4», «Menor 3 T1I»), que
+cuentan desde la forma de la tabla sobre Do; en cualquier otra
+tonalidad se cuentan desde la tonalidad.
 
-Hay otra manera de contar que parece igual de natural: la operación que
-convierte la forma de la tonalidad en la otra forma, «darla vuelta y
-después subirla n». Falla en lo que importa. Dar vuelta las notas las
-refleja alrededor de Do, así que depende de dónde está la tonalidad. En
-Menor 3 sobre Do, La Do Do♯ es la forma de la tonalidad dada vuelta y
-subida 1 (T1I); con toda la pieza un tono más arriba, la misma forma, Si
-Re Re♯, sería la forma de la tonalidad dada vuelta y subida 5. Un nombre
-que cambia cuando la música se mueve no sirve como grado, así que la
-app primero mueve la pieza a Do y nombra la forma allí.
+Dónde está el espejo importa. El T*n*I de la teoría de conjuntos de
+clases de altura da vuelta las notas alrededor de Do, y con ese espejo
+un nombre cambiaría cuando la música se mueve: en Menor 3 sobre Do, La
+Do Do♯ es Do Do♯ Mi dada vuelta alrededor de Do y subida 1, pero un tono
+más arriba las mismas figuras, Si Re Re♯ desde Re Re♯ Fa♯, serían «dada
+vuelta alrededor de Do y subida 5». La nota propia de la tonalidad se
+mueve con la pieza, así que la app refleja alrededor de ella, y Si Re
+Re♯ en Menor 3 sobre Re es T1I, como La Do Do♯ en Menor 3 sobre Do.
 
-Cuando la forma propia de la tonalidad es ella misma la dada vuelta,
-casa es **T0I**. Es el caso de una tríada mayor: la tabla escribe el
-micromodo de las tríadas como la tríada menor Do Mi♭ Sol, y la tríada
-mayor es esa dada vuelta. En una tonalidad de Do mayor como conjunto,
-casa es T0I, la tríada mayor una quinta arriba es T7I y la de una cuarta
-arriba T5I, y las tríadas menores son las formas sin I.
+Casa es siempre T0, esté como esté la forma propia de la tonalidad.
+Para las tríadas, el acorde paralelo es T7I desde los dos lados: en Do
+mayor como tonalidad, Do Mi Sol dada vuelta alrededor de Do es Do La♭
+Fa, Fa menor, y una quinta más arriba eso es Do menor; en Do menor como
+tonalidad, Do mayor también es T7I. El relativo menor de Do mayor, La
+menor, es T4I, y el relativo mayor de Do menor, Mi♭ mayor, es T10I.
 
 ### Qué tan cerca está una forma: las notas que conserva
 
@@ -811,7 +814,7 @@ Un grado son dos datos, así que es un struct de dos campos, en
 pub struct Degree {
     /// How many semitones it is moved, from 0 to 11.
     pub up: u8,
-    /// Whether it is upside down from the set's prime form.
+    /// Whether it is turned upside down first, around the key's note.
     pub inverted: bool,
 }
 ```
@@ -820,30 +823,50 @@ Es `Copy` porque ocupa dos bytes: pasarlo por valor no cuesta nada, y el
 código puede seguir usándolo después de pasarlo sin pensar en la
 propiedad.
 
-Encontrar el grado son dos movimientos. `moved_to` (de [Conjuntos de
-clases de altura](sets.md)) responde «¿cómo se mueve la forma prima para
-dar este conjunto?», como un `Option<(u8, bool)>`: `None` si el conjunto
-no es una forma suya. La primera llamada encuentra cuánto está movida la
-tonalidad; la forma se baja eso mismo; la segunda llamada nombra lo que
-queda:
+Encontrar el grado es una búsqueda: casa subida de 0 a 11 semitonos, y
+después, solo si ninguna de esas es la forma, casa dada vuelta y
+movida:
 
 ```rust
-pub fn of(key: PitchSet, form: PitchSet) -> Option<Degree> {
-    let prime = key.prime_form();
-    if key.is_empty() || form.prime_form() != prime {
+pub fn of(key: Scale, form: PitchSet) -> Option<Degree> {
+    let own = key.pitch_set();
+    if own.is_empty() || own.len() != form.len() {
         return None;
     }
-    let (up, _) = prime.moved_to(key)?;
-    let (up, inverted) = prime.moved_to(form.transpose((12 - up) % 12))?;
-    Some(Degree { up, inverted })
+    let mirrored = mirror(own, key.root);
+    let moved = |shape: PitchSet| (0..12u8).find(|&up| shape.transpose(up) == form);
+    moved(own)
+        .map(|up| Degree {
+            up,
+            inverted: false,
+        })
+        .or_else(|| moved(mirrored).map(|up| Degree { up, inverted: true }))
 }
 ```
 
-`(12 - up) % 12` baja `up` semitonos sin un número negativo: un `u8` no
-puede ser menor que cero, y subir 12 − n semitonos da las mismas notas
-que bajar n. El `?` después de cada `moved_to` devuelve `None` de toda
-la función si el conjunto no es una forma, así que el camino feliz se lee
-de arriba abajo.
+El closure `moved` prueba los doce movimientos de una figura; `find` se
+detiene en el primero que coincide y lo da como `Some(up)`, o `None`.
+`map` convierte `Some(up)` en `Some(Degree { .. })` y deja `None` como
+está, y `or_else` ejecuta su closure solo con `None`, así que la figura
+reflejada solo se prueba cuando casa movida no puede dar la forma. Ese
+orden importa para un conjunto que es igual dado vuelta, como el acorde
+aumentado o Do mayor como conjunto: cada forma suya es casa movida, así
+que recibe el nombre más simple.
+
+El espejo es una sola línea:
+
+```rust
+pub fn mirror(set: PitchSet, note: PitchClass) -> PitchSet {
+    set.invert().transpose((2 * note.semitone()) % 12)
+}
+```
+
+`invert` da vuelta un conjunto alrededor de Do: cada nota *n* semitonos
+por encima de Do pasa a *n* por debajo. Subir el resultado el doble de
+la distancia de Do a la nota de la tonalidad pone el espejo en esa nota:
+una nota *n* por encima de Re cae *n* por debajo de Re. El `% 12` deja
+el movimiento por debajo de una octava; un `u8` por dos puede llegar a
+22.
 
 `Display` escribe un grado como «T2» o «T5I», y `parse` lo vuelve a leer.
 `strip_prefix` y `strip_suffix` reciben un patrón, y un array de
@@ -873,17 +896,17 @@ una tupla cuyos elementos son las reglas en orden:
 
 ```rust
 forms.sort_by_key(|&(form, degree)| {
-    let home = form == key;
     (
-        !home,
-        std::cmp::Reverse(kept(key, form)),
+        degree != Degree::HOME,
+        std::cmp::Reverse(kept(own, form)),
         degree.inverted,
         degree.up,
     )
 });
 ```
 
-`false` va antes que `true`, así que `!home` pone casa primero. `Reverse`
+`false` va antes que `true`, y `degree != Degree::HOME` es `false` solo
+para casa, así que casa va primero. `Reverse`
 invierte el orden de lo que envuelve, así que las formas que conservan
 *más* notas van primero, sin cambiarle el signo a una cuenta. Después
 las formas derechas van antes que las dadas vuelta, y por último van por
@@ -1094,8 +1117,9 @@ Do Do♯ Mi no es una tríada, así que su bajo es la primera nota de su
 forma normal, Do; y Si Do Mi♭ tampoco es una tríada, y empieza en Si.
 
 `harmony/degree.rs` comprueba los grados: contados desde la forma
-propia de la tonalidad, iguales cuando toda la pieza se mueve, T0I como
-casa de una tríada mayor, leídos como se escriben («T2», «t7i») y nunca
+propia de la tonalidad y reflejados alrededor de su nota, iguales
+cuando toda la pieza se mueve, casa T0 esté como esté la tonalidad (Do
+mayor y Do menor, cada uno T7I del otro), leídos como se escriben («T2», «t7i») y nunca
 T12; las 24 formas de Menor 3 en orden de cercanía (3, 9 y 11 formas que
 conservan dos, una y ninguna nota), las cuatro formas del acorde
 aumentado sin enlace suave; y los nombres de los movimientos P, L y R.
