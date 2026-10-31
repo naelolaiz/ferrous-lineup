@@ -6,11 +6,10 @@
 //! final chord with a crash at the end. Every demo is an ordinary
 //! project, to take apart and change.
 
-use crate::chord_sheet::{ChordMarker, HarmonyName, Stop};
+use crate::chord_sheet::{ChordMarker, HarmonyName};
 use crate::harmony::{ChordSymbol, Scale};
-use crate::heard_sections::{is_home_chord, tune_breaks};
 use crate::key_map::KeyMarker;
-use crate::meter::{Bar, Meter, TimeMarker, TimeSignature};
+use crate::meter::{Bar, TimeMarker, TimeSignature};
 use crate::playlist::{Clip, Section};
 use crate::project::{Drum, Project};
 use crate::tempo::{Tempo, TempoMarker};
@@ -493,12 +492,6 @@ pub fn song_demo(song: &Song) -> Project {
             let melody = melody_notes(song, piece, time, length, voices.len());
             let tonic = song.part_scale(piece).root;
             let spans = piece.spans(bar, tonic);
-            // Where the tune comes home and rests, the band breaks with it.
-            let spans = if piece.written_out() {
-                spans
-            } else {
-                with_breaks(spans, &piece.melody(), time, tonic)
-            };
             let (mut chords, mut bass_line) = if !piece.written_out() {
                 let (comping, bass, _) = song.part_playing(piece);
                 let backing = accompany_in_bars(&spans, tonic, comping, bass, time);
@@ -643,13 +636,8 @@ pub fn song_demo(song: &Song) -> Project {
     // Patterns without clips are counted in the project's time signature,
     // so it is the piece's own while its drums are written.
     let rhythm = Rhythm::named(song.rhythm);
-    // The piece the song ends with: after it the drums call nobody back.
-    let last = song
-        .form
-        .last()
-        .and_then(|part| patterns.iter().rposition(|piece| piece.part == *part));
     if let Some(rhythm) = rhythm {
-        for (index, piece) in patterns.iter_mut().enumerate() {
+        for piece in &mut patterns {
             // A part with its drums written out plays them, not the
             // rhythm's.
             if song
@@ -670,15 +658,7 @@ pub fn song_demo(song: &Song) -> Project {
             let long = piece.length >= 4 * piece.time.steps_per_bar();
             let name = format!("{} drums", piece.name);
             let drums = drum_pattern(&mut project, &name, piece.length, rhythm, long);
-            let goes_on = last != Some(index);
-            mark_drums(
-                &mut project,
-                drums,
-                &piece.spans,
-                &piece.tune,
-                Some(rhythm),
-                goes_on,
-            );
+            mark_drums(&mut project, drums, &piece.spans, &piece.tune);
             piece.drums = Some(drums);
             piece.rhythm = Some(rhythm);
         }
@@ -788,90 +768,9 @@ pub fn song_demo(song: &Song) -> Project {
     project
 }
 
-/// `spans`, a part's chords from its first step, with a shot where the
-/// part breaks (see [`tune_breaks`]): each bar of `time` all on the home
-/// chord of the key whose tonic is `tonic`, unmarked, where `tune` lands
-/// on the first beat and rests to the bar's end. The chord is struck
-/// again after the break.
-fn with_breaks(
-    spans: Vec<ChordSpan>,
-    tune: &Melody,
-    time: TimeSignature,
-    tonic: PitchClass,
-) -> Vec<ChordSpan> {
-    let end = spans.last().map_or(0, |span| span.start + span.length);
-    let bars: Vec<Bar> = Meter::new(time, [])
-        .bars()
-        .take_while(|bar| bar.start < end)
-        .collect();
-    let notes: Vec<(usize, usize)> = tune
-        .notes
-        .iter()
-        .map(|note| (note.start, note.start + note.length))
-        .collect();
-    let span_at = |step: usize| {
-        spans
-            .iter()
-            .rposition(|span| span.start <= step && step < span.start + span.length)
-    };
-    let home = |index: usize| {
-        let bar = bars[index];
-        let Some(at) = span_at(bar.start) else {
-            return false;
-        };
-        let span = spans[at];
-        span.start + span.length >= bar.end()
-            && span.stop.is_none()
-            && span.chord.semitones == 0
-            && is_home_chord(tonic, span.chord.quality, tonic)
-    };
-    let breaks = tune_breaks(&bars, &notes, home);
-    if breaks.is_empty() {
-        return spans;
-    }
-    let mut out: Vec<ChordSpan> = Vec::new();
-    for span in spans {
-        let span_end = span.start + span.length;
-        let mut from = span.start;
-        let mut first = true;
-        for bar in breaks.iter().map(|&index| bars[index]) {
-            if bar.start < span.start || bar.start >= span_end {
-                continue;
-            }
-            if bar.start > from {
-                out.push(ChordSpan {
-                    start: from,
-                    length: bar.start - from,
-                    push: if first { span.push } else { None },
-                    ..span
-                });
-                first = false;
-            }
-            out.push(ChordSpan {
-                start: bar.start,
-                length: bar.length,
-                push: if first { span.push } else { None },
-                stop: Some(Stop::Shot),
-                ..span
-            });
-            first = false;
-            from = bar.end();
-        }
-        if from < span_end {
-            out.push(ChordSpan {
-                start: from,
-                length: span_end - from,
-                push: if first { span.push } else { None },
-                ..span
-            });
-        }
-    }
-    out
-}
-
 /// A drum pattern placed for a piece: the piece, the drums it plays and
 /// the pattern.
-type Placed = (usize, Vec<(Drum, NoteEvent)>, bool, usize);
+type Placed = (usize, Vec<(Drum, NoteEvent)>, usize);
 
 /// Puts the drums of each place in `places` (a piece and where it
 /// starts) on the drum track. A song whose parts all play one rhythm
@@ -930,19 +829,14 @@ fn place_drums(project: &mut Project, pieces: &mut [Piece], places: &[(usize, us
                 )
             })
             .collect();
-        // After the song's last piece, the drums call nobody back in.
-        let goes_on = at + piece.length < end;
         let same = known
             .iter()
-            .find(|(other, played, on, _)| *other == index && *played == notes && *on == goes_on)
-            .map(|&(_, _, _, pattern)| pattern);
+            .find(|(other, played, _)| *other == index && *played == notes)
+            .map(|&(_, _, pattern)| pattern);
         let pattern = match same {
             Some(pattern) => pattern,
             None => {
-                let takes = known
-                    .iter()
-                    .filter(|(other, _, _, _)| *other == index)
-                    .count();
+                let takes = known.iter().filter(|(other, _, _)| *other == index).count();
                 let pattern = if takes == 0 {
                     own
                 } else {
@@ -950,15 +844,8 @@ fn place_drums(project: &mut Project, pieces: &mut [Piece], places: &[(usize, us
                     new_pattern(project, &name, piece.length)
                 };
                 apply::write_drums(project, pattern, &notes);
-                mark_drums(
-                    project,
-                    pattern,
-                    &piece.spans,
-                    &piece.tune,
-                    piece.rhythm,
-                    goes_on,
-                );
-                known.push((index, notes, goes_on, pattern));
+                mark_drums(project, pattern, &piece.spans, &piece.tune);
+                known.push((index, notes, pattern));
                 pattern
             }
         };
@@ -1006,17 +893,8 @@ fn same_notes(a: &[(usize, Vec<NoteEvent>)], b: &[(usize, Vec<NoteEvent>)]) -> b
 /// the kick and the crash cymbal (see [`chart::parse_chart`]); and they
 /// play as loud as the piece's `tune` is marked to be (see
 /// [`interpret::follow`]). Drums written out in a score play their own
-/// marks instead. After a shot, `rhythm` calls the band back in, at the
-/// piece's end too if the song `goes_on` after it (see
-/// [`Breaks::calls`](crate::band::stops::Breaks::calls)).
-fn mark_drums(
-    project: &mut Project,
-    index: usize,
-    spans: &[ChordSpan],
-    tune: &Melody,
-    rhythm: Option<&Rhythm>,
-    goes_on: bool,
-) {
+/// marks instead.
+fn mark_drums(project: &mut Project, index: usize, spans: &[ChordSpan], tune: &Melody) {
     let breaks = chart::breaks(spans);
     if breaks.is_empty() && !tune.is_marked() {
         return;
@@ -1029,14 +907,6 @@ fn mark_drums(
             apply::drum_channel(project, Drum::Crash),
         )
     };
-    // After a shot, the drums call the band back in.
-    let meter = Meter::new(project.pattern_time(index), []);
-    let calls: Vec<(usize, NoteEvent)> = rhythm
-        .map(|rhythm| breaks.calls(rhythm, |step| meter.bar_at(step), goes_on))
-        .unwrap_or_default()
-        .into_iter()
-        .filter_map(|(drum, note)| Some((apply::drum_channel(project, drum)?, note)))
-        .collect();
     let channels = project.channels().len();
     let Some(pattern) = project.pattern_mut(index) else {
         return;
@@ -1049,8 +919,7 @@ fn mark_drums(
                 .map(move |&note| (channel, note))
         })
         .collect();
-    let mut notes = breaks.apply_to_drums(notes, kick, crash);
-    notes.extend(calls);
+    let notes = breaks.apply_to_drums(notes, kick, crash);
     for channel in 0..channels {
         let mut line: Vec<NoteEvent> = notes
             .iter()
@@ -1397,8 +1266,7 @@ mod tests {
                 "{channel}"
             );
         }
-        // The drums hit the shot and stop, and if the rhythm has a call,
-        // call the band back in over the bar's second half.
+        // The drums hit the shot and stop until the next chord.
         let drums: Vec<NoteEvent> = (0..marked.channels().len())
             .flat_map(|channel| {
                 let pattern = marked.patterns().iter().find(|p| p.name == "Marked drums");
@@ -1406,15 +1274,7 @@ mod tests {
             })
             .collect();
         assert!(drums.iter().any(|note| note.start == 16));
-        assert!(drums.iter().all(|note| !(17..24).contains(&note.start)));
-        let rhythm = Rhythm::named(song.rhythm).unwrap();
-        let call = drum_form::call(rhythm, TimeSignature::COMMON, 16);
-        assert_eq!(
-            drums.iter().any(|note| (24..32).contains(&note.start)),
-            !call.is_empty(),
-            "{}",
-            song.rhythm
-        );
+        assert!(drums.iter().all(|note| !(17..32).contains(&note.start)));
         assert!(drums.iter().any(|note| note.start >= 32));
         let crash = notes(&marked, "Marked drums", Drum::Crash.name());
         assert!(crash.iter().any(|note| note.start == 16));
@@ -1811,46 +1671,5 @@ mod tests {
                 }
             }
         }
-    }
-
-    #[test]
-    fn the_drums_stop_at_a_break_and_call_the_band_back_in() {
-        // Candombe para Gardel lands on its home chord in bar 14 and rests:
-        // the band strikes it with a crash, stops, and the repique calls
-        // it back in over the last two beats.
-        let song = SONGS
-            .iter()
-            .find(|song| song.name == "Candombe para Gardel")
-            .unwrap();
-        let project = song_demo(song);
-        let bar = project.meter().bar(13);
-        let beat = bar.time.unit_steps();
-        let mut drums: Vec<(Drum, usize)> = Vec::new();
-        for clip in project.playlist().clips() {
-            let pattern = project.pattern(clip.pattern).unwrap();
-            for (channel, note) in pattern.all_notes() {
-                let ChannelKind::Sampler(crate::project::SampleSource::Builtin(drum)) =
-                    project.channels()[channel].kind
-                else {
-                    continue;
-                };
-                let at = clip.start + note.start;
-                if (bar.start..bar.end()).contains(&at) {
-                    drums.push((drum, at - bar.start));
-                }
-            }
-        }
-        assert!(drums.contains(&(Drum::Crash, 0)), "{drums:?}");
-        assert!(drums.contains(&(Drum::Kick, 0)), "{drums:?}");
-        assert!(
-            !drums.iter().any(|&(_, at)| at > 0 && at < 2 * beat),
-            "the second beat is silent: {drums:?}"
-        );
-        assert!(
-            drums
-                .iter()
-                .any(|&(drum, at)| drum == Drum::HighTom && at >= 2 * beat),
-            "the repique calls: {drums:?}"
-        );
     }
 }

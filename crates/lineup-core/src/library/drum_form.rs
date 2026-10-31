@@ -503,33 +503,6 @@ pub fn part_drums(rhythm: &Rhythm, part: &DrumPart, fills: &mut usize) -> Vec<(D
     notes
 }
 
-/// What the drums play to call the band back in after a break, in the
-/// last beat or two of a bar of `time` lasting `length` steps (from
-/// [`small_from`] on), on the bar's timeline: a rhythm laid out as an
-/// opening, grooves and a closing plays the end of its closing, as a
-/// candombe's repique calls; another the start of its first fill. A
-/// rhythm without fills, such as a tango's, does not call.
-pub fn call(rhythm: &Rhythm, time: TimeSignature, length: usize) -> Vec<(Drum, NoteEvent)> {
-    let from = small_from(time).min(length);
-    if let Some(layout) = rhythm.layout {
-        let line = layout.closing_from() + layout.closing.saturating_sub(1);
-        return rhythm
-            .drums()
-            .flat_map(|drum| {
-                rhythm
-                    .bar_notes(drum, line, time, length)
-                    .into_iter()
-                    .filter(|note| note.start >= from)
-                    .map(move |note| (drum, note))
-            })
-            .collect();
-    }
-    match fills_of(rhythm).first() {
-        Some(&fill) => fill_notes(rhythm, fill, time, length, from),
-        None => Vec::new(),
-    }
-}
-
 /// How many phrases of each kind of part a song has played so far, for
 /// the parts' turns (see [`DrumPart::turn`]).
 #[derive(Debug, Clone, Default)]
@@ -899,19 +872,6 @@ mod tests {
                 "{name}"
             );
         }
-    }
-
-    #[test]
-    fn the_drums_call_the_band_back_in_after_a_break() {
-        let time = TimeSignature::COMMON;
-        let candombe = call(named("Candombe"), time, 16);
-        assert!(!candombe.is_empty());
-        assert!(candombe.iter().all(|(_, note)| note.start >= 8));
-        assert!(candombe.iter().any(|(drum, _)| *drum == Drum::HighTom));
-        let rock = call(named("Rock beat"), time, 16);
-        assert!(!rock.is_empty());
-        assert!(rock.iter().all(|(_, note)| note.start >= 8));
-        assert!(call(named("Tango marcato"), time, 16).is_empty());
     }
 
     #[test]

@@ -9,17 +9,10 @@
 //! around them, after the style has written it. The demo songs' chord
 //! charts mark them the same way (see
 //! [`crate::library::chart::parse_chart`]), and their bands play them so.
-//! After a shot that leaves the band silent for two beats or more, the
-//! drums call it back in, in the last beat or two before the next
-//! harmony (see [`crate::library::drum_form::call`]).
 
 use crate::chord_sheet::{ChordMarker, Push, Stop};
 use crate::library::comping::Played;
-use crate::library::drum_form;
-use crate::library::rhythm::Rhythm;
-use crate::meter::Bar;
 use crate::pattern::{NoteEvent, STEP_NOTE, TICKS_PER_STEP};
-use crate::project::Drum;
 
 /// How long a shot sounds: an eighth note.
 const SHOT_STEPS: usize = 2;
@@ -56,8 +49,6 @@ struct PushSpan {
 pub(crate) struct Breaks {
     stops: Vec<StopSpan>,
     pushes: Vec<PushSpan>,
-    /// Where the last harmony ends.
-    end: usize,
 }
 
 impl Breaks {
@@ -88,10 +79,7 @@ impl Breaks {
                 early.max(earliest).min(written)
             })
             .collect();
-        let mut breaks = Breaks {
-            end,
-            ..Breaks::default()
-        };
+        let mut breaks = Breaks::default();
         for (index, &(written, _, stop)) in marks.iter().enumerate() {
             let start = starts[index];
             let next = starts.get(index + 1).copied().unwrap_or(end).max(start);
@@ -111,46 +99,6 @@ impl Breaks {
             }
         }
         breaks
-    }
-
-    /// What the drums play to call the band back in after each shot that
-    /// leaves it silent for two beats or more: `rhythm`'s call (see
-    /// [`drum_form::call`]), ending where the next harmony comes in, a
-    /// beat after the shot at the earliest. `bar_at` gives the bar a step
-    /// is in. Each note has its drum, on the song's timeline.
-    ///
-    /// Only where the band does come back in: not before another shot,
-    /// as in stop-time, nor before a rest, and not after the last
-    /// harmony unless the song `goes_on` after it.
-    pub(crate) fn calls(
-        &self,
-        rhythm: &Rhythm,
-        bar_at: impl Fn(usize) -> Bar,
-        goes_on: bool,
-    ) -> Vec<(Drum, NoteEvent)> {
-        let mut notes = Vec::new();
-        for stop in self.stops.iter().filter(|stop| stop.stop == Stop::Shot) {
-            let silent_next = self
-                .stops
-                .iter()
-                .any(|next| next.start == stop.end && matches!(next.stop, Stop::Shot | Stop::Rest));
-            if stop.end == 0 || silent_next || (stop.end >= self.end && !goes_on) {
-                continue;
-            }
-            let bar = bar_at(stop.end - 1);
-            let beat = bar.time.unit_steps();
-            if stop.end < stop.start + 2 * beat + 1 {
-                continue;
-            }
-            let from = stop.end.saturating_sub(bar.length);
-            for (drum, note) in drum_form::call(rhythm, bar.time, bar.length) {
-                let at = from + note.start;
-                if at >= stop.start + beat && at < stop.end {
-                    notes.push((drum, NoteEvent { start: at, ..note }));
-                }
-            }
-        }
-        notes
     }
 
     /// Whether the song has none.
