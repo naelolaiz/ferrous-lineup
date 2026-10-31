@@ -39,7 +39,7 @@ use lineup_core::harmony::degree::{self, Degree};
 use lineup_core::harmony::key_finding::{KeyGuess, read_chord};
 use lineup_core::harmony::keys::{self, ChordKey, ChordSize, Function, GroupKey};
 use lineup_core::harmony::{
-    Harmony, Hearing, HintLevel, Suggestion, analyze, next_chords_over, with_figures,
+    Harmony, Hearing, HintLevel, Micromode, Suggestion, analyze, next_chords_over, with_figures,
 };
 use lineup_core::{
     Chord, HarmonyName, Note, PitchClass, PitchSet, Project, Scale, ScaleKind, TimeSignature,
@@ -182,11 +182,16 @@ pub struct HarmonyKeys {
     last_bass: Option<PitchClass>,
     /// Whether Find the key is on.
     pub find_key: bool,
-    /// In a micromode key, whether every form gets a key, or only those
-    /// that share a note with home.
+    /// In a key that is a set, whether every form gets a key, or only
+    /// those that keep enough notes of home (see [`keys::form_keys`]).
     all_forms: bool,
-    /// The last form of a micromode played, here or in the music, for
-    /// the outline on the forms that keep two of its notes.
+    /// In a key that is a set of more than three notes, whether the keys
+    /// are the set's forms rather than chords stacked from its notes. A
+    /// set of three notes is its one chord, so its keys are always its
+    /// forms.
+    forms: bool,
+    /// The last form of the key's set played, here or in the music, for
+    /// the outline on the forms that keep all but one of its notes.
     last_form: Option<PitchSet>,
 }
 
@@ -202,6 +207,7 @@ impl HarmonyKeys {
             last_bass: None,
             find_key: false,
             all_forms: false,
+            forms: false,
             last_form: None,
         }
     }
@@ -250,7 +256,9 @@ impl HarmonyKeys {
     ) -> Vec<HarmonyAction> {
         let scale = here;
         let size = self.size_for(scale);
-        if let Some(forms) = keys::form_keys(scale, self.all_forms) {
+        if self.shows_forms(scale)
+            && let Some(forms) = keys::form_keys(scale, self.all_forms)
+        {
             return self.show_forms(ui, project, here, &forms, held, heard, digits, parts);
         }
         if let Some(groups) = keys::group_keys(scale, size) {
@@ -433,11 +441,12 @@ impl HarmonyKeys {
     ) -> Vec<HarmonyAction> {
         let mut actions = Vec::new();
         let scale = here;
+        let key = scale.pitch_set();
         let set_of =
             |notes: &[Note]| -> PitchSet { notes.iter().map(|n| n.pitch_class()).collect() };
         let playing = [set_of(held), set_of(heard)]
             .into_iter()
-            .find(|&set| set.len() == 3 && Degree::of(scale, set).is_some());
+            .find(|&set| set.len() == key.len() && Degree::of(scale, set).is_some());
         if playing.is_some() {
             self.last_form = playing;
         }
@@ -472,17 +481,27 @@ impl HarmonyKeys {
             let from = last
                 .and_then(|form| Degree::of(scale, form))
                 .map(|degree| degree.to_string());
+            let micromode = key.len() == 3;
             let hint = match (self.hints, from) {
                 (HintLevel::Minimal, _) => String::new(),
-                (HintLevel::Short, Some(from)) => trf(
+                (HintLevel::Short, Some(from)) if micromode => trf(
                     "The micromode's forms, nearest home first. Outlined: they keep two notes of {}.",
                     &[&from],
                 ),
-                (HintLevel::Short, None) => trf(
+                (HintLevel::Short, Some(from)) => trf(
+                    "The set's forms, nearest home first. Outlined: they keep all but one note \
+                     of {}.",
+                    &[&from],
+                ),
+                (HintLevel::Short, None) if micromode => trf(
                     "The micromode's forms, nearest home first. Hold a key or press {}.",
                     &[&keys],
                 ),
-                (_, from) => {
+                (HintLevel::Short, None) => trf(
+                    "The set's forms, nearest home first. Hold a key or press {}.",
+                    &[&keys],
+                ),
+                (_, from) if micromode => {
                     let outline = match from {
                         Some(from) => trf(
                             " The outlined forms keep two notes of {} and move one: the \
@@ -497,6 +516,24 @@ impl HarmonyKeys {
                          degree: T0 is the key's own form, T2 the same moved up two \
                          semitones, T2I upside down. The more notes a form keeps from home, the \
                          brighter its key.{} Hold one (or press {}) to play it.",
+                        &[&outline, &keys],
+                    )
+                }
+                (_, from) => {
+                    let outline = match from {
+                        Some(from) => trf(
+                            " The outlined forms keep all but one note of {}: the smoothest \
+                             ways on.",
+                            &[&from],
+                        ),
+                        None => String::new(),
+                    };
+                    trf(
+                        "Music on one pitch-class set makes its harmony of the set's own \
+                         forms, so these are its keys, each called by its degree: T0 is the \
+                         key's own form, T2 the same moved up two semitones, T2I upside down. \
+                         The more notes a form keeps from home, the brighter its key.{} Hold \
+                         one (or press {}) to play it.",
                         &[&outline, &keys],
                     )
                 }
@@ -749,19 +786,56 @@ impl HarmonyKeys {
             ui.weak(trf("{} steps a bar", &[&time.steps_per_bar()]));
         });
         let scale = here;
-        if keys::form_keys(scale, false).is_some() {
+        let set = scale.pitch_set();
+        let trichord = set.len() == 3;
+        if matches!(scale.kind, ScaleKind::Set(_))
+            && !trichord
+            && keys::form_keys(scale, false).is_some()
+        {
             ui.horizontal(|ui| {
+                let chords = ui
+                    .selectable_label(!self.forms, tr("Chords"))
+                    .on_hover_text(tr(
+                        "Chords stacked from the set's notes, as a key stacks its scale's",
+                    ));
+                if chords.clicked() {
+                    self.forms = false;
+                }
+                let forms = ui
+                    .selectable_label(self.forms, tr("Forms"))
+                    .on_hover_text(tr(
+                        "The set itself, moved and turned upside down, each form called by its \
+                         degree",
+                    ));
+                if forms.clicked() {
+                    self.forms = true;
+                }
+            });
+        }
+        if self.shows_forms(scale) {
+            ui.horizontal(|ui| {
+                let near_hover = if trichord {
+                    tr("The forms that share at least one note with the key's own form").to_string()
+                } else {
+                    trf(
+                        "The forms that keep at least {} notes of the key's own form",
+                        &[&(set.len() / 2)],
+                    )
+                };
                 let near = ui
                     .selectable_label(!self.all_forms, tr("Near home"))
-                    .on_hover_text(tr(
-                        "The forms that share at least one note with the key's own form",
-                    ));
+                    .on_hover_text(near_hover);
                 if near.clicked() {
                     self.all_forms = false;
                 }
+                let all_hover = if Micromode::of(set).is_some() {
+                    tr("Every form of the micromode, moved and upside down")
+                } else {
+                    tr("Every form of the set, moved and upside down")
+                };
                 let all = ui
                     .selectable_label(self.all_forms, tr("All forms"))
-                    .on_hover_text(tr("Every form of the micromode, moved and upside down"));
+                    .on_hover_text(all_hover);
                 if all.clicked() {
                     self.all_forms = true;
                 }
@@ -816,6 +890,15 @@ impl HarmonyKeys {
                 }
             }
         });
+    }
+
+    /// Whether the keys are the forms of the set `scale` is: always for a
+    /// set of three notes, and for a bigger one when Forms is chosen.
+    fn shows_forms(&self, scale: Scale) -> bool {
+        match scale.kind {
+            ScaleKind::Set(set) => set.len() == 3 || (self.forms && (2..12).contains(&set.len())),
+            _ => false,
+        }
     }
 
     /// The chord size to play in `scale`: the one chosen, or the biggest
@@ -1232,12 +1315,9 @@ fn form_key(ui: &mut Ui, form: &GroupKey, lit: bool, outlined: bool) -> Response
     if !ui.is_rect_visible(rect) {
         return response;
     }
-    let near = match form.kept {
-        Some(3) => 1.0,
-        Some(2) => 0.78,
-        Some(1) => 0.6,
-        _ => 0.45,
-    };
+    // From 0.45 for a form that keeps no note of home to 1 for home.
+    let share = form.kept.unwrap_or(0) as f32 / form.notes.len().max(1) as f32;
+    let near = 0.45 + 0.55 * share;
     let fill = if lit {
         GROUP_COLOR
     } else if response.hovered() {
@@ -1263,11 +1343,12 @@ fn form_key(ui: &mut Ui, form: &GroupKey, lit: bool, outlined: bool) -> Response
         FontId::proportional(fitting_size(ui, &form.label, 18.0, rect.width() - 8.0)),
         KEY_TEXT,
     );
+    let names = names.join(" ");
     painter.text(
         rect.center() + vec2(0.0, 9.0),
         Align2::CENTER_CENTER,
-        names.join(" "),
-        FontId::proportional(12.0),
+        &names,
+        FontId::proportional(fitting_size(ui, &names, 12.0, rect.width() - 6.0)),
         KEY_TEXT,
     );
     let footer = form_footer(form);
@@ -1281,12 +1362,15 @@ fn form_key(ui: &mut Ui, form: &GroupKey, lit: bool, outlined: bool) -> Response
     response
 }
 
-/// What a micromode's key says under its notes: the triad it is, or the
-/// form's own name, as the chord sheet writes it ("Menor 3 T4").
+/// What a form's key says under its notes: the chord or the scale it
+/// is, or else the form's own name, as the chord sheet writes it ("Menor
+/// 3 T4", "6-1 T2").
 fn form_footer(form: &GroupKey) -> String {
+    let set = form.pitch_set();
     match &form.chord {
         Some(chord) => chord.clone(),
-        None => HarmonyName::Micromode(form.pitch_set()).to_string(),
+        None if Micromode::of(set).is_some() => HarmonyName::Micromode(set).to_string(),
+        None => HarmonyName::Set(set).to_string(),
     }
 }
 
@@ -1309,7 +1393,7 @@ fn describe_form(
         form_footer(form)
     );
     let home = match form.kept {
-        Some(3) => tr("the key's own form").to_string(),
+        Some(kept) if kept == form.notes.len() => tr("the key's own form").to_string(),
         Some(1) => tr("keeps 1 note of home").to_string(),
         Some(kept) => trf("keeps {} notes of home", &[&kept]),
         None => String::new(),

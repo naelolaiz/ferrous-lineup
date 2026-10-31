@@ -18,7 +18,7 @@
 //! a pattern. All the instruments of a style play the same walk, each in
 //! its own texture, so they always agree.
 
-use crate::harmony::{Micromode, PitchSet};
+use crate::harmony::{Micromode, PitchSet, degree};
 use crate::i18n::{tr, trf};
 use crate::pattern::NoteEvent;
 use crate::pitch::{Note, PitchClass};
@@ -40,7 +40,26 @@ pub enum Walk {
     /// form that shares two notes with them is inside it too. The
     /// augmented triad shares no two notes with another, so it moves a
     /// semitone instead.
+    ///
+    /// For a bigger set it keeps all notes but one when a form does, and
+    /// never goes straight back to the form before while it can go
+    /// anywhere else: the dominant seventh shares three notes only with
+    /// one half-diminished seventh (C7 with Em7b5), so from there it
+    /// goes on keeping two.
     CommonTones,
+    /// Keep exactly this many notes of each form, when some form does
+    /// (otherwise as many as some form can): `Keep(1)` pivots three notes
+    /// on one, a wider move than keeping two.
+    Keep(u8),
+    /// All twelve notes in every few forms: the set's forms that split
+    /// the twelve notes between them, one after another, then another
+    /// such group starting from a form that keeps as many notes of the
+    /// last as it can. Four forms of three notes, three of four, two of
+    /// six (a hexachord and its complement). Peter Schat's Tone Clock is
+    /// built on such groups of trichords; Webern's Concerto row is four
+    /// forms of Menor 3. A set that cannot split the twelve notes walks as
+    /// [`Walk::CommonTones`].
+    AllTwelve,
     /// Move every note up this many semitones: a sequence.
     Transpose(u8),
 }
@@ -49,6 +68,9 @@ impl Walk {
     pub fn name(self) -> String {
         match self {
             Walk::CommonTones => tr("Keep two notes, move one").to_string(),
+            Walk::Keep(1) => tr("Keep one note, move two").to_string(),
+            Walk::Keep(n) => trf("Keep {} notes", &[&n]),
+            Walk::AllTwelve => tr("All twelve notes in every few forms").to_string(),
             Walk::Transpose(1) => tr("Up a semitone each time").to_string(),
             Walk::Transpose(11) => tr("Down a semitone each time").to_string(),
             Walk::Transpose(n) => trf("Up {} semitones each time", &[&n]),
@@ -59,7 +81,24 @@ impl Walk {
 /// `count` forms of `micromode`, starting with `first` (which should be
 /// one of its forms), each following the one before as `walk` says.
 pub fn walk(micromode: &Micromode, first: PitchSet, walk: Walk, count: usize) -> Vec<PitchSet> {
-    let members = micromode.members();
+    let first = if Micromode::of(first).is_some_and(|m| m.number == micromode.number) {
+        first
+    } else {
+        micromode.prime
+    };
+    walk_forms(first, walk, count)
+}
+
+/// `count` forms of the set `first` is a form of, any set at all,
+/// starting with `first`, each following the one before as `walk` says.
+pub fn walk_forms(first: PitchSet, walk: Walk, count: usize) -> Vec<PitchSet> {
+    if walk == Walk::AllTwelve {
+        let groups = aggregates(first);
+        if !groups.is_empty() {
+            return all_twelve(first, &groups, count);
+        }
+    }
+    let members = degree::all_forms(first);
     let mut forms = Vec::with_capacity(count);
     // When each pitch class was last heard, as the number of the form.
     let mut heard: [Option<usize>; 12] = [None; 12];
@@ -74,34 +113,56 @@ pub fn walk(micromode: &Micromode, first: PitchSet, walk: Walk, count: usize) ->
         }
         current = match walk {
             Walk::Transpose(n) => current.transpose(n % 12),
-            Walk::CommonTones => next_by_common_tones(&members, current, &heard, &forms),
+            Walk::Keep(n) => next_keeping(&members, current, &heard, &forms, Some(n.into())),
+            Walk::CommonTones | Walk::AllTwelve => {
+                next_keeping(&members, current, &heard, &forms, None)
+            }
         };
     }
     forms
 }
 
-/// The form after `current` in a [`Walk::CommonTones`]: see there.
-fn next_by_common_tones(
+/// The form after `current` in a [`Walk::CommonTones`] (`keep` is
+/// `None`: as many notes kept as any form can) or a [`Walk::Keep`]: see
+/// there.
+fn next_keeping(
     members: &[PitchSet],
     current: PitchSet,
     heard: &[Option<usize>; 12],
     before: &[PitchSet],
+    keep: Option<usize>,
 ) -> PitchSet {
     let shared = |set: PitchSet| PitchSet::from_bits(set.bits() & current.bits()).len();
-    let most = members
+    // Never straight back to the form before, when there is anywhere
+    // else to go: the dominant and half-diminished sevenths (4-27) keep
+    // three notes only in pairs, and would swing between two forms.
+    let back = before.len().checked_sub(2).map(|index| before[index]);
+    let mut options: Vec<PitchSet> = members
         .iter()
-        .filter(|&&set| set != current)
-        .map(|&set| shared(set))
-        .max()
-        .unwrap_or(0);
+        .copied()
+        .filter(|&set| set != current && Some(set) != back)
+        .collect();
+    if options.is_empty() {
+        options = members
+            .iter()
+            .copied()
+            .filter(|&set| set != current)
+            .collect();
+    }
+    let possible = |count: usize| options.iter().any(|&set| shared(set) == count);
+    let most = options.iter().map(|&set| shared(set)).max().unwrap_or(0);
+    let most = match keep {
+        Some(count) if count > 0 && possible(count) => count,
+        _ => most,
+    };
     if most == 0 {
         return current.transpose(1);
     }
     let gone: Vec<PitchClass> = current.iter().collect();
-    members
+    options
         .iter()
         .copied()
-        .filter(|&set| set != current && shared(set) == most)
+        .filter(|&set| shared(set) == most)
         .min_by_key(|&set| {
             let new = PitchSet::from_bits(set.bits() & !current.bits());
             // The new note heard most recently decides; never heard is best.
@@ -130,6 +191,103 @@ fn next_by_common_tones(
             (freshest, used, moves, set.bits())
         })
         .unwrap_or(current)
+}
+
+/// The ways to split the twelve notes into forms of the set `form` is
+/// a form of, each way once: four forms of Menor 3, two hexachords. None
+/// when the set's size does not divide twelve, or no forms fit (the
+/// diminished triad's forms always overlap). Each way lists its forms
+/// from the one holding C, then the lowest note not yet held.
+pub fn aggregates(form: PitchSet) -> Vec<Vec<PitchSet>> {
+    let size = form.len();
+    if size == 0 || 12 % size != 0 {
+        return Vec::new();
+    }
+    let forms = degree::all_forms(form);
+    fn split(
+        held: u16,
+        chosen: &mut Vec<PitchSet>,
+        forms: &[PitchSet],
+        ways: &mut Vec<Vec<PitchSet>>,
+    ) {
+        let Some(lowest) = (0..12).find(|&note| held & (1 << note) == 0) else {
+            ways.push(chosen.clone());
+            return;
+        };
+        for &form in forms {
+            if form.bits() & held == 0 && form.bits() & (1 << lowest) != 0 {
+                chosen.push(form);
+                split(held | form.bits(), chosen, forms, ways);
+                chosen.pop();
+            }
+        }
+    }
+    let mut ways = Vec::new();
+    split(0, &mut Vec::new(), &forms, &mut ways);
+    ways
+}
+
+/// How far the notes of `from` move to reach `to`: each note of `to` to
+/// the nearest note of `from`, added up. Small numbers are smooth.
+fn distance(from: PitchSet, to: PitchSet) -> u32 {
+    to.iter()
+        .map(|p| {
+            from.iter()
+                .map(|q| {
+                    let up = u32::from(q.semitones_up_to(p));
+                    up.min(12 - up)
+                })
+                .min()
+                .unwrap_or(0)
+        })
+        .sum()
+}
+
+/// A [`Walk::AllTwelve`] of `count` forms from `first`, through the ways
+/// `ways` the set splits the twelve notes.
+fn all_twelve(first: PitchSet, ways: &[Vec<PitchSet>], count: usize) -> Vec<PitchSet> {
+    let mut forms: Vec<PitchSet> = Vec::with_capacity(count);
+    // When each way was last used, as the number of its group.
+    let mut used: Vec<Option<usize>> = vec![None; ways.len()];
+    let mut start = first;
+    let mut group = 0;
+    while forms.len() < count {
+        // Of the ways that hold the starting form, the one used longest ago.
+        let Some(way) = (0..ways.len())
+            .filter(|&w| ways[w].contains(&start))
+            .min_by_key(|&w| used[w].map_or(0, |g| g + 1))
+        else {
+            break;
+        };
+        used[way] = Some(group);
+        // From the starting form, each time to the nearest form left.
+        let mut left: Vec<PitchSet> = ways[way].iter().copied().filter(|&f| f != start).collect();
+        let mut current = start;
+        forms.push(current);
+        while !left.is_empty() && forms.len() < count {
+            let (index, _) = left
+                .iter()
+                .enumerate()
+                .min_by_key(|&(_, &form)| (distance(current, form), form.bits()))
+                .expect("left is not empty");
+            current = left.remove(index);
+            forms.push(current);
+        }
+        // The next group starts on a form of another way that keeps as
+        // many notes of the last form as can be, heard least recently.
+        let last = current;
+        let shared = |form: PitchSet| PitchSet::from_bits(form.bits() & last.bits()).len();
+        let candidates = ways.iter().flatten().copied().filter(|&f| f != last);
+        let Some(next) = candidates.min_by_key(|&form| {
+            let heard = forms.iter().rposition(|&f| f == form).map_or(0, |i| i + 1);
+            (std::cmp::Reverse(shared(form)), heard, form.bits())
+        }) else {
+            break;
+        };
+        start = next;
+        group += 1;
+    }
+    forms
 }
 
 /// How an instrument plays each form.
@@ -181,7 +339,7 @@ impl Default for MicroWriting {
 /// `before`: the notes they share stay, the others move to the nearest
 /// note of the new form left over. With nothing before, the chord is in
 /// close position from `low`.
-fn voice(form: PitchSet, before: &[Note], low: Note) -> Vec<Note> {
+pub(crate) fn voice(form: PitchSet, before: &[Note], low: Note) -> Vec<Note> {
     let normal = form.normal_form();
     if before.is_empty() {
         let mut chord: Vec<Note> = Vec::new();
@@ -331,11 +489,13 @@ pub fn write_forms(
     notes
 }
 
-/// The note a bass plays for `form`: the root of a triad, or else the
-/// first note of the normal form, where the group starts.
+/// The note a bass plays for `form`: the root of the chord it is, when
+/// it is one (a triad, C7 or Em7b5: see [`keys::form_chord`]), or else
+/// the first note of the normal form, where the group starts.
+///
+/// [`keys::form_chord`]: crate::harmony::keys::form_chord
 pub fn bass_note(form: PitchSet) -> PitchClass {
-    let chord = Micromode::of(form).and_then(|m| m.chord(form));
-    match chord {
+    match crate::harmony::keys::form_chord(form) {
         Some(chord) => chord.root,
         None => form.normal_form().first().copied().unwrap_or(PitchClass::C),
     }
@@ -348,6 +508,117 @@ mod tests {
 
     fn set(semitones: &[u8]) -> PitchSet {
         PitchSet::from_semitones(semitones)
+    }
+
+    #[test]
+    fn the_twelve_notes_split_into_forms() {
+        let ways = |semitones: &[u8]| aggregates(set(semitones)).len();
+        // Menor 3 splits them in 18 ways, the augmented triad in one, the
+        // diminished triad in none (its forms always overlap).
+        assert_eq!(ways(&[0, 1, 4]), 18);
+        assert_eq!(ways(&[0, 4, 8]), 1);
+        assert_eq!(ways(&[0, 3, 6]), 0);
+        // Every micromode but the diminished triad can.
+        for micromode in Micromode::all() {
+            let can = !aggregates(micromode.prime).is_empty();
+            assert_eq!(
+                can,
+                micromode.prime != set(&[0, 3, 6]),
+                "{}",
+                micromode.name
+            );
+        }
+        // A hexachord and its complement: six semitones in a row, and the
+        // six a tritone away, from each of six notes.
+        let halves = aggregates(set(&[0, 1, 2, 3, 4, 5]));
+        assert_eq!(halves.len(), 6);
+        for way in &halves {
+            assert_eq!(way[1], way[0].transpose(6));
+        }
+        // Seven notes cannot split twelve.
+        assert!(aggregates(set(&[0, 2, 4, 5, 7, 9, 11])).is_empty());
+        for way in aggregates(set(&[0, 1, 4])) {
+            let all = way.iter().fold(0, |bits, form| bits | form.bits());
+            assert_eq!(all, 0xFFF);
+            assert_eq!(way.len(), 4);
+        }
+    }
+
+    #[test]
+    fn an_all_twelve_walk_holds_every_note_in_every_group() {
+        for (first, size) in [
+            (set(&[0, 1, 4]), 4),
+            (set(&[0, 2, 7]), 4),
+            (set(&[0, 1, 2, 3]), 3),
+            (set(&[0, 2, 4, 6, 8, 10]), 2),
+        ] {
+            let forms = walk_forms(first, Walk::AllTwelve, size * 3);
+            assert_eq!(forms.len(), size * 3);
+            assert_eq!(forms[0], first);
+            for group in forms.chunks(size) {
+                let all = group.iter().fold(0, |bits, form| bits | form.bits());
+                assert_eq!(all, 0xFFF, "{group:?}");
+            }
+            for form in &forms {
+                assert_eq!(form.prime_form(), first.prime_form());
+            }
+        }
+        // From one group to the next, Menor 3 keeps two notes.
+        let forms = walk_forms(set(&[0, 1, 4]), Walk::AllTwelve, 8);
+        assert_eq!(degree::kept(forms[3], forms[4]), 2);
+        // The diminished triad cannot, and keeps two notes instead.
+        let forms = walk_forms(set(&[0, 3, 6]), Walk::AllTwelve, 4);
+        assert!(
+            forms
+                .windows(2)
+                .all(|pair| degree::kept(pair[0], pair[1]) == 2)
+        );
+    }
+
+    #[test]
+    fn a_walk_can_keep_one_note() {
+        let forms = walk_forms(set(&[0, 1, 4]), Walk::Keep(1), 12);
+        for pair in forms.windows(2) {
+            assert_eq!(degree::kept(pair[0], pair[1]), 1, "{pair:?}");
+        }
+        // Any set walks: C major as a set, keeping all but one note, goes
+        // round the circle of fifths, here flatwards: F major, Bb major.
+        let c_major = set(&[0, 2, 4, 5, 7, 9, 11]);
+        let forms = walk_forms(c_major, Walk::CommonTones, 4);
+        for pair in forms.windows(2) {
+            assert_eq!(degree::kept(pair[0], pair[1]), 6);
+        }
+        assert_eq!(forms[1], c_major.transpose(5));
+        assert_eq!(forms[2], c_major.transpose(10));
+    }
+
+    #[test]
+    fn the_bass_plays_the_root_of_a_chord() {
+        // Triads and the chords of four or five notes have a root.
+        assert_eq!(bass_note(set(&[9, 0, 4])), PitchClass::A);
+        assert_eq!(bass_note(set(&[0, 4, 7, 10])), PitchClass::C);
+        assert_eq!(bass_note(set(&[2, 4, 7, 10])), PitchClass::E);
+        // Other groups start where their normal form does.
+        assert_eq!(bass_note(set(&[0, 1, 4])), PitchClass::C);
+        assert_eq!(bass_note(set(&[1, 2, 3, 4])), PitchClass::CSharp);
+    }
+
+    #[test]
+    fn a_walk_never_goes_straight_back() {
+        // C7 shares three notes only with Em7b5, and Em7b5 only with C7:
+        // the walk goes there, then on keeping two notes, not back.
+        let c7 = set(&[0, 4, 7, 10]);
+        let forms = walk_forms(c7, Walk::CommonTones, 8);
+        assert_eq!(forms[1], set(&[2, 4, 7, 10]));
+        assert_eq!(degree::kept(forms[1], forms[2]), 2);
+        for pair in forms.windows(2) {
+            assert!(degree::kept(pair[0], pair[1]) >= 2, "{pair:?}");
+        }
+        for three in forms.windows(3) {
+            assert_ne!(three[0], three[2], "{three:?}");
+        }
+        let distinct: std::collections::HashSet<u16> = forms.iter().map(|f| f.bits()).collect();
+        assert!(distinct.len() >= 6, "{forms:?}");
     }
 
     #[test]

@@ -2333,6 +2333,95 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "keeps 1 note of home",
         "conserva 1 nota de la forma de la tonalidad",
     ),
+    ("Forms", "Formas"),
+    (
+        "Keep as many notes as it can",
+        "Conservar todas las notas que se pueda",
+    ),
+    (
+        "Each form keeps as many notes of the one before as it can without going straight \
+         back to it",
+        "Cada forma conserva todas las notas de la anterior que puede sin volver enseguida a \
+         ella",
+    ),
+    (
+        "Write a progression of the set's forms from bar {} on",
+        "Escribir una progresión de las formas del conjunto desde el compás {}",
+    ),
+    (
+        "Keep all notes but one",
+        "Conservar todas las notas menos una",
+    ),
+    (
+        "Each form keeps every note of the one before but one, which moves: the smoothest way on, round all twelve notes when the set can",
+        "Cada forma conserva todas las notas de la anterior menos una, que se mueve: la manera más suave de seguir, que recorre las doce notas cuando el conjunto puede",
+    ),
+    ("Keep one note, move two", "Conservar una nota, mover dos"),
+    (
+        "Each form keeps one note of the one before: a pivot, a wider move",
+        "Cada forma conserva una nota de la anterior: un pivote, un movimiento más amplio",
+    ),
+    (
+        "All twelve notes, every {} forms",
+        "Las doce notas, cada {} formas",
+    ),
+    (
+        "Forms that share no note, so that every few of them hold all twelve notes between them, as the four groups of Webern's Concerto row do; the next round starts from a form that keeps notes of the last",
+        "Formas que no comparten ninguna nota, así que cada pocas de ellas reúnen entre todas las doce notas, como los cuatro grupos de la serie del Concierto de Webern; la vuelta siguiente empieza en una forma que conserva notas de la última",
+    ),
+    ("Sequence: up a semitone", "Secuencia: un semitono arriba"),
+    ("Sequence: up a whole tone", "Secuencia: un tono arriba"),
+    (
+        "Sequence: up a minor third",
+        "Secuencia: una tercera menor arriba",
+    ),
+    ("Sequence: up a fourth", "Secuencia: una cuarta arriba"),
+    ("Sequence: up a fifth", "Secuencia: una quinta arriba"),
+    (
+        "Every note moves the same distance each time, so each form is the last one moved",
+        "Todas las notas se mueven la misma distancia cada vez, así que cada forma es la anterior transportada",
+    ),
+    (
+        "Wrote {} forms from bar {}",
+        "Se escribieron {} formas desde el compás {}",
+    ),
+    ("Keep {} notes", "Conservar {} notas"),
+    (
+        "All twelve notes in every few forms",
+        "Las doce notas cada pocas formas",
+    ),
+    (
+        "Chords stacked from the set's notes, as a key stacks its scale's",
+        "Acordes apilados con las notas del conjunto, como una tonalidad apila los de su escala",
+    ),
+    (
+        "The set itself, moved and turned upside down, each form called by its degree",
+        "El propio conjunto, transportado y dado vuelta, cada forma llamada por su grado",
+    ),
+    (
+        "The forms that keep at least {} notes of the key's own form",
+        "Las formas que conservan al menos {} notas de la forma propia de la tonalidad",
+    ),
+    (
+        "Every form of the set, moved and upside down",
+        "Todas las formas del conjunto, transportadas y dadas vuelta",
+    ),
+    (
+        "The set's forms, nearest home first. Outlined: they keep all but one note of {}.",
+        "Las formas del conjunto, primero las más cercanas a la de la tonalidad. Con borde: conservan todas las notas de {} menos una.",
+    ),
+    (
+        "The set's forms, nearest home first. Hold a key or press {}.",
+        "Las formas del conjunto, primero las más cercanas a la de la tonalidad. Mantén una tecla o pulsa {}.",
+    ),
+    (
+        " The outlined forms keep all but one note of {}: the smoothest ways on.",
+        " Las formas con borde conservan todas las notas de {} menos una: los enlaces más suaves.",
+    ),
+    (
+        "Music on one pitch-class set makes its harmony of the set's own forms, so these are its keys, each called by its degree: T0 is the key's own form, T2 the same moved up two semitones, T2I upside down. The more notes a form keeps from home, the brighter its key.{} Hold one (or press {}) to play it.",
+        "La música sobre un conjunto de clases de altura hace su armonía con las formas del propio conjunto, así que estas son sus teclas, cada una llamada por su grado: T0 es la forma propia de la tonalidad, T2 la misma transportada dos semitonos hacia arriba, T2I dada vuelta. Cuantas más notas conserva una forma de la de la tonalidad, más brillante es su tecla.{} Mantén una (o pulsa {}) para tocarla.",
+    ),
     (
         "keeps {} notes of home",
         "conserva {} notas de la forma de la tonalidad",
