@@ -36,7 +36,9 @@ posterior. Funciona en Linux, macOS y Windows.
 - **Editar cada nota.** Lo que toca la banda queda en pistas propias,
   como [patrones](patterns-and-playlist.md) corrientes. Abre uno en el
   [piano roll](piano-roll.md) para ver cómo reparte un acorde un pianista
-  de bossa nova, cámbialo o escribe tus propias partes desde cero.
+  de bossa nova, cámbialo o escribe tus propias partes desde cero. O
+  canta o silba una parte junto con la canción, y la aplicación escribe
+  sus notas por ti, en una [toma](takes.md).
 - **Escuchar y estudiar.** Cientos de [demostraciones](finding-a-demo.md),
   desde canciones populares y tangos hasta estándares de jazz y el
   *Boléro*, se abren con sus acordes escritos, y la [guía de
@@ -62,7 +64,8 @@ posterior. Funciona en Linux, macOS y Windows.
    canales, el piano roll, las teclas de armonía, los cambios de tempo y
    de tonalidad, y los ajustes.
 4. **Sonido, MIDI y archivos**: el mezclador, los teclados y
-   sintetizadores MIDI, guardar y abrir, y exportar.
+   sintetizadores MIDI, las tomas cantadas o silbadas en la canción,
+   guardar y abrir, y exportar.
 5. **Aprender armonía**: notas y escalas, tonalidades y modos, los
    acordes y lo que hacen, la conducción de voces, ritmo y compás,
    conjuntos y series, y cómo practicar.

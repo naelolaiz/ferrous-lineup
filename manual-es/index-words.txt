@@ -35,6 +35,7 @@ Ajustar a la escala: piano-roll.md#escribir-notas
 Ajuste (lista de reproducción): patterns-and-playlist.md#colocar-y-mover-clips
 Ajustes: settings.md#ajustes
 Ajustes de la Biblioteca: styles.md#los-ajustes-de-la-biblioteca
+Añadir una grabación: takes.md#añadir-una-grabación-hecha-antes
 Aksak: véase Métrica irregular
 Altura real: lead-sheets.md#para-instrumentos-en-si-mi-y-fa
 Amortiguación: mixer.md#la-reverberación
@@ -77,6 +78,7 @@ Cambio de tonalidad: keys-and-modes.md#cambios-de-tonalidad-en-una-canción, tem
 Canal MIDI: midi.md#enviar-a-un-sintetizador
 Candombe: folk-and-misa-criolla.md#en-otras-partes-de-américa-latina
 Canon: jazz-and-pop.md#canciones-que-todos-conocen, concert-hall.md#el-barroco
+Cantar una parte: véase Toma
 Carpeta de datos: saving.md#recuperar-el-trabajo-sin-guardar
 Carpeta de estilos: style-editor.md#guardar-y-usar-tus-estilos
 Cejilla: bigger-band.md#cómo-toca-la-guitarra
@@ -133,13 +135,14 @@ Exportar WAV: exporting.md#un-archivo-de-sonido
 Figuras: rhythm-and-meter.md#figuras-y-pasos
 Filtros (Biblioteca): styles.md#buscar-un-estilo
 Final: first-song.md#6-dale-una-forma, song-form.md#el-final-a-casa-y-sostenido
+Forma de onda: takes.md#la-toma-en-su-pista
 Forma prima: sets-rows-micromodes.md#conjuntos-de-clases-de-alturas
 Formación de instrumentos: bigger-band.md#el-menú-banda
 Función: chord-functions.md#casa-alejarse-y-tensión
 General MIDI: sounds.md#un-instrumento-para-cada-canal, midi.md#enviar-a-un-sintetizador, exporting.md#un-archivo-midi
 GeneralUser GS: sounds.md#al-abrir-la-aplicación
 Golpe: stops.md
-Grabar: midi.md#grabar
+Grabar: midi.md#grabar, takes.md#grabar-una-toma
 Guardar: first-song.md#7-guárdala, saving.md#el-menú-archivo
 ¿Guardar cambios?: saving.md#antes-de-perder-tus-cambios
 Guía de escucha: finding-a-demo.md#la-guía-de-escucha
@@ -156,9 +159,7 @@ Húmedo / seco: mixer.md#la-reverberación
 Idioma: installing.md#el-primer-arranque, settings.md#apariencia
 ii–V–I: chord-functions.md#fundamentales-que-bajan-una-quinta, jazz-and-pop.md#los-estándares-y-las-big-bands
 Importar archivo MIDI: importing.md#archivos-midi
-Importar grabación: importing.md#grabaciones-experimental
 Importar hoja de acordes: importing.md#hojas-de-acordes-en-texto
-Importar una grabación: véase Importar grabación
 Instalar: installing.md
 Instrumento: sounds.md#un-instrumento-para-cada-canal
 Instrumento transpositor: lead-sheets.md#para-instrumentos-en-si-mi-y-fa
@@ -184,6 +185,7 @@ Métrica irregular: rhythm-and-meter.md#métricas-irregulares, odd-meters-and-ba
 Metrónomo: practising.md#cuenta-de-entrada-y-metrónomo
 Mezclador: mixer.md
 Micromodo: sets-rows-micromodes.md#micromodos, no finding-a-demo.md
+Micrófono: takes.md#qué-necesitas, settings.md#audio
 MIDI: midi.md
 Milonga: tango-and-latin-america.md#el-tango
 Misa Criolla: folk-and-misa-criolla.md#la-misa-criolla
@@ -258,6 +260,7 @@ Serie dodecafónica: sets-rows-micromodes.md#series-dodecafónicas
 Sesquiáltera: véase Hemiola
 Sexta napolitana: outside-the-key.md#la-sexta-napolitana, concert-hall.md#el-piano
 Shuffle: swing.md#dónde-no-se-aplica-el-swing
+Silbar una parte: véase Toma
 Silenciar: channel-rack.md#leerlo, patterns-and-playlist.md#las-pistas, mixer.md#las-líneas
 Silencio: stops.md
 Sin banda: bigger-band.md#el-menú-banda
@@ -265,7 +268,7 @@ Síncopa: stops.md#la-música, rhythm-and-meter.md#pulsos-fuertes-pulsos-débile
 Sintetizador: midi.md#enviar-a-un-sintetizador
 Solfeo: notes-and-scales.md#solfeo-o-letras
 Solista: soloist.md
-Solo: mixer.md#las-líneas
+Solo: mixer.md#las-líneas, patterns-and-playlist.md#las-pistas
 Soltar archivos: saving.md#abrir-archivos-de-otras-maneras
 Soltura: swing.md#tiempo-suelto
 Son cubano: tango-and-latin-america.md#cuba-y-méxico
@@ -285,10 +288,12 @@ Tempo: first-song.md#5-el-tempo-y-la-tonalidad, main-window.md#la-barra-de-herra
 Tercera de picardía: outside-the-key.md#acordes-prestados
 Terminar la canción aquí: song-form.md#el-final-a-casa-y-sostenido
 Tocas tú: locks.md#tocas-tú
+Toma: takes.md
 Tonalidad: keys-and-modes.md#la-tonalidad-de-una-canción, first-song.md#5-el-tempo-y-la-tonalidad
 Tonalidades con dos nombres: keys-and-modes.md#tonalidades-con-dos-nombres
 Tónica: harmony-keys.md#las-teclas, chord-functions.md#casa-alejarse-y-tensión
 Tonicalización: outside-the-key.md#dominantes-secundarias
+Transcribir otra vez: takes.md#transcribir-otra-vez-una-toma, patterns-and-playlist.md#colocar-y-mover-clips
 Transportar: piano-roll.md#herramientas
 Tresillo: swing.md#el-control-swing, bigger-band.md#la-sección-de-vientos, rhythm-and-meter.md#figuras-y-pasos, tango-and-latin-america.md, rhythm-and-meter.md#pulsos-fuertes-pulsos-débiles-y-síncopa
 Tríada: chords.md#tríadas
