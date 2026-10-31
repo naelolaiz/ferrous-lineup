@@ -15,6 +15,11 @@ use crate::theme;
 /// and the colour to draw it in.
 pub type Picture = fn(&Painter, Rect, Color32);
 
+/// How wide a toggle is: a little narrower than the transport's buttons,
+/// so the toolbar fits on one row in a window 1280 points wide, in
+/// Spanish too (see `the_toolbar_fits_on_one_row_at_1280_points`).
+const TOGGLE_WIDTH: f32 = 28.0;
+
 /// The Id of the toggle named `name`, to find it again (in tests).
 pub fn id(name: &str) -> egui::Id {
     egui::Id::unique(("icon-toggle", name))
@@ -35,7 +40,7 @@ pub fn toggle_lit(
     light: Color32,
     picture: Picture,
 ) -> egui::Response {
-    let (_, rect) = ui.allocate_space(vec2(30.0, 26.0));
+    let (_, rect) = ui.allocate_space(vec2(TOGGLE_WIDTH, 26.0));
     let response = ui.interact(rect, id(name), Sense::click());
     response
         .widget_info(|| egui::WidgetInfo::selected(egui::Role::Button, ui.is_enabled(), on, name));

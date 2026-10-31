@@ -83,8 +83,9 @@ use crate::widgets;
 /// downloads are kept in.
 pub const APP_NAME: &str = "Ferrous Lineup";
 
-/// How wide the pattern list in the toolbar is.
-const PATTERN_LIST_WIDTH: f32 = 92.0;
+/// How wide the pattern list in the toolbar is: as wide as leaves the
+/// toolbar on one row in a window 1280 points wide, in Spanish too.
+const PATTERN_LIST_WIDTH: f32 = 80.0;
 
 /// The sample rate used to prepare sounds when there is no sound card.
 const FALLBACK_SAMPLE_RATE: u32 = 48_000;
