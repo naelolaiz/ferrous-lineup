@@ -32,7 +32,7 @@ use lineup_audio::PlayMode;
 use lineup_audio::input::{Microphone, Recorder, Recording};
 use lineup_core::general_midi::FLUTE;
 use lineup_core::take::{
-    Along, Keep, SungNote, Take, Target, Transcription, transcribe, tune_channel,
+    Along, Keep, Pitches, SungNote, Take, Target, Transcription, transcribe_with, tune_channel,
 };
 use lineup_core::{MAX_TRACKS, Meter, Project};
 use lineup_listen::voice;
@@ -55,6 +55,27 @@ const GRIDS: [(usize, &str); 3] = [
     (1, "Sixteenth notes"),
     (2, "Eighth notes"),
     (4, "Quarter notes"),
+];
+
+/// The ways the pitches of a take can be written, with what each does.
+const PITCHES: [(Pitches, &str, &str); 3] = [
+    (
+        Pitches::AsSung,
+        "As sung",
+        "Each note on the nearest semitone to what was sung.",
+    ),
+    (
+        Pitches::InKey,
+        "In the key",
+        "Each note on the nearest note of the key there, so an out of tune note does not \
+         come out as a wrong one.",
+    ),
+    (
+        Pitches::WithChords,
+        "Key and chords",
+        "Each note on the nearest note of the key as the chord there colours it: over D7 \
+         in C major, F♯ instead of F. Bars with no chord keep to the key.",
+    ),
 ];
 
 /// The fewest notes of a take the review shows by name.
@@ -121,6 +142,7 @@ struct Review {
     take: Take,
     destination: Destination,
     grid: usize,
+    pitches: Pitches,
     keep: bool,
     track: usize,
     transcription: Transcription,
@@ -135,7 +157,9 @@ impl Review {
             along: heard.along.clone(),
         };
         let grid = 1;
-        let transcription = transcribe(project, &take, &heard.notes, grid, heard.tuning);
+        let pitches = Pitches::AsSung;
+        let transcription =
+            transcribe_with(project, &take, &heard.notes, grid, heard.tuning, pitches);
         let destination = tune_channel(project).map_or(Destination::New, Destination::Channel);
         let tracks = project.playlist().tracks().len();
         let track = track
@@ -146,23 +170,33 @@ impl Review {
             take,
             destination,
             grid,
+            pitches,
             keep: true,
             track,
             transcription,
         }
     }
 
-    fn snap(&mut self, project: &Project, grid: usize) {
-        if grid != self.grid {
+    /// Writes the notes again on `grid`, with their pitches as `pitches`
+    /// says, if either changed.
+    fn snap(&mut self, project: &Project, grid: usize, pitches: Pitches) {
+        if grid != self.grid || pitches != self.pitches {
             self.grid = grid;
-            self.transcription = transcribe(
-                project,
-                &self.take,
-                &self.heard.notes,
-                grid,
-                self.heard.tuning,
-            );
+            self.pitches = pitches;
+            self.transcription = self.transcribe(project);
         }
+    }
+
+    /// The notes of the take as the song is now.
+    fn transcribe(&self, project: &Project) -> Transcription {
+        transcribe_with(
+            project,
+            &self.take,
+            &self.heard.notes,
+            self.grid,
+            self.heard.tuning,
+            self.pitches,
+        )
     }
 }
 
@@ -593,7 +627,18 @@ impl LineupApp {
                             for (steps, name) in GRIDS {
                                 ui.selectable_value(&mut grid, steps, tr(name));
                             }
-                            review.snap(project, grid);
+                            review.snap(project, grid, review.pitches);
+                        });
+                        ui.end_row();
+
+                        ui.label(tr("Pitches"));
+                        ui.horizontal(|ui| {
+                            let mut pitches = review.pitches;
+                            for (way, name, hover) in PITCHES {
+                                ui.selectable_value(&mut pitches, way, tr(name))
+                                    .on_hover_text(tr(hover));
+                            }
+                            review.snap(project, review.grid, pitches);
                         });
                         ui.end_row();
 
@@ -645,13 +690,7 @@ impl LineupApp {
             return;
         };
         // Again, in case the song changed while the window was open.
-        let transcription = transcribe(
-            &self.project,
-            &review.take,
-            &review.heard.notes,
-            review.grid,
-            review.heard.tuning,
-        );
+        let transcription = review.transcribe(&self.project);
         let name = take_name(&self.project, review.heard.name.as_deref());
         let mut recordings = Vec::new();
         if review.keep {
@@ -691,6 +730,7 @@ impl LineupApp {
             Destination::Nowhere => Target::Nowhere,
         };
         let keep = Keep {
+            notes: format!("{name} notes"),
             name,
             track: review.track,
             recordings,

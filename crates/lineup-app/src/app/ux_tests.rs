@@ -5971,6 +5971,42 @@ mod takes {
     }
 
     #[test]
+    fn a_take_sung_out_of_tune_can_keep_to_the_key() {
+        // Ode to Joy is in D major; a D♯ sung a quarter of a semitone
+        // sharp, in bar 2.
+        let mut screen = ode_to_joy();
+        let beat = 60.0 / f64::from(screen.app.project.tempo.bpm());
+        let folder = folder("take-in-key");
+        let notes = vec![sung(0.0, beat * 0.9, 75.25)];
+        screen
+            .app
+            .heard_take(16.0, beat * 2.0, notes.clone(), folder.clone());
+        screen.draw(vec![]);
+        screen.click(tr("Keep it"));
+        screen.click(tr("Write it in"));
+        assert_eq!(
+            lead_notes(&screen.app.project, 16, 20),
+            [(16, 75)],
+            "as sung"
+        );
+        screen.app.undo();
+
+        screen
+            .app
+            .heard_take(16.0, beat * 2.0, notes, folder.clone());
+        screen.draw(vec![]);
+        screen.click(tr("In the key"));
+        screen.click(tr("Keep it"));
+        screen.click(tr("Write it in"));
+        assert_eq!(
+            lead_notes(&screen.app.project, 16, 20),
+            [(16, 76)],
+            "D♯ is not in D major: the nearest note of the key is E"
+        );
+        std::fs::remove_dir_all(folder).unwrap();
+    }
+
+    #[test]
     fn a_take_can_keep_only_its_notes_on_a_new_channel() {
         let mut screen = ode_to_joy();
         let before = screen.app.project.clone();

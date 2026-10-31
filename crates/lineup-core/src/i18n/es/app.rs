@@ -271,6 +271,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("Arrows, Tab, Shift+Tab", "Flechas, Tab, Mayús+Tab"),
     ("as here in {A} minor", "como aquí en {A} menor"),
     ("As it came from {}.", "Tal como vino de {}."),
+    ("As sung", "Como se cantó"),
     (
         "As it sounds: piano, guitar, bass, voice, flute, violin, trombone",
         "Como suena: piano, guitarra, bajo, voz, flauta, violín, trombón",
@@ -298,6 +299,11 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     (
         "The notes in the opposite order in time, rhythm and all, as in a crab canon. A form of a row becomes its retrograde: P0 becomes R0.",
         "Las notas en el orden contrario en el tiempo, con su ritmo también, como en un canon cangrejo. Una forma de una serie se vuelve su retrógrada: P0 se vuelve R0.",
+    ),
+    ("Hear every track again", "Oír todas las pistas otra vez"),
+    (
+        "Hear only this track: the others are muted",
+        "Oír solo esta pista: las demás se silencian",
     ),
     ("Pitches backwards", "Alturas hacia atrás"),
     (
@@ -528,6 +534,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Combinatorial: its first six notes and those of {} make all twelve.",
         "Combinatoria: sus seis primeras notas y las de {} forman las doce.",
     ),
+    ("solo track", "pista en solo"),
     ("With its partner, {}", "Con su compañera, {}"),
     ("With its partner", "Con su compañera"),
     (
@@ -680,6 +687,18 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Cada tecla superpone una nota sí y una no del conjunto, desde una de sus notas, como los acordes de una tonalidad superponen una nota sí y una no de la escala. Mantén una (o pulsa {}) para tocarlo.",
     ),
     ("Each note", "Cada nota"),
+    (
+        "Each note on the nearest semitone to what was sung.",
+        "Cada nota en el semitono más cercano a lo que se cantó.",
+    ),
+    (
+        "Each note on the nearest note of the key there, so an out of tune note does not come out as a wrong one.",
+        "Cada nota en la nota de la tonalidad más cercana en ese lugar, para que una nota desafinada no salga como una nota equivocada.",
+    ),
+    (
+        "Each note on the nearest note of the key as the chord there colours it: over D7 in C major, F♯ instead of F. Bars with no chord keep to the key.",
+        "Cada nota en la nota de la tonalidad más cercana tal como la colorea el acorde de ese lugar: sobre D7 en do mayor, fa♯ en lugar de fa. Los compases sin acorde se quedan en la tonalidad.",
+    ),
     (
         "Each note lasts as many steps as the row's number at its place, plus one",
         "Cada nota dura tantos pasos como el número de la serie en su lugar, más uno",
@@ -956,6 +975,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("in the notes here", "en las notas de aquí"),
     ("in this pattern", "en este patrón"),
     ("in what you play", "en lo que tocas"),
+    ("In the key", "En la tonalidad"),
     ("In {}", "En {}"),
     (
         "In {}: what are the chords after {}?",
@@ -1033,6 +1053,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Keeps the song’s time signatures and tempo: this preset plays every bar in that bar’s meter.",
         "Conserva los compases y el tempo de la canción: este preajuste toca cada compás en la métrica de ese compás.",
     ),
+    ("Key and chords", "Tonalidad y acordes"),
     ("Key from bar {}: {}", "Tonalidad desde el compás {}: {}"),
     ("Key {}.", "Tecla {}."),
     ("Keys", "Tonalidades"),
@@ -1389,6 +1410,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("PATTERN", "PATRÓN"),
     ("Patterns", "Patrones"),
     ("PDF document", "Documento PDF"),
+    ("Pitches", "Alturas"),
     ("Piano + nylon guitar", "Piano + guitarra de nailon"),
     ("Piano + strings", "Piano + cuerdas"),
     (
@@ -2667,6 +2689,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ),
     ("{} is {}", "{} es {}"),
     ("{} notes", "{} notas"),
+    ("name|{} notes", "Notas de {}"),
     (
         "{} notes, from bar {} to bar {}.",
         "{} notas, del compás {} al compás {}.",
