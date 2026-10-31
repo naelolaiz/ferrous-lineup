@@ -662,7 +662,7 @@ impl<'a> Labels<'a> {
 }
 
 /// What a channel plays, for a trace: its General MIDI program's name,
-/// or its drum, sample file or MIDI channel.
+/// or its drum, sample file, take or MIDI channel.
 fn instrument_name(channel: &Channel) -> String {
     match (&channel.kind, channel.program) {
         (ChannelKind::Synth, Some(program)) => general_midi::name(program).to_string(),
@@ -673,6 +673,11 @@ fn instrument_name(channel: &Channel) -> String {
         },
         (ChannelKind::Sampler(SampleSource::File(path)), _) => format!(
             "sample {}",
+            path.file_name()
+                .map_or_else(String::new, |name| name.to_string_lossy().into_owned())
+        ),
+        (ChannelKind::Sampler(SampleSource::Take(path)), _) => format!(
+            "take {}",
             path.file_name()
                 .map_or_else(String::new, |name| name.to_string_lossy().into_owned())
         ),
