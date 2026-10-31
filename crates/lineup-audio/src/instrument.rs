@@ -205,7 +205,7 @@ impl Instrument {
 
     /// Starts a long sound of the song partway through, `elapsed` output
     /// frames after its note began, as when playback starts or jumps past
-    /// the note's step: a whole song imported as a recording plays from
+    /// the note's step: a whole song added as a take plays from
     /// wherever playback starts. Only a sampler playing a long sound (one
     /// that stops with the transport, see [`Instrument::release_all`])
     /// does this; every other note waits for its own step, and a sound
@@ -512,8 +512,8 @@ impl Sampler {
         true
     }
 
-    /// Whether the sound is long, such as a whole song imported as a
-    /// recording: longer than [`LONG_SAMPLE_SECONDS`]. A take counts as
+    /// Whether the sound is long, such as a whole song in a sound file:
+    /// longer than [`LONG_SAMPLE_SECONDS`]. A take counts as
     /// long, whatever its length.
     fn is_long(&self) -> bool {
         self.along
@@ -522,7 +522,7 @@ impl Sampler {
     }
 
     /// Fades out the voices playing a long sound, such as a whole song
-    /// imported as a recording, so that it stops with the transport.
+    /// added as a take, so that it stops with the transport.
     /// Short sounds (drum hits) still ring out.
     pub fn release_all(&mut self) {
         if self.is_long() {

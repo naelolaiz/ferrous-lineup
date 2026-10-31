@@ -47,8 +47,8 @@ const QUEUE_SECONDS: u32 = 4;
 /// How many blocks can wait.
 const BLOCK_QUEUE: usize = 4096;
 
-/// The longest take: ten minutes, as long as a recording can be imported
-/// (a take is held in memory while it is recorded).
+/// The longest take: ten minutes, as long as an audio file added to the
+/// song (a take is held in memory while it is recorded).
 pub const MAX_TAKE_SECONDS: u32 = 10 * 60;
 
 /// How often the recorder empties the queues.
