@@ -2294,7 +2294,11 @@ los compases hacia atrás hace que el primero sea el último compás.
 corte. Un tramo que vuelve **nota por nota** (una estrofa repetida, un
 da capo) toca otra vez el mismo patrón en lugar de una copia, como
 construirías la canción a mano. Cada patrón lleva el nombre de sus
-compases, como «Compases 1–16».
+compases, como «Compases 1–16». La batería de cada trozo va en un
+patrón propio, «Drums, bars 1–16», en una segunda pista llamada Drums:
+así la batería de una banda puede ocupar su lugar, porque la banda
+silencia las pistas que solo tienen batería (ver [La
+banda](../band/band.md)).
 
 ![Eine kleine Nachtmusik de Mozart, importada de un archivo MIDI, en el piano roll. Encima de las notas, el carril de acordes nombra cada acorde: G, D, G, D, G, C, A, D... El cuadro de tonalidad dice Sol mayor. Debajo, el carril de velocidad muestra con qué fuerza se tocó cada nota.](../images/step-8-midi-mozart.png)
 
