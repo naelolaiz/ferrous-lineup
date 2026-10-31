@@ -145,3 +145,7 @@ how you give an imported MIDI file the key changes it really has. No note moves,
 It is right on most bars of the demo songs, but it often misses short
 visits to another key, and it can mistake a key for its relative major
 or minor.
+
+Music made of a micromode or another set has no major or minor key.
+For it, a second line says what the passage is made of: see [Finding
+the colour](sets-rows-micromodes.md#finding-the-colour).

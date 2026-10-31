@@ -1067,25 +1067,43 @@ El carril sobre la cuadrícula nombra la armonía. Su primera fila nombra
 lo que toca este canal en cada paso; su segunda fila, **Todo**, nombra
 cómo suena ahí la canción entera, pulso a pulso, tal como lo calcula
 [Oír la armonía](../theory/hearing.md). Cada fila une los pasos
-vecinos con la misma armonía en un solo bloque:
+vecinos con el mismo nombre en un solo bloque.
+
+Qué es «el mismo» depende del menú **Mostrar** del carril. Como
+acordes, una armonía guarda su bajo, así que C y C/E son dos bloques;
+como conjuntos de clases de alturas son uno, las mismas notas (ver [En
+el piano roll](../theory/sets.md#en-el-piano-roll)). Así que primero
+cada paso recibe el nombre que le dará el carril, y los bloques se
+hacen a partir de eso:
 
 ```rust
-// `chunk_by` splits a slice wherever two neighbours differ. A
-// harmony holds its bass, so C and C/E are two blocks.
+#[derive(PartialEq)]
+enum LaneName {
+    Heard(Harmony),
+    Named(Vec<HarmonyName>),
+}
+
+let steps: Vec<LaneName> = harmonies
+    .iter()
+    .map(|&(harmony, notes)| match self.notation.name_heard(&harmony, notes, scale) {
+        Some(names) => LaneName::Named(names),
+        None => LaneName::Heard(harmony),
+    })
+    .collect();
 let mut start = 0;
-for run in harmonies.chunk_by(|a, b| a == b) {
+for run in steps.chunk_by(|a, b| a == b) {
     let end = start + run.len();
-    if let Some(label) = run[0].label_in(scale) {
-        // ...a block from step `start` to step `end`, with the label...
-    }
+    // ...a block from step `start` to step `end`, named by `run[0]`...
     start = end;
 }
 ```
 
 `chunk_by` parte un slice en tramos allí donde el closure dice que dos
 vecinos no van juntos. Cada `run` es un slice del vector original, así
-que no se copia nada. Comparar armonías enteras, y no sus etiquetas,
-importa: todo grupo de notas sin nombre de acorde lleva la etiqueta «?»,
+que no se copia nada. El `==` que usa es el que escribe
+`#[derive(PartialEq)]`: dos `LaneName` son iguales cuando son la misma
+variante con el mismo contenido. Comparar armonías enteras, y no sus
+etiquetas, importa: todo grupo de notas sin nombre de acorde lleva la etiqueta «?»,
 y unir por etiqueta convertiría varios acordes distintos sin nombre
 seguidos en un solo bloque «?» largo, como si se mantuviera un acorde.
 
@@ -1121,9 +1139,11 @@ if name.size().x <= chord_rect.width() - 2.0 {
 cuánto mide de ancho y de alto. Si cabe en el bloque, con un punto de
 margen a cada lado, se pinta esa misma galley; nada se compone dos
 veces. `galley` recibe la esquina superior izquierda del texto, así que
-el centro se corre hacia atrás la mitad del tamaño. Si no cabe, no se
-dibuja nada; apuntar al bloque sigue nombrando el acorde entero en la
-línea bajo la barra de herramientas.
+el centro se corre hacia atrás la mitad del tamaño. Un conjunto o un
+micromodo tiene un nombre más corto para probar antes, su clase sola,
+«3-11» por «3-11 T7I»; si ni eso cabe, no se dibuja nada. Apuntar al
+bloque sigue nombrándolo entero en la línea bajo la barra de
+herramientas.
 
 ### Resaltado de la escala
 
