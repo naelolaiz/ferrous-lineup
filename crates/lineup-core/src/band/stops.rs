@@ -12,6 +12,7 @@
 
 use crate::chord_sheet::{ChordMarker, Push, Stop};
 use crate::library::comping::Played;
+use crate::meter::Bar;
 use crate::pattern::{NoteEvent, STEP_NOTE, TICKS_PER_STEP};
 
 /// How long a shot sounds: an eighth note.
@@ -98,6 +99,43 @@ impl Breaks {
                 None => {}
             }
         }
+        breaks
+    }
+
+    /// These breaks, and a shot on the first beat of each of `bars`,
+    /// where the band breaks before a new part (see
+    /// [`crate::library::drum_form::break_bars`]): it strikes the harmony
+    /// of `harmonies` sounding there and is silent to the bar's end. A
+    /// bar the chord sheet already breaks or pushes in keeps what the
+    /// sheet says.
+    pub(crate) fn with_shots(&self, bars: &[Bar], harmonies: &[Played]) -> Breaks {
+        let mut breaks = self.clone();
+        for bar in bars {
+            let (start, end) = (bar.start, bar.end());
+            let Some(sounding) = harmonies
+                .iter()
+                .find(|harmony| harmony.start <= start && start < harmony.end)
+            else {
+                continue;
+            };
+            let marked = self
+                .stops
+                .iter()
+                .any(|stop| stop.start < end && start < stop.end)
+                || self
+                    .pushes
+                    .iter()
+                    .any(|push| push.start < end && start <= push.written);
+            if !marked {
+                breaks.stops.push(StopSpan {
+                    written: sounding.start,
+                    start,
+                    end,
+                    stop: Stop::Shot,
+                });
+            }
+        }
+        breaks.stops.sort_by_key(|stop| stop.start);
         breaks
     }
 

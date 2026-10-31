@@ -6,7 +6,7 @@
 //! final chord with a crash at the end. Every demo is an ordinary
 //! project, to take apart and change.
 
-use crate::chord_sheet::{ChordMarker, HarmonyName};
+use crate::chord_sheet::{ChordMarker, HarmonyName, Stop};
 use crate::harmony::{ChordSymbol, Scale};
 use crate::key_map::KeyMarker;
 use crate::meter::{Bar, TimeMarker, TimeSignature};
@@ -477,12 +477,20 @@ pub fn song_demo(song: &Song) -> Project {
     // a part whose meter changes bar by bar (see `Song::part_runs`).
     // `Project::empty` starts with one pattern, which the first part uses.
     let mut patterns: Vec<Piece> = Vec::new();
+    let breaking = breaking_parts(song);
     for part in song.parts {
         let mut bar_number = 0;
-        for (run, piece) in song.part_runs(part).iter().enumerate() {
+        let runs = song.part_runs(part);
+        for (run, piece) in runs.iter().enumerate() {
             let time = song.part_time(piece);
             let bar = time.steps_per_bar();
             let length = piece.length(bar);
+            // The band breaks in the last bar of a part that goes on into
+            // a new one.
+            let breaks = breaking.contains(&part.name)
+                && run + 1 == runs.len()
+                && !piece.written_out()
+                && length >= 2 * bar;
             let name = if run == 0 {
                 part.name.to_string()
             } else {
@@ -492,9 +500,16 @@ pub fn song_demo(song: &Song) -> Project {
             let melody = melody_notes(song, piece, time, length, voices.len());
             let tonic = song.part_scale(piece).root;
             let spans = piece.spans(bar, tonic);
+            // The band's chords, with the shot of a break: the chart, as
+            // the chord sheet shows it, does not break.
+            let played_spans = if breaks {
+                shot_from(&spans, length - bar)
+            } else {
+                spans.clone()
+            };
             let (mut chords, mut bass_line) = if !piece.written_out() {
                 let (comping, bass, _) = song.part_playing(piece);
-                let backing = accompany_in_bars(&spans, tonic, comping, bass, time);
+                let backing = accompany_in_bars(&played_spans, tonic, comping, bass, time);
                 (backing.chords, backing.bass)
             } else {
                 (piece.left().notes, Vec::new())
@@ -503,7 +518,7 @@ pub fn song_demo(song: &Song) -> Project {
             // its accompaniment written out has none for them.
             let mut horn_notes = match horns {
                 Some((_, horns)) if !piece.written_out() => {
-                    accompany(&spans, tonic, time, horns.comping, Bass::None).chords
+                    accompany(&played_spans, tonic, time, horns.comping, Bass::None).chords
                 }
                 _ => Vec::new(),
             };
@@ -622,6 +637,7 @@ pub fn song_demo(song: &Song) -> Project {
                 pattern: index,
                 length,
                 time,
+                breaks,
                 spans,
                 tune,
                 drums: None,
@@ -768,6 +784,78 @@ pub fn song_demo(song: &Song) -> Project {
     project
 }
 
+/// The parts of `song` the band breaks at the end of, before a new part,
+/// when its rhythm breaks there (see [`drum_form::break_bars`]): every
+/// time the form plays the part, after the drums come in, a part of
+/// another name follows it ("Verse" into "Verse 2" goes on). A part
+/// with its own drums or its own rhythm plays on.
+fn breaking_parts(song: &Song) -> Vec<&'static str> {
+    if !Rhythm::named(song.rhythm).is_some_and(drum_form::breaks) || song.parts_are_numbered() {
+        return Vec::new();
+    }
+    let form = song.form;
+    song.parts
+        .iter()
+        .filter(|part| part.drums.is_empty() && part.played.is_none())
+        .map(|part| part.name)
+        .filter(|name| {
+            let mut places = form.iter().enumerate().filter(|(_, part)| *part == name);
+            let mut any = false;
+            let all = places.all(|(at, _)| {
+                any = true;
+                at >= song.drums_from
+                    && form
+                        .get(at + 1)
+                        .is_some_and(|next| !drum_form::same_part(name, next))
+            });
+            any && all
+        })
+        .collect()
+}
+
+/// `spans`, a part's chords from its first step, with the band breaking
+/// from step `at` to the end: a shot on the chord sounding at `at`, and
+/// rests for the chords after it. A part whose chart already breaks or
+/// pushes there keeps its own marks.
+fn shot_from(spans: &[ChordSpan], at: usize) -> Vec<ChordSpan> {
+    let marked = spans.iter().any(|span| {
+        span.start + span.length > at
+            && (span.stop.is_some() || (span.push.is_some() && span.start >= at))
+    });
+    if marked {
+        return spans.to_vec();
+    }
+    let mut out = Vec::new();
+    for &span in spans {
+        let end = span.start + span.length;
+        if end <= at {
+            out.push(span);
+        } else if span.start < at {
+            out.push(ChordSpan {
+                length: at - span.start,
+                ..span
+            });
+            out.push(ChordSpan {
+                start: at,
+                length: end - at,
+                push: None,
+                stop: Some(Stop::Shot),
+                ..span
+            });
+        } else {
+            out.push(ChordSpan {
+                stop: Some(if span.start == at {
+                    Stop::Shot
+                } else {
+                    Stop::Rest
+                }),
+                ..span
+            });
+        }
+    }
+    out
+}
+
 /// A drum pattern placed for a piece: the piece, the drums it plays and
 /// the pattern.
 type Placed = (usize, Vec<(Drum, NoteEvent)>, usize);
@@ -806,7 +894,17 @@ fn place_drums(project: &mut Project, pieces: &mut [Piece], places: &[(usize, us
         .filter(|section| section.start >= from)
         .cloned()
         .collect();
-    let laid = drum_form::song_drums(rhythm, &bars, &form, end);
+    // The drums break where the band does: in the last bar of each
+    // place of a piece that breaks.
+    let breaks: Vec<Bar> = places
+        .iter()
+        .filter(|&&(piece, _)| pieces[piece].breaks)
+        .filter_map(|&(piece, at)| {
+            let end = at + pieces[piece].length;
+            bars.iter().find(|bar| bar.end() == end).copied()
+        })
+        .collect();
+    let laid = drum_form::song_drums_breaking(rhythm, &bars, &form, end, &breaks);
     // The patterns each piece plays its places with, by their notes.
     let mut known: Vec<Placed> = Vec::new();
     for &(index, at) in places {
@@ -864,6 +962,9 @@ struct Piece {
     pattern: usize,
     length: usize,
     time: TimeSignature,
+    /// Whether the band breaks in its last bar, before a new part (see
+    /// [`breaking_parts`]).
+    breaks: bool,
     /// Its chords, from its first step.
     spans: Vec<ChordSpan>,
     /// Its tune as written, whose marks the band follows.
@@ -1462,6 +1563,66 @@ mod tests {
             .map(|note| (note.start, note.pitch.midi()))
             .collect();
         assert_eq!(left, [(12, 45), (14, 52), (16, 57)]);
+    }
+
+    #[test]
+    fn the_candombe_breaks_before_every_new_part() {
+        // Candombe para Gardel's band strikes the first beat of the last
+        // bar before a new part and stops, and the repique plays the
+        // clave on the wood alone: at the end of the second verse, not of
+        // the first, which goes on into it.
+        let project = song_demo(Song::named("Candombe para Gardel").unwrap());
+        let keys = project
+            .channels()
+            .iter()
+            .position(|c| c.name == apply::KEYS)
+            .unwrap();
+        let last_bar = |name: &str| {
+            let part = project.patterns().iter().find(|p| p.name == name).unwrap();
+            let from = part.length() - 16;
+            let mut starts: Vec<usize> = part
+                .notes(keys)
+                .iter()
+                .filter(|note| note.start >= from)
+                .map(|note| note.start - from)
+                .collect();
+            starts.dedup();
+            starts
+        };
+        assert_eq!(last_bar("Verse 2"), [0]);
+        assert_eq!(last_bar("Refrain"), [0]);
+        assert!(last_bar("Verse").len() > 1);
+        // The drums of the place after the second verse, in its last bar.
+        let start = |name: &str| {
+            let section = project
+                .playlist()
+                .sections()
+                .iter()
+                .find(|s| s.name == name);
+            section.unwrap().start
+        };
+        let at = start("Refrain") - 16;
+        let mut drums: Vec<(String, usize)> = Vec::new();
+        for clip in project
+            .playlist()
+            .clips()
+            .iter()
+            .filter(|c| c.track == DRUM_TRACK)
+        {
+            let pattern = project.pattern(clip.pattern).unwrap();
+            for (channel, note) in pattern.all_notes() {
+                let step = clip.start + note.start;
+                if (at..at + 16).contains(&step) {
+                    drums.push((project.channels()[channel].name.clone(), step - at));
+                }
+            }
+        }
+        drums.sort();
+        let clave: Vec<(String, usize)> = [0, 3, 6, 10, 12]
+            .into_iter()
+            .map(|step| (Drum::Rim.name().to_string(), step))
+            .collect();
+        assert_eq!(drums, clave);
     }
 
     #[test]
