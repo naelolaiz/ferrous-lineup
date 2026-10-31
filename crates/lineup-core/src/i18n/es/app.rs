@@ -2004,6 +2004,18 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Las notas se quedan como están: esto nombra la tonalidad en la que están desde aquí.",
     ),
     (
+        "A set or a row this song is in, on this note.",
+        "Un conjunto o una serie en que está esta canción, sobre esta nota.",
+    ),
+    (
+        "{}: {}. As the key, on the key note. From another set or micromode, every form keeps \
+         its degree and the notes go with it: T2 of Menor 3 becomes T2 of Menor 5. From a key, \
+         the notes stay as they are.",
+        "{}: {}. Como tonalidad, sobre la tónica. Desde otro conjunto o micromodo, cada forma \
+         conserva su grado y las notas van con ella: T2 de Menor 3 pasa a ser T2 de Menor 5. \
+         Desde una tonalidad, las notas se quedan como están.",
+    ),
+    (
         "The pattern only has room for {} of the 12 notes. Make it longer, or the steps shorter, to hear the whole row.",
         "El patrón solo tiene lugar para {} de las 12 notas. Alárgalo, o acorta los pasos, para escuchar toda la serie.",
     ),
