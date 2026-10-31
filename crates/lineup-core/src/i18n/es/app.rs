@@ -1308,6 +1308,26 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Notas de {} sonando juntas",
     ),
     (
+        "Forms of the key heard in the notes of every track",
+        "Formas de la tonalidad oídas en las notas de todas las pistas",
+    ),
+    (
+        "Forms of the key heard in the notes of the {}",
+        "Formas de la tonalidad oídas en las notas de {}",
+    ),
+    (
+        "No key here is a set",
+        "Ninguna tonalidad de aquí es un conjunto",
+    ),
+    (
+        "The forms are read where the key is a pitch-class set or a micromode: pick one in the Key menu, or as a key change",
+        "Las formas se leen donde la tonalidad es un conjunto de clases de alturas o un micromodo: elige uno en el menú Tonalidad, o como cambio de tonalidad",
+    ),
+    (
+        "A form of the key's set has as many notes as the set",
+        "Una forma del conjunto de la tonalidad tiene tantas notas como el conjunto",
+    ),
+    (
         "Notes you draw or move land on the notes of the key. Notes already there stay put until you move them: to snap them all, select them (Ctrl+A) and drag them up a semitone and back. Right-click for more.",
         "Las notas que dibujas o mueves caen en las notas de la tonalidad. Las notas que ya están se quedan donde están hasta que las muevas: para ajustarlas todas, selecciónalas (Ctrl+A) y arrástralas un semitono hacia arriba y de vuelta. Clic derecho para más.",
     ),

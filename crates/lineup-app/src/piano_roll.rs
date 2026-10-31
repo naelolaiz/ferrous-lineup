@@ -17,7 +17,7 @@ use eframe::egui::{
 use lineup_core::band::solo::{NoteRole, Over};
 use lineup_core::chord_sheet::notation::{Notation, stacked_classes, stacked_text};
 use lineup_core::harmony::keys::{self, ChordSize};
-use lineup_core::harmony::voice_leading::{self, Rules, Slip, VoiceLeading};
+use lineup_core::harmony::voice_leading::{self, HeardIn, Rules, Slip, VoiceLeading};
 use lineup_core::harmony::voice_motion::{self, Change};
 use lineup_core::harmony::{Harmony, HintLevel, analyze, next_chords_over};
 use lineup_core::tools::{self, ArpeggioOrder};
@@ -2149,7 +2149,7 @@ impl PianoRoll {
                     below += 1;
                 }
                 Rules::Colour => {
-                    self.colour_row(ui, row(below), response, check, lanes);
+                    self.colour_row(ui, row(below), response, drawing.project, check, lanes);
                     below += 1;
                 }
                 Rules::Classical => {}
@@ -2238,13 +2238,16 @@ impl PianoRoll {
 
     /// The chord lane's row for the forms of a pitch-class set that the
     /// colour check reads in the notes: a block over each, named by its
-    /// degree in the key ("T0", "T5I"). Pointing at one says how it is
-    /// made from the key's own form, and lists its notes.
+    /// degree in the key ("T0", "T5I"). Where two tracks, or a top line
+    /// and the chords under it, are each in a form of their own, the row
+    /// has a band for each, the highest part on top. Pointing at one says
+    /// how it is made from the key's own form, and lists its notes.
     fn colour_row(
         &mut self,
         ui: &mut Ui,
         rect: Rect,
         response: &Response,
+        project: &Project,
         check: &VoiceLeading,
         lanes: Lanes,
     ) {
@@ -2262,10 +2265,17 @@ impl PianoRoll {
         paint_lane_name(ui, &painter, rect, tr("Forms"));
         painter.rect_filled(cells, 2.0, LANE_BACKGROUND);
         let painter = painter.with_clip_rect(cells);
+        let parts = form_parts(check);
+        let band = lane.rect.height() / parts.len().max(1) as f32;
+        let top = |heard_in: HeardIn| {
+            let index = parts.iter().position(|&part| part == heard_in).unwrap_or(0);
+            lane.rect.top() + band * index as f32
+        };
         for statement in &check.forms {
+            let top = top(statement.heard_in);
             let block = Rect::from_min_max(
-                pos2(lane.x(statement.start), lane.rect.top()),
-                pos2(lane.x(statement.end), lane.rect.bottom()),
+                pos2(lane.x(statement.start), top),
+                pos2(lane.x(statement.end), top + band),
             )
             .shrink2(vec2(1.0, 1.0));
             painter.rect_filled(block, 3.0, LANE_ROW_FORM);
@@ -2287,7 +2297,19 @@ impl PianoRoll {
                 .forms
                 .iter()
                 .filter(|form| (form.start..form.end).contains(&step))
-                .map(|form| form.describe())
+                .map(|form| match (parts.len(), form.heard_in) {
+                    (0 | 1, _) | (_, HeardIn::All) => form.describe(),
+                    (_, HeardIn::Track(track)) => {
+                        let name = project
+                            .channels()
+                            .get(track)
+                            .map_or(tr("Track"), |channel| channel.name.as_str());
+                        format!("{}: {}", tr_name(name), form.describe())
+                    }
+                    (_, HeardIn::Line(voice)) => {
+                        format!("{}: {}", voice_name(project, check, voice), form.describe())
+                    }
+                })
                 .collect();
             if !found.is_empty() {
                 response
@@ -3314,6 +3336,41 @@ fn paint_lane_name(ui: &Ui, painter: &Painter, rect: Rect, name: &str) {
         FontId::proportional(11.0),
         ui.visuals().weak_text_color(),
     );
+}
+
+/// The parts the colour check read forms in, the highest first, by the
+/// average pitch of their notes: one for forms read in every part at
+/// once.
+fn form_parts(check: &VoiceLeading) -> Vec<HeardIn> {
+    let mut parts: Vec<HeardIn> = Vec::new();
+    for form in &check.forms {
+        if !parts.contains(&form.heard_in) {
+            parts.push(form.heard_in);
+        }
+    }
+    let lines: Vec<usize> = parts
+        .iter()
+        .filter_map(|part| match part {
+            HeardIn::Line(voice) => Some(*voice),
+            _ => None,
+        })
+        .collect();
+    let height = |part: &HeardIn| {
+        let pitches: Vec<u32> = check
+            .voices
+            .iter()
+            .enumerate()
+            .filter(|(index, voice)| match *part {
+                HeardIn::All => true,
+                HeardIn::Track(track) => voice.channel == track && !lines.contains(index),
+                HeardIn::Line(line) => *index == line,
+            })
+            .flat_map(|(_, voice)| voice.notes.iter().map(|note| u32::from(note.pitch.midi())))
+            .collect();
+        pitches.iter().sum::<u32>() * 100 / pitches.len().max(1) as u32
+    };
+    parts.sort_by_key(|part| std::cmp::Reverse(height(part)));
+    parts
 }
 
 /// The name of part `voice` of a voice-leading check: its track's name,
