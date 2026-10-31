@@ -15,9 +15,11 @@
 //! `lineup_core::take`).
 //!
 //! A recording made before, in an audio file, becomes a take the same
-//! way: File > Add a recording, or dropping it on the window, lays it on
-//! the playlist from the playhead (see [`Take::laid`]). Opening one
-//! starts a new song with it.
+//! way, laid on the playlist (see [`Take::laid`]): dropped on the
+//! playlist, from the bar and on the track it was dropped on; from the
+//! playlist's "Add a recording" button, or a track's menu, from the
+//! playhead; dropped anywhere else on the window, from the playhead.
+//! Opening one starts a new song with it.
 
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -30,7 +32,7 @@ use lineup_audio::PlayMode;
 use lineup_audio::input::{Microphone, Recorder, Recording};
 use lineup_core::general_midi::FLUTE;
 use lineup_core::take::{
-    Along, Keep, SungNote, Take, Target, Transcription, transcribe, tune_channel,
+    Along, Keep, Pitches, SungNote, Take, Target, Transcription, transcribe_with, tune_channel,
 };
 use lineup_core::{MAX_TRACKS, Meter, Project};
 use lineup_listen::voice;
@@ -53,6 +55,27 @@ const GRIDS: [(usize, &str); 3] = [
     (1, "Sixteenth notes"),
     (2, "Eighth notes"),
     (4, "Quarter notes"),
+];
+
+/// The ways the pitches of a take can be written, with what each does.
+const PITCHES: [(Pitches, &str, &str); 3] = [
+    (
+        Pitches::AsSung,
+        "As sung",
+        "Each note on the nearest semitone to what was sung.",
+    ),
+    (
+        Pitches::InKey,
+        "In the key",
+        "Each note on the nearest note of the key there, so an out of tune note does not \
+         come out as a wrong one.",
+    ),
+    (
+        Pitches::WithChords,
+        "Key and chords",
+        "Each note on the nearest note of the key as the chord there colours it: over D7 \
+         in C major, F♯ instead of F. Bars with no chord keep to the key.",
+    ),
 ];
 
 /// The fewest notes of a take the review shows by name.
@@ -100,6 +123,9 @@ struct Loading {
     worker: JoinHandle<Loaded>,
     step: usize,
     name: String,
+    /// The track the recording goes on, when it was dropped on one or
+    /// added from its menu: else the review offers a free one.
+    track: Option<usize>,
 }
 
 /// Where a take's notes go, as the review window offers it.
@@ -116,13 +142,14 @@ struct Review {
     take: Take,
     destination: Destination,
     grid: usize,
+    pitches: Pitches,
     keep: bool,
     track: usize,
     transcription: Transcription,
 }
 
 impl Review {
-    fn new(project: &Project, heard: Heard) -> Self {
+    fn new(project: &Project, heard: Heard, track: Option<usize>) -> Self {
         let take = Take {
             sample_rate: heard.recording.sample_rate,
             frames: heard.recording.samples.len(),
@@ -130,31 +157,46 @@ impl Review {
             along: heard.along.clone(),
         };
         let grid = 1;
-        let transcription = transcribe(project, &take, &heard.notes, grid, heard.tuning);
+        let pitches = Pitches::AsSung;
+        let transcription =
+            transcribe_with(project, &take, &heard.notes, grid, heard.tuning, pitches);
         let destination = tune_channel(project).map_or(Destination::New, Destination::Channel);
-        let track = free_track(project, transcription.recorded().unwrap_or(0..0));
+        let tracks = project.playlist().tracks().len();
+        let track = track
+            .filter(|&track| track < tracks)
+            .unwrap_or_else(|| free_track(project, transcription.recorded().unwrap_or(0..0)));
         Review {
             heard,
             take,
             destination,
             grid,
+            pitches,
             keep: true,
             track,
             transcription,
         }
     }
 
-    fn snap(&mut self, project: &Project, grid: usize) {
-        if grid != self.grid {
+    /// Writes the notes again on `grid`, with their pitches as `pitches`
+    /// says, if either changed.
+    fn snap(&mut self, project: &Project, grid: usize, pitches: Pitches) {
+        if grid != self.grid || pitches != self.pitches {
             self.grid = grid;
-            self.transcription = transcribe(
-                project,
-                &self.take,
-                &self.heard.notes,
-                grid,
-                self.heard.tuning,
-            );
+            self.pitches = pitches;
+            self.transcription = self.transcribe(project);
         }
+    }
+
+    /// The notes of the take as the song is now.
+    fn transcribe(&self, project: &Project) -> Transcription {
+        transcribe_with(
+            project,
+            &self.take,
+            &self.heard.notes,
+            self.grid,
+            self.heard.tuning,
+            self.pitches,
+        )
     }
 }
 
@@ -392,22 +434,29 @@ impl LineupApp {
         self.voice.loading.take().is_some()
     }
 
-    /// File > Add a recording: asks for an audio file, and adds it to the
-    /// song as a take, from the playhead.
-    pub(super) fn add_recording(&mut self) {
+    /// The playlist's "Add a recording" (its button, or a track's menu):
+    /// asks for an audio file, and adds it to the song as a take, from the
+    /// playhead, on `track` if given.
+    pub(super) fn add_recording(&mut self, track: Option<usize>) {
         if let Some(path) = rfd::FileDialog::new()
             .add_filter(tr("Audio"), &lineup_listen::AUDIO_EXTENSIONS)
             .pick_file()
         {
-            self.add_recording_path(path);
+            self.add_recording_path(path, None, track);
         }
     }
 
-    /// Adds the recording at `path` to the song as a take, from the
-    /// playhead (from the start in pattern mode, which switches to song
-    /// mode): reads it and hears its notes in the background, then asks
-    /// where they go, as for a take recorded here.
-    pub(super) fn add_recording_path(&mut self, path: PathBuf) {
+    /// Adds the recording at `path` to the song as a take, from step `at`
+    /// of the playlist where it was dropped, else from the playhead (from
+    /// the start in pattern mode, which switches to song mode), on `track`
+    /// if given: reads it and hears its notes in the background, then
+    /// asks where they go, as for a take recorded here.
+    pub(super) fn add_recording_path(
+        &mut self,
+        path: PathBuf,
+        at: Option<usize>,
+        track: Option<usize>,
+    ) {
         let busy = self.voice.recording.is_some()
             || self.voice.hearing.is_some()
             || self.voice.loading.is_some();
@@ -418,17 +467,23 @@ impl LineupApp {
             );
             return;
         }
-        let step = match self.mode {
-            PlayMode::Song => {
+        let step = match (self.mode, at) {
+            (PlayMode::Song, None) => {
                 let here = self.playhead().unwrap_or(self.cursor);
                 self.project
                     .playback_arrangement()
                     .timeline_step(here)
                     .unwrap_or(0)
             }
-            PlayMode::Pattern => {
+            (PlayMode::Pattern, None) => {
                 self.set_mode(PlayMode::Song);
                 0
+            }
+            (mode, Some(step)) => {
+                if mode == PlayMode::Pattern {
+                    self.set_mode(PlayMode::Song);
+                }
+                step
             }
         };
         let name = path.file_stem().map_or_else(
@@ -450,6 +505,7 @@ impl LineupApp {
             }),
             step,
             name,
+            track,
         });
     }
 
@@ -464,7 +520,7 @@ impl LineupApp {
         self.replace_project(Project::empty(), None);
         self.file.name_imported(&title);
         self.set_mode(PlayMode::Song);
-        self.add_recording_path(path);
+        self.add_recording_path(path, None, None);
     }
 
     /// Once a frame: stops a take that stopped by itself (the longest
@@ -489,7 +545,7 @@ impl LineupApp {
         if let Some(hearing) = self.voice.hearing.take() {
             self.notice = None;
             match hearing.join() {
-                Ok(heard) => self.voice.review = Some(Review::new(&self.project, heard)),
+                Ok(heard) => self.voice.review = Some(Review::new(&self.project, heard, None)),
                 Err(_) => self.message = Some(tr("Listening to the take failed.").to_string()),
             }
         }
@@ -529,7 +585,7 @@ impl LineupApp {
                     tuning,
                     name: Some(loading.name),
                 };
-                self.voice.review = Some(Review::new(&self.project, heard));
+                self.voice.review = Some(Review::new(&self.project, heard, loading.track));
             }
             Ok(Err(err)) => {
                 self.message = Some(trf("Could not add the recording: {}", &[&err]));
@@ -571,7 +627,18 @@ impl LineupApp {
                             for (steps, name) in GRIDS {
                                 ui.selectable_value(&mut grid, steps, tr(name));
                             }
-                            review.snap(project, grid);
+                            review.snap(project, grid, review.pitches);
+                        });
+                        ui.end_row();
+
+                        ui.label(tr("Pitches"));
+                        ui.horizontal(|ui| {
+                            let mut pitches = review.pitches;
+                            for (way, name, hover) in PITCHES {
+                                ui.selectable_value(&mut pitches, way, tr(name))
+                                    .on_hover_text(tr(hover));
+                            }
+                            review.snap(project, review.grid, pitches);
                         });
                         ui.end_row();
 
@@ -623,13 +690,7 @@ impl LineupApp {
             return;
         };
         // Again, in case the song changed while the window was open.
-        let transcription = transcribe(
-            &self.project,
-            &review.take,
-            &review.heard.notes,
-            review.grid,
-            review.heard.tuning,
-        );
+        let transcription = review.transcribe(&self.project);
         let name = take_name(&self.project, review.heard.name.as_deref());
         let mut recordings = Vec::new();
         if review.keep {
@@ -669,6 +730,7 @@ impl LineupApp {
             Destination::Nowhere => Target::Nowhere,
         };
         let keep = Keep {
+            notes: format!("{name} notes"),
             name,
             track: review.track,
             recordings,
@@ -959,7 +1021,7 @@ impl LineupApp {
             name: None,
         };
         self.voice.folder = Some(folder);
-        self.voice.review = Some(Review::new(&self.project, heard));
+        self.voice.review = Some(Review::new(&self.project, heard, None));
     }
 }
 
@@ -974,6 +1036,13 @@ impl LineupApp {
     /// For the tests: whether a take waits in the review window.
     pub(super) fn take_waiting(&self) -> bool {
         self.voice.review.is_some()
+    }
+
+    /// For the tests: the step the waiting take's recording starts on,
+    /// and the track the review offers to keep it on.
+    pub(super) fn take_place(&self) -> Option<(usize, usize)> {
+        let review = self.voice.review.as_ref()?;
+        Some((review.transcription.recorded()?.start, review.track))
     }
 }
 
@@ -1119,6 +1188,7 @@ mod tests {
             worker: thread::spawn(|| Err(String::new())),
             step: 0,
             name: String::new(),
+            track: None,
         });
 
         let opened = Project::template();

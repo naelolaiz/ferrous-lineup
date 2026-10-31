@@ -1315,6 +1315,20 @@ impl LineupApp {
                     }
                 });
             }
+            PlaylistAction::SoloTrack(track) => {
+                self.edit("solo track", |project| {
+                    let tracks = project.playlist().tracks();
+                    let alone = tracks
+                        .iter()
+                        .enumerate()
+                        .all(|(other, t)| (other == track) != t.muted);
+                    for other in 0..tracks.len() {
+                        if let Some(t) = project.track_mut(other) {
+                            t.muted = !alone && other != track;
+                        }
+                    }
+                });
+            }
             PlaylistAction::RenameTrack { track, name } => {
                 self.edit("rename track", |project| {
                     if let Some(track) = project.track_mut(track) {
@@ -1333,6 +1347,7 @@ impl LineupApp {
             PlaylistAction::AddTrack => {
                 self.edit("add track", |project| project.add_track());
             }
+            PlaylistAction::AddRecording(track) => self.add_recording(track),
             PlaylistAction::InsertTrack(index) => {
                 self.edit("insert track", |project| project.insert_track(index));
             }

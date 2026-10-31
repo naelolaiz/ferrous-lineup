@@ -52,10 +52,6 @@ fn main_texts(text: &str) -> Option<&'static str> {
         "No recent songs" => "No hay canciones recientes",
         "Clear recent songs" => "Borrar canciones recientes",
         "Demos" => "Demostraciones",
-        "Add a recording…" => "Añadir una grabación…",
-        "Put an MP3, WAV, FLAC or Ogg file on a track of the song, from the playhead, and write the notes sung or played in it" => {
-            "Pone un archivo MP3, WAV, FLAC u Ogg en una pista de la canción, desde el cursor, y escribe las notas cantadas o tocadas en él"
-        }
         "Import MIDI file…" => "Importar archivo MIDI…",
         "Open a .mid file: its notes, tempo, time signatures and key" => {
             "Abre un archivo .mid: sus notas, tempo, compases y tonalidad"
