@@ -1223,6 +1223,9 @@ struct Score {
     /// The bars the band breaks in before a new part, where its drums
     /// break (see [`drum_form::break_bars`]).
     part_breaks: Vec<Bar>,
+    /// The first bars of new parts the tune leads into, which the band
+    /// waits on through after a break (see [`drum_form::pickup_bars`]).
+    pickups: Vec<Bar>,
     harmonies: Vec<Played>,
     keys: crate::key_map::KeyMap,
     runs: Vec<Run>,
@@ -2292,6 +2295,15 @@ impl Project {
                 print.number(marker.start);
                 print.bytes(marker.style.map_or("", |style| style.name).as_bytes());
             }
+            // Only bands that break before a new part count the tune,
+            // which may lead into a part with a pickup they wait through.
+            if band.breaks_before_parts() {
+                print.bytes(b"tune");
+                for (start, end) in self.tune_for(band, band.end) {
+                    print.number(start);
+                    print.number(end);
+                }
+            }
         }
         // What the band plays from only has to be compared within one
         // run of the app (a change means "write again"), so the debug
@@ -2408,6 +2420,22 @@ impl Project {
         result
     }
 
+    /// The song's tune up to step `end`, each note's first step and the
+    /// step after its last: the notes of its melody channel (see
+    /// [`crate::lead_sheet::melody::default_melody_channel`]), unless
+    /// `band` plays on that channel itself.
+    fn tune_for(&self, band: &Band, end: usize) -> Vec<(usize, usize)> {
+        use crate::lead_sheet::melody;
+        melody::default_melody_channel(self)
+            .filter(|channel| !band.channels.contains(&Some(*channel)))
+            .map_or_else(Vec::new, |channel| {
+                melody::melody(self, channel, end)
+                    .iter()
+                    .map(|note| (note.start, note.end()))
+                    .collect()
+            })
+    }
+
     /// Writes every part that is not frozen from the chord sheet: the
     /// intro, the chorus, and the ending after it, if the band plays one.
     fn write_band(&mut self) {
@@ -2450,6 +2478,12 @@ impl Project {
         let keys = self.key_map();
         let breaks = stops::Breaks::of(&markers, parts_end);
         let part_breaks = drum_form::break_bars(&bars, &form, end);
+        let pickups = if band.breaks_before_parts() && !part_breaks.is_empty() {
+            let tune = self.tune_for(&band, end);
+            drum_form::pickup_bars(&bars, &form, &part_breaks, &tune)
+        } else {
+            Vec::new()
+        };
         // The last bar of an ending is one chord, struck and held.
         let held = ending.and_then(|_| bars.last().copied());
         let variations = band.variations.clone();
@@ -2462,6 +2496,7 @@ impl Project {
             held,
             breaks,
             part_breaks,
+            pickups,
             harmonies,
             keys,
             runs,
@@ -2581,7 +2616,7 @@ impl Project {
         let breaks = if band.breaks_before_parts() {
             score
                 .breaks
-                .with_shots(&score.part_breaks, &score.harmonies)
+                .with_shots(&score.part_breaks, &score.pickups, &score.harmonies)
         } else {
             score.breaks.clone()
         };
@@ -3075,6 +3110,12 @@ impl Project {
                         .part_breaks
                         .iter()
                         .any(|broken| broken.start == bars[bar].start)
+                }),
+                picks_up: bars.get(range.start).is_some_and(|first| {
+                    score
+                        .pickups
+                        .iter()
+                        .any(|pickup| pickup.start == first.start)
                 }),
             };
             lands = drum_form::ends_with_fill(rhythm, &part);
@@ -4758,6 +4799,28 @@ mod tests {
         let mut ballad = band("Pop ballad", &chords);
         sections(&mut ballad);
         assert!(starts(&ballad, Player::Piano, 3).len() > 1);
+        // A tune that leads into the refrain from its first bar, a note
+        // tied over into the next and a rest: the band waits on through
+        // that bar, the clave alone, and comes in with the next.
+        let lead = apply::synth_named(&mut project, apply::LEAD).unwrap();
+        let tune = project.add_pattern().unwrap();
+        let pickup = vec![
+            NoteEvent::new(Note::new(67), 4 * bar + 4, 4),
+            NoteEvent::new(Note::new(65), 4 * bar + 14, 4),
+            NoteEvent::new(Note::new(64), 5 * bar + 8, 4),
+        ];
+        let pattern = project.pattern_mut(tune).unwrap();
+        pattern.set_length(8 * bar);
+        pattern.set_notes(lead, pickup);
+        let track = project.add_track().unwrap();
+        project.add_clip(Clip::new(tune, track, 0));
+        assert!(project.follow_chord_sheet());
+        assert_eq!(starts(&project, Player::Piano, 3), [0]);
+        assert!(starts(&project, Player::Piano, 4).is_empty());
+        assert!(starts(&project, Player::Bass, 4).is_empty());
+        assert_eq!(starts(&project, Player::Drums, 4), [0, 3, 6, 10, 12]);
+        assert!(!starts(&project, Player::Piano, 5).is_empty());
+        assert!(starts(&project, Player::Drums, 5).len() > 5);
     }
 
     fn struck(project: &Project, player: Player, from: usize, to: usize) -> Vec<(usize, u8)> {

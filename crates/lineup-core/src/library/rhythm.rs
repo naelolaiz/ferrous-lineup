@@ -1805,7 +1805,9 @@ pub static RHYTHMS: &[Rhythm] = &[
          after the verse, mixes the repique's busier base into its own and varies the \
          piano every second bar, more often still on its second turn. Before every new \
          part the band stops on the first beat of the last bar, and the repique plays the \
-         clave on the wood alone, leading into it.",
+         clave on the wood alone, leading into it. Where the tune leads into the new part \
+         with a pickup bar, the band and the drums wait on through it, the clave alone, and \
+         come in with the next bar.",
     )
     .laid_out(CANDOMBE),
     rhythm(
