@@ -49,7 +49,7 @@ use super::{PartNote, Slip, SlipKind, Voice, VoiceLeading};
 use crate::harmony::degree::forms_by_nearness;
 use crate::harmony::{Degree, Micromode, PitchSet, Scale, ScaleKind};
 use crate::i18n::{list, tr, trf};
-use crate::{Note, PitchClass};
+use crate::{Note, NoteEvent, PitchClass};
 
 /// The most groups of notes one stretch is read over. A longer passage
 /// in one form is read as several stretches of it, which costs little.
@@ -153,6 +153,41 @@ pub(super) fn check(
     }
     statements.sort_by_key(|statement| statement.start);
     (slips, statements)
+}
+
+/// How well some notes fit the set `key` is, read as the check reads
+/// them: how many notes there are, how many are out of place (outside
+/// the form heard around them, or missing from a micromode's form left
+/// unfinished), and the forms read, in order.
+pub(crate) struct Fit {
+    pub notes: usize,
+    pub out: usize,
+    pub forms: Vec<FormStatement>,
+}
+
+/// Reads `notes` as forms of the set `key` is, all as one part, and says
+/// how well they fit (see [`Fit`]). Find the key uses it to find the
+/// micromode a passage is made of.
+pub(crate) fn fit(notes: &[NoteEvent], key: Scale) -> Fit {
+    let mut parts: Vec<PartNote> = notes
+        .iter()
+        .map(|&note| PartNote { voice: 0, note })
+        .collect();
+    parts.sort_by_key(|played| (played.note.start_tick(), Reverse(played.note.pitch)));
+    let (mut slips, mut forms) = (Vec::new(), Vec::new());
+    read(&parts, key, &mut slips, &mut forms);
+    let out = slips
+        .iter()
+        .map(|slip| match (slip.kind, slip.colour) {
+            (SlipKind::FormUnfinished, Some(place)) => place.missing.len(),
+            _ => 1,
+        })
+        .sum();
+    Fit {
+        notes: parts.len(),
+        out,
+        forms,
+    }
 }
 
 fn union(a: PitchSet, b: PitchSet) -> PitchSet {

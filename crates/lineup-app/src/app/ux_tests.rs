@@ -5654,6 +5654,43 @@ mod chord_sheet_layout {
     }
 }
 
+/// Find the key shows the micromode a passage is made of under the key,
+/// and its button makes it the key of those bars, moving no note.
+#[test]
+fn find_the_key_proposes_the_micromode_of_the_passage() {
+    use lineup_core::harmony::{Micromode, Scale, ScaleKind};
+    use lineup_core::library::MICROMODE_STYLES;
+    let style = &MICROMODE_STYLES[0];
+    let micromode = Micromode::number(style.micromode).unwrap();
+    let mut screen = Screen::new();
+    screen.app.open_demo(library::Demo::Micromode(style));
+    screen.app.set_playing(false);
+    screen.app.mode = PlayMode::Song;
+    screen.app.harmony_keys.open = true;
+    screen.app.harmony_keys.find_key = true;
+    screen.draw(vec![]);
+    let output = screen.draw(vec![]);
+    assert!(text_rect(&output, "Colour in bars 1 to 8:").is_some());
+    // The demo is in its micromode already.
+    assert!(text_rect(&output, "(the key)").is_some());
+    assert!(text_rect(&output, "Use as the key").is_none());
+    // In C major, the button makes the micromode the key of bars 1 to 8.
+    let notes = screen.app.project.patterns().to_vec();
+    screen.app.edit("change key", |project| {
+        project.scale = Scale::new(lineup_core::PitchClass::C, ScaleKind::Major);
+    });
+    screen.draw(vec![]);
+    screen.click("Use as the key");
+    let project = &screen.app.project;
+    let bar = project.time_signature.steps_per_bar();
+    let key = project.key_at(0);
+    assert_eq!(Micromode::of(key.pitch_set()), Some(micromode));
+    assert_eq!(project.key_at(8 * bar).kind, ScaleKind::Major);
+    assert_eq!(project.patterns(), &notes[..], "no note moves");
+    screen.app.undo();
+    assert_eq!(screen.app.project.key_at(0).kind, ScaleKind::Major);
+}
+
 /// With Spanish chosen, every window, menu and settings page writes in
 /// Spanish: nothing it asks to translate is missing from the catalog,
 /// and no text it draws is an English one the catalog has Spanish for.
@@ -5692,6 +5729,7 @@ fn every_window_writes_in_spanish() {
         screen.app.rack_open = true;
         screen.app.piano_roll.open = true;
         screen.app.harmony_keys.open = true;
+        screen.app.harmony_keys.find_key = true;
         screen.app.chord_sheet.open = true;
         screen.app.mixer_open = true;
         screen.app.playlist.browser_open = true;
