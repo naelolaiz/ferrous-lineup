@@ -132,6 +132,9 @@ keeps every form's degree, as switching micromodes does (see [A
 micromode as the key](#a-micromode-as-the-key)): from C7 as a set to
 Cmaj7 as a set, C7 Em7b5 A7 becomes Cmaj7 E♭maj7 Amaj7.
 
+With **Voice leading** ticked, the piano roll checks that the notes keep
+the set's colour: see [Checking the colour](#checking-the-colour).
+
 **A micromode style over your forms.** In a song, a style from the
 Library's **Micromodes (Kröpfl)** group plays the forms written on the
 chord sheet, in your order, the way a style plays the chords of a tonal
@@ -422,3 +425,51 @@ diminished and augmented triads), so in them a form upside down is
 just a form moved; going into one of them and back cannot tell which
 forms were upside down. From a major or minor key to a micromode, the
 notes stay as they are, as with **pitch-class set**.
+
+### Checking the colour
+
+Music built on one set takes its sound, its **colour**, from the set,
+as tonal music takes its sound from its key: its notes come from forms
+of the set, one form after another. So when the key is a micromode or
+any other pitch-class set, the **Voice leading** tick box in the piano
+roll checks the colour instead of the classical rules (see [Voice
+leading and part motion](voice-leading.md)).
+
+1. Open a song whose key is a set or a micromode, such as **File >
+   Demos > Micromodes > Menor 3 colour**.
+2. Open the piano roll on a pattern with notes, and tick **Voice
+   leading** at the top.
+3. A **Forms** line appears under the chord names. It names each form
+   the check reads in the notes by its degree, **T0**, **T4I**, over the
+   notes that play it. Point at a form to read how it is made and its
+   notes: "T4I: the key's form upside down around C, moved up 4
+   semitones: C Eb E."
+
+The check reads which form sounds where by itself: you don't need to
+write the forms on the chord sheet first. What it asks of the notes
+depends on the size of the set:
+
+- **A micromode is heard whole.** Its three notes make one sound,
+  together as a chord, one after another in a line, or shared out among
+  the parts. A note outside the form heard around it is marked **out**.
+  A form that stops before its three notes have sounded is marked
+  **gap**, on its last note, because two notes alone make an interval
+  that many micromodes share: C and E are in Menor 3, in C major and in
+  the augmented triad. When one note is missing, a dashed outline shows
+  where it could go. The first and the last forms of a pattern are not
+  marked when unfinished, as they may come from the pattern before or
+  go on into the next.
+- **A larger set is used like a scale.** A melody takes a few of its
+  notes at a time, so a form need not sound whole; only notes outside
+  the form heard around them are marked **out**. A passage that moves
+  to another form, as a C major melody that turns to G major with
+  several F♯ and no F, is read as the new form (T7). A single F♯ among
+  Fs stays a note outside T0.
+
+The line above the chord rows sums it up: "Colour of Menor 3 (minor 3),
+T0, T5I: every note in the colour." Point at a step with a mark and the
+line says what happens there, such as "Outside the colour: Melody plays
+G4, which is not in T0 (C C# E), the form heard there."; hover over the
+line to read why music built on a set avoids it. The micromode demos
+keep every note in their colour, so the check stays quiet on them until
+you add a stray note or take one out of a form.

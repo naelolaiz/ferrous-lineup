@@ -1270,6 +1270,184 @@ Menor 5 en su lugar. Una tonalidad de tres notas se nombra por su
 micromodo en todas partes, «Menor 5 sobre Do», porque cada grupo de tres
 notas es uno de los doce.
 
+## Revisar el color
+
+La música tonal toma su sonido de su tonalidad, y la [revisión de la
+conducción de voces](voice-leading.md) marca lo que el estilo clásico
+evita en ella. La música hecha con un solo conjunto toma su sonido, su
+**color**, del conjunto: sus notas salen de formas del conjunto, una
+forma tras otra, como los acordes de una pieza tonal salen de su
+tonalidad. Así que cuando la tonalidad es un micromodo, o cualquier
+otro conjunto de clases de alturas, la casilla **Conducción de voces**
+del piano roll revisa el color. (Con una serie dodecafónica como
+tonalidad sigue en cambio [las reglas de la escritura
+dodecafónica](twelve-tone.md#las-reglas-de-la-escritura-dodecafónica).)
+
+Lo que les pide a las notas depende del tamaño del conjunto:
+
+- **Un micromodo se oye entero.** Kröpfl enseñaba sus tres notas como
+  un solo sonido: juntas como un acorde, una tras otra como una figura
+  de una línea, o repartidas entre las partes. Así que cada nota
+  pertenece a una forma, y una forma no se detiene antes de que hayan
+  sonado sus tres notas. Dos notas solas forman un intervalo, y un
+  intervalo pertenece a muchos micromodos: Do y Mi están en Menor 3 (Do
+  Do♯ Mi), en las tríadas mayor y menor y en la tríada aumentada, entre
+  otros. El color se pierde.
+- **Un conjunto más grande es una colección**, como una escala. La
+  música toma unas pocas de sus notas por vez, y lo que importa es que
+  salgan de él: cada nota pertenece a la forma que se oye a su
+  alrededor. Una forma no necesita sonar entera, como una melodía en Do
+  mayor no necesita usar las siete notas.
+
+### Lo que ves
+
+- **Una línea Formas** debajo de los nombres de los acordes. Nombra
+  cada forma que la revisión lee en las notas por su grado, **T0**,
+  **T5I**, encima de las notas que la tocan. Pasa el puntero por encima
+  para leer cómo está hecha la forma y sus notas: «T5I: la forma de la
+  tonalidad dada vuelta alrededor de Do, transportada 5 semitonos hacia
+  arriba: Do# Mi Fa.»
+- **La línea Voces**, debajo, marca **fuera** para una nota fuera de la
+  forma que se oye a su alrededor y, en un micromodo, **hueco** para una
+  forma sin terminar, sobre su última nota. Cuando falta una sola nota,
+  un contorno punteado la muestra, a la altura más cercana a esa última
+  nota.
+- **La línea de resumen** nombra el conjunto, las formas en orden y lo
+  que encontró: «Color de Menor 3, T0, T5I: todas las notas en el
+  color.» Pasa el puntero por un paso con una marca y la línea dice qué
+  pasa allí: «Fuera del color: Melodía toca Sol4, que no está en T0 (Do
+  Do# Mi), la forma que se oye ahí.» Pasa el puntero por la línea para
+  leer por qué.
+
+Las demostraciones de micromodos guardan todas sus notas en su color,
+así que la revisión no marca nada en ellas. Agrega una nota suelta, o
+saca una nota de una forma, y habla.
+
+### Leer las formas: la lectura más barata
+
+Qué forma suena dónde no está escrito en las notas: la revisión lo lee,
+como la [revisión
+dodecafónica](twelve-tone.md#la-mejor-lectura-programación-dinámica)
+lee las formas de una serie. Las notas que empiezan juntas forman un
+**grupo**, y los grupos se reparten en **tramos**, cada uno leído como
+una forma del conjunto. Cada elección cuesta algo:
+
+```rust
+/// What a reading costs for each note outside its stretch's form, and
+/// for each note of a micromode's form that never sounds in it.
+const OUT_OF_PLACE: u32 = 4;
+
+/// What a new stretch costs in a micromode, and in a larger set.
+const NEW_FORM: u32 = 2;
+const NEW_FORM_OF_A_COLLECTION: u32 = 8;
+```
+
+Un tramo nuevo cuesta algo para que una nota suelta no se lea como una
+forma propia: eso llevaría dos tramos nuevos, uno para entrar en la
+forma y otro para salir. Las formas de un micromodo cambian cada pocas
+notas, así que para él un tramo nuevo cuesta la mitad de una nota fuera
+de lugar: una nota alcanza para mostrar que la música siguió. Las
+formas de un conjunto más grande comparten la mayoría de sus notas (Do
+mayor y Sol mayor comparten seis), así que unas pocas notas caben en
+muchas de ellas, y un pasaje se queda más tiempo en una forma: una
+nueva cuesta tanto como dos notas fuera de lugar. Una melodía en Do
+mayor que pasa a Sol mayor, con dos Fa♯ y ningún Fa, pasa a T7; un solo
+Fa♯ entre varios Fa queda como **fuera** en T0.
+
+`best[to]` es la lectura más barata de los primeros `to` grupos. Para
+cada lugar donde puede empezar un tramo, `from`, y cada forma, el tramo
+crece de a un grupo, y su costo crece con él:
+
+```rust
+for to in from + 1..=(from + LONGEST).min(count) {
+    out += outside[to - 1][index];
+    heard = union(heard, common(sounded[to - 1], form));
+    let gaps = match whole {
+        true => (form.len() - heard.len()) as u32,
+        false => 0,
+    };
+    let (missing, unheard) = match may_stop(from, to) {
+        true => (0, before.unheard + gaps),
+        false => (gaps, before.unheard),
+    };
+    let cost = before.cost + new_form + OUT_OF_PLACE * (out + missing);
+    // ...
+}
+```
+
+`outside` se contó una vez para cada grupo y cada forma, así que hacer
+crecer un tramo en un grupo suma un número. `whole` es verdadero para un
+conjunto de tres notas: solo entonces cuentan las notas de la forma que
+nunca sonaron, `gaps`. `LONGEST`, 64 grupos, mantiene el trabajo
+acotado: un pasaje más largo en una forma se lee como varios tramos de
+ella, lo que cuesta apenas un poco más. Volver hacia atrás desde
+`best[count]` da los tramos en orden. Cada uno se vuelve un
+`FormStatement` en la línea Formas, con un hallazgo por cada nota fuera
+de su forma y, para una forma de un micromodo sin terminar, uno más
+sobre su última nota.
+
+Un patrón se lee solo, pero su primera forma puede venir del patrón
+anterior, y la última puede seguir en el siguiente, así que ninguna de
+las dos está sin terminar:
+
+```rust
+let may_stop = |from: usize, to: usize| !whole || from == 0 || to == count;
+```
+
+### Empates: una tupla, `Reverse` e `is_none_or`
+
+Muchas lecturas cuestan lo mismo. Do Do♯ Mi Fa Mi Do♯ en Menor 3 es T0
+(Do Do♯ Mi) y después T5I (Do♯ Mi Fa), por dos tramos nuevos; pero un
+primer tramo con el Do solo, que puede quedar sin terminar, y después
+T5I cuesta lo mismo. Así que las lecturas se comparan con una tupla,
+que Rust compara elemento por elemento, el segundo solo cuando los
+primeros son iguales:
+
+```rust
+let key = (cost, placed, unheard, stretches, Reverse(from));
+if best[to]
+    .is_none_or(|b| key < (b.cost, b.out, b.unheard, b.stretches, Reverse(b.from)))
+{
+```
+
+De las lecturas igual de baratas gana la que tiene menos notas fuera de
+lugar; después, la que tiene menos notas faltantes en la primera y la
+última forma (`unheard`, que decide Do Do♯ Mi Fa Mi Do♯); después, la
+de menos tramos. `Reverse(from)` da vuelta la última comparación, así
+que gana la lectura cuyo último tramo empieza *más tarde*: una nota que
+no cabe en ninguna de las dos formas se queda con la forma con la que
+llegó, en vez de empezar antes la siguiente. `Option::is_none_or` es
+`true` cuando todavía ninguna lectura llegó a `to`, y si no, le
+pregunta al closure. Una lectura nueva reemplaza a una vieja solo
+cuando es estrictamente mejor, y las formas se prueban en orden de
+cercanía a la forma propia de la tonalidad, así que los últimos empates
+van a las formas más cercanas a casa.
+
+### Notas que siguen sonando: `held`
+
+Una nota sostenida mientras la línea empieza una forma nueva también
+suena en esa forma. En Menor 3, un Mi sostenido desde T0 (Do Do♯ Mi)
+mientras Do♯ y Fa empiezan T5I (Do♯ Mi Fa) completa T5I sin tocar Mi
+otra vez. `held` encuentra, para cada grupo, las clases de alturas que
+siguen sonando ahí desde los grupos anteriores:
+
+```rust
+for (index, group) in groups.iter().enumerate() {
+    for played in group.iter() {
+        let end = played.note.end_tick();
+        let until = ticks.partition_point(|&tick| tick < end);
+        for later in held.iter_mut().take(until).skip(index + 1) {
+            later.insert(played.note.pitch.pitch_class());
+        }
+    }
+}
+```
+
+Los grupos están ordenados por su comienzo, así que `partition_point`
+encuentra, con una búsqueda binaria, el primer grupo que empieza cuando
+la nota ya terminó; cada grupo después de este y antes de ese la oye.
+Un tramo cuenta como oídas las notas sostenidas en su primer grupo.
+
 ## La ventana: un reloj dibujado con el painter de egui
 
 Las doce notas se sientan en un círculo como las horas de un reloj, Do
@@ -1503,6 +1681,20 @@ micromodos de acordes se
 escriben como acordes (Do Mi♭ Sol♭), que **▶ Escucharlo** toca las tres
 notas desde el Do central, y que elegir una forma muestra cómo se
 movió.
+
+`harmony/voice_leading/colour.rs` comprueba la revisión del color: T0 y
+T5I de Menor 3 oídas enteras, como línea, como acordes y repartidas
+entre dos partes, sin ninguna marca y con los pasos y la descripción de
+cada forma; un Sol entre Do♯, Mi y Do marcado fuera de T0, con su
+frase; Do Do♯ Mi, Re Fa, Sol Sol♯ Si leídas como T0, T1 y T7 con T1 sin
+terminar, Do♯ la nota que falta, mientras que el mismo hueco en la
+primera o la última forma no se marca; en el conjunto de Do mayor, una
+escala limpia en T0 y un Sol♯ entre Sol y La marcado; una melodía que
+pasa a Sol mayor leída como T0 y después T7, mientras que un solo Fa♯
+entre varios Fa queda en T0, marcado; y nada leído después de un cambio
+de tonalidad a Do mayor. La prueba de la aplicación marca **Conducción
+de voces** en una canción en Menor 3 y encuentra la línea Formas, sus
+grados, el resumen y la marca **fuera**.
 
 Los ejercicios sobre micromodos están en [Ejercicios: la teoría musical
 en código](exercises.md).
