@@ -1,8 +1,9 @@
 //! The ear-training window: questions to answer by ear, an experiment.
 //!
-//! Three exercises sit on tabs at the top: intervals, chords and
-//! progressions. Under them, what to ask: which intervals, which kinds
-//! of chord, which chords of a key. Then the question: it plays as soon
+//! Six exercises sit on tabs at the top: intervals, chords and
+//! progressions, and beyond keys micromodes, forms of a set and forms of
+//! a row (drawn in [`colours`]). Under them, what to ask: which
+//! intervals, which kinds of chord, which chords of a key. Then the question: it plays as soon
 //! as it is asked, Play again plays it as often as needed, and the
 //! answers are big buttons. A progression is answered on harmony keys,
 //! coloured as in the bar at the bottom of the window but with the chord
@@ -21,18 +22,21 @@ use std::time::{Instant, SystemTime, UNIX_EPOCH};
 use eframe::egui::{self, Align2, Color32, FontId, RichText, Sense, Stroke, StrokeKind, Ui, vec2};
 use lineup_core::ChordQuality;
 use lineup_core::ear_training::{
-    CHORD_QUALITIES, ChordPool, ChordQuestion, Cue, Direction, EarSettings, Exercise, Interval,
-    IntervalQuestion, KeyChoice, PROGRESSION_LENGTHS, PROGRESSION_TEMPOS, Players,
-    ProgressionQuestion, Score, duration, next_seed,
+    CHORD_QUALITIES, ChordPool, ChordQuestion, Cue, Direction, EarSettings, Exercise, FormQuestion,
+    Interval, IntervalQuestion, KeyChoice, MicromodeQuestion, PROGRESSION_LENGTHS,
+    PROGRESSION_TEMPOS, Players, ProgressionQuestion, RowQuestion, Score, duration, next_seed,
 };
 use lineup_core::harmony::keys::ChordKey;
 use lineup_core::harmony::shown_interval;
+use lineup_core::harmony::{MicromodeFamily, RowForm};
 
 use crate::harmony_keys::{KEY_TEXT, KEY_TEXT_DIM, function_color, paint_playing};
 use crate::i18n::{tr, trf};
 use crate::theme;
 use crate::twelve_tone::Front;
 use crate::widgets::{self, Opening};
+
+mod colours;
 
 /// The id of the window, to keep it in front.
 pub(crate) fn window_id() -> egui::Id {
@@ -67,6 +71,27 @@ enum Asked {
         /// The degree given for each chord after the first, in order.
         answers: Vec<usize>,
     },
+    Micromode {
+        question: MicromodeQuestion,
+        answer: Option<MicromodeGiven>,
+    },
+    Form {
+        question: FormQuestion,
+        /// Whether the answer was "upside down".
+        answer: Option<bool>,
+    },
+    Row {
+        question: RowQuestion,
+        answer: Option<RowForm>,
+    },
+}
+
+/// The answer to a micromode question: a family, or one of the twelve
+/// by its number.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum MicromodeGiven {
+    Family(MicromodeFamily),
+    Number(u8),
 }
 
 impl Asked {
@@ -75,6 +100,9 @@ impl Asked {
             Asked::Interval { answer, .. } => answer.is_some(),
             Asked::Chord { answer, .. } => answer.is_some(),
             Asked::Progression { question, answers } => answers.len() + 1 >= question.degrees.len(),
+            Asked::Micromode { answer, .. } => answer.is_some(),
+            Asked::Form { answer, .. } => answer.is_some(),
+            Asked::Row { answer, .. } => answer.is_some(),
         }
     }
 }
@@ -117,7 +145,7 @@ pub struct EarTraining {
     saved: EarSettings,
     asked: Option<Asked>,
     /// One for each exercise, in the order of [`Exercise::ALL`].
-    scores: [Score; 3],
+    scores: [Score; 6],
     seed: u64,
     playing: Option<Playing>,
     was_open: bool,
@@ -138,7 +166,7 @@ impl EarTraining {
             saved: settings.clone(),
             settings,
             asked: None,
-            scores: [Score::default(); 3],
+            scores: [Score::default(); 6],
             seed,
             playing: None,
             was_open: false,
@@ -218,6 +246,18 @@ impl EarTraining {
                     question: ProgressionQuestion::new(&settings.progressions, seed),
                     answers: Vec::new(),
                 },
+                Exercise::Micromodes => Asked::Micromode {
+                    question: MicromodeQuestion::new(&settings.micromodes, seed),
+                    answer: None,
+                },
+                Exercise::Forms => Asked::Form {
+                    question: FormQuestion::new(&settings.forms, seed),
+                    answer: None,
+                },
+                Exercise::Rows => Asked::Row {
+                    question: RowQuestion::new(&settings.rows, seed),
+                    answer: None,
+                },
             };
             let same = match (&asked, &self.asked) {
                 (
@@ -231,6 +271,16 @@ impl EarTraining {
                     Asked::Progression { question: a, .. },
                     Some(Asked::Progression { question: b, .. }),
                 ) => a.degrees == b.degrees,
+                (
+                    Asked::Micromode { question: a, .. },
+                    Some(Asked::Micromode { question: b, .. }),
+                ) => a.form == b.form,
+                (Asked::Form { question: a, .. }, Some(Asked::Form { question: b, .. })) => {
+                    a.class == b.class && a.upside_down == b.upside_down
+                }
+                (Asked::Row { question: a, .. }, Some(Asked::Row { question: b, .. })) => {
+                    a.row == b.row && a.form == b.form
+                }
                 _ => false,
             };
             next = Some(asked);
@@ -252,6 +302,9 @@ impl EarTraining {
                 question.cues(progression.players, progression.tempo),
                 Some(ProgressionQuestion::bar_seconds(progression.tempo)),
             ),
+            Some(Asked::Micromode { question, .. }) => (question.cues(), None),
+            Some(Asked::Form { question, .. }) => (question.cues(), None),
+            Some(Asked::Row { question, .. }) => (question.cues(), None),
             None => return,
         };
         self.play(cues, bar, actions);
@@ -288,6 +341,9 @@ impl EarTraining {
                     Exercise::Intervals => self.interval_settings(ui),
                     Exercise::Chords => self.chord_settings(ui),
                     Exercise::Progressions => self.progression_settings(ui),
+                    Exercise::Micromodes => self.micromode_settings(ui),
+                    Exercise::Forms => self.form_settings(ui),
+                    Exercise::Rows => self.row_settings(ui),
                 }
             });
         if self.changes_questions(&before) {
@@ -338,6 +394,9 @@ impl EarTraining {
                     || a.sevenths != b.sevenths
                     || a.length != b.length
             }
+            Exercise::Micromodes => a.micromodes != b.micromodes,
+            Exercise::Forms => a.forms != b.forms,
+            Exercise::Rows => a.rows != b.rows,
         }
     }
 
@@ -444,6 +503,23 @@ impl EarTraining {
                     "The band plays a few chords in a key, starting at home (I, or i in \
                      a minor key). What are the others?"
                 }
+                Exercise::Micromodes => match self.settings.micromodes.answer {
+                    lineup_core::ear_training::MicromodeAnswer::Family => {
+                        "Three notes play. Are they a minor micromode (with a semitone), a \
+                         major one (a whole tone, no semitone) or a chord?"
+                    }
+                    lineup_core::ear_training::MicromodeAnswer::Micromode => {
+                        "Three notes play. Which of the twelve micromodes are they?"
+                    }
+                },
+                Exercise::Forms => {
+                    "A figure plays, then another form of the same set. Is the second the \
+                     first moved, or turned upside down?"
+                }
+                Exercise::Rows => {
+                    "A twelve-tone row plays, then one of its forms. Is it the row moved \
+                     (P), upside down (I), backwards (R), or upside down and backwards (RI)?"
+                }
             };
             ui.label(RichText::new(tr(text)).size(15.0));
             ui.add_space(8.0);
@@ -472,6 +548,18 @@ impl EarTraining {
                         &question.keys[0].numeral,
                     ],
                 ),
+                Some(Asked::Micromode { .. }) => match self.settings.micromodes.answer {
+                    lineup_core::ear_training::MicromodeAnswer::Family => {
+                        tr("Which family of micromodes is this?").to_string()
+                    }
+                    lineup_core::ear_training::MicromodeAnswer::Micromode => {
+                        tr("Which micromode is this?").to_string()
+                    }
+                },
+                Some(Asked::Form { .. }) => {
+                    tr("Is the second form the first moved, or upside down?").to_string()
+                }
+                Some(Asked::Row { .. }) => tr("Which form of the row is the second?").to_string(),
                 None => String::new(),
             };
             ui.label(RichText::new(prompt).size(16.0).strong());
@@ -535,6 +623,27 @@ impl EarTraining {
             }) => {
                 self.progression_answers(ui, &question, &mut answers, actions);
                 self.asked = Some(Asked::Progression { question, answers });
+            }
+            Some(Asked::Micromode {
+                question,
+                mut answer,
+            }) => {
+                self.micromode_answers(ui, &question, &mut answer, actions);
+                self.asked = Some(Asked::Micromode { question, answer });
+            }
+            Some(Asked::Form {
+                question,
+                mut answer,
+            }) => {
+                self.form_answers(ui, &question, &mut answer, actions);
+                self.asked = Some(Asked::Form { question, answer });
+            }
+            Some(Asked::Row {
+                question,
+                mut answer,
+            }) => {
+                self.row_answers(ui, &question, &mut answer, actions);
+                self.asked = Some(Asked::Row { question, answer });
             }
             None => {}
         }
@@ -738,11 +847,17 @@ fn answer_button(ui: &mut Ui, short: &str, name: &str, mark: Mark) -> egui::Resp
         Stroke::new(1.0, theme::OUTLINE),
         StrokeKind::Inside,
     );
+    // A long short name ("Transportada") is written smaller too.
+    let wide = painter
+        .layout_no_wrap(short.to_string(), FontId::proportional(19.0), KEY_TEXT)
+        .size()
+        .x;
+    let size = (19.0 * (rect.width() - 10.0) / wide).clamp(12.0, 19.0);
     painter.text(
         rect.center_top() + vec2(0.0, 19.0),
         Align2::CENTER_CENTER,
         short,
-        FontId::proportional(19.0),
+        FontId::proportional(size),
         KEY_TEXT,
     );
     // A long name ("half-diminished seventh") is written smaller, to
@@ -877,6 +992,18 @@ fn numeral_key(ui: &mut Ui, key: &ChordKey, enabled: bool) -> egui::Response {
 
 /// Right or not, what was said if it was not, and the explanation.
 fn feedback(ui: &mut Ui, right: bool, wrong: Option<String>, explanation: &str) {
+    feedback_with(ui, right, wrong, explanation, true);
+}
+
+/// The same, saying that every answer plays its own sound when
+/// `answers_play` is true.
+fn feedback_with(
+    ui: &mut Ui,
+    right: bool,
+    wrong: Option<String>,
+    explanation: &str,
+    answers_play: bool,
+) {
     ui.add_space(8.0);
     egui::Frame::new()
         .fill(theme::GROUP)
@@ -898,7 +1025,9 @@ fn feedback(ui: &mut Ui, right: bool, wrong: Option<String>, explanation: &str) 
             });
             ui.add_space(2.0);
             ui.label(RichText::new(explanation).size(14.0).color(theme::TEXT));
-            ui.add_space(4.0);
-            ui.weak(tr("Click any answer to hear it."));
+            if answers_play {
+                ui.add_space(4.0);
+                ui.weak(tr("Click any answer to hear it."));
+            }
         });
 }

@@ -1,7 +1,7 @@
 //! Ear training: questions to answer by ear.
 //!
 //! Hearing harmony is learned like reading: by doing it often, a little
-//! at a time. There are three exercises, from small to large:
+//! at a time. There are three exercises in keys, from small to large:
 //!
 //! - **Intervals**: two notes; say how far apart they are, from a minor
 //!   second (one semitone) to an octave (twelve).
@@ -10,6 +10,10 @@
 //! - **Progressions**: the band plays a few chords in a key, starting
 //!   at home (I); say what each of the others is, as the Roman numeral
 //!   of its harmony key.
+//!
+//! and three beyond keys, in [`colours`]: name the micromode of three
+//! notes, tell a form of a set moved from one upside down, and name the
+//! form of a row.
 //!
 //! A question is made from a seed, so the same seed always asks the same
 //! question, and the tests below can check thousands of them. Each
@@ -30,20 +34,32 @@ use crate::library::voicing::bass_root;
 use crate::project::Drum;
 use crate::{Note, NoteName, PitchClass, Spelling};
 
-/// The three exercises.
+pub mod colours;
+pub use colours::{
+    FORM_SIZES, FormQuestion, FormSettings, MicromodeAnswer, MicromodeQuestion, MicromodeSettings,
+    RowQuestion, RowSettings, RowSource, Texture, form_classes,
+};
+
+/// The six exercises: three in keys, three beyond them.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
 pub enum Exercise {
     #[default]
     Intervals,
     Chords,
     Progressions,
+    Micromodes,
+    Forms,
+    Rows,
 }
 
 impl Exercise {
-    pub const ALL: [Exercise; 3] = [
+    pub const ALL: [Exercise; 6] = [
         Exercise::Intervals,
         Exercise::Chords,
         Exercise::Progressions,
+        Exercise::Micromodes,
+        Exercise::Forms,
+        Exercise::Rows,
     ];
 
     pub fn name(self) -> &'static str {
@@ -51,6 +67,9 @@ impl Exercise {
             Exercise::Intervals => "Intervals",
             Exercise::Chords => "Chords",
             Exercise::Progressions => "Progressions",
+            Exercise::Micromodes => "Micromodes",
+            Exercise::Forms => "Forms",
+            Exercise::Rows => "Rows",
         }
     }
 }
@@ -1125,6 +1144,9 @@ pub struct EarSettings {
     pub intervals: IntervalSettings,
     pub chords: ChordSettings,
     pub progressions: ProgressionSettings,
+    pub micromodes: MicromodeSettings,
+    pub forms: FormSettings,
+    pub rows: RowSettings,
 }
 
 #[cfg(test)]
