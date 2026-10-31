@@ -66,7 +66,7 @@
 pub mod colour;
 pub mod serial;
 
-pub use colour::{ColourPlace, FormStatement};
+pub use colour::{ColourPlace, FormStatement, HeardIn, Parts};
 
 use super::hearing::{HeardNote, Listening};
 use super::{

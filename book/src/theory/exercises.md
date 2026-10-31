@@ -497,7 +497,10 @@ chord before it, and check that nothing is marked.
    group. With **3 notes** chosen under the key, the harmony keys play
    its four groups of three, each labelled 3-3. Now switch the key menu
    from **twelve-tone row** to **pitch-class set**: the key becomes the
-   row's first group of three, and the harmony keys play its forms.
+   row's first group of three, set 3-3 on C, and the harmony keys play
+   its forms, 3-3 T11 and so on. Pick **3** in the Menor row of the
+   same menu: the same notes are now Menor 3, and nothing in the song
+   moves.
 6. Back on the starting song, while it plays, click **Fourths groove**
    in the Library: the song goes on in sus chords.
 

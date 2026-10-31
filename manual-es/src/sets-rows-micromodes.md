@@ -174,6 +174,14 @@ armonía de cuatro maneras, sin cambiar una nota: **Como está escrito**,
 como **Acordes**, como **Conjuntos de clases de alturas** o como
 **Micromodos**.
 
+Toda canción se abre **Según la tonalidad**: cada armonía con los
+nombres de la tonalidad en que está. Una canción en una tonalidad mayor
+o menor o en un modo muestra acordes, una canción cuya tonalidad es un
+conjunto o una serie muestra conjuntos, y una canción en un micromodo
+muestra micromodos. Elige otro nombre para ver la canción de esa
+manera; dura hasta que abres otra canción, que se abre otra vez según
+su propia tonalidad.
+
 ![La hoja de acordes de la demostración Cadencia clásica con Mostrar en Conjuntos de clases de alturas: Do, Fa, Sol7, Do, Lam, Rem, Sol7, Do escritos como 3-11 T7I (Do Mi Sol), 3-11 T0I (Fa La Do), 4-27 T7I (Si Re Fa Sol), 3-11 T7I, 3-11 T9 (La Do Mi), 3-11 T2 (Re Fa La), 4-27 T7I y 3-11 T7I, cada uno con sus notas debajo](images/sets-view.png)
 
 | Como está escrito | Acordes | Conjuntos de clases de alturas | Micromodos |
@@ -204,10 +212,22 @@ grupo: **Las armonías de la hoja**, **Notas a la vez (vertical)** o
 pista leer. Eso lee las notas de la canción, así que puedes mirar una
 melodía como una cadena de grupos de tres notas.
 
+La música construida sobre un conjunto mezcla las dos: una forma puede
+ser dos notas tocadas juntas y una tercera después. Donde la tonalidad
+es un conjunto o un micromodo, **Formas de la tonalidad (mixtas)**
+escribe las formas del conjunto de la tonalidad como las lee la
+[revisión del color](#revisar-el-color), vengan como vengan sus notas.
+Donde una melodía y los acordes de debajo están cada uno en una forma
+propia, escribe las dos, la de arriba primero, como dos acordes a la
+vez: **3-3|3-3 T7** como conjuntos. En **Color Menor 3** encuentra las formas escritas
+en la hoja, compás por compás. En una canción cuya tonalidad no es un
+conjunto no tiene nada que leer, y lo dice.
+
 El **piano roll** también tiene un menú **Mostrar**, arriba junto a
 **Conducción de voces**, para los nombres de los acordes sobre su
-cuadrícula: **Acordes**, **Conjuntos de clases de alturas** o
-**Micromodos**. Nombra las notas que suenan: Do, Re y Mi juntos se oyen
+cuadrícula: **Según la tonalidad**, con la que empieza, **Acordes**,
+**Conjuntos de clases de alturas** o **Micromodos**. Nombra las notas
+que suenan: Do, Re y Mi juntos se oyen
 como Doadd9, pero como conjunto son 3-6, el micromodo Mayor 1, porque
 ningún Sol suena. Un acorde y su inversión tienen las mismas notas, así
 que Do y Do/Mi, dos bloques como acordes, son un solo bloque como 3-11
@@ -222,6 +242,16 @@ el menú **Tonalidad** de una canción en Do mayor, y nada se mueve: la
 tonalidad se llama ahora 7-35, y las teclas de armonía muestran los
 mismos siete acordes con sus clases de conjuntos, seis de ellos 3-11 y
 Si Re Fa 3-10. Las notas cambian solo cuando eliges otro conjunto.
+
+Tres notas son a la vez un conjunto y un micromodo: Do Do♯ Mi es el
+conjunto 3-3 y el micromodo Menor 3. El menú Tonalidad guarda el nombre
+que eliges: desde una serie, **conjunto de clases de alturas** toma las
+tres primeras notas de la serie y las nombra como conjunto, «conjunto
+3-3 sobre Do» para la serie del Concierto de Webern sobre Do; **3** en
+la fila **Menor** de los micromodos, al final del menú, nombra las
+mismas notas como micromodo, «Menor 3 sobre Do». Pasar de uno a otro no
+mueve nada, y **serie dodecafónica** trae de vuelta la serie de la
+canción.
 
 ## Series dodecafónicas
 
@@ -497,6 +527,12 @@ movimiento de las partes](voice-leading.md)).
    para leer cómo está hecha y sus notas: «T4I: la forma de la
    tonalidad dada vuelta alrededor de Do, transportada 4 semitonos hacia
    arriba: Do Mib Mi.»
+4. Donde dos pistas, o la línea de arriba de un piano y sus acordes,
+   están cada una en una forma propia a la vez, la línea tiene una
+   franja para cada una, la más aguda arriba, y apuntar a una forma dice
+   de quién es. La revisión lee así las partes solo donde deja menos
+   notas fuera de lugar: una forma repartida entre los instrumentos, una
+   nota cada uno, sigue siendo una forma.
 
 La revisión lee sola qué forma suena dónde: no hace falta escribir
 antes las formas en la hoja de acordes. Lo que les pide a las notas
@@ -537,8 +573,9 @@ una nota suelta o saques una de una forma.
 tonalidad](keys-and-modes.md#buscar-la-tonalidad-experimental)), dice
 en qué tonalidad mayor o menor parece estar la música. La música hecha
 con un micromodo u otro conjunto no tiene una tonalidad así, de modo
-que debajo una segunda línea dice de qué **color** está hecho el
-pasaje, cuando encuentra uno:
+que donde la tonalidad de la canción es un conjunto, un micromodo, una
+serie o la escala cromática, una segunda línea debajo dice de qué
+**color** está hecho el pasaje, cuando encuentra uno:
 
 - **El micromodo** cuyas formas contienen las notas, el más fuerte, con
   los que encajan casi igual de bien después, más tenues: «Color en los
@@ -562,6 +599,12 @@ de esos compases, con marcas de tonalidad en la lista de reproducción,
 así que las teclas de armonía, la hoja de acordes y la revisión del
 color lo siguen. Ninguna nota se mueve, y Deshacer lo revierte. Donde
 ya es la tonalidad, la línea dice **(la tonalidad)**.
+
+Una canción en una tonalidad mayor o menor o en un modo no tiene línea
+de color: se muestra en acordes, como en la hoja de acordes. Para
+buscar el color de una canción así, por ejemplo una pieza importada que
+no suena tonal, elige primero **cromática** en el menú Tonalidad; nada
+se mueve.
 
 Pruébalo en **Archivo > Demostraciones > Micromodos > Bruma de tonos
 enteros**. Sus notas son la escala de tonos enteros, que no encaja en

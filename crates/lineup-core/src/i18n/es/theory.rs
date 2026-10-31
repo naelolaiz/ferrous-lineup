@@ -1268,6 +1268,14 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("Notes in a line (serial)", "Notas en línea (serial)"),
     ("Notes together (vertical)", "Notas a la vez (vertical)"),
     (
+        "Forms of the key (mixed)",
+        "Formas de la tonalidad (mixtas)",
+    ),
+    (
+        "The forms of the key's set heard in the notes, as the colour check reads them: a form may sound partly together and partly one after another, and two tracks, or a top line and the chords under it, may each be in a form of their own at once. Only where the key is a pitch-class set or a micromode",
+        "Las formas del conjunto de la tonalidad que se oyen en las notas, como las lee la revisión del color: una forma puede sonar en parte a la vez y en parte una nota tras otra, y dos pistas, o una línea de arriba y los acordes debajo, pueden estar cada una en una forma propia a la vez. Solo donde la tonalidad es un conjunto de clases de alturas o un micromodo",
+    ),
+    (
         "nothing classical part writing avoids",
         "nada de lo que evita la escritura clásica a varias voces",
     ),

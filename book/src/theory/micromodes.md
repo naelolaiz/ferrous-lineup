@@ -1214,14 +1214,17 @@ you. `saturating_add` stops at 255 instead of overflowing.
 ### Key changes in any colour
 
 A key change on the playlist names the key from a bar on, without
-moving a note, and it can now be a micromode, or a set or a row the
-song is in: a piece can be in Menor 3 and turn to Menor 5 at bar 9.
-The harmony keys and the degrees on the sheet read the key at each
-bar, so from bar 9 they offer and count Menor 5's forms; what is
-already written there stays as it is, until Menor 5's forms are
-written in its place. A key of three notes
-is named by its micromode everywhere, "Menor 5 on C", since every
-group of three notes is one of the twelve.
+moving a note, and it can now be a micromode, a twelve-tone row or a
+pitch-class set (made as the Key menus make them, by `KindChoice::key`),
+or a set or a row the song is in: a piece can be in Menor 3 and turn to
+Menor 5 at bar 9. The harmony keys and the degrees on the sheet read
+the key at each bar, so from bar 9 they offer and count Menor 5's
+forms; what is already written there stays as it is, until Menor 5's
+forms are written in its place. A key of three notes is named by its
+micromode, "Menor 5 on C", since every group of three notes is one of
+the twelve, unless it was picked as a pitch-class set: then it is "set
+3-5 on C", the same notes (see [Three notes: a set or a
+micromode](sets.md#three-notes-a-set-or-a-micromode)).
 
 ## Checking the colour
 
@@ -1253,9 +1256,11 @@ What it asks of the notes depends on how big the set is:
 
 - **A Forms line** under the chord names. It names each form the check
   reads in the notes by its degree, **T0**, **T5I**, over the notes
-  that play it. Point at it to read how the form is made and its notes:
-  "T5I: the key's form upside down around C, moved up 5 semitones: C#
-  E F."
+  that play it, with a band for each part where two parts are each in
+  a form of their own (see [Whose notes make a
+  form](#whose-notes-make-a-form)). Point at it to read how the form is
+  made and its notes: "T5I: the key's form upside down around C, moved
+  up 5 semitones: C# E F."
 - **The Voices line** under it marks **out** for a note outside the
   form heard around it, and, in a micromode, **gap** for a form left
   unfinished, on its last note. When one note is missing, a dashed
@@ -1389,6 +1394,59 @@ search, the first group that starts once the note has ended; every
 group after this one and before that one hears it. A stretch counts the
 notes held at its first group as heard.
 
+### Whose notes make a form
+
+So far the notes that start together were one group, in one form. That
+is right where a form is shared out among the instruments, as Webern
+gives the three notes of a form to three of them. But two parts may
+also each be in a form of their own at once: a tune in T0 (C C♯ E) over
+chords in T7 (G A♭ B), or a piano's top line over its own chords. Read
+as one part, every note of the tune that starts with a chord would be
+out of place. So the check reads the notes three ways, `Parts`:
+
+```rust
+pub enum Parts {
+    /// All the notes as one part.
+    Together,
+    /// Each track on its own.
+    EachTrack,
+    /// Each track on its own, with the top line of a track that plays
+    /// chords on its own too.
+    TopLinesApart,
+}
+```
+
+The top line is the highest of the parts a track's chords are split
+into, the same parts the [voice-leading check](voice-leading.md) follows
+(`voices_of`). Each way splits the parts of the one before it further,
+so a way with as many parts as one tried before is the same reading,
+and it is skipped. Every part is read on its own, as above, and the
+readings are compared:
+
+```rust
+let missed = reading.out + reading.unheard;
+if best.as_ref().is_none_or(|(least, _)| missed < *least) {
+    best = Some((missed, reading));
+}
+```
+
+`out` counts the notes out of place; `unheard` the notes missing from a
+micromode's first and last forms, which are not out of place (they may
+sound in the pattern before or after). Each part has a first and a last
+form, so without `unheard` a reading with more parts would leave more
+notes out for free. A reading replaces the one before only when it
+misses strictly fewer notes, so of readings as good, the one with
+fewer parts wins: a form shared out among the tracks stays one form,
+since each track alone would leave its forms unfinished.
+
+Each form keeps whose notes it was read in, `HeardIn::All`,
+`HeardIn::Track(channel)` or `HeardIn::Line(part)`. Where the forms
+were read in more than one part, the Forms line has a band for each,
+the highest part on top, and pointing at a form names its part: "Lead:
+T0: the key's own form: C C# E." The chord sheet's [mixed
+grouping](sets.md#forms-of-the-key-mixed) writes such forms as two
+chords at once.
+
 ## Finding the colour
 
 **🔍 Find the key** names the major or minor key a passage sounds like
@@ -1409,6 +1467,27 @@ Each has a **Use as the key** button, which makes it the key of those
 bars with key markers. No note moves, as when you pick
 **pitch-class set** in the Key menu; Undo takes it back. Where the
 colour is the key already, the line says **(the key)** instead.
+
+The line is there only where the key is a set, a micromode, a row or
+the chromatic scale. A song in a major or minor key or a mode is shown
+in chords, here as on the chord sheet and in the piano roll: tonal
+music is made of two micromodes, the major and minor triads (**Acorde
+menor-mayor**) and the diminished one (**Acorde disminuido**), and
+naming them as micromodes says nothing new; the starting song in C
+major would read "Acorde menor-mayor on C". To find the colour of a
+passage in such a song, an imported piece that turns out not to be
+tonal, say, make the key **chromatic** first. `shows_colours`, in the
+app, makes the choice, before anything is read:
+
+```rust
+fn shows_colours(key: Scale) -> bool {
+    !key.kind.is_tonal() || key.kind == ScaleKind::Chromatic
+}
+```
+
+`is_tonal` is true for every scale but a row or a set, the chromatic
+scale too; but the chromatic scale holds every note and says nothing
+about the harmony, so it is let through.
 
 ![Find the key on the demo Whole-tone haze: "Sounds in the notes here: D major, or A minor, or C major", and under it "Colour in bars 1 to 8: Mayor 1 on C (the key), made of 6-35 (whole-tone scale)" with a Use as the key button](../images/step-9-find-colour.png)
 
