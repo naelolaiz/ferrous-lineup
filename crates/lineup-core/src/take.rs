@@ -35,7 +35,8 @@ use std::ops::Range;
 use std::path::PathBuf;
 
 use crate::arrangement::{Arrangement, Pass};
-use crate::harmony::PitchSet;
+use crate::chord_sheet::HarmonyName;
+use crate::harmony::{PitchSet, chord_scale};
 use crate::pattern::{MAX_STEPS, NoteEvent, Pattern, STEP_NOTE};
 use crate::pitch::{Note, PitchClass};
 use crate::playlist::{Clip, MAX_SONG_STEPS};
@@ -434,10 +435,10 @@ pub enum Pitches {
     AsSung,
     /// The nearest note of the key there.
     InKey,
-    /// The nearest note of the key as the chord on the chord sheet there
-    /// colours it: the chord's own notes, and the notes of the key that
-    /// a chord note from outside the key does not replace. Over D7 in C
-    /// major F♯ is written, not F. Right between two notes, the chord's.
+    /// The nearest note of the scale a soloist plays over the chord on
+    /// the chord sheet there, in the key (see [`chord_scale`]): over D7
+    /// in C major, G major, so F♯ is written and not F. Right between two
+    /// notes, the chord's.
     WithChords,
 }
 
@@ -455,24 +456,24 @@ fn allowed_at(
         Pitches::AsSung => None,
         Pitches::InKey => Some((key, key)),
         Pitches::WithChords => {
-            let chord = match along {
-                Along::Song(_) => project
-                    .chord_at(step)
-                    .and_then(|marker| marker.harmony.pitch_set()),
+            let harmony = match along {
+                Along::Song(_) => project.chord_at(step).map(|marker| marker.harmony),
                 Along::Pattern { .. } => None,
             };
-            let Some(chord) = chord else {
+            let Some(chord) = harmony.and_then(HarmonyName::pitch_set) else {
                 return Some((key, key));
             };
-            let mut allowed = chord;
-            for note in key.iter() {
-                let replaced = chord.iter().any(|tone| {
-                    !key.contains(tone) && (tone.transpose(1) == note || tone.transpose(-1) == note)
-                });
-                if !replaced {
-                    allowed.insert(note);
+            let allowed = match harmony {
+                Some(HarmonyName::Chord(symbol)) => {
+                    let mut allowed = chord_scale(symbol.chord(), scale);
+                    allowed.insert(symbol.bass_pitch_class());
+                    allowed
                 }
-            }
+                // A micromode is the scale there.
+                Some(HarmonyName::Micromode(set)) => set,
+                // A set, or two chords at once: the key with their notes.
+                _ => PitchSet::from_bits(key.bits() | chord.bits()),
+            };
             Some((allowed, chord))
         }
     }
@@ -1527,13 +1528,18 @@ mod tests {
     fn pitches_can_keep_to_the_key_or_to_the_chords() {
         use crate::chord_sheet::{ChordMarker, HarmonyName};
         let mut project = song();
-        // D7 over bar 2: its F♯ takes the place of the key's F.
+        // D7 over bar 2: its F♯ takes the place of the key's F, and only
+        // of F: G, a semitone above it too, stays.
         let d7 = ChordMarker::new(16, HarmonyName::parse("D7").unwrap());
         assert!(project.set_chords(16, 32, &[d7]));
         let along = Along::Song(project.playback_arrangement());
         let take = take(along, 16.0, 2.0);
-        // A little sharp of C♯, and a little sharp of F.
-        let notes = [sung(0.0, 0.45, 61.1, -12.0), sung(0.5, 0.95, 65.3, -12.0)];
+        // A little sharp of C♯, of F and of G.
+        let notes = [
+            sung(0.0, 0.45, 61.1, -12.0),
+            sung(0.5, 0.95, 65.3, -12.0),
+            sung(1.0, 1.45, 67.3, -12.0),
+        ];
         let written = |pitches| -> Vec<u8> {
             transcribe_with(&project, &take, &notes, 1, 0.0, pitches)
                 .notes
@@ -1541,9 +1547,17 @@ mod tests {
                 .map(|note| note.pitch.midi())
                 .collect()
         };
-        assert_eq!(written(Pitches::AsSung), [61, 65], "as sung");
-        assert_eq!(written(Pitches::InKey), [62, 65], "C♯ is not in C major");
-        assert_eq!(written(Pitches::WithChords), [62, 66], "F♯ over D7");
+        assert_eq!(written(Pitches::AsSung), [61, 65, 67], "as sung");
+        assert_eq!(
+            written(Pitches::InKey),
+            [62, 65, 67],
+            "C♯ is not in C major"
+        );
+        assert_eq!(
+            written(Pitches::WithChords),
+            [62, 66, 67],
+            "F♯ over D7, G stays"
+        );
     }
 
     #[test]

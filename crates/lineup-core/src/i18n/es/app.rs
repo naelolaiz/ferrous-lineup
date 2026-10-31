@@ -696,8 +696,8 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Cada nota en la nota de la tonalidad más cercana en ese lugar, para que una nota desafinada no salga como una nota equivocada.",
     ),
     (
-        "Each note on the nearest note of the key as the chord there colours it: over D7 in C major, F♯ instead of F. Bars with no chord keep to the key.",
-        "Cada nota en la nota de la tonalidad más cercana tal como la colorea el acorde de ese lugar: sobre D7 en do mayor, fa♯ en lugar de fa. Los compases sin acorde se quedan en la tonalidad.",
+        "Each note on the nearest note of the scale the soloist plays over the chord there, in the key: over D7 in C major, F♯ instead of F. Bars with no chord keep to the key.",
+        "Cada nota en la nota más cercana de la escala que el solista toca sobre el acorde de ese lugar, en la tonalidad: sobre D7 en do mayor, fa♯ en lugar de fa. Los compases sin acorde se quedan en la tonalidad.",
     ),
     (
         "Each note lasts as many steps as the row's number at its place, plus one",
