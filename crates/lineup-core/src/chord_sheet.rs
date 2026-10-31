@@ -674,24 +674,12 @@ impl HarmonyName {
         let Some(degree) = self.degree(key) else {
             return String::new();
         };
-        let note = key.spell(key.root);
-        let what = match (degree.inverted, degree.up) {
-            (false, 0) => tr("the key's own form").to_string(),
-            (false, 1) => tr("the key's form moved up a semitone").to_string(),
-            (false, up) => trf("the key's form moved up {} semitones", &[&up]),
-            (true, 0) => trf("the key's form upside down around {}", &[&note]),
-            (true, 1) => trf(
-                "the key's form upside down around {}, moved up a semitone",
-                &[&note],
-            ),
-            (true, up) => trf(
-                "the key's form upside down around {}, moved up {} semitones",
-                &[&note, &up],
-            ),
-        };
         format!(
             " {}",
-            trf("In {} it is {}: {}.", &[&key_name(key), &degree, &what])
+            trf(
+                "In {} it is {}: {}.",
+                &[&key_name(key), &degree, &degree.describe(key)]
+            )
         )
     }
 }

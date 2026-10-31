@@ -1210,7 +1210,7 @@ mod tests {
     }
 
     #[test]
-    fn a_pitch_class_set_has_no_rules_of_its_own() {
+    fn in_a_set_the_colour_is_checked_instead() {
         let set = |_| {
             Scale::new(
                 PitchClass::C,
@@ -1218,8 +1218,9 @@ mod tests {
             )
         };
         let check = check_in(&[track("G4 A4", 4, 0), track("C3 D3", 4, 0)], set);
-        assert_eq!(check.rules, Rules::Neither);
-        assert_eq!(kinds(&check), vec![]);
-        assert!(check.summary().contains("a pitch-class set has no rules"));
+        assert_eq!(check.rules, Rules::Colour);
+        let found = kinds(&check);
+        assert!(!found.contains(&SlipKind::ParallelFifths), "{found:?}");
+        assert!(found.contains(&SlipKind::OutsideColour), "{found:?}");
     }
 }
