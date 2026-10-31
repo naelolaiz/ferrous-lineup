@@ -1049,9 +1049,10 @@ courses still teach them. So when the key is a **twelve-tone row**, the
   step with a finding and the line says what happens there; hover over
   the line to read why.
 
-With a **pitch-class set** as the key, nothing is checked. A set is a
-collection of notes with no order and no rules of its own, so there is
-nothing to check against, and the line under the chords says so.
+With a **pitch-class set** or a micromode as the key there is no order
+to keep, but there is a colour: the check reads the set's forms in the
+notes and marks the notes outside them (see [Checking the
+colour](micromodes.md#checking-the-colour)).
 
 ### The five rules
 

@@ -69,6 +69,7 @@ Clave: rhythm-and-meter.md#strong-beats-weak-beats-and-syncopation
 Clef: lead-sheets.md#reading-a-lead-sheet
 Clip: patterns-and-playlist.md#placing-and-moving-clips
 Close harmony: bigger-band.md#close-harmony
+Colour check: sets-rows-micromodes.md#checking-the-colour
 Command line: saving.md#opening-files-in-other-ways
 Comping: styles.md
 Compound meter: rhythm-and-meter.md#two-and-three

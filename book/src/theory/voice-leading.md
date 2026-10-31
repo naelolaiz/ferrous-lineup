@@ -227,13 +227,15 @@ judge of all music. Where the key is a twelve-tone row, the check
 follows the rules of twelve-tone writing instead (see [The rules of
 twelve-tone
 writing](twelve-tone.md#the-rules-of-twelve-tone-writing)),
-and where it is a pitch-class set, nothing is checked:
+and where it is a pitch-class set or a micromode, it checks that the
+notes keep the set's colour (see [Checking the
+colour](micromodes.md#checking-the-colour)):
 
 ```rust
 pub fn of(key: Scale) -> Rules {
     match key.kind {
         ScaleKind::Row(_) => Rules::TwelveTone,
-        ScaleKind::Set(_) => Rules::Neither,
+        ScaleKind::Set(_) => Rules::Colour,
         _ => Rules::Classical,
     }
 }
@@ -280,7 +282,9 @@ already filled in, so the whole table takes `notes × parts` steps.
 Walking back from the last cell recovers which choice made each cost,
 and so where each note went. The [twelve-tone
 check](twelve-tone.md#the-best-reading-dynamic-programming)
-uses the same idea to find which forms of a row are played.
+uses the same idea to find which forms of a row are played, and the
+[colour check](micromodes.md#reading-the-forms-the-cheapest-reading)
+which forms of a set.
 
 ### Comparing two parts note against note
 

@@ -242,6 +242,7 @@ Relleno: no patterns-and-playlist.md, styles.md#buscar-un-estilo, song-form.md#v
 Repetir compases: practising.md#repetir-compases
 Restablecer mezcla: mixer.md#las-líneas
 Reverberación: mixer.md#la-reverberación
+Revisión del color: sets-rows-micromodes.md#revisar-el-color
 Rhythm changes: jazz-and-pop.md#los-estándares-y-las-big-bands
 Ride: song-form.md#variaciones-a-y-b
 Ritardando: tempo-meter-key.md#cambiar-el-tempo-a-mitad-de-camino

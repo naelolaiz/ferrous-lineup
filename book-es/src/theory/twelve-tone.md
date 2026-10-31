@@ -1103,10 +1103,10 @@ la casilla **Conducción de voces** revisa esas reglas en su lugar.
   línea dice qué pasa allí; pasa el puntero por la línea para leer por
   qué.
 
-Con un **conjunto de clases de alturas** como tonalidad, no se revisa
-nada. Un conjunto es una colección de notas sin orden y sin reglas
-propias, así que no hay nada contra qué revisar, y la línea de debajo
-de los acordes lo dice.
+Con un **conjunto de clases de alturas** o un micromodo como
+tonalidad no hay un orden que respetar, pero hay un color: la revisión
+lee las formas del conjunto en las notas y marca las notas que quedan
+fuera de ellas (ver [Revisar el color](micromodes.md#revisar-el-color)).
 
 ### Las cinco reglas
 
