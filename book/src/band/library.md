@@ -580,35 +580,41 @@ play its parts: Keys and Bass, or the channel picked in the rack. A
 song imported from a MIDI file has neither; its channels carry the
 names the file gave them, such as "PIANO MELODIA", "BANDONEON" or
 "CONTRABAJO". Then `own_players_instruments` gives the style's sounds
-to the song's own players, each by the family of the instrument it
-had, and leaves the tune alone:
+to the song's own players, each by the part it plays, and leaves the
+tune alone:
 
 ```rust
-let program = match channel.program? {
-    general_midi::CONTRABASS => band.bass_program(),
-    // Violins to tremolo strings, and the string ensembles.
-    40..=44 | 48..=51 => extras.strings.as_ref()?.program,
-    program => match general_midi::FAMILIES[general_midi::family(program)] {
-        "Piano" => piano,
-        "Organ" => extras.organ.as_ref().map_or(piano, |organ| organ.program),
-        "Guitar" => extras
-            .guitar
-            .as_ref()
-            .map_or(piano, |guitar| guitar.program),
-        "Bass" => band.bass_program(),
-        _ => return None,
-    },
+let program = match role(&channel.name, channel.program)? {
+    Role::Piano => piano,
+    Role::Organ => extras.organ.as_ref().map_or(piano, |organ| organ.program),
+    Role::Guitar => extras
+        .guitar
+        .as_ref()
+        .map_or(piano, |guitar| guitar.program),
+    Role::Bass => band.bass_program(),
+    Role::Strings => extras.strings.as_ref()?.program,
 };
 ```
 
-The code sits in a closure given to `filter_map`, which returns an
-`Option`, so every `?` and the `return None` mean "this channel keeps
-its sound": a channel with no General MIDI program, strings when the
-style has none, a choir or a bandoneon, which no style has. A double
-bass is in the General MIDI strings family, so it is matched first, by
-its number, and takes the bass. The tune is any channel whose name
-says so (Lead, Melody, Melodía, Voice, Voz, Canto), or else the one the
-lead sheet would show.
+`role` reads the channel's name first ("slapbass", "drive guitar",
+"organ", "warmstrings", or bajo, guitarra, órgano, cuerdas), and only
+then the family of its General MIDI sound, a double bass counted as a
+bass although General MIDI files it among the strings. The name comes
+first because a style may have changed the sound's family: in a band
+without a guitar the guitar plays the piano's part, and by its sound
+alone it would stay a piano in the next band, which has a banjo for
+it. The code sits in a closure given to `filter_map`, which returns an
+`Option`, so every `?` means "this channel keeps its sound": a channel
+whose name and sound say nothing (a choir, a pad), or strings when the
+style has none. The tune is any channel whose name says so (Lead,
+Melody, Melodía, Voice, Voz, Canto), or else the one the lead sheet
+would show.
+
+The band's way in, `apply_band_parts`, reaches the same code through
+`own_players_sounds`, leaving out the band's own channels, so the
+file's players change sound whether the style plays as the band or
+not: the first style on a MIDI file brings the band in, and each style
+after it gives the file's organ, guitars and strings its sounds again.
 
 Two small methods correct the choice for the kind of preset, each
 taking `self` by value and giving back a changed copy: `for_rhythm`
