@@ -107,7 +107,8 @@ the dominant's bass and leads to E.
   take turns, so no two in a row sound the same. Before every new part,
   a verse into the refrain, the band **breaks**: it strikes the first
   beat of the last bar and stops, and the repique plays the clave on the
-  wood alone, leading into the new part.
+  wood alone, leading into the new part. In *Candombe para Gardel* the
+  singer's pickup into the verse gets one more bar of clave alone.
 - **Brazil**: the songs of the gaúchos of Rio Grande do Sul, such as
   *Boi barroso*, and *Luar do sertão*, a *toada* about the moonlight of
   the backlands.

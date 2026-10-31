@@ -932,20 +932,40 @@ pub struct DrumPart<'a> {
   `breaks`. A rhythm laid out with a break drum (`Layout::breaks`, the
   candombe's wood) plays only that drum there, the first bar of its
   line; every other rhythm plays on, so only the candombe breaks.
+- **Pickups.** A break can last two bars. `pickup_bars` looks at the
+  tune in the first bar of the part after each break: when a note
+  started after its first beat is tied over the bar line and the tune
+  rests where it ends, an eighth note or more (`leads_in`), the singer's
+  line leads from that bar into the next, where the part really lands.
+  That first bar is a pickup, and the part gets `picks_up`: the break
+  drum plays on alone through it, the next bar of its line, and the
+  drums come in with the part's second bar as they would have. A tune
+  that runs on past the tied note started the part with it, and the
+  band comes in at once. In *Candombe para Gardel* the verses and the
+  link back to the riff start with such a bar, so their breaks last
+  two bars; the refrain, the bridge and the coda, where the tune rests,
+  come in at once.
 
 Where the drums break, the rest of the band breaks with them. The
 chord sheet already has a way to say "strike and stop", the **shot**
 (see [Shots, holds, rests and pushes](stops.md)), so a break
 is one more shot: `Breaks::with_shots` adds a shot on the first beat of
 each break bar to the sheet's own, on the harmony sounding there, and
-each player plays it as it plays the sheet's. A bar where the sheet
-already breaks or pushes keeps what the sheet says. The band does this
-only when its drums play and their rhythm breaks
-(`breaks_before_parts`). Library > Apply does the same in a pattern's
-last bar where the pattern first plays (`recomp_breaking`), as for its
-drums. A demo breaks a part that goes on into a new part every time
-the form plays it (`breaking_parts`), with a shot from its last bar on
-(`shot_from`), and lays its drums with the same breaks
+each player plays it as it plays the sheet's; before a pickup bar the
+shot's silence lasts on to the pickup's end, so the band comes back with
+the drums. A break where the sheet already breaks or pushes keeps what
+the sheet says. The band does this only when its drums play and their
+rhythm breaks (`breaks_before_parts`); it reads the tune from the
+song's melody channel, unless it plays on that channel itself
+(`tune_for`), and a change to the tune makes it write its parts again.
+Library > Apply does the same in a pattern's last bar where the pattern
+first plays (`recomp_breaking`), and waits through a pickup bar the
+pattern starts with, as for its drums. A demo breaks a part that goes
+on into a new part every time the form plays it (`breaking_parts`),
+with a shot from its last bar on (`shot_from`); a part that comes right
+after such a part every time (`parts_after_breaks`) and whose tune leads
+in from its first bar rests through that bar (`rest_until`). The demo
+lays its drums with the same breaks and pickups
 (`song_drums_breaking`); the chord sheet it writes stays as the chart
 is.
 
@@ -1009,6 +1029,8 @@ Each module tests its own part:
   `the_ear_hears_most_parts_of_the_demos`, with and without the chord
   sheets.
 - `drum_form.rs`: `the_band_breaks_in_the_last_bar_before_a_new_part`,
+  `a_tune_leading_into_a_new_part_makes_its_first_bar_a_pickup`,
+  `the_clave_plays_on_alone_through_a_pickup_bar`,
   `the_candombe_breaks_with_the_clave_on_the_wood_alone`,
   `parts_are_cut_in_phrases_of_eight`,
   `a_part_ends_with_a_fill_and_long_parts_fill_inside`,
@@ -1018,10 +1040,12 @@ Each module tests its own part:
   `the_candombe_phrases_take_turns`.
 - `band.rs`: `the_band_starts_its_patterns_where_the_parts_start`,
   `a_chord_held_over_a_section_start_is_not_struck_again` and
-  `the_candombe_band_breaks_before_a_new_part`; `demo.rs`:
-  `the_candombe_breaks_before_every_new_part`; and `apply.rs`'s
-  `rhythms_close_every_part_of_the_song` checks every break of
-  *Candombe para Gardel* with the Candombe rhythm applied.
+  `the_candombe_band_breaks_before_a_new_part`, with a tune that leads
+  into the refrain; `demo.rs`:
+  `the_candombe_breaks_before_every_new_part` and
+  `the_candombe_waits_through_a_pickup_into_a_new_part`; and `apply.rs`'s
+  `rhythms_close_every_part_of_the_song` checks every break and pickup
+  of *Candombe para Gardel* with the Candombe rhythm applied.
 
 In the app, `ux_tests.rs` clicks the rack's lock and undoes it
 (`the_rack_locks_a_channel_and_undo_unlocks_it`), tries Doo-wop and

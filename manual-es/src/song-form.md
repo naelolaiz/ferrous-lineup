@@ -159,7 +159,10 @@ donde oyó una parte en un lugar equivocado, marca tú las correctas.
 - Un candombe hace un **corte** en el último compás antes de cada parte
   nueva: la banda golpea el primer pulso y para, y el repique toca solo
   la clave en la madera. Una parte que sigue con otra del mismo nombre,
-  «Verse» con «Verse 2», sigue tocando.
+  «Verse» con «Verse 2», sigue tocando. Cuando la melodía entra en la
+  parte nueva desde su primer compás, con una nota ligada al compás
+  siguiente como una anacrusa cantada, el corte dura también ese compás:
+  todos entran juntos con el segundo compás de la parte.
 - Los ritmos folclóricos hacen sus rellenos en sus propios tambores,
   como el parche y el aro del bombo. Los ritmos de tango, de orquesta y
   de ranchera ocupan el lugar de conjuntos sin baterista, así que no

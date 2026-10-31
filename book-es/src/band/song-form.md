@@ -988,6 +988,20 @@ pub struct DrumPart<'a> {
   un tambor de corte (`Layout::breaks`, la madera del candombe) toca
   ahí solo ese tambor, el primer compás de su línea; cualquier otro
   ritmo sigue tocando, así que solo corta el candombe.
+- **Anacrusas.** Un corte puede durar dos compases. `pickup_bars` mira
+  la melodía en el primer compás de la parte que sigue a cada corte:
+  cuando una nota que empieza después del primer pulso se liga por
+  encima de la barra de compás y la melodía calla donde termina, una
+  corchea o más (`leads_in`), la línea del cantante lleva de ese compás
+  al siguiente, donde la parte llega de verdad. Ese primer compás es una
+  anacrusa, y la parte recibe `picks_up`: el tambor de corte sigue
+  tocando solo durante él, el compás siguiente de su línea, y la
+  batería entra con el segundo compás de la parte como lo habría hecho.
+  Una melodía que sigue después de la nota ligada empezó la parte con
+  ella, y la banda entra enseguida. En *Candombe para Gardel* las
+  estrofas y el enlace de vuelta al riff empiezan con un compás así, y
+  sus cortes duran dos compases; el estribillo, el puente y la coda,
+  donde la melodía calla, entran enseguida.
 
 Donde la batería corta, el resto de la banda corta con ella. La hoja de
 acordes ya tiene una manera de decir «golpea y para», el **golpe**
@@ -995,16 +1009,24 @@ acordes ya tiene una manera de decir «golpea y para», el **golpe**
 anticipaciones](stops.md)),
 así que un corte es un golpe más: `Breaks::with_shots` agrega un golpe
 en el primer pulso de cada compás de corte a los de la hoja, sobre la
-armonía que suena ahí, y cada músico lo toca como toca los de la hoja.
-Un compás donde la hoja ya corta o anticipa conserva lo que dice la
-hoja. La banda lo hace solo cuando toca su batería y su ritmo corta
-(`breaks_before_parts`). Biblioteca > Aplicar hace lo mismo en el
-último compás de un patrón donde el patrón suena primero
-(`recomp_breaking`), como con su batería. Una demo corta una parte que
-sigue con una parte nueva cada vez que la forma la toca
-(`breaking_parts`), con un golpe desde su último compás (`shot_from`),
-y reparte su batería con los mismos cortes (`song_drums_breaking`); la
-hoja de acordes que escribe queda como está el cifrado.
+armonía que suena ahí, y cada músico lo toca como toca los de la hoja;
+antes de un compás de anacrusa, el silencio del golpe dura hasta el
+final de la anacrusa, así que la banda vuelve con la batería. Un corte
+donde la hoja ya corta o anticipa conserva lo que dice la hoja. La
+banda lo hace solo cuando toca su batería y su ritmo corta
+(`breaks_before_parts`); lee la melodía del canal de la melodía de la
+canción, salvo que toque en ese canal ella misma (`tune_for`), y un
+cambio en la melodía la hace escribir sus partes de nuevo. Biblioteca >
+Aplicar hace lo mismo en el último compás de un patrón donde el patrón
+suena primero (`recomp_breaking`), y espera durante un compás de
+anacrusa con el que empiece el patrón, como con su batería. Una demo
+corta una parte que sigue con una parte nueva cada vez que la forma la
+toca (`breaking_parts`), con un golpe desde su último compás
+(`shot_from`); una parte que viene justo después de una así cada vez
+(`parts_after_breaks`) y cuya melodía entra desde su primer compás
+calla durante ese compás (`rest_until`). La demo reparte su batería con
+los mismos cortes y anacrusas (`song_drums_breaking`); la hoja de
+acordes que escribe queda como está el cifrado.
 
 Los patrones de la banda siguen las mismas partes: `chunks` empieza un
 patrón donde empieza una parte. Ese borde es **blando**: cuando un
@@ -1068,6 +1090,8 @@ Cada módulo prueba su parte:
   `the_ear_hears_most_parts_of_the_demos`, con y sin las hojas de
   acordes.
 - `drum_form.rs`: `the_band_breaks_in_the_last_bar_before_a_new_part`,
+  `a_tune_leading_into_a_new_part_makes_its_first_bar_a_pickup`,
+  `the_clave_plays_on_alone_through_a_pickup_bar`,
   `the_candombe_breaks_with_the_clave_on_the_wood_alone`,
   `parts_are_cut_in_phrases_of_eight`,
   `a_part_ends_with_a_fill_and_long_parts_fill_inside`,
@@ -1077,10 +1101,13 @@ Cada módulo prueba su parte:
   `the_candombe_phrases_take_turns`.
 - `band.rs`: `the_band_starts_its_patterns_where_the_parts_start`,
   `a_chord_held_over_a_section_start_is_not_struck_again` y
-  `the_candombe_band_breaks_before_a_new_part`; `demo.rs`:
-  `the_candombe_breaks_before_every_new_part`; y
+  `the_candombe_band_breaks_before_a_new_part`, con una melodía que
+  entra en el estribillo; `demo.rs`:
+  `the_candombe_breaks_before_every_new_part` y
+  `the_candombe_waits_through_a_pickup_into_a_new_part`; y
   `rhythms_close_every_part_of_the_song`, de `apply.rs`, comprueba cada
-  corte de *Candombe para Gardel* con el ritmo Candombe aplicado.
+  corte y cada anacrusa de *Candombe para Gardel* con el ritmo Candombe
+  aplicado.
 
 En la aplicación, `ux_tests.rs` hace clic en el candado del rack y lo
 deshace (`the_rack_locks_a_channel_and_undo_unlocks_it`), prueba
