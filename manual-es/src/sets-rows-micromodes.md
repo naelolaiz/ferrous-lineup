@@ -140,6 +140,12 @@ comunes se quedan en las mismas teclas, sobre su fundamental cuando la
 forma es un acorde (Do bajo Do7) y si no sobre la primera nota de su
 orden más compacto.
 
+Pasar a otro conjunto, con **Usar como tonalidad** en la ventana
+Conjuntos, conserva el grado de cada forma, igual que pasar de un
+micromodo a otro (ver [Un micromodo como
+tonalidad](#un-micromodo-como-tonalidad)): de Do7 como conjunto a Domaj7
+como conjunto, Do7 Mim7b5 La7 pasa a ser Domaj7 Mi♭maj7 Lamaj7.
+
 **Un estilo de micromodo sobre tus formas.** En una canción, un estilo
 del grupo **Micromodos (Kröpfl)** de la Biblioteca toca las formas
 escritas en la hoja de acordes, en tu orden, como un estilo toca los
@@ -381,4 +387,27 @@ tríadas mayores y menores también nombra el movimiento (P, L o R).
 
 En la **hoja de acordes**, cada compás muestra su grado y, desde el
 segundo compás, cuántas notas conserva del compás anterior: «T1I · 2
-comunes». Escribe un grado para escribir esa forma: `T2`, `T5I`.
+comunes». Escribe un grado para escribir esa forma: `T2`, `T5I`. Las
+demostraciones de micromodos escriben sus formas en la hoja, así que
+puedes leer el orden de cada una.
+
+**Otro color, los mismos grados.** El menú **Tonalidad** lista los doce
+micromodos debajo de las escalas, en tres filas cortas: **Menor** 1 a
+5, **Mayor** 1 a 4, y las tríadas como **°**, **m/M** y **+** (apunta a
+uno para ver su nombre completo). Se abre en el micromodo de la
+tonalidad. Elige otro, y la pieza conserva su plan en el color nuevo,
+como una canción en Do mayor conserva los grados de sus acordes cuando
+pasa a Do menor: cada forma de la hoja de acordes conserva su grado (T2
+de Menor 3 pasa a ser T2 de Menor 5) y cada nota escrita va al mismo
+lugar en su forma nueva. Un estilo de micromodo que toca la banda sigue
+las formas nuevas. Los enlaces suaves cambian con el color: la
+demostración de Menor 3 conserva dos notas de compás a compás, y en
+Menor 5 los mismos grados no conservan ninguna, como muestra la hoja
+(«T4I · 0 comunes»).
+
+Algunos micromodos son iguales dados vuelta (Menor 1, Mayor 1, y las
+tríadas disminuida y aumentada), así que en ellos una forma dada vuelta
+es solo una forma movida; al pasar a uno de ellos y volver no se puede
+saber qué formas estaban dadas vuelta. Desde una tonalidad mayor o
+menor a un micromodo, las notas se quedan como están, igual que con
+**conjunto de clases de alturas**.
