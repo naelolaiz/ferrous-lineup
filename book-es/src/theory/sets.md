@@ -606,9 +606,10 @@ conserva de casa. Para Do mayor como conjunto es una vieja conocida:
 Cada paso en el círculo de quintas cambia una nota, así que las notas
 comunes cuentan las quintas entre dos tonalidades: el círculo de
 quintas es la cercanía de las formas de 7-35. **Cercanas** muestra las
-formas que conservan al menos la mitad de las notas de casa (para tres
-notas, al menos una), aquí las nueve tonalidades hasta cuatro quintas
-de distancia; **Todas las formas** muestra las doce.
+formas que conservan al menos la mitad de las notas de casa, redondeada
+hacia abajo (tres de siete; para tres notas, al menos una), aquí las
+nueve tonalidades hasta cuatro quintas de distancia; **Todas las
+formas** muestra las doce.
 
 Otros conjuntos dan mapas menos conocidos. Do Mi Sol Si♭ como conjunto,
 4-27, las notas de una séptima de dominante, tiene 24 formas: las doce

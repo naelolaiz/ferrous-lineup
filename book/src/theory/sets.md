@@ -574,8 +574,9 @@ For C major as a set this is an old friend:
 Each step round the circle of fifths changes one note, so the notes in
 common count the fifths between two keys: the circle of fifths is the
 nearness of the forms of 7-35. **Near home** shows the forms that keep
-at least half the notes of home (for three notes, at least one), here
-the nine keys up to four fifths away; **All forms** shows the twelve.
+at least half the notes of home, rounded down (three of seven; for
+three notes, at least one), here the nine keys up to four fifths away;
+**All forms** shows the twelve.
 
 Other sets give less familiar maps. C E G B♭ as a set, 4-27, the notes
 of a dominant seventh, has 24 forms: the twelve dominant sevenths and,
