@@ -375,13 +375,7 @@ fn drums_where_it_plays(
     bars: &[crate::meter::Bar],
 ) -> Option<Vec<(Drum, NoteEvent)>> {
     let length = project.pattern(pattern)?.length();
-    let start = project
-        .playlist()
-        .clips()
-        .iter()
-        .filter(|clip| clip.pattern == pattern)
-        .map(|clip| clip.start)
-        .min()?;
+    let start = first_played(project, pattern)?;
     bars.iter().find(|bar| bar.start == start)?;
     let end = start + length;
     Some(
@@ -400,6 +394,17 @@ fn drums_where_it_plays(
             })
             .collect(),
     )
+}
+
+/// Where pattern `pattern` first plays in the song, if it plays.
+fn first_played(project: &Project, pattern: usize) -> Option<usize> {
+    project
+        .playlist()
+        .clips()
+        .iter()
+        .filter(|clip| clip.pattern == pattern)
+        .map(|clip| clip.start)
+        .min()
 }
 
 /// Replaces the drums of pattern `pattern` from step `at` on with
@@ -747,6 +752,14 @@ fn play_song(
         let form = project.form_sections();
         (drum_form::song_drums(rhythm, &bars, &form, end), bars)
     });
+    // A pattern that first plays in a part of another kind, such as a
+    // refrain after the verse, plays its chords and bass as such a part
+    // does (see `Comping::in_contrast`), as its drums do.
+    let form = if comping.contrasts() {
+        project.form_sections()
+    } else {
+        Vec::new()
+    };
     for pattern in 0..patterns {
         let Some(length) = project.pattern(pattern).map(|p| p.length()) else {
             continue;
@@ -765,6 +778,13 @@ fn play_song(
                 .all(|start| drums_in(project, pattern, start, bar) != last)
         };
         let has_chords = heard_chords_channel(project, pattern).is_some();
+        let contrast = first_played(project, pattern)
+            .is_some_and(|start| drum_form::contrasts_at(&form, start));
+        let (comping, bass) = if contrast {
+            (comping.in_contrast(), bass.in_contrast(comping))
+        } else {
+            (comping, bass)
+        };
         if parts.matching_style && recomp(project, pattern, comping, bass) {
             change.harmony += 1;
         } else if !drums && !has_chords {
@@ -942,6 +962,35 @@ mod tests {
         ));
         assert_eq!(chords_channel(&mut project, None), Some(keys));
         assert_eq!(project.pattern(tried).unwrap().notes(keys), before);
+    }
+
+    #[test]
+    fn the_candombe_style_pushes_its_blocks_where_the_song_goes_on_to_another_part() {
+        // Candombe para Gardel played as a bossa nova, then as a
+        // candombe again: the verse's pattern plays the chord blocks in
+        // the clave and the refrain's, a part of another kind, pushes
+        // them, as the demo does.
+        let song = super::super::Song::named("Candombe para Gardel").unwrap();
+        let mut project = super::super::demo::song_demo(song);
+        use_style(&mut project, Style::named("Bossa nova").unwrap());
+        use_style(&mut project, Style::named("Candombe").unwrap());
+        let keys = find_synth(&project, KEYS).unwrap();
+        let bass = find_synth(&project, BASS).unwrap();
+        let second_bar = |name: &str, channel: usize| {
+            let part = project.patterns().iter().find(|p| p.name == name).unwrap();
+            let mut starts: Vec<usize> = part
+                .notes(channel)
+                .iter()
+                .filter(|note| (16..32).contains(&note.start))
+                .map(|note| note.start - 16)
+                .collect();
+            starts.dedup();
+            starts
+        };
+        assert_eq!(second_bar("Verse", keys), [0, 3, 6, 10, 12]);
+        assert_eq!(second_bar("Verse", bass), [0, 6, 12]);
+        assert_eq!(second_bar("Refrain", keys), [0, 3, 5, 9, 11, 13, 15]);
+        assert_eq!(second_bar("Refrain", bass), [0, 7, 12, 14]);
     }
 
     #[test]

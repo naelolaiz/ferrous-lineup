@@ -477,7 +477,16 @@ pub fn song_demo(song: &Song) -> Project {
     // a part whose meter changes bar by bar (see `Song::part_runs`).
     // `Project::empty` starts with one pattern, which the first part uses.
     let mut patterns: Vec<Piece> = Vec::new();
+    // The kinds of the song's parts, by the form: a part of another kind,
+    // such as a refrain after the verse, may be played otherwise (see
+    // `Comping::in_contrast`).
+    let kinds = drum_form::name_kinds(song.form.iter().copied());
     for part in song.parts {
+        let contrast = song
+            .form
+            .iter()
+            .position(|name| *name == part.name)
+            .is_some_and(|at| drum_form::contrasts(kinds[at].0));
         let mut bar_number = 0;
         for (run, piece) in song.part_runs(part).iter().enumerate() {
             let time = song.part_time(piece);
@@ -494,6 +503,11 @@ pub fn song_demo(song: &Song) -> Project {
             let spans = piece.spans(bar, tonic);
             let (mut chords, mut bass_line) = if !piece.written_out() {
                 let (comping, bass, _) = song.part_playing(piece);
+                let (comping, bass) = if contrast {
+                    (comping.in_contrast(), bass.in_contrast(comping))
+                } else {
+                    (comping, bass)
+                };
                 let backing = accompany_in_bars(&spans, tonic, comping, bass, time);
                 (backing.chords, backing.bass)
             } else {
@@ -1462,6 +1476,34 @@ mod tests {
             .map(|note| (note.start, note.pitch.midi()))
             .collect();
         assert_eq!(left, [(12, 45), (14, 52), (16, 57)]);
+    }
+
+    #[test]
+    fn the_candombe_pushes_its_blocks_in_its_refrain() {
+        // Candombe para Gardel's verse plays the chord blocks in the
+        // clave; its refrain and its link, parts of other kinds, push
+        // them. Its bridge, of a third kind, plays them as the verse.
+        let project = song_demo(Song::named("Candombe para Gardel").unwrap());
+        let keys = project
+            .channels()
+            .iter()
+            .position(|c| c.name == apply::KEYS)
+            .unwrap();
+        let second_bar = |name: &str| {
+            let part = project.patterns().iter().find(|p| p.name == name).unwrap();
+            let mut starts: Vec<usize> = part
+                .notes(keys)
+                .iter()
+                .filter(|note| (16..32).contains(&note.start))
+                .map(|note| note.start - 16)
+                .collect();
+            starts.dedup();
+            starts
+        };
+        assert_eq!(second_bar("Verse"), [0, 3, 6, 10, 12]);
+        assert_eq!(second_bar("Refrain"), [0, 3, 5, 9, 11, 13, 15]);
+        assert_eq!(second_bar("Link"), [0, 3, 5, 9, 11, 13, 15]);
+        assert_eq!(second_bar("Bridge"), [0, 3, 6, 10, 12]);
     }
 
     #[test]

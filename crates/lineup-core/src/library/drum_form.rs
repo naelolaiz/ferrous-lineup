@@ -424,7 +424,7 @@ pub fn part_drums(rhythm: &Rhythm, part: &DrumPart, fills: &mut usize) -> Vec<(D
     let lines = line_bars(rhythm, part);
     let places = fill_places(rhythm, part);
     let choices = fills_of(rhythm);
-    let contrast = part.contrast && rhythm.layout.is_none() && part.groove % 2 == 1;
+    let contrast = part.contrast && rhythm.layout.is_none() && contrasts(part.groove);
     let mut notes = Vec::new();
     // A fill that builds over two bars is one fill: its small part
     // and its whole one are the same.
@@ -542,11 +542,17 @@ pub struct PartKind {
 /// the order they first come, an intro and a coda as the first kind; and
 /// whether it is an intro.
 pub fn section_kinds(form: &[Section]) -> Vec<(usize, bool)> {
-    let mut names: Vec<String> = Vec::new();
-    form.iter()
-        .map(|section| {
-            let name = section
-                .name
+    name_kinds(form.iter().map(|section| section.name.as_str()))
+}
+
+/// The kinds of sections called `names`, as [`section_kinds`] gives
+/// them.
+pub fn name_kinds<'a>(names: impl IntoIterator<Item = &'a str>) -> Vec<(usize, bool)> {
+    let mut known: Vec<String> = Vec::new();
+    names
+        .into_iter()
+        .map(|name| {
+            let name = name
                 .trim()
                 .trim_end_matches(|c: char| c.is_ascii_digit() || c.is_whitespace())
                 .to_lowercase();
@@ -558,16 +564,34 @@ pub fn section_kinds(form: &[Section]) -> Vec<(usize, bool)> {
             if first {
                 return (0, intro);
             }
-            let kind = names
+            let kind = known
                 .iter()
                 .position(|known| *known == name)
                 .unwrap_or_else(|| {
-                    names.push(name);
-                    names.len() - 1
+                    known.push(name);
+                    known.len() - 1
                 });
             (kind, false)
         })
         .collect()
+}
+
+/// Whether a part of kind `kind` (see [`section_kinds`]) is of another
+/// kind than the song's first, such as a refrain after the verse: the
+/// second kind, the fourth and so on, so that kinds take turns as the
+/// drums' grooves do. The band plays such a part otherwise where its
+/// style does (see [`crate::library::Comping::in_contrast`]).
+pub fn contrasts(kind: usize) -> bool {
+    kind % 2 == 1
+}
+
+/// Whether step `at` is in a part of another kind (see [`contrasts`]),
+/// among `form`'s sections.
+pub fn contrasts_at(form: &[Section], at: usize) -> bool {
+    let kinds = section_kinds(form);
+    form.iter()
+        .position(|section| section.contains(at))
+        .is_some_and(|section| contrasts(kinds[section].0))
 }
 
 /// The parts of a song the drums play, as runs of `bars` up to step

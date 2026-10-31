@@ -96,15 +96,18 @@ pub(crate) fn louder(velocity: u8) -> u8 {
 }
 
 impl BandStyle {
-    /// How the piano comps in `variation`.
+    /// How the piano comps in `variation`. Variation b plays what a part
+    /// of another kind does (see [`Comping::in_contrast`]), unless the
+    /// style has more to change.
     pub fn comping_in(&self, variation: Variation) -> Comping {
         match (variation, self.genre, self.comping) {
             (Variation::B, Genre::Pop | Genre::Rock, Comping::Ballad) => Comping::Pulse,
+            (Variation::B, _, comping) => comping.in_contrast(),
             (_, _, comping) => comping,
         }
     }
 
-    /// The bass line in `variation`.
+    /// The bass line in `variation`, as [`BandStyle::comping_in`].
     pub fn bass_in(&self, variation: Variation) -> Bass {
         let common = self.time == TimeSignature::COMMON;
         match (variation, self.genre, self.bass) {
@@ -115,6 +118,7 @@ impl BandStyle {
             {
                 Bass::Quarters
             }
+            (Variation::B, _, bass) => bass.in_contrast(self.comping),
             (_, _, bass) => bass,
         }
     }
@@ -387,6 +391,11 @@ mod tests {
         let chorale = style("Chorale");
         assert_eq!(chorale.bass_in(Variation::B), Bass::Held);
         assert_eq!(chorale.comping_in(Variation::B), Comping::Held);
+        // The candombe pushes its blocks, as in a part of another kind.
+        let candombe = style("Candombe");
+        assert_eq!(candombe.comping_in(Variation::A), Comping::Bloques);
+        assert_eq!(candombe.comping_in(Variation::B), Comping::BloquesPushed);
+        assert_eq!(candombe.bass_in(Variation::B), Bass::TresilloPushed);
     }
 
     #[test]

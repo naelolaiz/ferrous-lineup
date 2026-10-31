@@ -165,9 +165,34 @@ pub enum Comping {
     /// chord on 1, just before beat 2, on the "and" of 2 held over beat
     /// 3, on the "and" of 3, and on 4. Play it with [`Bass::Tresillo`].
     Bloques,
+    /// The candombe's chord blocks pushed, as a part of another kind
+    /// plays them (see [`Comping::in_contrast`]): on 1 and just before
+    /// beat 2; a sixteenth after beat 2, held over beat 3; a sixteenth
+    /// after beat 3; just before beat 4, held over it; a sixteenth after
+    /// beat 4; and just before the next bar. Play it with
+    /// [`Bass::TresilloPushed`].
+    BloquesPushed,
 }
 
 impl Comping {
+    /// How the chords are played in a part of another kind than the
+    /// song's first, such as a refrain after the verse (see
+    /// [`super::drum_form::contrasts`]), or in variation b: the
+    /// candombe's blocks are pushed there. Every other way of comping
+    /// plays on as it is.
+    pub fn in_contrast(self) -> Comping {
+        match self {
+            Comping::Bloques => Comping::BloquesPushed,
+            comping => comping,
+        }
+    }
+
+    /// Whether the chords are played otherwise in a part of another kind
+    /// (see [`Comping::in_contrast`]).
+    pub fn contrasts(self) -> bool {
+        self.in_contrast() != self
+    }
+
     /// The voicings of `chords` over the bass line `bass`, for comping
     /// this way. Held chords are sung in parts, as by a church choir, so
     /// no two parts move in parallel fifths or octaves (see
@@ -516,6 +541,22 @@ impl Comping {
                     hit!(12, 4, All, 94),
                 ],
             ),
+            // The same method's third bar: a dotted eighth and a
+            // sixteenth, a sixteenth's rest, a dotted eighth tied to a
+            // sixteenth over beat 3, then an eighth and a sixteenth tied
+            // over beat 4, and an eighth and a sixteenth.
+            Comping::BloquesPushed => (
+                16,
+                &[
+                    hit!(0, 3, All, 100),
+                    hit!(3, 1, All, 82),
+                    hit!(5, 4, All, 96),
+                    hit!(9, 2, All, 82),
+                    hit!(11, 2, All, 92),
+                    hit!(13, 2, All, 84),
+                    hit!(15, 1, All, 88),
+                ],
+            ),
             Comping::Shout => (
                 32,
                 &[
@@ -722,6 +763,10 @@ pub enum Bass {
     Octaves16,
     /// 3 + 3 + 2 once a bar: the tango's "síncopa" and the milonga.
     Tresillo,
+    /// The tresillo with its middle note a sixteenth early, held over
+    /// beat 3, and a pickup on the "and" of 4: the bass under the
+    /// candombe's pushed blocks ([`Comping::BloquesPushed`]).
+    TresilloPushed,
     /// For 3/4: the root on beat 1, and the fifth below it in the next bar.
     Waltz,
     /// The habanera's long, short, long, long.
@@ -748,6 +793,16 @@ pub enum Bass {
 }
 
 impl Bass {
+    /// The bass line under `comping` in a part of another kind (see
+    /// [`Comping::in_contrast`]): the tresillo under the candombe's
+    /// blocks is pushed with them.
+    pub fn in_contrast(self, comping: Comping) -> Bass {
+        match (comping, self) {
+            (Comping::Bloques, Bass::Tresillo) => Bass::TresilloPushed,
+            (_, bass) => bass,
+        }
+    }
+
     /// How long the line's anticipation of the next chord rings on into
     /// it, in steps: the tumbao's root on 4 is held to the next "and" of
     /// 2. A line that starts on its own, at the start of a song or a
@@ -906,6 +961,16 @@ impl Bass {
                     hit!(0, 5, Root, 106),
                     hit!(6, 5, Root, 92),
                     hit!(12, 4, Fifth, 96),
+                ],
+            ),
+            // Under the pushed blocks, as the guitar method writes it.
+            Bass::TresilloPushed => (
+                16,
+                &[
+                    hit!(0, 4, Root, 106),
+                    hit!(7, 4, Root, 92),
+                    hit!(12, 2, Root, 96),
+                    hit!(14, 2, Root, 88),
                 ],
             ),
             Bass::Waltz => (24, &[hit!(0, 4, Root, 100), hit!(12, 4, LowFifth, 90)]),
@@ -1541,6 +1606,29 @@ mod tests {
         let chord = Chord::new(C, Major);
         let bass = Bass::Tresillo.play(FOUR, chord, chord, 0, 16);
         assert_eq!(starts(&bass), [0, 6, 12]);
+    }
+
+    #[test]
+    fn a_part_of_another_kind_pushes_the_candombe_blocks() {
+        assert_eq!(Comping::Bloques.in_contrast(), Comping::BloquesPushed);
+        assert_eq!(
+            Bass::Tresillo.in_contrast(Comping::Bloques),
+            Bass::TresilloPushed
+        );
+        // Nothing else is played otherwise.
+        assert!(!Comping::Offbeat.contrasts() && !Comping::Ballad.contrasts());
+        assert_eq!(Bass::Tresillo.in_contrast(Comping::Offbeat), Bass::Tresillo);
+        let notes = Comping::BloquesPushed.play(FOUR, &c_major(), 0, 16);
+        assert_eq!(starts(&notes), [0, 3, 5, 9, 11, 13, 15]);
+        // Held over beats 3 and 4: from a sixteenth after beat 2 to beat
+        // 3's second sixteenth, from just before beat 4 into it.
+        let at = |step| notes.iter().find(|note| note.start == step).unwrap();
+        assert_eq!(at(5).start + at(5).length, 9);
+        assert_eq!(at(11).start + at(11).length, 13);
+        let chord = Chord::new(C, Major);
+        let bass = Bass::TresilloPushed.play(FOUR, chord, chord, 0, 16);
+        assert_eq!(starts(&bass), [0, 7, 12, 14]);
+        assert!(bass.iter().all(|note| note.pitch.pitch_class() == C));
     }
 
     #[test]

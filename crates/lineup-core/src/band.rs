@@ -767,20 +767,38 @@ impl Band {
         extras
     }
 
-    fn comping_in(&self, variation: Variation) -> Comping {
+    /// How the piano comps in `run`: in its variation, and pushed in a
+    /// part of another kind where the style does that.
+    fn comping_in(&self, run: &Run) -> Comping {
         if self.accents_only {
-            Comping::Accents
+            return Comping::Accents;
+        }
+        let comping = self.playing_style().comping_in(run.variation);
+        if run.contrast {
+            comping.in_contrast()
         } else {
-            self.playing_style().comping_in(variation)
+            comping
         }
     }
 
-    fn bass_in(&self, variation: Variation) -> Bass {
+    /// The bass line in `run`, as [`Band::comping_in`].
+    fn bass_in(&self, run: &Run) -> Bass {
         if self.accents_only {
-            Bass::Accents
-        } else {
-            self.playing_style().bass_in(variation)
+            return Bass::Accents;
         }
+        let style = self.playing_style();
+        let bass = style.bass_in(run.variation);
+        if run.contrast {
+            bass.in_contrast(style.comping)
+        } else {
+            bass
+        }
+    }
+
+    /// Whether the band plays a part of another kind otherwise (see
+    /// [`Comping::in_contrast`]).
+    fn contrasts(&self) -> bool {
+        !self.accents_only && self.playing_style().comping.contrasts()
     }
 
     fn playing_style(&self) -> BandStyle {
@@ -1168,16 +1186,23 @@ fn cut(played: &[Played], start: usize, end: usize) -> Vec<Played> {
 struct Run {
     bars: Vec<Bar>,
     variation: Variation,
+    /// Whether it is in a part of another kind than the song's first,
+    /// such as a refrain after the verse (see
+    /// [`drum_form::contrasts`]), which a style may play otherwise.
+    contrast: bool,
 }
 
 /// `bars` in runs of one variation each, as `markers` say, starting
 /// again where a section's style starts (`styles`), all but the `held`
 /// bar, if there is one: the last bar of an ending, played otherwise.
+/// Runs start again too where the song goes into or out of a part of
+/// another kind among the sections of `contrasting`.
 fn runs(
     bars: &[Bar],
     held: Option<Bar>,
     markers: &[VariationMarker],
     styles: &[StyleMarker],
+    contrasting: &[Section],
 ) -> Vec<Run> {
     let mut runs: Vec<Run> = Vec::new();
     let played = bars
@@ -1185,12 +1210,16 @@ fn runs(
         .filter(|bar| held.is_none_or(|held| bar.start < held.start));
     for &bar in played {
         let variation = variation::variation_in(markers, bar.start);
+        let contrast = drum_form::contrasts_at(contrasting, bar.start);
         let restyled = styles.iter().any(|marker| marker.start == bar.start);
         match runs.last_mut() {
-            Some(run) if run.variation == variation && !restyled => run.bars.push(bar),
+            Some(run) if run.variation == variation && run.contrast == contrast && !restyled => {
+                run.bars.push(bar);
+            }
             _ => runs.push(Run {
                 bars: vec![bar],
                 variation,
+                contrast,
             }),
         }
     }
@@ -1218,12 +1247,12 @@ struct Score {
     time: TimeSignature,
 }
 
-/// A player's notes, run by run: each run played with `play` in its
-/// variation, from the harmonies inside it.
+/// A player's notes, run by run: each run played with `play`, from the
+/// harmonies inside it.
 fn played_in_runs(
     runs: &[Run],
     harmonies: &[Played],
-    play: impl Fn(Variation, &[Bar], &[Played]) -> Vec<NoteEvent>,
+    play: impl Fn(&Run, &[Played]) -> Vec<NoteEvent>,
 ) -> Vec<NoteEvent> {
     let mut notes = Vec::new();
     for run in runs {
@@ -1231,7 +1260,7 @@ fn played_in_runs(
             continue;
         };
         let played = cut(harmonies, first.start, last.end());
-        notes.extend(play(run.variation, &run.bars, &played));
+        notes.extend(play(run, &played));
     }
     notes
 }
@@ -2439,7 +2468,15 @@ impl Project {
         // The last bar of an ending is one chord, struck and held.
         let held = ending.and_then(|_| bars.last().copied());
         let variations = band.variations.clone();
-        let runs = runs(&bars, held, &variations, &band.styles);
+        // A style that plays a part of another kind otherwise, the
+        // candombe's pushed blocks, starts a run where one starts, in a
+        // song with no variations of its own (they play their own).
+        let contrasts = variations.is_empty()
+            && sections::styles_played(&band.styles)
+                .into_iter()
+                .any(|style| band.playing(style).contrasts());
+        let contrasting: &[Section] = if contrasts { &form } else { &[] };
+        let runs = runs(&bars, held, &variations, &band.styles, contrasting);
         let score = Score {
             bars,
             chunks,
@@ -2563,10 +2600,9 @@ impl Project {
         let variation_at = |step: usize| variation::variation_in(&score.variations, step);
         let notes: Vec<NoteEvent> = match player {
             Player::Piano => {
-                let mut notes =
-                    played_in_runs(&score.runs, &score.harmonies, |variation, bars, played| {
-                        band.comping_in(variation).play_in_bars(bars, played)
-                    });
+                let mut notes = played_in_runs(&score.runs, &score.harmonies, |run, played| {
+                    band.comping_in(run).play_in_bars(&run.bars, played)
+                });
                 notes.extend(held_bar(score.held, &score.harmonies, |bars, played| {
                     Comping::Held.play_in_bars(bars, played)
                 }));
@@ -2575,10 +2611,9 @@ impl Project {
                 })
             }
             Player::Bass => {
-                let mut notes =
-                    played_in_runs(&score.runs, &score.harmonies, |variation, bars, played| {
-                        band.bass_in(variation).play_in_bars(bars, played)
-                    });
+                let mut notes = played_in_runs(&score.runs, &score.harmonies, |run, played| {
+                    band.bass_in(run).play_in_bars(&run.bars, played)
+                });
                 notes.extend(held_bar(score.held, &score.harmonies, |bars, played| {
                     Bass::Held.play_in_bars(bars, played)
                 }));
@@ -2586,18 +2621,19 @@ impl Project {
             }
             Player::Drums => Vec::new(),
             Player::Guitar => {
-                let mut notes =
-                    played_in_runs(&score.runs, &score.harmonies, |variation, bars, played| {
-                        extras.guitar_in(variation).map_or_else(Vec::new, |guitar| {
-                            let comping = band.comping_in(variation);
+                let mut notes = played_in_runs(&score.runs, &score.harmonies, |run, played| {
+                    extras
+                        .guitar_in(run.variation)
+                        .map_or_else(Vec::new, |guitar| {
+                            let comping = band.comping_in(run);
                             let part = if band.accents_only {
                                 GuitarPart::Strum(comping)
                             } else {
                                 guitar.part
                             };
-                            guitar::play(part, comping, bars, played)
+                            guitar::play(part, comping, &run.bars, played)
                         })
-                    });
+                });
                 if held_in
                     .and_then(|variation| extras.guitar_in(variation))
                     .is_some()
@@ -2628,11 +2664,10 @@ impl Project {
                     Player::Strings => extras.strings_in(variation),
                     _ => extras.organ_in(variation),
                 };
-                let mut notes =
-                    played_in_runs(&score.runs, &score.harmonies, |variation, bars, played| {
-                        pad_in(variation)
-                            .map_or_else(Vec::new, |pad| pad.part.play(octave, bars, played))
-                    });
+                let mut notes = played_in_runs(&score.runs, &score.harmonies, |run, played| {
+                    pad_in(run.variation)
+                        .map_or_else(Vec::new, |pad| pad.part.play(octave, &run.bars, played))
+                });
                 if held_in.and_then(pad_in).is_some() {
                     notes.extend(held_bar(score.held, &score.harmonies, |bars, played| {
                         PadPart::Held.play(octave, bars, played)
@@ -2653,8 +2688,8 @@ impl Project {
             Player::Horns => match band.horns() {
                 Some(horns) => {
                     let voiced = horns::voiced(&score.harmonies);
-                    let mut notes = played_in_runs(&score.runs, &voiced, |_, bars, played| {
-                        horns.play(bars, played)
+                    let mut notes = played_in_runs(&score.runs, &voiced, |run, played| {
+                        horns.play(&run.bars, played)
                     });
                     notes.extend(held_bar(score.held, &voiced, |_, played| {
                         horns::held(played)
@@ -4693,6 +4728,46 @@ mod tests {
             struck(&project, Player::Strings, four.start, four.start + 1),
             []
         );
+    }
+
+    #[test]
+    fn the_candombe_band_pushes_its_blocks_in_a_part_of_another_kind() {
+        let chords = ["C", "F", "G7", "C", "C", "F", "G7", "C"];
+        let mut project = band("Candombe", &chords);
+        let bar = project.meter().first().steps_per_bar();
+        for (name, from) in [("Verse", 0), ("Refrain", 4)] {
+            let section = Section::new(name, from * bar, 4 * bar);
+            assert!(project.add_section(section).is_some());
+        }
+        project.follow_chord_sheet();
+        let starts = |player, at: usize| {
+            let mut starts: Vec<usize> = struck(&project, player, at * bar, (at + 1) * bar)
+                .iter()
+                .map(|&(step, _)| step - at * bar)
+                .collect();
+            starts.dedup();
+            starts
+        };
+        // The verse plays the blocks in the clave over the tresillo...
+        assert_eq!(starts(Player::Piano, 1), [0, 3, 6, 10, 12]);
+        assert_eq!(starts(Player::Bass, 1), [0, 6, 12]);
+        // ...and the refrain, a part of another kind, pushes them.
+        assert_eq!(starts(Player::Piano, 5), [0, 3, 5, 9, 11, 13, 15]);
+        assert_eq!(starts(Player::Bass, 5), [0, 7, 12, 14]);
+        // A pop ballad plays its refrain as its verse.
+        let mut ballad = band("Pop ballad", &chords);
+        for (name, from) in [("Verse", 0), ("Refrain", 4)] {
+            let section = Section::new(name, from * bar, 4 * bar);
+            assert!(ballad.add_section(section).is_some());
+        }
+        ballad.follow_chord_sheet();
+        let in_bar = |at: usize| -> Vec<usize> {
+            struck(&ballad, Player::Piano, at * bar, (at + 1) * bar)
+                .iter()
+                .map(|&(step, _)| step - at * bar)
+                .collect()
+        };
+        assert_eq!(in_bar(1), in_bar(5));
     }
 
     fn struck(project: &Project, player: Player, from: usize, to: usize) -> Vec<(usize, u8)> {
