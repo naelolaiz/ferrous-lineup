@@ -48,6 +48,10 @@ const LONGEST: usize = 32;
 /// something new starts there, and that instruments come in or drop out.
 const WINDOW: usize = 4;
 
+/// The longest loop a song can go round all through and still be heard
+/// as one part: a vamp.
+const VAMP: usize = 4;
+
 /// How the ear weighs what it hears. [`EAR`] is the one used; its values
 /// were found by scoring the parts heard in every demo against the parts
 /// its score writes (see the tests).
@@ -481,6 +485,20 @@ fn cut(bars: &[Heard], ear: &Ear) -> Option<Vec<usize>> {
         return None;
     }
     let likeness = likenesses(bars, ear);
+    // A song that goes round one loop of a few bars all through, as a
+    // vamp does, has no parts: nothing in it starts one more than any
+    // other bar.
+    let vamp = (1..=VAMP).any(|lag| {
+        let lines = first..bars.len().saturating_sub(lag);
+        let same = lines
+            .clone()
+            .filter(|&i| likeness[i][i + lag] >= ear.same_bar)
+            .count();
+        10 * same >= 9 * lines.len()
+    });
+    if vamp {
+        return None;
+    }
     let reasons = reasons(bars, &likeness, ear);
     // The tune may start with a pickup, a bar leading into the first
     // downbeat: the parts are counted from the bar after it. A bar the
@@ -888,18 +906,9 @@ mod tests {
     /// cut finer than a band plays.
     fn demos(modes: &[&str]) -> Vec<Demo> {
         let mut demos = Vec::new();
-        // Songs whose parts are only numbered were cut where a MIDI file
-        // was, not where the music's parts start.
-        let numbered = |song: &&crate::library::song::Song| {
-            song.parts.iter().all(|part| {
-                part.name
-                    .strip_prefix("Part ")
-                    .is_some_and(|number| number.chars().all(|c| c.is_ascii_digit()))
-            })
-        };
         for song in SONGS
             .iter()
-            .filter(|song| song.genre != Genre::Classical && !numbered(song))
+            .filter(|song| song.genre != Genre::Classical && !song.parts_are_numbered())
         {
             let project = song_demo(song);
             let written = written(&project);
