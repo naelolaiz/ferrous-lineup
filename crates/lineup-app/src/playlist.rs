@@ -64,6 +64,9 @@ pub enum PlaylistAction {
     /// Open the editor for a clip's pattern (a double-click on the clip).
     EditClip(usize),
     ToggleTrackMute(usize),
+    /// Hear only this track (every other one muted), or, when it is the
+    /// only one heard already, every track again.
+    SoloTrack(usize),
     RenameTrack {
         track: usize,
         name: String,
@@ -73,6 +76,10 @@ pub enum PlaylistAction {
         height: u16,
     },
     AddTrack,
+    /// Ask for an audio file, and lay it on the song as a take from the
+    /// playhead: on this track, or (with `None`) on one the take window
+    /// offers.
+    AddRecording(Option<usize>),
     /// Insert a new, empty track at this row.
     InsertTrack(usize),
     /// Delete a track and its clips.
@@ -337,6 +344,124 @@ pub struct PlaylistView {
     /// Where on screen the playlist was drawn last frame, beside the
     /// Patterns and Library panel: where the zoom keys zoom the playlist.
     area: Rect,
+    /// Where the grid was last frame: where a recording dropped on the
+    /// window lands (see [`PlaylistView::recording_drop`]).
+    drop_grid: Option<DropGrid>,
+    /// The waveforms of the takes' recordings, drawn in their clips.
+    waves: Waves,
+}
+
+/// How loud a take's recording is moment by moment, to draw it.
+struct Wave {
+    /// The loudest sample of each moment, as a share of the loudest of
+    /// all: a take sung softly is drawn as tall as a loud one.
+    peaks: Vec<f32>,
+    /// How long each moment is.
+    seconds_per_peak: f64,
+}
+
+/// How many moments a second of a waveform has.
+const PEAKS_PER_SECOND: f64 = 400.0;
+
+impl Wave {
+    /// Reads the recording at `path`; `None` if it cannot be read.
+    fn read(path: &std::path::Path) -> Option<Wave> {
+        let recording = lineup_listen::decode_file(path).ok()?;
+        let block = (f64::from(recording.sample_rate) / PEAKS_PER_SECOND).max(1.0) as usize;
+        let mut peaks: Vec<f32> = recording
+            .samples
+            .chunks(block)
+            .map(|chunk| {
+                chunk
+                    .iter()
+                    .fold(0.0_f32, |peak, s| peak.max(s.abs()))
+                    .min(1.0)
+            })
+            .collect();
+        // Near silence stays near silence.
+        let loudest = peaks.iter().copied().fold(0.01_f32, f32::max);
+        for peak in &mut peaks {
+            *peak /= loudest;
+        }
+        Some(Wave {
+            peaks,
+            seconds_per_peak: block as f64 / f64::from(recording.sample_rate.max(1)),
+        })
+    }
+
+    fn seconds(&self) -> f64 {
+        self.peaks.len() as f64 * self.seconds_per_peak
+    }
+
+    /// The loudest moment from `from` to `to` seconds in.
+    fn peak(&self, from: f64, to: f64) -> f32 {
+        let first = (from / self.seconds_per_peak).floor().max(0.0) as usize;
+        let last = ((to / self.seconds_per_peak).ceil() as usize).max(first + 1);
+        self.peaks
+            .get(first.min(self.peaks.len())..last.min(self.peaks.len()))
+            .map_or(0.0, |peaks| peaks.iter().copied().fold(0.0, f32::max))
+    }
+}
+
+/// The waveforms read so far, each read once, on a thread of its own so
+/// a long recording does not hold up drawing.
+#[derive(Default)]
+struct Waves(std::collections::HashMap<std::path::PathBuf, WaveState>);
+
+enum WaveState {
+    Reading(std::thread::JoinHandle<Option<Wave>>),
+    Read(Option<std::sync::Arc<Wave>>),
+}
+
+impl Waves {
+    /// The waveform of the recording at `path`, once it is read.
+    fn get(&mut self, ctx: &egui::Context, path: &std::path::Path) -> Option<std::sync::Arc<Wave>> {
+        let state = self.0.entry(path.to_path_buf()).or_insert_with(|| {
+            let path = path.to_path_buf();
+            WaveState::Reading(std::thread::spawn(move || Wave::read(&path)))
+        });
+        if let WaveState::Reading(reading) = state {
+            if !reading.is_finished() {
+                ctx.request_repaint_after(std::time::Duration::from_millis(100));
+                return None;
+            }
+            let WaveState::Reading(reading) = std::mem::replace(state, WaveState::Read(None))
+            else {
+                return None;
+            };
+            *state = WaveState::Read(reading.join().ok().flatten().map(std::sync::Arc::new));
+        }
+        match state {
+            WaveState::Read(wave) => wave.clone(),
+            WaveState::Reading(_) => None,
+        }
+    }
+}
+
+/// The grid as drawn last frame, for files dropped on it: drops reach the
+/// app before the playlist is drawn again.
+struct DropGrid {
+    /// The part of the grid in view, not under the names or the ruler.
+    cells: Rect,
+    /// The layer the grid is on: a window over it hides it.
+    layer: egui::LayerId,
+    origin: Pos2,
+    step_width: f32,
+    track_tops: Vec<f32>,
+    tracks: usize,
+    spare: bool,
+}
+
+impl DropGrid {
+    fn layout(&self) -> Layout<'_> {
+        Layout {
+            origin: self.origin,
+            step_width: self.step_width,
+            track_tops: &self.track_tops,
+            tracks: self.tracks,
+            spare: self.spare,
+        }
+    }
 }
 
 impl PlaylistView {
@@ -360,6 +485,8 @@ impl PlaylistView {
             scroll_to: None,
             reveal: None,
             area: Rect::NOTHING,
+            drop_grid: None,
+            waves: Waves::default(),
         }
     }
 
@@ -508,6 +635,17 @@ impl PlaylistView {
             {
                 actions.push(PlaylistAction::AddSection(next_section(project)));
             }
+            if ui
+                .button(tr("➕ Recording"))
+                .on_hover_text(tr(
+                    "Put an MP3, WAV, FLAC or Ogg file on the song, from the playhead, and write \
+                     the notes sung or played in it. Or drop the file on a track, where it should \
+                     start",
+                ))
+                .clicked()
+            {
+                actions.push(PlaylistAction::AddRecording(None));
+            }
             ui.separator();
             if let Some(swing) = swing_control(ui, project) {
                 actions.push(PlaylistAction::SetSwing(swing));
@@ -625,6 +763,36 @@ impl PlaylistView {
         self.selection_box = None;
     }
 
+    /// Where a recording dropped on the window now lands, when the
+    /// pointer is over the playlist's grid: the step it starts on (the
+    /// bar, beat or step under the pointer, as Snap says) and the track
+    /// (`None` on the spare row below the last one, for a new track).
+    pub fn recording_drop(
+        &self,
+        ctx: &egui::Context,
+        project: &Project,
+    ) -> Option<(usize, Option<usize>)> {
+        let grid = self.drop_grid.as_ref()?;
+        let pos = ctx.input(|input| input.pointer.hover_pos())?;
+        if !grid.cells.contains(pos) || ctx.layer_id_at(pos) != Some(grid.layer) {
+            return None;
+        }
+        let (track, step) = grid.layout().cell_at(pos);
+        let step = self.snap.floor(step, &project.meter());
+        Some((step, (track < grid.tracks).then_some(track)))
+    }
+
+    /// For the tests: where on screen the middle of `step` on `track`
+    /// was drawn last frame.
+    #[cfg(test)]
+    pub fn cell_center(&self, track: usize, step: usize) -> Option<Pos2> {
+        let layout = self.drop_grid.as_ref()?.layout();
+        Some(pos2(
+            layout.x(step) + layout.step_width / 2.0,
+            (layout.track_top(track) + layout.track_top(track + 1)) / 2.0,
+        ))
+    }
+
     /// The tracks, the bar ruler and the clips.
     fn grid(
         &mut self,
@@ -682,6 +850,15 @@ impl PlaylistView {
         );
 
         self.handle_input(ui, &response, layout, cells, project, current, actions);
+        self.drop_grid = Some(DropGrid {
+            cells,
+            layer: ui.layer_id(),
+            origin: layout.origin,
+            step_width,
+            track_tops: track_tops.clone(),
+            tracks: tracks.len(),
+            spare,
+        });
 
         if let Some(step) = self.reveal.take() {
             // Include the fixed track headers, so step zero is fully visible.
@@ -706,7 +883,7 @@ impl PlaylistView {
             );
             painter.rect_filled(shade, 0.0, sections::LOOP.gamma_multiply(0.06));
         }
-        paint_clips(&painter, layout, cells, project, current);
+        paint_clips(&painter, layout, cells, project, current, &mut self.waves);
         for &index in &self.selected {
             if let Some(clip) = project.playlist().clips().get(index) {
                 painter.rect_stroke(
@@ -727,6 +904,34 @@ impl PlaylistView {
                 0.0,
                 Stroke::new(1.0, theme::ACCENT),
                 StrokeKind::Inside,
+            );
+        }
+        // Where an audio file dragged over the grid would start.
+        let audio_hovering = ui.ctx().input(|input| {
+            input.raw.hovered_files.iter().any(|file| {
+                file.path
+                    .as_deref()
+                    .is_some_and(lineup_listen::is_audio_file)
+            })
+        });
+        if audio_hovering
+            && let Some(pos) = ui.ctx().input(|input| input.pointer.hover_pos())
+            && cells.contains(pos)
+        {
+            let (track, step) = layout.cell_at(pos);
+            let start = self.snap.floor(step, &meter);
+            let target = Rect::from_min_max(
+                pos2(layout.x(start), layout.track_top(track)),
+                pos2(
+                    layout.x(self.snap.next(start, &meter)),
+                    layout.track_top(track + 1),
+                ),
+            );
+            painter.rect_filled(target, 2.0, theme::ACCENT.gamma_multiply(0.25));
+            painter.vline(
+                target.left(),
+                cells.top()..=cells.bottom(),
+                Stroke::new(1.5, theme::ACCENT),
             );
         }
         // Lines from the ruler down to the last track.
@@ -826,12 +1031,49 @@ impl PlaylistView {
             if light_response.clicked() {
                 actions.push(PlaylistAction::ToggleTrackMute(index));
             }
+            // S, at the right: hear this track alone.
+            let tracks_count = project.playlist().tracks().len();
+            let soloed = tracks_count > 1
+                && !track.muted
+                && project
+                    .playlist()
+                    .tracks()
+                    .iter()
+                    .enumerate()
+                    .all(|(other, t)| other == index || t.muted);
+            let solo = Rect::from_center_size(
+                pos2(row.right() - 12.0, row.center().y),
+                vec2(16.0, 16.0f32.min(row.height() - 4.0)),
+            );
+            let solo_text = egui::RichText::new("S").size(10.5).color(if soloed {
+                Color32::BLACK
+            } else {
+                HEADER_TEXT.gamma_multiply(0.7)
+            });
+            let solo_button = egui::Button::new(solo_text)
+                .fill(if soloed {
+                    theme::ACCENT
+                } else {
+                    Color32::TRANSPARENT
+                })
+                .min_size(solo.size());
+            if ui
+                .put(solo, solo_button)
+                .on_hover_text(if soloed {
+                    tr("Hear every track again")
+                } else {
+                    tr("Hear only this track: the others are muted")
+                })
+                .clicked()
+            {
+                actions.push(PlaylistAction::SoloTrack(index));
+            }
 
             // One line of text, in the middle of the row however tall it is.
             let line = (ui.text_style_height(&egui::TextStyle::Body) + 2.0).min(row.height() - 2.0);
             let name_rect = Rect::from_min_max(
                 pos2(light.right() + 4.0, row.center().y - line / 2.0),
-                pos2(row.right() - 6.0, row.center().y + line / 2.0),
+                pos2(solo.left() - 3.0, row.center().y + line / 2.0),
             );
             // A name the app gave shows in the chosen language; a new
             // one typed here is kept as typed.
@@ -877,6 +1119,16 @@ impl PlaylistView {
                 }
                 if ui.button(tr("Insert track below")).clicked() {
                     actions.push(PlaylistAction::InsertTrack(index + 1));
+                }
+                if ui
+                    .button(tr("Add a recording…"))
+                    .on_hover_text(tr(
+                        "Put an MP3, WAV, FLAC or Ogg file on this track, from the playhead, and \
+                         write the notes sung or played in it",
+                    ))
+                    .clicked()
+                {
+                    actions.push(PlaylistAction::AddRecording(Some(index)));
                 }
                 ui.separator();
                 if ui
@@ -1444,8 +1696,16 @@ fn paint_tracks(painter: &Painter, layout: Layout, steps: usize, meter: &Meter) 
 
 /// Every clip: a box in its pattern's colour, its name, and a sketch of
 /// the notes inside.
-fn paint_clips(painter: &Painter, layout: Layout, cells: Rect, project: &Project, current: usize) {
+fn paint_clips(
+    painter: &Painter,
+    layout: Layout,
+    cells: Rect,
+    project: &Project,
+    current: usize,
+    waves: &mut Waves,
+) {
     let tracks = project.playlist().tracks();
+    let tempo = project.tempo_map();
     for clip in project.playlist().clips() {
         let length = project.clip_length(clip);
         let rect = layout.clip_rect(clip, length).shrink2(vec2(0.5, 1.5));
@@ -1488,8 +1748,42 @@ fn paint_clips(painter: &Painter, layout: Layout, cells: Rect, project: &Project
                 pos2(left + round, rect.bottom()),
             )
             .shrink(2.0);
-            if body.intersects(cells) {
+            if !body.intersects(cells) {
+                continue;
+            }
+            // A take's recording is drawn as its waveform, other notes
+            // as notes.
+            let takes: Vec<(usize, &std::path::Path)> =
+                project
+                    .channels()
+                    .iter()
+                    .enumerate()
+                    .filter_map(|(channel, c)| match &c.kind {
+                        lineup_core::ChannelKind::Sampler(lineup_core::SampleSource::Take(
+                            path,
+                        )) if !pattern.notes(channel).is_empty() => Some((channel, path.as_path())),
+                        _ => None,
+                    })
+                    .collect();
+            if takes.is_empty() {
                 paint_clip_notes(&notes_painter, body, pattern, layout.step_width);
+                continue;
+            }
+            let mut notes_only = pattern.clone();
+            for &(channel, path) in &takes {
+                for note in pattern.notes(channel) {
+                    let Some(wave) = waves.get(painter.ctx(), path) else {
+                        continue;
+                    };
+                    let from = clip.start + repeat * pattern.length() + note.start;
+                    paint_wave(&notes_painter, body, layout, &wave, from, |step| {
+                        tempo.tempo_at(step)
+                    });
+                }
+                notes_only.set_notes(channel, []);
+            }
+            if notes_only.all_notes().next().is_some() {
+                paint_clip_notes(&notes_painter, body, &notes_only, layout.step_width);
             }
         }
 
@@ -1501,6 +1795,54 @@ fn paint_clips(painter: &Painter, layout: Layout, cells: Rect, project: &Project
                 StrokeKind::Inside,
             );
         }
+    }
+}
+
+/// The waveform of a recording that starts on step `from` of the
+/// playlist, inside a clip's `body`: one line per column of pixels, as
+/// tall as the loudest moment in it, through the tempo changes.
+fn paint_wave(
+    painter: &Painter,
+    body: Rect,
+    layout: Layout,
+    wave: &Wave,
+    from: usize,
+    tempo: impl Fn(usize) -> lineup_core::Tempo,
+) {
+    let seconds = wave.seconds();
+    let middle = body.center().y;
+    let half = body.height() / 2.0;
+    let color = CLIP_TEXT.gamma_multiply(0.75);
+    let visible = painter.clip_rect().intersect(body);
+    // The seconds each step of the playlist starts at, from `from` on.
+    let mut step = from;
+    let mut at = 0.0;
+    while at < seconds && layout.x(step) <= visible.right() {
+        let step_seconds = f64::from(tempo(step).seconds_per_beat()) / 4.0;
+        let x0 = layout.x(step);
+        let x1 = layout.x(step + 1);
+        if x1 >= visible.left() {
+            let columns = (x1 - x0).max(1.0).ceil() as usize;
+            for column in 0..columns {
+                let x = x0 + column as f32;
+                if x < visible.left() || x > visible.right() {
+                    continue;
+                }
+                let start = at + step_seconds * column as f64 / columns as f64;
+                if start >= seconds {
+                    break;
+                }
+                let end = start + step_seconds / columns as f64;
+                let peak = wave.peak(start, end).max(0.02);
+                painter.vline(
+                    x + 0.5,
+                    (middle - peak * half)..=(middle + peak * half),
+                    Stroke::new(1.0, color),
+                );
+            }
+        }
+        at += step_seconds;
+        step += 1;
     }
 }
 

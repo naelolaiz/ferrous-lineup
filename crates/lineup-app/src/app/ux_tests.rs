@@ -5844,6 +5844,47 @@ fn a_recording_dropped_on_the_window_becomes_a_take_and_a_short_sound_goes_to_th
     std::fs::remove_dir_all(recording.parent().unwrap()).ok();
 }
 
+#[test]
+fn a_recording_dropped_on_a_track_starts_at_the_bar_under_the_pointer() {
+    let recording = silent_wav("tune.wav", 12);
+    let mut screen = Screen::new();
+    screen.app.chord_sheet.open = false;
+    screen.app.rack_open = false;
+    screen.draw(vec![]);
+    screen.draw(vec![]);
+    // Bar 3 of the second track, a little after the bar line.
+    let bar_3 = 2 * lineup_core::STEPS_PER_BAR;
+    let pos = screen.app.playlist.cell_center(1, bar_3 + 1).unwrap();
+    let raw = RawInput {
+        screen_rect: Some(Rect::from_min_size(Pos2::ZERO, screen.size)),
+        events: vec![Event::PointerMoved(pos)],
+        dropped_files: vec![std::sync::Arc::new(Dropped(recording.clone()))],
+        ..Default::default()
+    };
+    screen.run(raw);
+    assert!(screen.app.hearing_recording());
+    let started = std::time::Instant::now();
+    while screen.app.hearing_recording() {
+        assert!(started.elapsed().as_secs() < 60, "still hearing it");
+        std::thread::sleep(std::time::Duration::from_millis(20));
+        screen.draw(vec![]);
+    }
+    assert_eq!(screen.app.take_place(), Some((bar_3, 1)));
+    std::fs::remove_file(&recording).ok();
+}
+
+#[test]
+fn the_file_menu_has_no_recording_and_the_playlist_has() {
+    let mut screen = Screen::new();
+    screen.app.chord_sheet.open = false;
+    screen.draw(vec![]);
+    screen.click(tr("File"));
+    let output = screen.draw(vec![]);
+    assert!(text_rect(&output, tr("Import MIDI file…")).is_some());
+    assert!(text_rect(&output, tr("Add a recording…")).is_none());
+    assert!(text_rect(&output, tr("➕ Recording")).is_some());
+}
+
 mod takes {
     use super::*;
     use lineup_core::Note;
@@ -5926,6 +5967,42 @@ mod takes {
         // One step of undo takes it all back.
         screen.app.undo();
         assert_eq!(screen.app.project, before);
+        std::fs::remove_dir_all(folder).unwrap();
+    }
+
+    #[test]
+    fn a_take_sung_out_of_tune_can_keep_to_the_key() {
+        // Ode to Joy is in D major; a D♯ sung a quarter of a semitone
+        // sharp, in bar 2.
+        let mut screen = ode_to_joy();
+        let beat = 60.0 / f64::from(screen.app.project.tempo.bpm());
+        let folder = folder("take-in-key");
+        let notes = vec![sung(0.0, beat * 0.9, 75.25)];
+        screen
+            .app
+            .heard_take(16.0, beat * 2.0, notes.clone(), folder.clone());
+        screen.draw(vec![]);
+        screen.click(tr("Keep it"));
+        screen.click(tr("Write it in"));
+        assert_eq!(
+            lead_notes(&screen.app.project, 16, 20),
+            [(16, 75)],
+            "as sung"
+        );
+        screen.app.undo();
+
+        screen
+            .app
+            .heard_take(16.0, beat * 2.0, notes, folder.clone());
+        screen.draw(vec![]);
+        screen.click(tr("In the key"));
+        screen.click(tr("Keep it"));
+        screen.click(tr("Write it in"));
+        assert_eq!(
+            lead_notes(&screen.app.project, 16, 20),
+            [(16, 76)],
+            "D♯ is not in D major: the nearest note of the key is E"
+        );
         std::fs::remove_dir_all(folder).unwrap();
     }
 
