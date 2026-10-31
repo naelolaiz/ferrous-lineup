@@ -350,7 +350,9 @@ semitone; the **mayores** have a major second and no semitone; and the
 rest are the three triads, named after them. The minor and the major
 triad are one micromode, **Acorde menor-mayor**, because each is the
 other upside down: every chord of a I, IV, V, I is the same colour,
-and tonal music works with *which* forms it uses.
+and tonal music works with *which* forms it uses. To learn to hear the
+families and then each micromode, use the **Micromodes** tab of the
+[Ear training](practising.md#ear-training-experimental) window.
 
 **Micromodes…** in the piano roll shows the three families, each
 micromode drawn on a clock of the twelve notes, with its prime form,
