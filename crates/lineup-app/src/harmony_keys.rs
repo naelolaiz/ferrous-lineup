@@ -584,7 +584,7 @@ impl HarmonyKeys {
                 let lit =
                     self.down.as_ref().is_some_and(|d| d.key == index) || playing == Some(set);
                 let outlined = !lit && next.contains(&set);
-                let response = form_key(ui, form, lit, outlined);
+                let response = form_key(ui, form, scale, lit, outlined);
                 let hover = describe_form(form, index, self.hints, scale, last);
                 let response = crate::theme::hint(response, hover);
                 if response.is_pointer_button_down_on() {
@@ -600,7 +600,7 @@ impl HarmonyKeys {
             let from = last
                 .and_then(|form| Degree::of(scale, form))
                 .map(|degree| degree.to_string());
-            let micromode = key.len() == 3;
+            let micromode = scale.micromode().is_some();
             let hint = match (self.hints, from) {
                 (HintLevel::Minimal, _) => String::new(),
                 (HintLevel::Short, Some(from)) if micromode => trf(
@@ -953,7 +953,7 @@ impl HarmonyKeys {
                 if near.clicked() {
                     self.all_forms = false;
                 }
-                let all_hover = if Micromode::of(set).is_some() {
+                let all_hover = if scale.micromode().is_some() {
                     tr("Every form of the micromode, moved and upside down")
                 } else {
                     tr("Every form of the set, moved and upside down")
@@ -1434,7 +1434,7 @@ fn group_key(ui: &mut Ui, group: &GroupKey, lit: bool) -> Response {
 /// micromode's own name for the form (or the triad it is) at the bottom.
 /// The more notes it keeps from home the brighter it is, so home and the
 /// forms next to it stand out; `outlined` marks a smooth way on.
-fn form_key(ui: &mut Ui, form: &GroupKey, lit: bool, outlined: bool) -> Response {
+fn form_key(ui: &mut Ui, form: &GroupKey, scale: Scale, lit: bool, outlined: bool) -> Response {
     let (rect, response) = ui.allocate_exact_size(KEY_SIZE, Sense::click());
     ui.add_space(KEY_GAP - ui.spacing().item_spacing.x);
     if !ui.is_rect_visible(rect) {
@@ -1476,7 +1476,7 @@ fn form_key(ui: &mut Ui, form: &GroupKey, lit: bool, outlined: bool) -> Response
         FontId::proportional(fitting_size(ui, &names, 12.0, rect.width() - 6.0)),
         KEY_TEXT,
     );
-    let footer = form_footer(form);
+    let footer = form_footer(form, scale);
     painter.text(
         rect.center_bottom() - vec2(0.0, 9.0),
         Align2::CENTER_CENTER,
@@ -1488,14 +1488,13 @@ fn form_key(ui: &mut Ui, form: &GroupKey, lit: bool, outlined: bool) -> Response
 }
 
 /// What a form's key says under its notes: the chord or the scale it
-/// is, or else the form's own name, as the chord sheet writes it ("Menor
-/// 3 T4", "6-1 T2").
-fn form_footer(form: &GroupKey) -> String {
-    let set = form.pitch_set();
+/// is, or else the form's own name, as the chord sheet writes it, named
+/// as the key `scale` is ("Menor 3 T4", or "3-3 T4" in a key of three
+/// notes named as a set; "6-1 T2").
+fn form_footer(form: &GroupKey, scale: Scale) -> String {
     match &form.chord {
         Some(chord) => chord.clone(),
-        None if Micromode::of(set).is_some() => HarmonyName::Micromode(set).to_string(),
-        None => HarmonyName::Set(set).to_string(),
+        None => HarmonyName::form_in(form.pitch_set(), scale).to_string(),
     }
 }
 
@@ -1515,7 +1514,7 @@ fn describe_form(
         "{}: {} · {}",
         form.label,
         names.join(" "),
-        form_footer(form)
+        form_footer(form, scale)
     );
     let home = match form.kept {
         Some(kept) if kept == form.notes.len() => tr("the key's own form").to_string(),

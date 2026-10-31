@@ -580,7 +580,7 @@ impl PianoRoll {
             ghosts: true,
             voice_leading: false,
             voice_check: None,
-            notation: Notation::Chords,
+            notation: Notation::Key,
             arpeggio: ArpeggioOrder::Up,
             arpeggio_rate: 1,
             scroll_to_notes: true,
@@ -1336,7 +1336,11 @@ impl PianoRoll {
         };
         // As sets or micromodes, what the lane shows, named in full.
         let named = match self.notation.name_heard(&all, hearing.notes(), scale) {
-            Some(names) => format!(" {}: {}.", tr(self.notation.name()), stacked_text(&names)),
+            Some(names) => format!(
+                " {}: {}.",
+                tr(self.notation.in_key(scale).name()),
+                stacked_text(&names)
+            ),
             None => String::new(),
         };
         (
@@ -1745,14 +1749,21 @@ impl PianoRoll {
     }
 
     /// The switch for how the chord lane names the harmony, as the chord
-    /// sheet's Show does: chords, pitch-class sets or micromodes.
+    /// sheet's Show does: as the key (chords in a key of tonal music,
+    /// sets in a set or a row, micromodes in a micromode), or always
+    /// chords, pitch-class sets or micromodes.
     fn notation_choice(&mut self, ui: &mut Ui) {
         theme::keep_together(ui, 200.0, |ui| {
             ui.label(tr("Show"));
             let combo = egui::ComboBox::from_id_salt("piano-roll-notation")
                 .selected_text(tr(self.notation.name()))
                 .show_ui(ui, |ui| {
-                    for choice in [Notation::Chords, Notation::Sets, Notation::Micromodes] {
+                    for choice in [
+                        Notation::Key,
+                        Notation::Chords,
+                        Notation::Sets,
+                        Notation::Micromodes,
+                    ] {
                         let hint = match choice {
                             Notation::Chords => tr(
                                 "Chord symbols, with the bass after a slash: C/E. Notes that \

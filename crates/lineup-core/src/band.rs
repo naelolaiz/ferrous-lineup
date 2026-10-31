@@ -28,7 +28,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::chord_sheet::{ChordMarker, HarmonyName, read_bar};
 use crate::general_midi;
-use crate::harmony::{Chord, Degree, Micromode, PitchSet, Scale, ScaleKind};
+use crate::harmony::{Chord, Degree, PitchSet, Scale, ScaleKind};
 use crate::i18n::{tr, trf};
 use crate::library::apply::{self, BASS, KEYS};
 use crate::library::comping::{Bass, BassPart, Comping, Played};
@@ -2095,10 +2095,7 @@ impl Project {
             if bar.end() > MAX_SONG_STEPS {
                 break;
             }
-            let harmony = match Micromode::of(form) {
-                Some(_) => HarmonyName::Micromode(form),
-                None => HarmonyName::Set(form),
-            };
+            let harmony = HarmonyName::form_in(form, key);
             self.set_chords(
                 bar.start,
                 bar.end(),

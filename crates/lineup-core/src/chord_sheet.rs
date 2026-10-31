@@ -424,18 +424,25 @@ impl HarmonyName {
         HarmonyName::parse(text)
     }
 
-    /// The form at `degree` in `key`, a key that is a set: a micromode
-    /// when the key is one, a pitch-class set otherwise. `None` in any
-    /// other key.
+    /// The form at `degree` in `key`, a key that is a set, named as the
+    /// key is (see [`HarmonyName::form_in`]). `None` in any other key.
     pub fn at_degree(degree: Degree, key: Scale) -> Option<HarmonyName> {
         let ScaleKind::Set(_) = key.kind else {
             return None;
         };
-        let form = degree.form(key)?;
-        Some(match Micromode::of(form) {
-            Some(_) => HarmonyName::Micromode(form),
-            None => HarmonyName::Set(form),
-        })
+        Some(HarmonyName::form_in(degree.form(key)?, key))
+    }
+
+    /// `form`, a form of the set `key` is, named as the key is: a
+    /// micromode in a key named as one (Menor 3 T2), a pitch-class set
+    /// otherwise (3-3 T2, 4-28 T3), so a set of three notes picked as
+    /// "pitch-class set" keeps its forms in set notation.
+    pub fn form_in(form: PitchSet, key: Scale) -> HarmonyName {
+        if key.micromode().is_some() && Micromode::of(form).is_some() {
+            HarmonyName::Micromode(form)
+        } else {
+            HarmonyName::Set(form)
+        }
     }
 
     /// Its degree in `key`: for a set or a micromode, where it sits in a
@@ -1010,19 +1017,15 @@ pub(crate) fn names_groups(key: Scale) -> bool {
 }
 
 /// What to write for the notes `heard` together in `key` (see
-/// [`names_groups`]): a micromode when the key is a trichord, as in the
+/// [`names_groups`]): a micromode when the key is one, as in the
 /// micromode demos, and three notes are heard; otherwise the set, by
-/// its Forte name. `None` for fewer than two notes.
+/// its Forte name, as in a key of three notes named as a set. `None`
+/// for fewer than two notes.
 pub(crate) fn heard_group(heard: PitchSet, key: Scale) -> Option<HarmonyName> {
     if heard.len() < 2 {
         return None;
     }
-    let trichord_key = matches!(key.kind, ScaleKind::Set(set) if set.len() == 3);
-    if trichord_key && heard.len() == 3 && Micromode::of(heard).is_some() {
-        Some(HarmonyName::Micromode(heard))
-    } else {
-        Some(HarmonyName::Set(heard))
-    }
+    Some(HarmonyName::form_in(heard, key))
 }
 
 /// `step` moved to the nearest beat of a song in `time` with no

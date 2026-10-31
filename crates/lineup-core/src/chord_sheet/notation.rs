@@ -30,15 +30,23 @@
 use serde::{Deserialize, Serialize};
 
 use super::HarmonyName;
-use crate::harmony::{ChordQuality, ChordSymbol, Harmony, HeardNote, Micromode, PitchSet, Scale};
+use crate::harmony::{
+    ChordQuality, ChordSymbol, Harmony, HeardNote, Micromode, PitchSet, Scale, ScaleKind,
+};
 use crate::pitch::Note;
 use crate::{Chord, Project};
 
 /// How the chord sheet names each harmony.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, Serialize, Deserialize)]
 pub enum Notation {
-    /// As it is written: chords as chords, sets as sets.
+    /// In the notation of the key the harmony is in (see
+    /// [`Notation::in_key`]): chords in a major or minor key or a mode,
+    /// pitch-class sets in a set or a twelve-tone row, micromodes in a
+    /// micromode. A song in C major is not shown in micromodes because
+    /// the last song was.
     #[default]
+    Key,
+    /// As it is written: chords as chords, sets as sets.
     Written,
     /// Chord symbols, wherever the notes make a chord the app knows. A
     /// set that makes no chord keeps its name.
@@ -52,7 +60,8 @@ pub enum Notation {
 }
 
 impl Notation {
-    pub const ALL: [Notation; 4] = [
+    pub const ALL: [Notation; 5] = [
+        Notation::Key,
         Notation::Written,
         Notation::Chords,
         Notation::Sets,
@@ -61,6 +70,7 @@ impl Notation {
 
     pub fn name(self) -> &'static str {
         match self {
+            Notation::Key => "As the key",
             Notation::Written => "As written",
             Notation::Chords => "Chords",
             Notation::Sets => "Pitch-class sets",
@@ -71,6 +81,11 @@ impl Notation {
     /// What it shows, for hints.
     pub fn describe(self) -> &'static str {
         match self {
+            Notation::Key => {
+                "Each harmony in the notation of the key it is in: chords in a major or minor \
+                 key or a mode, pitch-class sets in a set or a twelve-tone row, micromodes in \
+                 a micromode"
+            }
             Notation::Written => {
                 "Each harmony as it is written: chords as chords, sets and micromodes as \
                  they were typed or heard"
@@ -92,9 +107,26 @@ impl Notation {
         }
     }
 
+    /// The notation [`Notation::Key`] stands for where the song is in
+    /// `key`: chords in a key of tonal music, one of its modes or the
+    /// chromatic scale; micromodes in a key of three notes named as one
+    /// (see [`Scale::micromode`]); pitch-class sets in any other set,
+    /// and in a twelve-tone row. Any other notation is itself.
+    pub fn in_key(self, key: Scale) -> Notation {
+        match self {
+            Notation::Key if key.micromode().is_some() => Notation::Micromodes,
+            Notation::Key if matches!(key.kind, ScaleKind::Set(_) | ScaleKind::Row(_)) => {
+                Notation::Sets
+            }
+            Notation::Key => Notation::Chords,
+            other => other,
+        }
+    }
+
     /// Whether the song's own notes can be read in this notation, in
     /// groups ([`Grouping`]): only sets and micromodes, which name any
-    /// group of notes.
+    /// group of notes. [`Notation::Key`] stands for one of them only in
+    /// a key (see [`Notation::in_key`]), so it says `false`.
     pub fn groups(self) -> bool {
         matches!(self, Notation::Sets | Notation::Micromodes)
     }
@@ -111,8 +143,9 @@ impl Notation {
     /// No chord and a row form stay as they are: a row is a line of
     /// twelve notes, not a group.
     pub fn rename(self, harmony: HarmonyName, key: Scale) -> Vec<HarmonyName> {
-        let group = |set: PitchSet| self.name_group(set, key);
-        match (self, harmony) {
+        let notation = self.in_key(key);
+        let group = |set: PitchSet| notation.name_group(set, key);
+        match (notation, harmony) {
             (Notation::Written, _)
             | (_, HarmonyName::NoChord)
             | (_, HarmonyName::Row(_))
@@ -142,7 +175,7 @@ impl Notation {
     /// notes in [`Notation::Micromodes`], a set otherwise, or the chord
     /// it makes in [`Notation::Chords`].
     pub fn name_group(self, set: PitchSet, key: Scale) -> HarmonyName {
-        match self {
+        match self.in_key(key) {
             Notation::Micromodes if Micromode::of(set).is_some() => HarmonyName::Micromode(set),
             Notation::Chords | Notation::Written => match chord_of(set) {
                 Some(chord) => {
@@ -173,13 +206,14 @@ impl Notation {
         sounding: PitchSet,
         key: Scale,
     ) -> Option<Vec<HarmonyName>> {
-        if !self.groups() {
+        let notation = self.in_key(key);
+        if !notation.groups() {
             return None;
         }
         let heard = |harmony: Harmony| {
             let all = harmony.pitch_set();
             let heard = all.intersection(sounding);
-            self.name_group(if heard.len() >= 2 { heard } else { all }, key)
+            notation.name_group(if heard.len() >= 2 { heard } else { all }, key)
         };
         match *harmony {
             Harmony::Silence | Harmony::Single(_) => None,
@@ -586,6 +620,50 @@ mod tests {
         assert_eq!(renamed(Notation::Written, "3-11 T2"), "3-11 T2");
         // Chords stay as they are written, with their bass.
         assert_eq!(renamed(Notation::Chords, "G7/B"), "G7/B");
+    }
+
+    #[test]
+    fn as_the_key_follows_the_key_each_harmony_is_in() {
+        use crate::harmony::{Micromode, ScaleKind};
+        let shown = |key: Scale, text: &str| stacked_text(&Notation::Key.rename(name(text), key));
+        // In C major, and in a mode, chords: a micromode typed there that
+        // makes a chord is that chord.
+        assert_eq!(shown(C_MAJOR, "Acorde disminuido T11"), "Bdim");
+        assert_eq!(shown(C_MAJOR, "Am7"), "Am7");
+        let d_dorian = Scale::new(PitchClass::D, ScaleKind::Dorian);
+        assert_eq!(shown(d_dorian, "3-11 T2"), "Dm");
+        // In a micromode, micromodes; the same notes named as a set, sets.
+        let menor_3 = Micromode::named("Menor 3").unwrap().key(PitchClass::C);
+        assert_eq!(shown(menor_3, "C"), "Acorde menor-mayor T7I");
+        assert_eq!(shown(menor_3.named_as_set(), "C"), "3-11 T7I");
+        assert_eq!(shown(menor_3.named_as_set(), "Menor 3"), "3-3");
+        // In a set or a row, sets.
+        let octatonic = Scale::set(
+            PitchClass::C,
+            PitchSet::from_semitones(&[0, 1, 3, 4, 6, 7, 9, 10]),
+        );
+        assert_eq!(shown(octatonic, "C"), "3-11 T7I");
+        let row = Scale::row(crate::harmony::ToneRow::CHROMATIC);
+        assert_eq!(shown(row, "C"), "3-11 T7I");
+        assert_eq!(Notation::Key.in_key(row), Notation::Sets);
+        assert_eq!(Notation::Key.in_key(C_MAJOR), Notation::Chords);
+        assert_eq!(Notation::Key.in_key(menor_3), Notation::Micromodes);
+        // Any other notation stays itself in every key.
+        for notation in Notation::ALL.into_iter().skip(1) {
+            assert_eq!(notation.in_key(menor_3), notation);
+        }
+        // The chord lane of the piano roll reads the notes heard the
+        // same way: in C major, the chord's own name.
+        let heard = crate::harmony::Harmony::Chord {
+            chord: crate::Chord::new(PitchClass::C, ChordQuality::Major),
+            bass: PitchClass::C,
+        };
+        let c_e_g = PitchSet::from_semitones(&[0, 4, 7]);
+        assert_eq!(Notation::Key.name_heard(&heard, c_e_g, C_MAJOR), None);
+        assert_eq!(
+            Notation::Key.name_heard(&heard, c_e_g, menor_3),
+            Some(vec![HarmonyName::Micromode(c_e_g)])
+        );
     }
 
     #[test]
