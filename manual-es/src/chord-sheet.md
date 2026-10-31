@@ -125,8 +125,8 @@ pulso, así que puedes poner un acorde en el pulso que quieras.
 
 Una canción se abre con sus acordes ya en la hoja. Una demostración
 escribe el esquema del que se hizo; cualquier otra canción, como un
-archivo MIDI que abriste o una grabación que importaste, recibe los
-acordes que la aplicación oye en ella.
+archivo MIDI que abriste, recibe los acordes que la aplicación oye en
+ella.
 
 **Escribir los acordes que toca la canción**, arriba de la hoja, los
 vuelve a escribir a partir de lo que toca ahora la canción, en lugar de
