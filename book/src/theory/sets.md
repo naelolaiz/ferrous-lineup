@@ -288,7 +288,9 @@ T3I its inversion moved up three. Then:
   (`ChordStamp::Set`, next to the chord stamps of [Chords: building,
   naming and inversions](chords.md#chord-stamps));
 - **Use as the key** makes the set the song's key: the piano roll
-  highlights its notes and the harmony keys play chords stacked from it.
+  highlights its notes and the harmony keys play chords stacked from it
+  (or, for a set of three notes, a micromode, its forms by degree: see
+  [Micromodes](micromodes.md#a-micromode-as-the-key-degrees)).
 
 A set of three notes is also one of Kröpfl's micromodes, and the window
 links to it (see [Micromodes](micromodes.md)).

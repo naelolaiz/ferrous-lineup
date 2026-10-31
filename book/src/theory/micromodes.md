@@ -356,7 +356,8 @@ pass again. Click a style in the Library while the song plays and the
 whole song goes over to it: its chords and bass are replaced by the
 walk, the patterns start from those four places in turn, and the key
 becomes the micromode itself, a pitch-class set, so the harmony keys
-play its forms.
+play its forms, counted from home (see [A micromode as the key:
+degrees](#a-micromode-as-the-key-degrees)).
 
 ## The micromodes in Rust: a table in a `static`
 
@@ -700,6 +701,167 @@ makes one pattern per section and fills it with a closure, and
 in after the first section. `micromode_demo` and `row_demo` both use
 them, each passing its own closure.
 
+## A micromode as the key: degrees
+
+In C major the chord on D is called ii, wherever the song is: "ii"
+says where the chord stands in the key, not which notes it has, so a
+progression written in numerals plays in any key. A song whose key is a
+micromode needs the same kind of name for its forms. Its forms are not
+built on the notes of a scale, though: each is the key's own three notes
+moved, or turned upside down and moved. So the name says just that, how
+far and whether upside down, measured from the key.
+
+A form's **degree** is the name it would have if the whole piece were
+moved so that the key's own form were the micromode as the table writes
+it, on C. In a song in Menor 3 on D (D D♯ F♯), moving everything down a
+whole tone turns the key's form into C C♯ E, Menor 3 itself; the form E F
+G♯ becomes D D♯ F♯, Menor 3 moved up 2. So in that key E F G♯ is **T2**:
+
+| Degree | Means | In Menor 3 on C | In Menor 3 on D |
+|---|---|---|---|
+| T0 | the key's own form, home | C C♯ E | D D♯ F♯ |
+| T2 | home moved up 2 semitones | D D♯ F♯ | E F G♯ |
+| T1I | home upside down, moved so it starts 1 above C | A C C♯ | B D D♯ |
+| T4 | home moved up 4 | E F G♯ | F♯ G A♯ |
+
+The names are the ones the chord sheet already writes after a set or a
+micromode ("Menor 3 T4", "3-11 T7I"), only counted from the key instead
+of from C. And like ii, a degree stays the same when the whole piece
+moves: the third column is the second moved up a tone, with the same
+degrees.
+
+There is another way to count that looks just as natural: the
+operation that turns the key's form into the other form, "turn it
+upside down, then move it up n". It fails the test that matters. Turning
+notes upside down mirrors them around C, so it depends on where the key
+sits. In Menor 3 on C, A C C♯ is the key's form turned over and moved up
+1 (T1I); with the whole piece a tone higher, the same form, B D D♯, would
+be the key's form turned over and moved up 5. A name that changes when
+the music moves is no use as a degree, so the app moves the piece to C
+first and names the form there.
+
+When the key's own form is itself the upside-down one, home is **T0I**.
+That is the case of a major triad: the table writes the triads'
+micromode as the minor triad C E♭ G, and the major triad is that upside
+down. In a key of C major as a set, home is T0I, the major triad a
+fifth up is T7I and the one a fourth up T5I, and the minor triads are
+the forms without I.
+
+### How near a form is: the notes it keeps
+
+A tonal key ranks its chords by what they do (tonic, subdominant,
+dominant). A micromode has no such roles, because every form has the
+same intervals; what tells two forms apart, to the ear, is how many
+notes they share. For three notes:
+
+- keeping **two** notes and moving one is the smoothest link, the move
+  of the walk in [Keeping two notes, moving
+  one](#keeping-two-notes-moving-one);
+- keeping **one** note is a pivot: one note holds while two change;
+- keeping **none** is a contrast: all three notes are new.
+
+Menor 3 has 24 forms. From C C♯ E, three keep two notes (A C C♯, C E♭ E
+and C♯ E F), nine keep one, and eleven keep none. So the harmony keys of
+a micromode key show its forms in that order, home first, each brighter
+the more it keeps of home, and leave out the ones that keep nothing
+until **All forms** asks for them. After a form plays, the forms that
+keep two of *its* notes are outlined, as the tonal keys outline the
+chords that usually come next, and the hint says what stays and what
+moves: "keeps A and C; C♯ goes to A♭". For the triads it also names the
+move, P, L or R.
+
+On the chord sheet, each bar of a micromode key shows its degree, and
+from the second bar on how many notes it keeps of the bar before: "T1I
+· 2 common". The degrees can be typed, too: `T2` and `T5I` mean those
+forms of the key.
+
+### Degrees in Rust: a small `Copy` struct
+
+A degree is two facts, so it is a struct of two fields, in
+`harmony/degree.rs`:
+
+```rust
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct Degree {
+    /// How many semitones it is moved, from 0 to 11.
+    pub up: u8,
+    /// Whether it is upside down from the set's prime form.
+    pub inverted: bool,
+}
+```
+
+It is `Copy` because it is two bytes: passing it by value costs nothing,
+and code can use it after passing it without thinking about ownership.
+
+Finding the degree is two moves. `moved_to` (from [Pitch-class
+sets](sets.md)) answers "how is the prime form moved to give this
+set?", as an `Option<(u8, bool)>`: `None` if the set is not a form of
+it. The first call finds how far the key is moved; the form is moved
+down by that much; the second call names what is left:
+
+```rust
+pub fn of(key: PitchSet, form: PitchSet) -> Option<Degree> {
+    let prime = key.prime_form();
+    if key.is_empty() || form.prime_form() != prime {
+        return None;
+    }
+    let (up, _) = prime.moved_to(key)?;
+    let (up, inverted) = prime.moved_to(form.transpose((12 - up) % 12))?;
+    Some(Degree { up, inverted })
+}
+```
+
+`(12 - up) % 12` moves down by `up` without a negative number: a `u8`
+cannot be below zero, and moving up 12 − n semitones lands on the same
+notes as moving down n. The `?` after each `moved_to` returns `None`
+from the whole function if the set is not a form, so the happy path
+reads straight down.
+
+`Display` writes a degree as "T2" or "T5I", and `parse` reads it back.
+`strip_prefix` and `strip_suffix` take a pattern, and an array of
+characters is a pattern that matches any of them, so the letters can be
+upper or lower case:
+
+```rust
+pub fn parse(text: &str) -> Option<Degree> {
+    let number = text.trim().strip_prefix(['T', 't'])?;
+    let (number, inverted) = match number.strip_suffix(['I', 'i']) {
+        Some(number) => (number, true),
+        None => (number, false),
+    };
+    if number.is_empty() || !number.chars().all(|c| c.is_ascii_digit()) {
+        return None;
+    }
+    let up = number.parse::<u8>().ok().filter(|&up| up < 12)?;
+    Some(Degree { up, inverted })
+}
+```
+
+The check for digits is there because `"+3".parse::<u8>()` succeeds;
+`filter` turns T12 into `None`.
+
+The harmony keys' order is one sort, again with a tuple whose items are
+the rules in order:
+
+```rust
+forms.sort_by_key(|&(form, degree)| {
+    let home = form == key;
+    (
+        !home,
+        std::cmp::Reverse(kept(key, form)),
+        degree.inverted,
+        degree.up,
+    )
+});
+```
+
+`false` sorts before `true`, so `!home` puts home first. `Reverse` flips
+the order of what it wraps, so the forms that keep *more* notes come
+first, without negating a count. Then the forms the right way up come
+before the upside-down ones, and finally they go by degree. `kept`
+counts the shared notes with the bits, as the walk does:
+`PitchSet::from_bits(a.bits() & b.bits()).len()`.
+
 ## The window: a clock drawn with egui's painter
 
 The twelve notes sit round a circle like the hours of a clock, C at the
@@ -892,6 +1054,13 @@ fn the_bass_plays_the_root_of_a_triad() {
 A C E is A minor, so its bass is A; B D F is B diminished; C C♯ E is
 no triad, so its bass is the first note of its normal form, C; and B C
 E♭ is no triad either, starting on B.
+
+`harmony/degree.rs` checks the degrees: counted from the key's own
+form, the same when the whole piece moves, T0I as home for a major
+triad, read as written ("T2", "t7i") and never T12; the 24 forms of
+Menor 3 in order of nearness (3, 9 and 11 forms keeping two, one and no
+notes), the augmented triad's four forms with no smooth link; and the
+names of the P, L and R moves.
 
 `library/micromodes.rs` checks that every style plays only its
 micromode, in any key and from every section's start, with the key

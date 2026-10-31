@@ -371,7 +371,8 @@ de la Biblioteca mientras suena la canción y toda la canción pasa a
 él: sus acordes y su bajo se reemplazan por el recorrido, los patrones
 empiezan por turno desde esos cuatro lugares, y la tonalidad pasa a ser
 el propio micromodo, un conjunto de clases de altura, así que las
-teclas de armonía tocan sus formas.
+teclas de armonía tocan sus formas, contadas desde casa (ver [Un
+micromodo como tonalidad: grados](#un-micromodo-como-tonalidad-grados)).
 
 ## Los micromodos en Rust: una tabla en un `static`
 
@@ -720,6 +721,175 @@ hace un patrón por sección y lo llena con un closure, y
 entrando después de la primera sección. `micromode_demo` y `row_demo`
 usan las dos, cada una pasando su propio closure.
 
+## Un micromodo como tonalidad: grados
+
+En Do mayor el acorde sobre Re se llama ii, esté donde esté la canción:
+«ii» dice dónde está el acorde en la tonalidad, no qué notas tiene, así
+que una progresión escrita en números romanos suena en cualquier
+tonalidad. Una canción cuya tonalidad es un micromodo necesita la misma
+clase de nombre para sus formas. Pero sus formas no se construyen sobre
+las notas de una escala: cada una es el grupo de tres notas de la
+tonalidad movido, o dado vuelta y movido. Así que el nombre dice
+justamente eso, cuánto y si está dado vuelta, medido desde la
+tonalidad.
+
+El **grado** de una forma es el nombre que tendría si toda la pieza se
+moviera para que la forma propia de la tonalidad fuera el micromodo tal
+como lo escribe la tabla, sobre Do. En una canción en Menor 3 sobre Re
+(Re Re♯ Fa♯), bajar todo un tono convierte la forma de la tonalidad en
+Do Do♯ Mi, el propio Menor 3; la forma Mi Fa Sol♯ pasa a ser Re Re♯
+Fa♯, Menor 3 subido 2. Así que en esa tonalidad Mi Fa Sol♯ es **T2**:
+
+| Grado | Quiere decir | En Menor 3 sobre Do | En Menor 3 sobre Re |
+|---|---|---|---|
+| T0 | la forma propia de la tonalidad, casa | Do Do♯ Mi | Re Re♯ Fa♯ |
+| T2 | casa subida 2 semitonos | Re Re♯ Fa♯ | Mi Fa Sol♯ |
+| T1I | casa dada vuelta, movida para empezar 1 sobre Do | La Do Do♯ | Si Re Re♯ |
+| T4 | casa subida 4 | Mi Fa Sol♯ | Fa♯ Sol La♯ |
+
+Los nombres son los que la hoja de acordes ya escribe después de un
+conjunto o un micromodo («Menor 3 T4», «3-11 T7I»), solo que contados
+desde la tonalidad en vez de desde Do. Y como ii, un grado sigue igual
+cuando toda la pieza se mueve: la tercera columna es la segunda subida
+un tono, con los mismos grados.
+
+Hay otra manera de contar que parece igual de natural: la operación que
+convierte la forma de la tonalidad en la otra forma, «darla vuelta y
+después subirla n». Falla en lo que importa. Dar vuelta las notas las
+refleja alrededor de Do, así que depende de dónde está la tonalidad. En
+Menor 3 sobre Do, La Do Do♯ es la forma de la tonalidad dada vuelta y
+subida 1 (T1I); con toda la pieza un tono más arriba, la misma forma, Si
+Re Re♯, sería la forma de la tonalidad dada vuelta y subida 5. Un nombre
+que cambia cuando la música se mueve no sirve como grado, así que la
+app primero mueve la pieza a Do y nombra la forma allí.
+
+Cuando la forma propia de la tonalidad es ella misma la dada vuelta,
+casa es **T0I**. Es el caso de una tríada mayor: la tabla escribe el
+micromodo de las tríadas como la tríada menor Do Mi♭ Sol, y la tríada
+mayor es esa dada vuelta. En una tonalidad de Do mayor como conjunto,
+casa es T0I, la tríada mayor una quinta arriba es T7I y la de una cuarta
+arriba T5I, y las tríadas menores son las formas sin I.
+
+### Qué tan cerca está una forma: las notas que conserva
+
+Una tonalidad tonal ordena sus acordes por lo que hacen (tónica,
+subdominante, dominante). Un micromodo no tiene esos papeles, porque
+todas sus formas tienen los mismos intervalos; lo que distingue dos
+formas, al oído, es cuántas notas comparten. Para tres notas:
+
+- conservar **dos** notas y mover una es el enlace más suave, el
+  movimiento del recorrido de [Conservar dos notas, mover
+  una](#conservar-dos-notas-mover-una);
+- conservar **una** nota es un pivote: una nota se queda mientras dos
+  cambian;
+- no conservar **ninguna** es un contraste: las tres notas son nuevas.
+
+Menor 3 tiene 24 formas. Desde Do Do♯ Mi, tres conservan dos notas (La
+Do Do♯, Do Mi♭ Mi y Do♯ Mi Fa), nueve conservan una y once no conservan
+ninguna. Así que las teclas de armonía de una tonalidad que es un
+micromodo muestran sus formas en ese orden, casa primero, cada una más
+brillante cuanto más conserva de casa, y dejan fuera las que no
+conservan nada hasta que **Todas las formas** las pide. Después de que
+suena una forma, las formas que conservan dos de *sus* notas aparecen
+con borde, como las teclas tonales marcan con borde los acordes que suelen
+venir después, y la ayuda dice qué se queda y qué se mueve: «conserva La
+y Do; Do♯ pasa a La♭». Para las tríadas también nombra el movimiento, P,
+L o R.
+
+En la hoja de acordes, cada compás de una tonalidad que es un micromodo
+muestra su grado y, desde el segundo compás, cuántas notas conserva del
+compás anterior: «T1I · 2 comunes». Los grados también se pueden
+escribir: `T2` y `T5I` son esas formas de la tonalidad.
+
+### Los grados en Rust: un struct `Copy` pequeño
+
+Un grado son dos datos, así que es un struct de dos campos, en
+`harmony/degree.rs`:
+
+```rust
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct Degree {
+    /// How many semitones it is moved, from 0 to 11.
+    pub up: u8,
+    /// Whether it is upside down from the set's prime form.
+    pub inverted: bool,
+}
+```
+
+Es `Copy` porque ocupa dos bytes: pasarlo por valor no cuesta nada, y el
+código puede seguir usándolo después de pasarlo sin pensar en la
+propiedad.
+
+Encontrar el grado son dos movimientos. `moved_to` (de [Conjuntos de
+clases de altura](sets.md)) responde «¿cómo se mueve la forma prima para
+dar este conjunto?», como un `Option<(u8, bool)>`: `None` si el conjunto
+no es una forma suya. La primera llamada encuentra cuánto está movida la
+tonalidad; la forma se baja eso mismo; la segunda llamada nombra lo que
+queda:
+
+```rust
+pub fn of(key: PitchSet, form: PitchSet) -> Option<Degree> {
+    let prime = key.prime_form();
+    if key.is_empty() || form.prime_form() != prime {
+        return None;
+    }
+    let (up, _) = prime.moved_to(key)?;
+    let (up, inverted) = prime.moved_to(form.transpose((12 - up) % 12))?;
+    Some(Degree { up, inverted })
+}
+```
+
+`(12 - up) % 12` baja `up` semitonos sin un número negativo: un `u8` no
+puede ser menor que cero, y subir 12 − n semitonos da las mismas notas
+que bajar n. El `?` después de cada `moved_to` devuelve `None` de toda
+la función si el conjunto no es una forma, así que el camino feliz se lee
+de arriba abajo.
+
+`Display` escribe un grado como «T2» o «T5I», y `parse` lo vuelve a leer.
+`strip_prefix` y `strip_suffix` reciben un patrón, y un array de
+caracteres es un patrón que coincide con cualquiera de ellos, así que las
+letras pueden ir en mayúscula o minúscula:
+
+```rust
+pub fn parse(text: &str) -> Option<Degree> {
+    let number = text.trim().strip_prefix(['T', 't'])?;
+    let (number, inverted) = match number.strip_suffix(['I', 'i']) {
+        Some(number) => (number, true),
+        None => (number, false),
+    };
+    if number.is_empty() || !number.chars().all(|c| c.is_ascii_digit()) {
+        return None;
+    }
+    let up = number.parse::<u8>().ok().filter(|&up| up < 12)?;
+    Some(Degree { up, inverted })
+}
+```
+
+La comprobación de los dígitos está porque `"+3".parse::<u8>()` funciona;
+`filter` convierte T12 en `None`.
+
+El orden de las teclas de armonía es un solo ordenamiento, otra vez con
+una tupla cuyos elementos son las reglas en orden:
+
+```rust
+forms.sort_by_key(|&(form, degree)| {
+    let home = form == key;
+    (
+        !home,
+        std::cmp::Reverse(kept(key, form)),
+        degree.inverted,
+        degree.up,
+    )
+});
+```
+
+`false` va antes que `true`, así que `!home` pone casa primero. `Reverse`
+invierte el orden de lo que envuelve, así que las formas que conservan
+*más* notas van primero, sin cambiarle el signo a una cuenta. Después
+las formas derechas van antes que las dadas vuelta, y por último van por
+grado. `kept` cuenta las notas compartidas con los bits, como el
+recorrido: `PitchSet::from_bits(a.bits() & b.bits()).len()`.
+
 ## La ventana: un reloj dibujado con el painter de egui
 
 Las doce notas se sientan en un círculo como las horas de un reloj, Do
@@ -922,6 +1092,13 @@ fn the_bass_plays_the_root_of_a_triad() {
 La Do Mi es La menor, así que su bajo es La; Si Re Fa es Si disminuido;
 Do Do♯ Mi no es una tríada, así que su bajo es la primera nota de su
 forma normal, Do; y Si Do Mi♭ tampoco es una tríada, y empieza en Si.
+
+`harmony/degree.rs` comprueba los grados: contados desde la forma
+propia de la tonalidad, iguales cuando toda la pieza se mueve, T0I como
+casa de una tríada mayor, leídos como se escriben («T2», «t7i») y nunca
+T12; las 24 formas de Menor 3 en orden de cercanía (3, 9 y 11 formas que
+conservan dos, una y ninguna nota), las cuatro formas del acorde
+aumentado sin enlace suave; y los nombres de los movimientos P, L y R.
 
 `library/micromodes.rs` comprueba que cada estilo toca solo su
 micromodo, en cualquier tonalidad y desde el comienzo de cada sección,

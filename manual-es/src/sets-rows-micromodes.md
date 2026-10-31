@@ -268,3 +268,38 @@ Los cuatro grupos de tres de la serie del Concierto op. 24 de Webern, en
 la imagen de la ventana Serie dodecafónica, son todos Menor 3. El grupo
 **Micromodos (Kröpfl)** de la Biblioteca tiene siete estilos, y
 **Archivo > Demostraciones > Micromodos** toca cada uno.
+
+### Un micromodo como tonalidad
+
+Cuando la tonalidad de la canción es un micromodo (después de **Usar
+como tonalidad**, o de un estilo de micromodo de la Biblioteca), sus
+acordes son las **formas** del micromodo: las mismas tres notas movidas,
+o dadas vuelta y movidas. Se nombran por su **grado**, contado desde la
+tonalidad como un número romano:
+
+- **T0** es la forma propia de la tonalidad, casa. En Menor 3 sobre Do
+  es Do Do♯ Mi.
+- **T2** es casa subida 2 semitonos: Re Re♯ Fa♯.
+- **T1I** es casa dada vuelta y movida: La Do Do♯.
+
+Lleva toda la canción a Re y cada forma conserva su grado, como ii sigue
+siendo ii en cualquier tonalidad mayor. Cuando la forma propia de la
+tonalidad es la dada vuelta, como una tríada mayor (la tabla de los
+micromodos escribe la tríada menor), casa es **T0I**.
+
+![Las teclas de armonía en una tonalidad de Menor 3 sobre Do después de tocar T1I: T0, T1I, T4I y T5I, después las formas que conservan una nota de casa, cada una con sus notas y su nombre; T0, T8 y T9 aparecen con borde porque conservan dos notas de La Do Do♯, y la ayuda de abajo lo dice](images/micromode-keys.png)
+
+Las **teclas de armonía** muestran las formas de la tonalidad: casa
+primero, después las formas que conservan dos de sus notas, después las
+que conservan una; cuanto más conserva una forma de casa, más brillante
+es su tecla. **Cercanas** deja fuera las formas que no conservan ninguna
+nota de casa, y **Todas las formas** las muestra todas (24 para Menor
+3). Después de tocar una forma, las formas que conservan dos de *sus*
+notas aparecen con borde: son las maneras más suaves de seguir, con una
+sola nota que se mueve. Pasa el puntero sobre una tecla para leer qué se
+queda y qué se mueve, como «conserva La y Do; Do♯ pasa a La♭»; para las
+tríadas mayores y menores también nombra el movimiento (P, L o R).
+
+En la **hoja de acordes**, cada compás muestra su grado y, desde el
+segundo compás, cuántas notas conserva del compás anterior: «T1I · 2
+comunes». Escribe un grado para escribir esa forma: `T2`, `T5I`.
