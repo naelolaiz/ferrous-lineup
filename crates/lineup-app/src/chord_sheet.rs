@@ -42,9 +42,10 @@ use lineup_core::chord_sheet::{Push, Stop, read_typed_bar_after, text, write_bar
 use lineup_core::general_midi;
 use lineup_core::harmony::degree;
 use lineup_core::library::{Genre, Style};
+use lineup_core::micromodal::{self, Walk};
 use lineup_core::{
     Band, BandStyle, Bar, ChordMarker, HarmonyName, KeyMap, MAX_SONG_STEPS, Meter, Note, Pass,
-    PitchSet, Player, Project, band_styles,
+    PitchSet, Player, Project, ScaleKind, band_styles,
 };
 
 use crate::library_browser::{LibraryAction, LibraryBrowser, LibraryPurpose, Tried};
@@ -146,6 +147,12 @@ pub enum SheetAction {
     /// Write a progression's chords from this bar on.
     WriteProgression {
         style: &'static Style,
+        from: usize,
+    },
+    /// In a key that is a set, write a progression of its forms from
+    /// this bar on, chained as the walk says.
+    WriteForms {
+        walk: Walk,
         from: usize,
     },
     /// End the song with this bar.
@@ -1985,7 +1992,8 @@ fn horns_items(ui: &mut Ui, band: &Band, actions: &mut Vec<SheetAction>) {
     }
 }
 
-/// The same Library browser, restricted to styles with chord progressions.
+/// The same Library browser, restricted to styles with chord
+/// progressions; in a key that is a set, the ways to chain its forms.
 fn progression_menu(
     ui: &mut Ui,
     project: &Project,
@@ -1993,6 +2001,13 @@ fn progression_menu(
     library: &mut LibraryBrowser,
     actions: &mut Vec<SheetAction>,
 ) {
+    let key = project.key_at(project.meter().bar(from).start);
+    if let ScaleKind::Set(set) = key.kind
+        && (2..12).contains(&set.len())
+    {
+        forms_menu(ui, set, from, actions);
+        return;
+    }
     let tonal = project.scale.kind.is_tonal();
     ui.add_enabled_ui(tonal, |ui| {
         let menu = egui::containers::menu::MenuButton::new(crate::i18n::tr("Progression")).config(
@@ -2029,6 +2044,104 @@ fn progression_menu(
             "Progressions are chords in a key; this song is in a set or a row",
         ));
     });
+}
+
+/// The Progression menu in a key that is a set: the ways to chain its
+/// forms (see [`micromodal::Walk`]), each written from bar `from` on.
+fn forms_menu(ui: &mut Ui, set: PitchSet, from: usize, actions: &mut Vec<SheetAction>) {
+    let menu = egui::containers::menu::MenuButton::new(crate::i18n::tr("Progression")).config(
+        egui::containers::menu::MenuConfig::new()
+            .close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside),
+    );
+    let (response, _) = menu.ui(ui, |ui| {
+        ui.set_min_width(260.0);
+        for (walk, label, about) in form_walks(set) {
+            if ui.button(label).on_hover_text(about).clicked() {
+                actions.push(SheetAction::WriteForms { walk, from });
+                ui.close();
+            }
+        }
+    });
+    theme::hint(
+        response,
+        trf(
+            "Write a progression of the set's forms from bar {} on",
+            &[&(from + 1)],
+        ),
+    );
+}
+
+/// The ways the forms of `set` can follow each other, as the
+/// Progression menu offers them: what each is called and what it does.
+fn form_walks(set: PitchSet) -> Vec<(Walk, String, String)> {
+    let size = set.len();
+    // A set whose forms keep all notes but one of two others or more can
+    // walk that way; one whose forms do so only in pairs (the dominant
+    // seventh and the half-diminished seventh) keeps as many as it can.
+    let (name, about) = if size == 3 {
+        (
+            tr("Keep two notes, move one"),
+            tr(
+                "Each form keeps every note of the one before but one, which moves: the \
+                smoothest way on, round all twelve notes when the set can",
+            ),
+        )
+    } else if degree::smooth_links(set).len() >= 2 {
+        (
+            tr("Keep all notes but one"),
+            tr(
+                "Each form keeps every note of the one before but one, which moves: the \
+                smoothest way on, round all twelve notes when the set can",
+            ),
+        )
+    } else {
+        (
+            tr("Keep as many notes as it can"),
+            tr(
+                "Each form keeps as many notes of the one before as it can without going \
+                straight back to it",
+            ),
+        )
+    };
+    let mut walks = vec![(Walk::CommonTones, name.to_string(), about.to_string())];
+    if size == 3 {
+        walks.push((
+            Walk::Keep(1),
+            tr("Keep one note, move two").to_string(),
+            tr("Each form keeps one note of the one before: a pivot, a wider move").to_string(),
+        ));
+    }
+    if !micromodal::aggregates(set).is_empty() {
+        walks.push((
+            Walk::AllTwelve,
+            trf("All twelve notes, every {} forms", &[&(12 / size)]),
+            tr(
+                "Forms that share no note, so that every few of them hold all twelve \
+                notes between them, as the four groups of Webern's Concerto row do; the \
+                next round starts from a form that keeps notes of the last",
+            )
+            .to_string(),
+        ));
+    }
+    let sequences = [
+        (1, "Sequence: up a semitone"),
+        (2, "Sequence: up a whole tone"),
+        (3, "Sequence: up a minor third"),
+        (5, "Sequence: up a fourth"),
+        (7, "Sequence: up a fifth"),
+    ];
+    for (up, label) in sequences {
+        walks.push((
+            Walk::Transpose(up),
+            tr(label).to_string(),
+            tr(
+                "Every note moves the same distance each time, so each form is the last one \
+                moved",
+            )
+            .to_string(),
+        ));
+    }
+    walks
 }
 
 /// The variations of the band's style, in a bar's menu. They apply to
