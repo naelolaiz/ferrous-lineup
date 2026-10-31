@@ -31,6 +31,11 @@
 //!   a form of their own at once, both forms, written as two chords at
 //!   once are.
 //!
+//! Whichever way the groups are read, [`most_used`] adds up how long
+//! each class of sets or micromodes sounds in them, the class that
+//! sounds longest first: the most used micromode of a passage, or its
+//! most used set.
+//!
 //! Nothing here changes the song: the chord sheet shows what these
 //! functions find, and what is written stays as it was.
 
@@ -42,7 +47,7 @@ use crate::harmony::{
     ChordQuality, ChordSymbol, Harmony, HeardNote, Micromode, PitchSet, Scale, ScaleKind,
 };
 use crate::pitch::Note;
-use crate::{Chord, NoteEvent, Project};
+use crate::{Chord, KeyMap, NoteEvent, Project};
 
 /// How the chord sheet names each harmony.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, Serialize, Deserialize)]
@@ -669,6 +674,181 @@ pub fn spelled_set(set: PitchSet, key: Scale) -> String {
     NoteGroup::new(notes).spelled(key)
 }
 
+/// How much a song uses one class of sets or micromodes, as the sheet
+/// names its groups: see [`most_used`].
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ClassUse {
+    /// The class, by its name alone, as [`stacked_classes`] writes it:
+    /// "Menor 3" for a micromode, "3-11" for a set.
+    pub class: String,
+    /// The steps where one of its groups sounds, each from where it
+    /// starts to where the next harmony starts, as the sheet writes a
+    /// harmony lasting. Two groups of it at once count once.
+    pub steps: usize,
+    /// How many of its groups start: two at once are two.
+    pub times: usize,
+    /// Its forms, each with the steps it sounds, the most used first:
+    /// "Menor 3 T4I" for 16 steps.
+    pub forms: Vec<(HarmonyName, usize)>,
+}
+
+/// The classes of sets or micromodes a song uses, the most used first,
+/// and how long the song is, to say how much of it each one fills.
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct Tally {
+    pub classes: Vec<ClassUse>,
+    /// The steps the harmonies were counted over: the song's, or the
+    /// sheet's where more bars are written than the song plays.
+    pub length: usize,
+}
+
+impl Tally {
+    /// How much of the song `steps` is, in hundredths, rounded.
+    pub fn percent(&self, steps: usize) -> usize {
+        (steps * 100 + self.length / 2) / self.length.max(1)
+    }
+}
+
+/// The class of a group as the sheet names it, or `None` for a chord, a
+/// row form or no chord, which are no group of a class.
+fn class_of(name: &HarmonyName) -> Option<String> {
+    match *name {
+        HarmonyName::Set(set) => Some(set.set_class().name()),
+        HarmonyName::Micromode(set) => Some(
+            Micromode::of(set)
+                .map_or_else(|| set.set_class().name(), |micromode| micromode.name.into()),
+        ),
+        _ => None,
+    }
+}
+
+/// The classes of sets and micromodes among `harmonies`, the one that
+/// sounds longest first (then the one heard more times, then by name).
+/// Each entry of `harmonies` is a step and the groups named there, the
+/// lowest first, and lasts until the next entry's step, the last until
+/// `end`. A chord, a row form or no chord among them is left out: the
+/// tally is of the sets and micromodes the sheet shows.
+pub fn most_used(harmonies: &[(usize, Vec<HarmonyName>)], end: usize) -> Tally {
+    let mut classes: Vec<ClassUse> = Vec::new();
+    for (index, (start, names)) in harmonies.iter().enumerate() {
+        let until = harmonies
+            .get(index + 1)
+            .map_or(end, |(next, _)| *next)
+            .min(end);
+        let steps = until.saturating_sub(*start);
+        let mut counted: Vec<String> = Vec::new();
+        for name in names {
+            let Some(class) = class_of(name) else {
+                continue;
+            };
+            let entry = match classes.iter().position(|entry| entry.class == class) {
+                Some(found) => &mut classes[found],
+                None => {
+                    classes.push(ClassUse {
+                        class: class.clone(),
+                        steps: 0,
+                        times: 0,
+                        forms: Vec::new(),
+                    });
+                    classes.last_mut().expect("just pushed")
+                }
+            };
+            entry.times += 1;
+            if !counted.contains(&class) {
+                entry.steps += steps;
+                counted.push(class);
+            }
+            match entry.forms.iter_mut().find(|(form, _)| form == name) {
+                Some((_, form_steps)) => *form_steps += steps,
+                None => entry.forms.push((*name, steps)),
+            }
+        }
+    }
+    for entry in &mut classes {
+        entry.forms.sort_by(|(a, a_steps), (b, b_steps)| {
+            b_steps
+                .cmp(a_steps)
+                .then_with(|| a.to_string().cmp(&b.to_string()))
+        });
+    }
+    classes.sort_by(|a, b| {
+        b.steps
+            .cmp(&a.steps)
+            .then(b.times.cmp(&a.times))
+            .then_with(|| a.class.cmp(&b.class))
+    });
+    Tally {
+        classes,
+        length: end,
+    }
+}
+
+/// The groups read from the notes, each named in `notation` in the key
+/// on its step, for [`most_used`].
+pub fn heard_names(
+    groups: &[HeardGroups],
+    notation: Notation,
+    keys: &KeyMap,
+) -> Vec<(usize, Vec<HarmonyName>)> {
+    groups
+        .iter()
+        .map(|heard| {
+            let key = keys.key_at(heard.start);
+            let names = heard
+                .sets()
+                .into_iter()
+                .map(|set| notation.name_group(set, key))
+                .collect();
+            (heard.start, names)
+        })
+        .collect()
+}
+
+/// The harmonies written on the sheet, each renamed in `notation` in
+/// the key on its step, for [`most_used`], and where the last one ends:
+/// the song's end, or the end of the last bar written where the sheet
+/// goes on past the song.
+pub fn written_names(
+    project: &Project,
+    notation: Notation,
+) -> (Vec<(usize, Vec<HarmonyName>)>, usize) {
+    let keys = project.key_map();
+    let markers = project.playlist().chord_markers();
+    let names = markers
+        .iter()
+        .map(|marker| {
+            let key = keys.key_at(marker.start);
+            (marker.start, notation.rename(marker.harmony, key))
+        })
+        .collect();
+    let last_bar = markers
+        .last()
+        .map_or(0, |last| project.meter().bar_at(last.start).end());
+    (names, project.song_length().max(last_bar))
+}
+
+/// The tally of the classes the sheet shows in `notation`, with its
+/// groups read as `grouping` says (see [`heard_groups`]).
+pub fn tally(
+    project: &Project,
+    notation: Notation,
+    grouping: Grouping,
+    size: Option<usize>,
+    channel: Option<usize>,
+) -> Tally {
+    match grouping {
+        Grouping::Written => {
+            let (names, end) = written_names(project, notation);
+            most_used(&names, end)
+        }
+        _ => {
+            let groups = heard_groups(project, grouping, size, channel);
+            let names = heard_names(&groups, notation, &project.key_map());
+            most_used(&names, project.song_length())
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1169,5 +1349,88 @@ mod tests {
         let group = NoteGroup::new(vec![Note::new(60), Note::new(63), Note::new(66)]);
         assert_eq!(group.spelled(C_MAJOR), "C Eb Gb");
         assert_eq!(spelled_set(set(&[2, 5, 9]), C_MAJOR), "D F A");
+    }
+
+    #[test]
+    fn the_most_used_class_sounds_longest() {
+        // C for two bars, Bdim for one, then two forms of 3-3 at once.
+        let harmonies = vec![
+            (0, vec![name("3-11 T7I")]),
+            (16, vec![name("3-11 T2")]),
+            (32, vec![name("3-10 T11")]),
+            (48, vec![name("{C C# E}"), name("{G G# B}")]),
+        ];
+        let tally = most_used(&harmonies, 64);
+        let classes: Vec<(&str, usize, usize)> = tally
+            .classes
+            .iter()
+            .map(|class| (class.class.as_str(), class.steps, class.times))
+            .collect();
+        // The two forms of 3-3 at once fill one bar, not two.
+        assert_eq!(classes, [("3-11", 32, 2), ("3-3", 16, 2), ("3-10", 16, 1)]);
+        assert_eq!(tally.percent(32), 50);
+        assert_eq!(tally.percent(16), 25);
+        let forms: Vec<String> = tally.classes[0]
+            .forms
+            .iter()
+            .map(|(form, steps)| format!("{form} {steps}"))
+            .collect();
+        assert_eq!(forms, ["3-11 T2 16", "3-11 T7I 16"]);
+    }
+
+    #[test]
+    fn the_tally_leaves_out_chords_rows_and_no_chord() {
+        let harmonies = vec![
+            (0, vec![name("C")]),
+            (16, vec![name("N.C.")]),
+            (32, vec![name("Menor 3 T2")]),
+            (40, vec![name("P0")]),
+        ];
+        let tally = most_used(&harmonies, 64);
+        assert_eq!(tally.classes.len(), 1);
+        assert_eq!(tally.classes[0].class, "Menor 3");
+        // Menor 3 lasts until the row form starts.
+        assert_eq!(tally.classes[0].steps, 8);
+        assert!(most_used(&[], 0).classes.is_empty());
+    }
+
+    #[test]
+    fn the_sheets_chords_tallied_as_sets() {
+        use crate::ChordMarker;
+        let mut project = Project::empty();
+        let markers = ["C", "Am", "G7", "C"]
+            .iter()
+            .enumerate()
+            .map(|(bar, text)| ChordMarker::new(bar * 16, name(text)))
+            .collect::<Vec<_>>();
+        assert!(project.set_chords(0, 64, &markers));
+        let tally = tally(&project, Notation::Sets, Grouping::Written, None, None);
+        assert_eq!(tally.length, 64);
+        let classes: Vec<(&str, usize)> = tally
+            .classes
+            .iter()
+            .map(|class| (class.class.as_str(), tally.percent(class.steps)))
+            .collect();
+        assert_eq!(classes, [("3-11", 75), ("4-27", 25)]);
+        // C is played twice: its form is the most used.
+        assert_eq!(tally.classes[0].forms[0], (name("3-11 T7I"), 32));
+        // As chords, nothing is a set.
+        let chords = super::tally(&project, Notation::Chords, Grouping::Written, None, None);
+        assert!(chords.classes.is_empty());
+    }
+
+    #[test]
+    fn a_micromode_demo_uses_its_own_micromode_most() {
+        use crate::library::{MicromodeStyle, demo};
+        let style = MicromodeStyle::named("Menor 3 colour").unwrap();
+        let project = demo::micromode_demo(style);
+        let mixed = tally(&project, Notation::Key, Grouping::Mixed, None, None);
+        assert_eq!(mixed.classes.len(), 1, "{:?}", mixed.classes);
+        assert_eq!(mixed.classes[0].class, "Menor 3");
+        assert!(mixed.percent(mixed.classes[0].steps) >= 90);
+        // The sheet's own harmonies are its forms too.
+        let written = tally(&project, Notation::Key, Grouping::Written, None, None);
+        assert_eq!(written.classes[0].class, "Menor 3");
+        assert!(written.classes[0].forms.len() >= 3);
     }
 }

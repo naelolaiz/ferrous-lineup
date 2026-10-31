@@ -856,7 +856,9 @@ impl ChordSheet {
     ) {
         let meter = project.meter();
         let keys = project.key_map();
-        let heard = self.notation.heard(project, &keys);
+        let heard = self
+            .notation
+            .heard(project, &keys, ui.ctx().cumulative_pass_nr());
         let marks = Marks::of(project);
         self.read_functions(project, &keys);
         // Lines hold as many bars as chosen, or as fit with every name

@@ -2,15 +2,16 @@
 //! as chords, as pitch-class sets or as micromodes) and, for sets and
 //! micromodes, which notes make each group: the sheet's own harmonies,
 //! the notes sounding together, the notes one after another in a line,
-//! or the forms of the key's set heard in both ways at once. See
-//! `lineup_core::chord_sheet::notation`.
+//! or the forms of the key's set heard in both ways at once; and under
+//! it, for sets and micromodes, the classes the sheet shows the most.
+//! See `lineup_core::chord_sheet::notation`.
 
 use std::rc::Rc;
 
 use eframe::egui::{self, Color32, Ui};
 use lineup_core::chord_sheet::notation::{
-    Grouping, HeardGroups, Notation, heard_groups, spelled_set, stacked_classes, stacked_notes,
-    stacked_text,
+    ClassUse, Grouping, HeardGroups, Notation, Tally, heard_groups, heard_names, most_used,
+    spelled_set, stacked_classes, stacked_notes, stacked_text, written_names,
 };
 use lineup_core::harmony::HeardNote;
 use lineup_core::lead_sheet::default_melody_channel;
@@ -62,6 +63,10 @@ enum Track {
     Channel(usize),
 }
 
+/// How many classes the line of the most used shows by name; the rest
+/// are in its hint.
+const MOST_SHOWN: usize = 4;
+
 /// The groups last read from the song's notes, as the bars show them,
 /// and what they were read from, so they are only read again when the
 /// notes, the keys or the choices change.
@@ -70,6 +75,11 @@ struct Read {
     notes: Vec<HeardNote>,
     keys: KeyMap,
     shown: Rc<[Shown]>,
+    /// The classes of the groups, the most used first.
+    tally: Rc<Tally>,
+    /// The pass of the frame it was last checked in: the row and the
+    /// bars both ask for it, and the song does not change in between.
+    pass: u64,
 }
 
 /// A harmony as the sheet shows it, in the notation chosen: a harmony
@@ -183,7 +193,8 @@ impl NotationView {
         }
     }
 
-    /// Draws the row, with `after` at its end.
+    /// Draws the row, with `after` at its end, and under it, for sets
+    /// and micromodes, the classes the sheet shows the most.
     pub fn row(&mut self, ui: &mut Ui, project: &Project, after: impl FnOnce(&mut Ui)) {
         self.song_key = project.scale;
         ui.horizontal_wrapped(|ui| {
@@ -191,6 +202,26 @@ impl NotationView {
             ui.separator();
             after(ui);
         });
+        if let Some(tally) = self.tally(project, ui.ctx().cumulative_pass_nr())
+            && !tally.classes.is_empty()
+        {
+            ui.horizontal_wrapped(|ui| most_used_line(ui, &tally, self.reads_notes()));
+        }
+    }
+
+    /// The classes of sets or micromodes the sheet shows, the most used
+    /// first, as it groups the notes; `None` where it names its harmony
+    /// as chords.
+    fn tally(&mut self, project: &Project, pass: u64) -> Option<Rc<Tally>> {
+        if !self.song_notation().groups() {
+            return None;
+        }
+        if self.reads_notes() {
+            self.heard(project, &project.key_map(), pass);
+            return self.read.as_ref().map(|read| read.tally.clone());
+        }
+        let (names, end) = written_names(project, self.notation());
+        Some(Rc::new(most_used(&names, end)))
     }
 
     /// The row's own choices.
@@ -405,7 +436,9 @@ impl NotationView {
     /// order, for the sheet to place in its bars, read again only when
     /// the notes, the keys or the choices change. Empty when the bars
     /// show what is written.
-    pub fn heard(&mut self, project: &Project, keys: &KeyMap) -> Rc<[Shown]> {
+    /// `pass` is the frame's (see `egui::Context::cumulative_pass_nr`):
+    /// what was read in it is not checked again.
+    pub fn heard(&mut self, project: &Project, keys: &KeyMap, pass: u64) -> Rc<[Shown]> {
         if !self.reads_notes() {
             self.read = None;
             return Rc::from([]);
@@ -417,20 +450,31 @@ impl NotationView {
             self.size(),
             self.channel(project),
         );
+        if let Some(read) = &self.read
+            && read.from == from
+            && read.pass == pass
+        {
+            return read.shown.clone();
+        }
         let notes = project.heard_notes(0, project.song_length());
-        match &self.read {
+        match &mut self.read {
             Some(read) if read.from == from && read.notes == notes && read.keys == *keys => {
+                read.pass = pass;
                 read.shown.clone()
             }
             _ => {
-                let (_, grouping, size, channel) = from;
+                let (notation, grouping, size, channel) = from;
                 let groups = heard_groups(project, grouping, size, channel);
                 let shown: Rc<[Shown]> = self.show(project, &groups, keys).into();
+                let names = heard_names(&groups, notation, keys);
+                let tally = Rc::new(most_used(&names, project.song_length()));
                 self.read = Some(Read {
                     from,
                     notes,
                     keys: keys.clone(),
                     shown: shown.clone(),
+                    tally,
+                    pass,
                 });
                 shown
             }
@@ -585,4 +629,82 @@ impl NotationView {
             ),
         }
     }
+}
+
+/// The line of the most used classes: the first, which sounds the
+/// longest, brightest, the next ones fainter, each with how much of the
+/// song it fills; its hint tells how they are counted. `heard` says the
+/// groups are read from the notes rather than written on the sheet.
+fn most_used_line(ui: &mut Ui, tally: &Tally, heard: bool) {
+    let label = ui.label(tr("Most used:"));
+    let counted = match heard {
+        true => tr(
+            "The classes of the groups the sheet reads from the notes, the one that sounds \
+             longest first. Each group lasts from where it starts to where the next one \
+             starts, as the sheet writes a harmony lasting; two of one class at once count \
+             once",
+        ),
+        false => tr(
+            "The classes of the harmonies written on the sheet, as the notation names them, \
+             the one that sounds longest first. Each lasts from where it is written to the \
+             next one; chords, row forms and N.C. are left out",
+        ),
+    };
+    let every: Vec<String> = tally
+        .classes
+        .iter()
+        .map(|class| about_class(tally, class))
+        .collect();
+    theme::hint(label, format!("{counted}.\n\n{}", every.join("\n")));
+    for (index, class) in tally.classes.iter().take(MOST_SHOWN).enumerate() {
+        if index > 0 {
+            ui.weak("·");
+        }
+        let text = format!("{} {}", class.class, share(tally, class.steps));
+        let item = match index {
+            0 => ui.label(egui::RichText::new(text).strong()),
+            _ => ui.weak(text),
+        };
+        theme::hint(item, about_class(tally, class));
+    }
+    let rest = tally.classes.len().saturating_sub(MOST_SHOWN);
+    if rest > 0 {
+        let more = ui.weak(trf("· {} more", &[&rest]));
+        let others: Vec<String> = tally.classes[MOST_SHOWN..]
+            .iter()
+            .map(|class| about_class(tally, class))
+            .collect();
+        theme::hint(more, others.join("\n"));
+    }
+}
+
+/// How much of the song `steps` fills: "62%", or "<1%" for a little.
+fn share(tally: &Tally, steps: usize) -> String {
+    match tally.percent(steps) {
+        0 if steps > 0 => "<1%".to_string(),
+        percent => format!("{percent}%"),
+    }
+}
+
+/// A class and how the song uses it, for a hint: "Menor 3: 62% of the
+/// song, 14 times. Menor 3 T4I 30%, Menor 3 20%".
+fn about_class(tally: &Tally, class: &ClassUse) -> String {
+    let times = match class.times {
+        1 => tr("once").to_string(),
+        times => trf("{} times", &[&times]),
+    };
+    let forms: Vec<String> = class
+        .forms
+        .iter()
+        .map(|(form, steps)| format!("{form} {}", share(tally, *steps)))
+        .collect();
+    trf(
+        "{}: {} of the song, {}. {}",
+        &[
+            &class.class,
+            &share(tally, class.steps),
+            &times,
+            &forms.join(", "),
+        ],
+    )
 }
