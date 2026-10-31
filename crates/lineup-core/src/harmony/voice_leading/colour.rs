@@ -47,7 +47,7 @@ use std::cmp::Reverse;
 
 use super::{PartNote, Slip, SlipKind, Voice, VoiceLeading};
 use crate::harmony::degree::forms_by_nearness;
-use crate::harmony::{Degree, Micromode, PitchSet, Scale, ScaleKind};
+use crate::harmony::{Degree, PitchSet, Scale, ScaleKind};
 use crate::i18n::{list, tr, trf};
 use crate::{Note, NoteEvent, PitchClass};
 
@@ -500,10 +500,11 @@ pub(super) fn why(kind: SlipKind) -> &'static str {
     }
 }
 
-/// The set a key is, by name: "Menor 3 (minor 3)", "set 7-35".
+/// The set a key is, by name: "Menor 3 (minor 3)", "set 7-35", and
+/// "set 3-3" for a key of three notes named as a set.
 fn colour_name(key: Scale) -> String {
     let set = key.pitch_set();
-    match Micromode::of(set) {
+    match key.micromode() {
         Some(micromode) => micromode.full_name(),
         None => trf("set {}", &[&set.set_class().name()]),
     }

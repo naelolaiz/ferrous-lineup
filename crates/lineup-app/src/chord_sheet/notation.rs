@@ -26,12 +26,14 @@ fn choices_id() -> egui::Id {
 /// The most notes a group can be asked to hold: a whole twelve-tone row.
 const MOST_NOTES: usize = 12;
 
-/// What the row remembers from one run of the app to the next.
+/// What the row remembers from one run of the app to the next: the
+/// sizes of the groups. The notation and the grouping are each song's
+/// own, and a song starts in the notation of its key (see
+/// [`Notation::Key`]): a song in C major is not shown in micromodes
+/// because the song before was.
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 struct Choices {
-    notation: Notation,
-    grouping: Grouping,
     /// How many different notes a group of notes sounding together
     /// holds, or `None` for all of them.
     together: Option<usize>,
@@ -42,8 +44,6 @@ struct Choices {
 impl Default for Choices {
     fn default() -> Self {
         Choices {
-            notation: Notation::Written,
-            grouping: Grouping::Written,
             together: None,
             line: 3,
         }
@@ -97,6 +97,11 @@ pub(super) struct Shown {
 
 /// The notation row and what it chose.
 pub(super) struct NotationView {
+    notation: Notation,
+    grouping: Grouping,
+    /// The key the song starts in, which says what the row offers in
+    /// [`Notation::Key`].
+    song_key: Scale,
     choices: Choices,
     /// What was last saved for the next run, or `None` before the
     /// choices were read back.
@@ -109,6 +114,9 @@ pub(super) struct NotationView {
 impl NotationView {
     pub fn new() -> Self {
         NotationView {
+            notation: Notation::Key,
+            grouping: Grouping::Written,
+            song_key: Scale::new(lineup_core::PitchClass::C, lineup_core::ScaleKind::Major),
             choices: Choices::default(),
             saved: None,
             track: Track::Auto,
@@ -135,29 +143,40 @@ impl NotationView {
         }
     }
 
-    /// Another song: its tracks are not the last one's.
+    /// Another song: its tracks are not the last one's, and it is shown
+    /// in the notation of its own key.
     pub fn new_song(&mut self) {
+        self.notation = Notation::Key;
+        self.grouping = Grouping::Written;
         self.track = Track::Auto;
         self.read = None;
     }
 
+    /// The notation chosen: [`Notation::Key`] names each harmony in the
+    /// key it is in.
     fn notation(&self) -> Notation {
-        self.choices.notation
+        self.notation
+    }
+
+    /// The notation the song's own key gives, which says whether its
+    /// notes can be read in groups, and how big.
+    fn song_notation(&self) -> Notation {
+        self.notation.in_key(self.song_key)
     }
 
     /// Whether the bars show groups read from the song's notes rather
     /// than the harmonies written on them.
     pub fn reads_notes(&self) -> bool {
-        self.notation().groups() && self.choices.grouping != Grouping::Written
+        self.song_notation().groups() && self.grouping != Grouping::Written
     }
 
     /// How many notes a group holds, or `None` for all those sounding
     /// together.
     fn size(&self) -> Option<usize> {
-        if let Some(size) = self.notation().fixed_size() {
+        if let Some(size) = self.song_notation().fixed_size() {
             return Some(size);
         }
-        match self.choices.grouping {
+        match self.grouping {
             Grouping::InLine => Some(self.choices.line),
             _ => self.choices.together,
         }
@@ -165,6 +184,7 @@ impl NotationView {
 
     /// Draws the row, with `after` at its end.
     pub fn row(&mut self, ui: &mut Ui, project: &Project, after: impl FnOnce(&mut Ui)) {
+        self.song_key = project.scale;
         ui.horizontal_wrapped(|ui| {
             self.items(ui, project);
             ui.separator();
@@ -181,7 +201,7 @@ impl NotationView {
             .show_ui(ui, |ui| {
                 for choice in Notation::ALL {
                     let item = ui.selectable_value(
-                        &mut self.choices.notation,
+                        &mut self.notation,
                         choice,
                         crate::i18n::tr(choice.name()),
                     );
@@ -195,17 +215,16 @@ impl NotationView {
              micromode is another way to write the same chord",
             ),
         );
-        if !self.notation().groups() {
+        if !self.song_notation().groups() {
             return;
         }
         ui.separator();
-        let grouping = self.choices.grouping;
+        let grouping = self.grouping;
         let combo = egui::ComboBox::from_id_salt("chord-sheet-grouping")
             .selected_text(tr(grouping.name()))
             .show_ui(ui, |ui| {
                 for choice in Grouping::ALL {
-                    let item =
-                        ui.selectable_value(&mut self.choices.grouping, choice, tr(choice.name()));
+                    let item = ui.selectable_value(&mut self.grouping, choice, tr(choice.name()));
                     theme::hint(item, tr(choice.describe()));
                 }
             });
@@ -213,7 +232,7 @@ impl NotationView {
             combo.response,
             trf(
                 "{}. Typing in a bar still writes its harmony",
-                &[&tr(self.choices.grouping.describe())],
+                &[&tr(self.grouping.describe())],
             ),
         );
         if self.reads_notes() {
@@ -224,12 +243,12 @@ impl NotationView {
 
     /// How many notes a group holds: in a micromode, always three.
     fn size_choice(&mut self, ui: &mut Ui) {
-        if self.notation().fixed_size().is_some() {
+        if self.song_notation().fixed_size().is_some() {
             let label = ui.weak(tr("3 notes"));
             theme::hint(label, tr("A micromode is a group of three notes"));
             return;
         }
-        let together = self.choices.grouping == Grouping::Together;
+        let together = self.grouping == Grouping::Together;
         let shown = |size: Option<usize>| match size {
             None => tr("All notes").to_string(),
             Some(2) => tr("2 notes (dyads)").to_string(),
@@ -287,7 +306,7 @@ impl NotationView {
                 .get(channel)
                 .map_or_else(String::new, |channel| tr_name(&channel.name).into_owned())
         };
-        let in_line = self.choices.grouping == Grouping::InLine;
+        let in_line = self.grouping == Grouping::InLine;
         let auto = match (in_line, default_melody_channel(project)) {
             (true, Some(tune)) => trf("Auto ({})", &[&name(tune)]),
             _ => tr("All tracks").to_string(),
@@ -326,7 +345,7 @@ impl NotationView {
         match self.track {
             Track::Channel(channel) => Some(channel),
             Track::All => None,
-            Track::Auto => match self.choices.grouping {
+            Track::Auto => match self.grouping {
                 Grouping::InLine => default_melody_channel(project),
                 _ => None,
             },
@@ -357,9 +376,10 @@ impl NotationView {
             self.read = None;
             return Rc::from([]);
         }
+        self.song_key = project.scale;
         let from = (
             self.notation(),
-            self.choices.grouping,
+            self.grouping,
             self.size(),
             self.channel(project),
         );
@@ -386,7 +406,7 @@ impl NotationView {
     /// The groups read from the notes, as the bars show them.
     fn show(&self, project: &Project, groups: &[HeardGroups], keys: &KeyMap) -> Vec<Shown> {
         let notation = self.notation();
-        let grouping = self.choices.grouping;
+        let grouping = self.grouping;
         let channel = self
             .channel(project)
             .and_then(|channel| project.channels().get(channel));
