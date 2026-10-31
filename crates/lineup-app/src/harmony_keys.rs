@@ -18,6 +18,12 @@
 //! what is heard when it is not one chord: two chords at once, such as
 //! the Rite of Spring's Eb7|Fb, or a set of notes, such as 4-23.
 //!
+//! In a key of three notes, one of Kröpfl's micromodes, the keys are the
+//! micromode's own forms instead, each called by its degree (T0 for the
+//! key's own form, T2, T5I...), home first and the nearest next; the
+//! forms that keep two notes of the last one played get the outline,
+//! since keeping two notes and moving one is the smoothest way on.
+//!
 //! Under it, the experimental Find the key option shows the key the
 //! music sounds like it is in, and the next best keys, fainter, when it
 //! is not clear, each with what the chord playing is in it.
@@ -29,12 +35,15 @@ use eframe::egui::{
     self, Align2, Color32, FontId, Key, Painter, Rect, Response, Sense, Stroke, StrokeKind, Ui,
     pos2, vec2,
 };
+use lineup_core::harmony::degree::{self, Degree};
 use lineup_core::harmony::key_finding::{KeyGuess, read_chord};
 use lineup_core::harmony::keys::{self, ChordKey, ChordSize, Function, GroupKey};
 use lineup_core::harmony::{
     Harmony, Hearing, HintLevel, Suggestion, analyze, next_chords_over, with_figures,
 };
-use lineup_core::{Chord, Note, PitchClass, PitchSet, Project, Scale, ScaleKind, TimeSignature};
+use lineup_core::{
+    Chord, HarmonyName, Note, PitchClass, PitchSet, Project, Scale, ScaleKind, TimeSignature,
+};
 
 use crate::i18n::{tr, trc, trf};
 use crate::time_picker::{describe_time, time_picker};
@@ -124,6 +133,8 @@ struct Play {
     notes: Vec<Note>,
     /// The chord, for the keys of a key; none for a row or a set.
     chord: Option<Chord>,
+    /// The form, for the keys of a micromode.
+    form: Option<PitchSet>,
 }
 
 /// What is holding a harmony key down.
@@ -171,6 +182,12 @@ pub struct HarmonyKeys {
     last_bass: Option<PitchClass>,
     /// Whether Find the key is on.
     pub find_key: bool,
+    /// In a micromode key, whether every form gets a key, or only those
+    /// that share a note with home.
+    all_forms: bool,
+    /// The last form of a micromode played, here or in the music, for
+    /// the outline on the forms that keep two of its notes.
+    last_form: Option<PitchSet>,
 }
 
 impl HarmonyKeys {
@@ -184,6 +201,8 @@ impl HarmonyKeys {
             last_chord: None,
             last_bass: None,
             find_key: false,
+            all_forms: false,
+            last_form: None,
         }
     }
 
@@ -193,6 +212,7 @@ impl HarmonyKeys {
         self.last_voicing = None;
         self.last_chord = None;
         self.last_bass = None;
+        self.last_form = None;
     }
 
     /// Lets go of the key that is down, if any. Called when the bar is
@@ -230,6 +250,9 @@ impl HarmonyKeys {
     ) -> Vec<HarmonyAction> {
         let scale = here;
         let size = self.size_for(scale);
+        if let Some(forms) = keys::form_keys(scale, self.all_forms) {
+            return self.show_forms(ui, project, here, &forms, held, heard, digits, parts);
+        }
         if let Some(groups) = keys::group_keys(scale, size) {
             return self.show_groups(
                 ui,
@@ -382,7 +405,111 @@ impl HarmonyKeys {
                     voicing,
                     notes,
                     chord: Some(key.chord),
+                    form: None,
                 }
+            })
+            .collect();
+        self.follow_mouse(pressed, &plays, &mut actions);
+        self.follow_digits(ui, digits, &plays, &mut actions);
+        actions
+    }
+
+    /// The bar for a key of three notes, a micromode: a key for each of
+    /// its forms (see [`keys::form_keys`]), the brighter the more notes it
+    /// keeps from home. The form playing, held on a keyboard or heard in
+    /// the music, is lit, and the forms that keep two of its notes (or of
+    /// the last one played) are outlined: the smoothest ways on.
+    #[allow(clippy::too_many_arguments)]
+    fn show_forms(
+        &mut self,
+        ui: &mut Ui,
+        project: &Project,
+        here: Scale,
+        forms: &[GroupKey],
+        held: &[Note],
+        heard: &[Note],
+        digits: bool,
+        parts: &mut lineup_core::library::apply::StyleParts,
+    ) -> Vec<HarmonyAction> {
+        let mut actions = Vec::new();
+        let scale = here;
+        let set_of =
+            |notes: &[Note]| -> PitchSet { notes.iter().map(|n| n.pitch_class()).collect() };
+        let playing = [set_of(held), set_of(heard)]
+            .into_iter()
+            .find(|&set| set.len() == 3 && Degree::of(scale, set).is_some());
+        if playing.is_some() {
+            self.last_form = playing;
+        }
+        // A form of another key's micromode means nothing here.
+        let last = self
+            .last_form
+            .filter(|&form| Degree::of(scale, form).is_some());
+        let next = last.map(degree::smooth_links).unwrap_or_default();
+        let mut pressed = None;
+        ui.add_space(4.0);
+        ui.horizontal_wrapped(|ui| {
+            ui.vertical(|ui| self.settings(ui, project, here, parts, &mut actions));
+            ui.separator();
+            for (index, form) in forms.iter().enumerate() {
+                let set = form.pitch_set();
+                let lit =
+                    self.down.as_ref().is_some_and(|d| d.key == index) || playing == Some(set);
+                let outlined = !lit && next.contains(&set);
+                let response = form_key(ui, form, lit, outlined);
+                let hover = describe_form(form, index, self.hints, scale, last);
+                let response = crate::theme::hint(response, hover);
+                if response.is_pointer_button_down_on() {
+                    pressed = Some(index);
+                }
+            }
+            ui.separator();
+            piano(ui, scale, held, heard);
+        });
+        ui.horizontal_wrapped(|ui| {
+            self.hints_menu(ui);
+            let keys = trf("1 to {}", &[&forms.len().min(7)]);
+            let from = last
+                .and_then(|form| Degree::of(scale, form))
+                .map(|degree| degree.to_string());
+            let hint = match (self.hints, from) {
+                (HintLevel::Minimal, _) => String::new(),
+                (HintLevel::Short, Some(from)) => trf(
+                    "The micromode's forms, nearest home first. Outlined: they keep two notes of {}.",
+                    &[&from],
+                ),
+                (HintLevel::Short, None) => trf(
+                    "The micromode's forms, nearest home first. Hold a key or press {}.",
+                    &[&keys],
+                ),
+                (_, from) => {
+                    let outline = match from {
+                        Some(from) => trf(
+                            " The outlined forms keep two notes of {} and move one: the \
+                             smoothest ways on.",
+                            &[&from],
+                        ),
+                        None => String::new(),
+                    };
+                    trf(
+                        "Music on one micromode makes its chords and its tunes of the \
+                         micromode's own forms, so these are its keys, each called by its \
+                         degree: T0 is the key's own form, T2 the same moved up two \
+                         semitones, T2I upside down. The more notes a form keeps from home, the \
+                         brighter its key.{} Hold one (or press {}) to play it.",
+                        &[&outline, &keys],
+                    )
+                }
+            };
+            ui.weak(hint);
+        });
+        let plays: Vec<Play> = forms
+            .iter()
+            .map(|form| Play {
+                voicing: Vec::new(),
+                notes: form.play(),
+                chord: None,
+                form: Some(form.pitch_set()),
             })
             .collect();
         self.follow_mouse(pressed, &plays, &mut actions);
@@ -462,6 +589,7 @@ impl HarmonyKeys {
                 voicing: Vec::new(),
                 notes: group.play(),
                 chord: None,
+                form: None,
             })
             .collect();
         self.follow_mouse(pressed, &plays, &mut actions);
@@ -621,6 +749,25 @@ impl HarmonyKeys {
             ui.weak(trf("{} steps a bar", &[&time.steps_per_bar()]));
         });
         let scale = here;
+        if keys::form_keys(scale, false).is_some() {
+            ui.horizontal(|ui| {
+                let near = ui
+                    .selectable_label(!self.all_forms, tr("Near home"))
+                    .on_hover_text(tr(
+                        "The forms that share at least one note with the key's own form",
+                    ));
+                if near.clicked() {
+                    self.all_forms = false;
+                }
+                let all = ui
+                    .selectable_label(self.all_forms, tr("All forms"))
+                    .on_hover_text(tr("Every form of the micromode, moved and upside down"));
+                if all.clicked() {
+                    self.all_forms = true;
+                }
+            });
+            return;
+        }
         ui.horizontal(|ui| {
             let current = self.size_for(scale);
             for size in keys::chord_sizes(scale) {
@@ -768,6 +915,9 @@ impl HarmonyKeys {
             return;
         };
         let notes = play.notes.clone();
+        if play.form.is_some() {
+            self.last_form = play.form;
+        }
         if let Some(chord) = play.chord {
             self.last_voicing = Some(play.voicing.clone());
             self.last_chord = Some(chord);
@@ -1072,6 +1222,127 @@ fn group_key(ui: &mut Ui, group: &GroupKey, lit: bool) -> Response {
     response
 }
 
+/// A key of a micromode's form: its degree, its notes, and the
+/// micromode's own name for the form (or the triad it is) at the bottom.
+/// The more notes it keeps from home the brighter it is, so home and the
+/// forms next to it stand out; `outlined` marks a smooth way on.
+fn form_key(ui: &mut Ui, form: &GroupKey, lit: bool, outlined: bool) -> Response {
+    let (rect, response) = ui.allocate_exact_size(KEY_SIZE, Sense::click());
+    ui.add_space(KEY_GAP - ui.spacing().item_spacing.x);
+    if !ui.is_rect_visible(rect) {
+        return response;
+    }
+    let near = match form.kept {
+        Some(3) => 1.0,
+        Some(2) => 0.78,
+        Some(1) => 0.6,
+        _ => 0.45,
+    };
+    let fill = if lit {
+        GROUP_COLOR
+    } else if response.hovered() {
+        GROUP_COLOR.gamma_multiply((near + 0.2_f32).min(1.0))
+    } else {
+        GROUP_COLOR.gamma_multiply(near * 0.8)
+    };
+    let painter = ui.painter();
+    painter.rect_filled(rect, 6.0, fill.gamma_multiply(0.55));
+    let body = Rect::from_min_max(rect.min, rect.max - vec2(0.0, 3.0));
+    painter.rect_filled(body, 6.0, fill);
+    if lit {
+        paint_playing(painter, rect);
+    } else if outlined {
+        let stroke = Stroke::new(1.5, SUGGESTED.gamma_multiply(0.8));
+        painter.rect_stroke(rect, 6.0, stroke, StrokeKind::Inside);
+    }
+    let names: Vec<String> = form.names.iter().map(ToString::to_string).collect();
+    painter.text(
+        rect.center_top() + vec2(0.0, 16.0),
+        Align2::CENTER_CENTER,
+        &form.label,
+        FontId::proportional(fitting_size(ui, &form.label, 18.0, rect.width() - 8.0)),
+        KEY_TEXT,
+    );
+    painter.text(
+        rect.center() + vec2(0.0, 9.0),
+        Align2::CENTER_CENTER,
+        names.join(" "),
+        FontId::proportional(12.0),
+        KEY_TEXT,
+    );
+    let footer = form_footer(form);
+    painter.text(
+        rect.center_bottom() - vec2(0.0, 9.0),
+        Align2::CENTER_CENTER,
+        &footer,
+        FontId::proportional(fitting_size(ui, &footer, 10.0, rect.width() - 6.0)),
+        KEY_TEXT_DIM,
+    );
+    response
+}
+
+/// What a micromode's key says under its notes: the triad it is, or the
+/// form's own name, as the chord sheet writes it ("Menor 3 T4").
+fn form_footer(form: &GroupKey) -> String {
+    match &form.chord {
+        Some(chord) => chord.clone(),
+        None => HarmonyName::Micromode(form.pitch_set()).to_string(),
+    }
+}
+
+/// The tooltip of a micromode's key: "T2: E F G# · Menor 3 T4. Keeps 1
+/// note of home." and, from the last form played, how it would go on to
+/// this one: "From T0: keeps C# and E; C goes to D."
+fn describe_form(
+    form: &GroupKey,
+    index: usize,
+    level: HintLevel,
+    scale: Scale,
+    last: Option<PitchSet>,
+) -> String {
+    let names: Vec<String> = form.names.iter().map(ToString::to_string).collect();
+    let set = form.pitch_set();
+    let mut text = format!(
+        "{}: {} · {}",
+        form.label,
+        names.join(" "),
+        form_footer(form)
+    );
+    let home = match form.kept {
+        Some(3) => tr("the key's own form").to_string(),
+        Some(1) => tr("keeps 1 note of home").to_string(),
+        Some(kept) => trf("keeps {} notes of home", &[&kept]),
+        None => String::new(),
+    };
+    if !home.is_empty() {
+        text += &format!(", {home}");
+    }
+    text.push('.');
+    if level == HintLevel::Minimal {
+        return text;
+    }
+    if let Some(last) = last.filter(|&last| last != set)
+        && let Some(from) = Degree::of(scale, last)
+    {
+        let mut link = degree::describe_link(last, set, |p| scale.spell(p).to_string());
+        // Between triads, the neo-Riemannian name of the move.
+        if let Some(triadic) = degree::Triadic::between(last, set) {
+            link += &format!(" ({}, {})", triadic.letter(), tr(triadic.name()));
+        }
+        text += &format!(" {}", trf("From {}: {}.", &[&from, &link]));
+    }
+    if level == HintLevel::Detailed && index < 7 {
+        text += &format!(
+            " {}",
+            trf(
+                "Hold to play; key {} on the computer keyboard too.",
+                &[&(index + 1)]
+            )
+        );
+    }
+    text
+}
+
 /// Frames the key whose chord is sounding now in thick white, so it
 /// stands out above every other mark on the bar.
 pub(crate) fn paint_playing(painter: &Painter, rect: Rect) {
@@ -1365,15 +1636,15 @@ mod tests {
 
     #[test]
     fn group_keys_say_what_their_label_does_not() {
-        let c_minor = PitchSet::from_semitones(&[0, 3, 7]);
-        let groups =
-            keys::group_keys(Scale::set(PitchClass::C, c_minor), ChordSize::Triads).unwrap();
-        assert_eq!(group_footer(&groups[1]), "3-11");
+        // A set bigger than a micromode stacks its notes into chords.
+        let c7 = PitchSet::from_semitones(&[0, 4, 7, 10]);
+        let groups = keys::group_keys(Scale::set(PitchClass::C, c7), ChordSize::Triads).unwrap();
+        assert_eq!(group_footer(&groups[1]), "3-10");
         assert_eq!(
             describe_group(&groups[1], 1, HintLevel::Minimal),
-            "Cm/Eb: Eb G C · set 3-11, major or minor triad"
+            "Edim: E Bb G · set 3-10, diminished triad"
         );
-        let chromatic = PitchSet::from_semitones(&[0, 1, 2]);
+        let chromatic = PitchSet::from_semitones(&[0, 1, 2, 3]);
         let groups =
             keys::group_keys(Scale::set(PitchClass::C, chromatic), ChordSize::Triads).unwrap();
         assert_eq!(groups[0].label, "3-1");

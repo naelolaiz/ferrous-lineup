@@ -16,6 +16,8 @@
 //!   of notes, chord or not: music after tonality.
 //! - [`Micromode`] is one of Francisco Kröpfl's twelve groups of three
 //!   notes, the smallest sets, which larger sets are made of.
+//! - [`Degree`] names a form of a set by where it sits in a key made of
+//!   that set, as a Roman numeral names a chord in a key: `T2`, `T5I`.
 //! - [`key_fits`] finds the key a piece is in from how long each note
 //!   sounds.
 //! - [`voice_leading`] checks how the parts move from chord to chord:
@@ -26,6 +28,7 @@
 mod analysis;
 mod chord;
 pub(crate) mod chord_scale;
+pub mod degree;
 pub mod hearing;
 mod hints;
 pub mod key_finding;
@@ -46,6 +49,7 @@ pub use analysis::{
 };
 pub use chord::{Chord, ChordFamily, ChordQuality, ChordStamp};
 pub use chord_scale::{chord_scale, chord_scale_name};
+pub use degree::Degree;
 pub use hearing::{HeardNote, Hearing, Listening, Reading, hear};
 pub use hints::HintLevel;
 pub use key_finding::key_fits;
