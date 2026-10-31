@@ -12,7 +12,9 @@ use crate::chord_sheet::{self, ChordMarker, HarmonyName};
 use crate::effects::Effects;
 use crate::harmony::key_finding::{KeySpan, chromas_of_notes, key_spans};
 use crate::harmony::voice_leading::{self, VoiceLeading, voices_of};
-use crate::harmony::{Chord, ChordSymbol, Harmony, HeardNote, Hearing, Listening, Scale, hear};
+use crate::harmony::{
+    Chord, ChordSymbol, Degree, Harmony, HeardNote, Hearing, Listening, PitchSet, Scale, hear,
+};
 use crate::key_map::{KeyMap, KeyMarker, moved_key};
 use crate::meter::{Bar, Click, Meter, TimeMarker, TimeSignature};
 use crate::pattern::{NoteEvent, Pattern};
@@ -534,6 +536,19 @@ impl Project {
             .iter()
             .map(|marker| self.key_at(marker.start))
             .collect();
+        // The sheet as it was, and where each pattern first plays, to
+        // find the form each note is part of (see `form_of`).
+        let sheet = self.playlist.chord_markers.clone();
+        let first_clips: Vec<Option<usize>> = (0..self.patterns.len())
+            .map(|pattern| {
+                self.playlist
+                    .clips
+                    .iter()
+                    .filter(|clip| clip.pattern == pattern)
+                    .map(|clip| clip.start)
+                    .min()
+            })
+            .collect();
         self.scale = scale;
         for marker in &mut self.playlist.key_markers {
             marker.scale = moved_key(marker.scale, from, scale);
@@ -550,16 +565,24 @@ impl Project {
         let pitched: Vec<bool> = self.channels.iter().map(Channel::is_pitched).collect();
         for (index, pattern) in self.patterns.iter_mut().enumerate() {
             let (old, new) = (before[index], after[index]);
-            for (channel, _) in pitched.iter().enumerate().filter(|(_, p)| **p) {
-                if pattern.is_step_row(channel) {
-                    continue;
-                }
+            let channels: Vec<usize> = (0..pitched.len())
+                .filter(|&channel| pitched[channel] && !pattern.is_step_row(channel))
+                .collect();
+            let sounding: Vec<NoteEvent> = channels
+                .iter()
+                .flat_map(|&channel| pattern.notes(channel).iter().copied())
+                .collect();
+            let start = first_clips[index];
+            for channel in channels {
                 let notes: Vec<NoteEvent> = pattern
                     .notes(channel)
                     .iter()
-                    .map(|note| NoteEvent {
-                        pitch: tools::change_key(note.pitch, old, new),
-                        ..*note
+                    .map(|note| {
+                        let form = form_of(note, &sounding, &sheet, start, old);
+                        NoteEvent {
+                            pitch: tools::change_key_in(note.pitch, form, old, new),
+                            ..*note
+                        }
                     })
                     .collect();
                 pattern.set_notes(channel, notes);
@@ -2376,6 +2399,44 @@ impl Default for Project {
     fn default() -> Self {
         Project::demo()
     }
+}
+
+/// The form of `key`, a key that is a set, that `note` is part of, so a
+/// change of set can keep its degree (see [`tools::change_key_in`]): the
+/// harmony written on the sheet where the pattern first plays the note
+/// (it starts on step `start` of the song), if the note is in it, or
+/// else the notes sounding with it in the pattern, all of them, if they
+/// are a form. `None` when neither is a form of the key, or the key is
+/// not a set.
+fn form_of(
+    note: &NoteEvent,
+    sounding: &[NoteEvent],
+    sheet: &[ChordMarker],
+    start: Option<usize>,
+    key: Scale,
+) -> Option<PitchSet> {
+    if !matches!(key.kind, crate::ScaleKind::Set(_)) {
+        return None;
+    }
+    let pitch_class = note.pitch.pitch_class();
+    let is_form = |form: &PitchSet| Degree::of(key, *form).is_some();
+    let written = start.and_then(|start| {
+        let step = start + note.start;
+        let after = sheet.partition_point(|marker| marker.start <= step);
+        let marker = sheet.get(after.checked_sub(1)?)?;
+        marker
+            .harmony
+            .pitch_set()
+            .filter(|form| form.contains(pitch_class) && is_form(form))
+    });
+    written.or_else(|| {
+        let together: PitchSet = sounding
+            .iter()
+            .filter(|other| (other.start..other.start + other.length).contains(&note.start))
+            .map(|other| other.pitch.pitch_class())
+            .collect();
+        Some(together).filter(is_form)
+    })
 }
 
 #[cfg(test)]

@@ -16,9 +16,9 @@
 //! is a way of playing, and plays a tetrachord or a hexachord as it
 //! plays three notes.
 
-use crate::chord_sheet::{ChordMarker, HarmonyName};
+use crate::chord_sheet::HarmonyName;
 use crate::general_midi;
-use crate::harmony::{Degree, Micromode, ScaleKind};
+use crate::harmony::{Degree, ScaleKind};
 use crate::library::MicromodeStyle;
 use crate::library::apply::{BASS, KEYS, LEAD, StyleParts};
 use crate::library::comping::{BassPart, Played};
@@ -280,21 +280,7 @@ impl Project {
         self.scale = style.scale(key);
         self.playlist.key_markers.clear();
         let first = style.first_form(key, DEMO_SECTIONS[0].0);
-        let steps = style.steps.max(1);
-        let markers: Vec<ChordMarker> = style
-            .forms(first, end)
-            .into_iter()
-            .enumerate()
-            .map(|(index, form)| {
-                let harmony = match Micromode::of(form) {
-                    Some(_) => HarmonyName::Micromode(form),
-                    None => HarmonyName::Set(form),
-                };
-                ChordMarker::new(index * steps, harmony)
-            })
-            .take_while(|marker| marker.start < end)
-            .collect();
-        self.set_chords(0, end, &markers);
+        self.set_chords(0, end, &style.sheet(first, end));
     }
 }
 
@@ -302,7 +288,8 @@ impl Project {
 mod tests {
     use super::*;
     use crate::band::tests::part;
-    use crate::harmony::{PitchSet, Scale};
+    use crate::chord_sheet::ChordMarker;
+    use crate::harmony::{Micromode, PitchSet, Scale};
     use crate::library::MICROMODE_STYLES;
     use crate::pitch::PitchClass;
 

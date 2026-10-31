@@ -265,6 +265,7 @@ pub fn row_demo(style: &RowStyle) -> Project {
 /// note, from it upside down, from a tritone away, and from there upside
 /// down, each a section of the song, then the first once more. The key
 /// note is C. With a rhythm, the drums come in after the first section.
+/// The forms are written on the chord sheet, each with its degree.
 pub fn micromode_demo(style: &MicromodeStyle) -> Project {
     let mut project = Project::empty();
     project.tempo = Tempo::new(style.tempo);
@@ -276,6 +277,24 @@ pub fn micromode_demo(style: &MicromodeStyle) -> Project {
     });
     project.scale = style.scale(PitchClass::C);
     arrange_sections(&mut project, &patterns, length, style.rhythm(), "Micromode");
+    // Each section's forms on the sheet, where its pattern plays.
+    let mut sheet = Vec::new();
+    for clip in project.playlist().clips() {
+        let Some(i) = patterns
+            .iter()
+            .position(|&(pattern, _)| pattern == clip.pattern)
+        else {
+            continue;
+        };
+        let first = style.first_form(PitchClass::C, micromodes::DEMO_SECTIONS[i].0);
+        sheet.extend(
+            style
+                .sheet(first, length)
+                .into_iter()
+                .map(|marker| ChordMarker::new(clip.start + marker.start, marker.harmony)),
+        );
+    }
+    project.set_chords(0, project.song_length(), &sheet);
     project
 }
 
