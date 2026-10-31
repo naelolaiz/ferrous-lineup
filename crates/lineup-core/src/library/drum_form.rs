@@ -88,6 +88,9 @@ pub struct DrumPart<'a> {
     /// [`break_bars`]): a rhythm that breaks plays only its break drum
     /// there.
     pub breaks: bool,
+    /// Whether its first bar is a pickup after a break (see
+    /// [`pickup_bars`]): the break drum plays on alone through it.
+    pub picks_up: bool,
 }
 
 /// How big a fill is.
@@ -430,20 +433,25 @@ pub fn part_drums(rhythm: &Rhythm, part: &DrumPart, fills: &mut usize) -> Vec<(D
     let places = fill_places(rhythm, part);
     let choices = fills_of(rhythm);
     let contrast = part.contrast && rhythm.layout.is_none() && part.groove % 2 == 1;
-    // The bar the band breaks in: the break drum alone, the first bar of
-    // its opening.
-    let breaking = break_drum(rhythm)
-        .filter(|_| part.breaks)
-        .and_then(|drum| Some((part.bars.len().checked_sub(1)?, drum)));
+    // The bars the band breaks in: the break drum alone, the first bars
+    // of its opening, in the part's last bar before a new part, and on
+    // through a new part's pickup bar.
+    let drum = break_drum(rhythm);
+    let last = part.bars.len().checked_sub(1);
+    let alone = |index: usize| match drum {
+        Some(drum) if part.breaks && Some(index) == last => Some((drum, 0)),
+        Some(drum) if part.picks_up && index == 0 && last.is_some_and(|last| last > 0) => {
+            Some((drum, 1))
+        }
+        _ => None,
+    };
     let mut notes = Vec::new();
     // A fill that builds over two bars is one fill: its small part
     // and its whole one are the same.
     let mut chosen: Option<Fill> = None;
     for (index, bar) in part.bars.iter().enumerate() {
-        if let Some((last, drum)) = breaking
-            && index == last
-        {
-            for note in rhythm.bar_notes(drum, 0, bar.time, bar.length) {
+        if let Some((drum, line)) = alone(index) {
+            for note in rhythm.bar_notes(drum, line, bar.time, bar.length) {
                 notes.push((
                     drum,
                     NoteEvent {
@@ -631,6 +639,53 @@ pub fn break_bars(bars: &[Bar], form: &[Section], end: usize) -> Vec<Bar> {
         .collect()
 }
 
+/// How long the tune rests, at least, where a pickup's line lands: an
+/// eighth note.
+const LANDED_STEPS: usize = 2;
+
+/// The bars of `bars` that are a pickup into a new part, after one of
+/// the `breaks` (see [`break_bars`]): the first bar of the part after
+/// the break, when the tune, `melody`, leads in it into the part's next
+/// bar. A note started after the bar's first beat is tied over the bar
+/// line, and where it ends the tune rests, an eighth note or more: the
+/// line has landed on the next bar, where the part really starts. The
+/// band waits on through the pickup bar, as in the break, and comes back
+/// in with the next. A tune that runs on past the tied note leads into
+/// nothing: the part started with it. Each note of `melody` is its first
+/// step and the step after its last.
+pub fn pickup_bars(
+    bars: &[Bar],
+    form: &[Section],
+    breaks: &[Bar],
+    melody: &[(usize, usize)],
+) -> Vec<Bar> {
+    breaks
+        .iter()
+        .filter_map(|broken| {
+            let at = bars.iter().position(|bar| bar.start == broken.end())?;
+            let (bar, next) = (bars[at], *bars.get(at + 1)?);
+            // The part goes on past its pickup bar.
+            let section = form.iter().find(|section| section.start == bar.start)?;
+            (next.end() <= section.end() && leads_in(bar.start, bar.end(), melody)).then_some(bar)
+        })
+        .collect()
+}
+
+/// Whether the tune, `melody`, leads from the bar of steps `start` to
+/// `end` into the next bar, as a pickup does (see [`pickup_bars`]): a
+/// note started after the bar's first beat is tied over the bar line,
+/// and where it ends the tune rests, an eighth note or more.
+pub fn leads_in(start: usize, end: usize, melody: &[(usize, usize)]) -> bool {
+    let lands = |at: usize| {
+        !melody
+            .iter()
+            .any(|&(from, _)| at <= from && from < at + LANDED_STEPS)
+    };
+    melody
+        .iter()
+        .any(|&(from, to)| start < from && from < end && end < to && lands(to))
+}
+
 /// The drum a rhythm plays alone where the band breaks, if it breaks
 /// (see [`Layout::breaks`]).
 fn break_drum(rhythm: &Rhythm) -> Option<Drum> {
@@ -710,27 +765,30 @@ pub fn song_drums(
     form: &[Section],
     end: usize,
 ) -> Vec<(Drum, NoteEvent)> {
-    song_drums_breaking(rhythm, bars, form, end, &break_bars(bars, form, end))
+    song_drums_breaking(rhythm, bars, form, end, &break_bars(bars, form, end), &[])
 }
 
 /// What the drums play over a whole song, as [`song_drums`], breaking in
-/// the bars of `breaks` only.
+/// the bars of `breaks` only, and on through the pickup bars of
+/// `pickups` (see [`pickup_bars`]).
 pub fn song_drums_breaking(
     rhythm: &Rhythm,
     bars: &[Bar],
     form: &[Section],
     end: usize,
     breaks: &[Bar],
+    pickups: &[Bar],
 ) -> Vec<(Drum, NoteEvent)> {
     let parts = form_parts(bars, form, end, &[], 0);
     let last = parts.len().saturating_sub(1);
     let breaks: Vec<usize> = breaks.iter().map(|bar| bar.start).collect();
+    let pickups: Vec<usize> = pickups.iter().map(|bar| bar.start).collect();
     let mut fills = 0;
     let mut crash = false;
     let mut turns = Turns::default();
     let mut notes = Vec::new();
     for (index, (range, kind)) in parts.into_iter().enumerate() {
-        let last_bar = bars[range.end - 1].start;
+        let (first_bar, last_bar) = (bars[range.start].start, bars[range.end - 1].start);
         let part = DrumPart {
             bars: &bars[range],
             opens: kind.opens,
@@ -745,6 +803,7 @@ pub fn song_drums_breaking(
             crash,
             turn: turns.of(&kind),
             breaks: index != last && breaks.contains(&last_bar),
+            picks_up: pickups.contains(&first_bar),
         };
         notes.extend(part_drums(rhythm, &part, &mut fills));
         crash = ends_with_fill(rhythm, &part);
@@ -777,6 +836,7 @@ mod tests {
             crash: false,
             turn: 0,
             breaks: false,
+            picks_up: false,
         }
     }
 
@@ -800,6 +860,88 @@ mod tests {
         assert_eq!(breaks, [7, 11]);
         // Nor where the chorus ends.
         assert_eq!(break_bars(&bars, &form, 12 * bar).len(), 1);
+    }
+
+    #[test]
+    fn a_tune_leading_into_a_new_part_makes_its_first_bar_a_pickup() {
+        let bars = bars(12, TimeSignature::COMMON);
+        let bar = 16;
+        let form = [
+            Section::new("Intro", 0, 4 * bar),
+            Section::new("Verse", 4 * bar, 4 * bar),
+            Section::new("Refrain", 8 * bar, 4 * bar),
+        ];
+        let breaks = break_bars(&bars, &form, 12 * bar);
+        assert_eq!(breaks.len(), 2);
+        let numbers = |melody: &[(usize, usize)]| -> Vec<usize> {
+            pickup_bars(&bars, &form, &breaks, melody)
+                .iter()
+                .map(|bar| bar.number)
+                .collect()
+        };
+        // The verse's line is tied over into its second bar and lands
+        // there, resting; so does the refrain's, after a note on its
+        // first beat.
+        let line = [
+            (4 * bar + 6, 4 * bar + 15),
+            (5 * bar - 1, 5 * bar + 2),
+            (5 * bar + 5, 5 * bar + 6),
+        ];
+        let after_a_note = [
+            (8 * bar, 8 * bar + 4),
+            (8 * bar + 12, 9 * bar + 2),
+            (9 * bar + 4, 9 * bar + 5),
+        ];
+        assert_eq!(numbers(&line), [4]);
+        assert_eq!(numbers(&after_a_note), [8]);
+        // A tune that runs on past the tied note started the part.
+        let running = [
+            (8 * bar, 8 * bar + 4),
+            (8 * bar + 12, 9 * bar + 2),
+            (9 * bar + 3, 9 * bar + 4),
+        ];
+        assert!(numbers(&running).is_empty());
+        // A note held from the first beat, or a line that ends in the
+        // bar, is no pickup.
+        assert!(numbers(&[(4 * bar, 5 * bar + 4)]).is_empty());
+        assert!(numbers(&[(4 * bar + 4, 5 * bar)]).is_empty());
+        // Nor is a part's only bar.
+        let short = [
+            Section::new("Intro", 0, 4 * bar),
+            Section::new("Verse", 4 * bar, bar),
+            Section::new("Refrain", 5 * bar, 4 * bar),
+        ];
+        let breaks = break_bars(&bars, &short, 12 * bar);
+        assert!(pickup_bars(&bars, &short, &breaks, &line).is_empty());
+    }
+
+    #[test]
+    fn the_clave_plays_on_alone_through_a_pickup_bar() {
+        let bars = bars(8, TimeSignature::COMMON);
+        let rhythm = named("Candombe");
+        let picking_up = DrumPart {
+            picks_up: true,
+            ..part(&bars)
+        };
+        let notes = part_drums(rhythm, &picking_up, &mut 0);
+        let in_bar = |notes: &[(Drum, NoteEvent)], at: usize| -> Vec<(Drum, usize)> {
+            notes
+                .iter()
+                .filter(|(_, note)| (at * 16..(at + 1) * 16).contains(&note.start))
+                .map(|(drum, note)| (*drum, note.start - at * 16))
+                .collect()
+        };
+        let clave: Vec<(Drum, usize)> = rhythm
+            .bar_notes(Drum::Rim, 1, TimeSignature::COMMON, 16)
+            .iter()
+            .map(|note| (Drum::Rim, note.start))
+            .collect();
+        assert_eq!(in_bar(&notes, 0), clave);
+        // The rest of the part plays as it would.
+        let on = part_drums(rhythm, &part(&bars), &mut 0);
+        for at in 1..8 {
+            assert_eq!(in_bar(&notes, at), in_bar(&on, at), "bar {at}");
+        }
     }
 
     #[test]
