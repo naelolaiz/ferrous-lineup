@@ -229,8 +229,12 @@ impl Triadic {
 /// to D", "keeps G, moves C and E", "keeps no note". Notes are named by
 /// `name`.
 pub fn describe_link(from: PitchSet, to: PitchSet, name: impl Fn(PitchClass) -> String) -> String {
-    let shared: Vec<String> = PitchSet::from_bits(from.bits() & to.bits())
-        .iter()
+    // In the order of the first group's normal form: A C C# keeps "A and
+    // C", as the group is read, not "C and A".
+    let shared: Vec<String> = from
+        .normal_form()
+        .into_iter()
+        .filter(|&p| to.contains(p))
         .map(&name)
         .collect();
     let (arriving, leaving) = changed(from, to);
@@ -388,8 +392,15 @@ mod tests {
     #[test]
     fn a_link_says_what_stays_and_what_moves() {
         let name = |p: PitchClass| p.to_string();
-        let text = describe_link(set(&[0, 1, 4]), set(&[1, 4, 5]), name);
-        assert!(text.contains("goes to"), "{text}");
+        assert_eq!(
+            describe_link(set(&[0, 1, 4]), set(&[1, 4, 5]), name),
+            "keeps C# and E; C goes to F"
+        );
+        // A C C# to Ab A C: the kept notes as A C C# is read.
+        assert_eq!(
+            describe_link(set(&[9, 0, 1]), set(&[8, 9, 0]), name),
+            "keeps A and C; C# goes to G#"
+        );
         assert_eq!(
             describe_link(set(&[0, 1, 4]), set(&[6, 7, 10]), |p| p.to_string()),
             "keeps no note"
