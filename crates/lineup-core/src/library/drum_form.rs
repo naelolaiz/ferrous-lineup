@@ -871,6 +871,16 @@ mod tests {
                     .any(|(drum, note)| *drum == Drum::Rim && note.start < 16),
                 "{name}"
             );
+            // Never the clave just before a new part: both calls close
+            // on the drum.
+            for notes in [&first, &second] {
+                assert!(
+                    !notes
+                        .iter()
+                        .any(|(drum, note)| *drum == Drum::Rim && note.start >= 6 * 16),
+                    "{name}"
+                );
+            }
         }
     }
 
