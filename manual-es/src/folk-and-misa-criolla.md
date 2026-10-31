@@ -104,8 +104,8 @@ el bajo de la dominante y lleva a Mi.
   arpegio en lugar del arpa y el *cuatro*.
 - **Colombia**: *La gata golosa*, un **pasillo** rápido en La mayor.
 - **Uruguay**: el **candombe** de Montevideo. *Candombe del barrio* se
-  mueve en 3 + 3 + 2, la clave que el palo toca en la madera del
-  tambor; *Candombe para Gardel*, de Rubén Rada, cambia de modo una y
+  mueve en 3 + 3 + 2, el tresillo en el que también se apoyan la
+  milonga y el tango; *Candombe para Gardel*, de Rubén Rada, cambia de modo una y
   otra vez, de Sol mayor a Sol menor y de vuelta.
 - **Brasil**: las canciones de los gaúchos de Rio Grande do Sul, como
   *Boi barroso*, y *Luar do sertão*, una *toada* sobre la luna del

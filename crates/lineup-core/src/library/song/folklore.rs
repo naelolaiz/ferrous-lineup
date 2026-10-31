@@ -737,8 +737,8 @@ pub(super) const CANDOMBE_DEL_BARRIO: Song = Song {
     form: &["A", "A", "A"],
     drums_from: 0,
     about: "Montevideo's candombe, across the river from Buenos Aires. The tune moves in \
-            3 + 3 + 2, two dotted eighths and an eighth, the same clave the stick plays on \
-            the drum's wooden shell, over three plain chords in C major.",
+            3 + 3 + 2, two dotted eighths and an eighth, the tresillo that the milonga and \
+            the tango lean on too, over three plain chords in C major.",
 };
 
 /// The verse: E minor, then D7 into G, the relative major, and A minor and

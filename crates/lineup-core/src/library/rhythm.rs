@@ -1573,13 +1573,18 @@ pub static RHYTHMS: &[Rhythm] = &[
         Folklore,
         110.0,
         &[
-            (Rim, "X..X ..X. X..X ..X."),
-            (LowTom, "X... ..X. X... X..."),
-            (Conga, ".xx. .xx. .xx. .xx."),
+            // The madera, the piano and the chico in their Cuareim versions,
+            // as the murga percussion sheet writes them. The piano's closed
+            // left hand is soft, its open stick strokes loud.
+            (Rim, "x..x .x.x x.x. x..x"),
+            (LowTom, "o..X .o.. o..X o..."),
+            (Conga, ".Xxx .Xxx .Xxx .Xxx"),
         ],
         "",
-        "Montevideo's candombe: the stick on the drum's wooden shell plays the clave, \
-         3 + 3 + 2 twice, under the piano, repique and chico drums.",
+        "Montevideo's candombe in its Cuareim style: the stick plays the madera on the \
+         drum's wooden shell, as the repique does between its phrases; the chico plays the \
+         three sixteenths after each beat, the first one loud; and the piano's open strokes \
+         ring just before beats 2 and 4, over soft strokes of the hand.",
     ),
     rhythm(
         "Polca",
