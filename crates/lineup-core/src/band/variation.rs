@@ -292,8 +292,10 @@ mod tests {
             ["Hat", "Kick", "Snare"]
         );
         project.set_variation(64, None, Variation::B);
+        // Bars 5 and 6: the last part's groove, before it builds into the
+        // end.
         assert_eq!(
-            heard(&project, Player::Drums, 64, 112),
+            heard(&project, Player::Drums, 64, 96),
             ["Crash", "Kick", "Ride", "Snare"]
         );
         // Variation a before it keeps the hi-hat.
