@@ -1327,6 +1327,19 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "A form of the key's set has as many notes as the set",
         "Una forma del conjunto de la tonalidad tiene tantas notas como el conjunto",
     ),
+    ("Most used:", "Más usados:"),
+    (
+        "The classes of the groups the sheet reads from the notes, the one that sounds longest first. Each group lasts from where it starts to where the next one starts, as the sheet writes a harmony lasting; two of one class at once count once",
+        "Las clases de los grupos que la hoja lee en las notas, primero la que suena más tiempo. Cada grupo dura desde donde empieza hasta donde empieza el siguiente, como la hoja escribe lo que dura una armonía; dos de una misma clase a la vez cuentan una vez",
+    ),
+    (
+        "The classes of the harmonies written on the sheet, as the notation names them, the one that sounds longest first. Each lasts from where it is written to the next one; chords, row forms and N.C. are left out",
+        "Las clases de las armonías escritas en la hoja, como las nombra la notación, primero la que suena más tiempo. Cada una dura desde donde está escrita hasta la siguiente; los acordes, las formas de la serie y N.C. quedan fuera",
+    ),
+    ("· {} more", "· {} más"),
+    ("once", "una vez"),
+    ("{} times", "{} veces"),
+    ("{}: {} of the song, {}. {}", "{}: {} de la canción, {}. {}"),
     (
         "Notes you draw or move land on the notes of the key. Notes already there stay put until you move them: to snap them all, select them (Ctrl+A) and drag them up a semitone and back. Right-click for more.",
         "Las notas que dibujas o mueves caen en las notas de la tonalidad. Las notas que ya están se quedan donde están hasta que las muevas: para ajustarlas todas, selecciónalas (Ctrl+A) y arrástralas un semitono hacia arriba y de vuelta. Clic derecho para más.",
