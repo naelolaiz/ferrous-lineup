@@ -1964,8 +1964,8 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Los vientos tocan los acordes con la banda",
     ),
     (
-        "The key becomes the micromode, starting on the key note. While the song plays, a click plays the whole song this way.",
-        "La tonalidad se vuelve el micromodo, empezando en la nota de la tonalidad. Si la canción está sonando, un clic toca así toda la canción.",
+        "In a song, the band plays it from the chord sheet: the forms written there when the key is a set, or else its own walk, which it writes on the sheet, and the key becomes the micromode, starting on the key note.",
+        "En una canción, la banda lo toca desde la hoja de acordes: las formas escritas ahí cuando la tonalidad es un conjunto, o si no su propio recorrido, que escribe en la hoja, y la tonalidad se vuelve el micromodo, empezando en la nota de la tonalidad.",
     ),
     (
         "The key becomes the row, starting on the key note. While the song plays, a click plays the whole song this way.",
@@ -1990,10 +1990,6 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     (
         "the lower note first, going up",
         "primero la nota más grave, subiendo",
-    ),
-    (
-        "the micromode instead of the chords",
-        "el micromodo en lugar de los acordes",
     ),
     (
         "The notes it leaves out form {}{}.",

@@ -1,11 +1,12 @@
 //! Micromode styles: music in one of Kröpfl's colours, to try from the
 //! library.
 //!
-//! Like a twelve-tone style, a micromode style has no chord progression.
-//! It names one micromode, a [`Walk`] from form to form, and how each
-//! instrument plays the forms (see [`crate::micromodal`]). Every
-//! instrument plays the same walk, so the chords, the bass and the tune
-//! always share their three notes.
+//! A micromode style names one micromode, a [`Walk`] from form to form,
+//! and how each instrument plays the forms (see [`crate::micromodal`]).
+//! Tried on its own, it writes its walk into a pattern, every instrument
+//! playing the same forms, so the chords, the bass and the tune always
+//! share their three notes. In a song the band plays it from the forms on
+//! the chord sheet instead (see [`Project::apply_micromode_style`]).
 //!
 //! The styles were written for Ferrous Lineup. Kröpfl's own music, and his
 //! students', is still under copyright, so none of it is copied here.
@@ -17,9 +18,8 @@ use crate::pitch::{Note, PitchClass};
 use crate::project::Project;
 use crate::serial::Register;
 
-use super::apply::{BASS, KEYS, LEAD, RhythmChange, chords_channel, find_synth, synth_named};
+use super::apply::{BASS, KEYS, LEAD, chords_channel, find_synth, synth_named};
 use super::rhythm::Rhythm;
-use super::rows::take_over_harmony;
 
 /// How one instrument plays the walk.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -367,34 +367,9 @@ pub fn write_micromode_style(
     write_voices(project, pattern, style, key, start, selected)
 }
 
-/// Plays the whole song in `style`, as [`super::rows::use_row_style`]
-/// does with a row: the style's walk replaces the song's chords and
-/// bass, what it does not play goes quiet, and the melody stays unless
-/// the style has one. The patterns start in turn from the four places of
-/// [`DEMO_SECTIONS`], so the song does not repeat itself. The key becomes
-/// the micromode, on the song's key note.
-pub fn use_micromode_style(project: &mut Project, style: &MicromodeStyle) -> RhythmChange {
-    let key = project.scale.root;
-    let uses = |name: &str| style.voices.iter().any(|voice| voice.channel == name);
-    let change = take_over_harmony(
-        project,
-        &uses,
-        style.rhythm(),
-        |project, pattern, n, keys| {
-            let start = DEMO_SECTIONS[n % DEMO_SECTIONS.len()].0;
-            write_voices(project, pattern, style, key, start, keys);
-        },
-    );
-    if change.harmony > 0 {
-        project.scale = style.scale(key);
-    }
-    change
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::library::apply::heard_chords_channel;
 
     #[test]
     fn every_style_names_a_micromode_and_a_rhythm() {
@@ -470,31 +445,5 @@ mod tests {
         // Triads: the key's own chord.
         let triads = MicromodeStyle::named("Triads, two notes kept").unwrap();
         assert_eq!(triads.scale(PitchClass::A).root, PitchClass::A);
-    }
-
-    #[test]
-    fn a_song_takes_a_micromode_style() {
-        let original = Project::demo();
-        let pattern = (0..original.patterns().len())
-            .find(|&p| heard_chords_channel(&original, p).is_some())
-            .unwrap();
-        let chords = heard_chords_channel(&original, pattern).unwrap();
-        let mut project = original.clone();
-        let style = MicromodeStyle::named("Fourths groove").unwrap();
-        let change = use_micromode_style(&mut project, style);
-        assert!(change.harmony > 0 && change.drums > 0, "{change:?}");
-        assert_eq!(
-            Micromode::of(project.scale.pitch_set()),
-            Some(style.micromode())
-        );
-        // Its chords replace the song's, on the same channel.
-        let notes = project.pattern(pattern).unwrap().notes(chords);
-        assert!(!notes.is_empty());
-        let heard: PitchSet = notes
-            .iter()
-            .filter(|n| n.start == 0)
-            .map(|n| n.pitch.pitch_class())
-            .collect();
-        assert_eq!(Micromode::of(heard), Some(style.micromode()));
     }
 }

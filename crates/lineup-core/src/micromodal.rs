@@ -397,23 +397,48 @@ pub fn write_forms(
     length: usize,
 ) -> Vec<NoteEvent> {
     let steps = steps.max(1);
-    let mut notes = Vec::new();
     if forms.is_empty() {
-        return notes;
+        return Vec::new();
     }
+    let spans: Vec<Span> = (0..length)
+        .step_by(steps)
+        .map(|start| Span {
+            start,
+            end: (start + steps).min(length),
+            form: forms[(start / steps) % forms.len()],
+        })
+        .collect();
+    write_spans(&spans, writing)
+}
+
+/// A form and the steps it lasts, from `start` up to `end`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Span {
+    pub start: usize,
+    pub end: usize,
+    pub form: PitchSet,
+}
+
+/// Writes each form of `spans` from its start to its end, the way
+/// `writing` says, each voiced from the one before as [`write_forms`]
+/// voices a walk: the band plays the forms of the chord sheet so in a
+/// micromode style. A span without notes is a rest: the voices go on
+/// from the form before it.
+pub fn write_spans(spans: &[Span], writing: &MicroWriting) -> Vec<NoteEvent> {
+    let mut notes = Vec::new();
     let event = |pitch: Note, start: usize, lasts: usize| NoteEvent {
         velocity: writing.velocity,
-        ..NoteEvent::new(pitch, start, lasts.min(length - start).max(1))
+        ..NoteEvent::new(pitch, start, lasts.max(1))
     };
     let mut chord: Vec<Note> = Vec::new();
     let mut last: Option<Note> = None;
     let mut bass: Option<Note> = None;
     let mut place = 0;
-    let mut start = 0;
     let mut previous: Option<PitchSet> = None;
-    while start < length {
-        let form = forms[(start / steps) % forms.len()];
-        let end = (start + steps).min(length);
+    for &Span { start, end, form } in spans {
+        if form.is_empty() || end <= start {
+            continue;
+        }
         chord = voice(form, &chord, writing.low);
         match writing.texture {
             Texture::Chords => {
@@ -484,7 +509,6 @@ pub fn write_forms(
             }
         }
         previous = Some(form);
-        start = end;
     }
     notes
 }
