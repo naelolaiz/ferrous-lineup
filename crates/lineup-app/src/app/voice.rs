@@ -127,6 +127,16 @@ struct Loading {
     /// The track the recording goes on, when it was dropped on one or
     /// added from its menu: else the review offers a free one.
     track: Option<usize>,
+    /// A take's recording already in the song, heard again.
+    again: Option<Again>,
+}
+
+/// A take's recording already in the song, transcribed again: its
+/// track and the take's name ("Take 1").
+#[derive(Debug, Clone)]
+struct Again {
+    track: usize,
+    name: String,
 }
 
 /// Where a take's notes go, as the review window offers it.
@@ -147,6 +157,9 @@ struct Review {
     keep: bool,
     track: usize,
     transcription: Transcription,
+    /// For a take transcribed again, the recording it is: kept already,
+    /// so it is not saved or added again.
+    again: Option<Again>,
 }
 
 impl Review {
@@ -175,7 +188,42 @@ impl Review {
             keep: true,
             track,
             transcription,
+            again: None,
         }
+    }
+
+    /// The review of a take's recording already in the song, `again`:
+    /// nothing to keep, and the notes go where they went before, the
+    /// channel whose notes are on the take's notes track if it has one.
+    fn again(project: &Project, heard: Heard, again: Again) -> Self {
+        let mut review = Review::new(project, heard, Some(again.track));
+        let notes = format!("{} notes", again.name);
+        let below = again.track + 1;
+        let written = project
+            .playlist()
+            .tracks()
+            .get(below)
+            .filter(|track| track.name == notes)
+            .and_then(|_| {
+                project
+                    .playlist()
+                    .clips()
+                    .iter()
+                    .filter(|clip| clip.track == below)
+                    .filter_map(|clip| project.pattern(clip.pattern))
+                    .find_map(|pattern| {
+                        (0..project.channels().len()).find(|&channel| {
+                            !project.channels()[channel].is_take()
+                                && !pattern.notes(channel).is_empty()
+                        })
+                    })
+            });
+        if let Some(channel) = written {
+            review.destination = Destination::Channel(channel);
+        }
+        review.keep = false;
+        review.again = Some(again);
+        review
     }
 
     /// Writes the notes again on `grid`, with their pitches as `pitches`
@@ -458,14 +506,7 @@ impl LineupApp {
         at: Option<usize>,
         track: Option<usize>,
     ) {
-        let busy = self.voice.recording.is_some()
-            || self.voice.hearing.is_some()
-            || self.voice.loading.is_some();
-        if busy || self.voice.review.is_some() {
-            self.message = Some(
-                tr("Finish the take first: write it in or throw it away, then add the recording.")
-                    .to_string(),
-            );
+        if self.take_busy() {
             return;
         }
         let step = match (self.mode, at) {
@@ -507,6 +548,57 @@ impl LineupApp {
             step,
             name,
             track,
+            again: None,
+        });
+    }
+
+    /// Whether a take is being recorded, heard or reviewed, so another
+    /// cannot start: says so if it is.
+    fn take_busy(&mut self) -> bool {
+        let busy = self.voice.recording.is_some()
+            || self.voice.hearing.is_some()
+            || self.voice.loading.is_some()
+            || self.voice.review.is_some();
+        if busy {
+            self.message = Some(
+                tr("Finish the take first: write it in or throw it away, then add the recording.")
+                    .to_string(),
+            );
+        }
+        busy
+    }
+
+    /// Hears the recording that `channel` plays from step `from` of
+    /// track `track` again, and opens "Your take" for it, to write its
+    /// notes with other choices in place of the ones written before.
+    pub(super) fn transcribe_again(&mut self, channel: usize, from: usize, track: usize) {
+        let Some(take) = self.project.channels().get(channel) else {
+            return;
+        };
+        let lineup_core::ChannelKind::Sampler(lineup_core::SampleSource::Take(path)) = &take.kind
+        else {
+            return;
+        };
+        let path = path.clone();
+        let name = take.name.clone();
+        if self.take_busy() {
+            return;
+        }
+        if self.mode == PlayMode::Pattern {
+            self.set_mode(PlayMode::Song);
+        }
+        self.notice = Some(trf("Listening to {}…", &[&tr_name(&name)]));
+        self.message = None;
+        let language = crate::i18n::Language::current();
+        self.voice.loading = Some(Loading {
+            worker: thread::spawn(move || {
+                language.set();
+                load(&path)
+            }),
+            step: from,
+            name: name.clone(),
+            track: Some(track),
+            again: Some(Again { track, name }),
         });
     }
 
@@ -586,7 +678,10 @@ impl LineupApp {
                     tuning,
                     name: Some(loading.name),
                 };
-                self.voice.review = Some(Review::new(&self.project, heard, loading.track));
+                self.voice.review = Some(match loading.again {
+                    Some(again) => Review::again(&self.project, heard, again),
+                    None => Review::new(&self.project, heard, loading.track),
+                });
             }
             Ok(Err(err)) => {
                 self.message = Some(trf("Could not add the recording: {}", &[&err]));
@@ -644,12 +739,26 @@ impl LineupApp {
                         ui.end_row();
 
                         ui.label(tr("The recording"));
-                        ui.horizontal(|ui| {
-                            ui.checkbox(&mut review.keep, tr("Keep it"));
-                            if review.keep && matches!(review.take.along, Along::Song(_)) {
-                                track_combo(ui, project, &mut review.track);
+                        match &review.again {
+                            Some(again) => {
+                                let track = project
+                                    .playlist()
+                                    .tracks()
+                                    .get(again.track)
+                                    .map_or_else(String::new, |track| {
+                                        tr_name(&track.name).into_owned()
+                                    });
+                                ui.label(trf("It stays on {}, as it is.", &[&track]));
                             }
-                        });
+                            None => {
+                                ui.horizontal(|ui| {
+                                    ui.checkbox(&mut review.keep, tr("Keep it"));
+                                    if review.keep && matches!(review.take.along, Along::Song(_)) {
+                                        track_combo(ui, project, &mut review.track);
+                                    }
+                                });
+                            }
+                        }
                         ui.end_row();
                     });
                 if let Destination::Channel(channel) = review.destination
@@ -692,7 +801,10 @@ impl LineupApp {
         };
         // Again, in case the song changed while the window was open.
         let transcription = review.transcribe(&self.project);
-        let name = take_name(&self.project, review.heard.name.as_deref());
+        let name = match &review.again {
+            Some(again) => again.name.clone(),
+            None => take_name(&self.project, review.heard.name.as_deref()),
+        };
         let mut recordings = Vec::new();
         if review.keep {
             let folder = self.takes_folder();
@@ -735,9 +847,15 @@ impl LineupApp {
             name,
             track: review.track,
             recordings,
+            under: review.again.as_ref().map(|again| again.track),
         };
         let along = review.take.along.clone();
-        let added = self.edit("record a take", |project| {
+        let undo = if review.again.is_some() {
+            "transcribe a take again"
+        } else {
+            "record a take"
+        };
+        let added = self.edit(undo, |project| {
             project.add_take(&along, &transcription, &target, &keep)
         });
         let mut said = match added.channel {
@@ -1039,6 +1157,11 @@ impl LineupApp {
         self.voice.review.is_some()
     }
 
+    /// For the tests: saves takes in `folder`.
+    pub(super) fn keep_takes_in(&mut self, folder: PathBuf) {
+        self.voice.folder = Some(folder);
+    }
+
     /// For the tests: the step the waiting take's recording starts on,
     /// and the track the review offers to keep it on.
     pub(super) fn take_place(&self) -> Option<(usize, usize)> {
@@ -1190,6 +1313,7 @@ mod tests {
             step: 0,
             name: String::new(),
             track: None,
+            again: None,
         });
 
         let opened = Project::template();
