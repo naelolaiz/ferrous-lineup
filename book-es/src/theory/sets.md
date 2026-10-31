@@ -710,6 +710,74 @@ porque los acordes de séptima van antes que los de sexta en la lista.
 referencia: `iter` da `&PitchClass`, y `find` le pasa a su closure una
 referencia a eso.
 
+### En el piano roll
+
+El carril de acordes del piano roll, sobre la cuadrícula, también tiene
+un menú **Mostrar**, junto a **Conducción de voces**: **Acordes**,
+**Conjuntos de clases de alturas** o **Micromodos**. (No hay Como está
+escrito: el carril nombra lo que oye, y ahí no hay nada escrito.)
+
+![El piano roll de la demostración Bruma de tonos enteros con Mostrar en Conjuntos de clases de alturas: la fila Teclados nombra notas sueltas, y la fila Todo nombra 2-2, 3-6, 2-2, 2-2 T2, 3-6 T2 y así, un bloque por pulso; la línea bajo la barra de herramientas dice «Paso 22: Teclados: Re. Todos: Re subiendo a Mi: una segunda mayor. Conjuntos de clases de alturas: 2-2 T2.»](../images/step-9-piano-roll-sets.png)
+
+El carril oye la armonía como un `analysis::Harmony`, no como un
+`HarmonyName`, así que tiene su propia entrada a la misma regla:
+
+```rust
+pub fn name_heard(
+    self,
+    harmony: &Harmony,
+    sounding: PitchSet,
+    key: Scale,
+) -> Option<Vec<HarmonyName>> {
+    if !self.groups() {
+        return None;
+    }
+    let heard = |harmony: Harmony| {
+        let all = harmony.pitch_set();
+        let heard = all.intersection(sounding);
+        self.name_group(if heard.len() >= 2 { heard } else { all }, key)
+    };
+    match *harmony {
+        Harmony::Silence | Harmony::Single(_) => None,
+        Harmony::Polychord { upper, lower, bass } => Some(vec![
+            heard(Harmony::Chord { chord: lower, bass }),
+            heard(Harmony::Chord {
+                chord: upper,
+                bass: upper.root,
+            }),
+        ]),
+        other => Some(vec![heard(other)]),
+    }
+}
+```
+
+`None` quiere decir «deja el nombre propio del carril»: en la vista
+Acordes, y para el silencio y una sola nota, que no forman conjunto.
+Dos notas son un conjunto de dos, una clase de intervalo: Do y Mi son
+2-4. Un acorde y su bajo son un solo conjunto, así que C y C/E, dos
+bloques como acordes, son un solo bloque como 3-11 T7I.
+
+¿Por qué `sounding`? Una armonía oída es el **nombre** de un acorde, y
+un nombre puede tener una nota que no suena. Do, Re y Mi juntos se oyen
+como Cadd9, como los oiría un músico: Do mayor con una novena agregada,
+sin su quinta. Pero las notas de Cadd9 son Do, Re, Mi y Sol, el
+conjunto 4-22, y ningún Sol suena. Un conjunto nombra las notas mismas,
+así que las notas del acorde se recortan a las que suenan:
+`intersection` es un AND bit a bit de los doce bits de los dos
+conjuntos (ver [La teoría de conjuntos en doce
+bits](#la-teoría-de-conjuntos-en-doce-bits)). Do Re Mi es 3-6, el
+micromodo Mayor 1, que es de lo que está hecha Bruma de tonos enteros.
+Si quedaran menos de dos notas, se nombran las del acorde, porque si no
+no habría conjunto que nombrar.
+
+El nombre completo de un conjunto es largo para un bloque de un pulso,
+así que un bloque demasiado estrecho para él muestra su clase sola,
+**3-11** por 3-11 T7I, como hace la hoja de acordes cuando mete más
+compases en una línea (`stacked_classes`). Apuntar al bloque lo nombra
+entero en la línea bajo la barra de herramientas. Cómo dibuja el carril
+sus bloques está en [El carril de acordes: `chunk_by`, y luego
+medir](../program/editors.md#el-carril-de-acordes-chunk_by-y-luego-medir).
+
 ## Leer las propias notas
 
 Renombrar las armonías de la hoja es la mitad de lo que hace un

@@ -1389,6 +1389,178 @@ search, the first group that starts once the note has ended; every
 group after this one and before that one hears it. A stretch counts the
 notes held at its first group as heard.
 
+## Finding the colour
+
+**🔍 Find the key** names the major or minor key a passage sounds like
+it is in (see [Finding the key](hearing.md#finding-the-key)). Music
+built on a micromode, or on any other set, has a home of another kind:
+one set, moved and turned upside down, heard over and over. So under
+the key, a second line names the **colour** of the passage, in two
+ways:
+
+- **The micromode** its notes fit best, strong, and any that fit almost
+  as well, fainter: "Colour in bars 1 to 8: Menor 3 on C". Pointing at
+  it says how many of the notes are in its forms, and which form is its
+  home.
+- **The collection** of notes it is made of, as a scale is the notes a
+  melody is made of: "made of 6-35 (whole-tone scale)".
+
+Each has a **Use as the key** button, which makes it the key of those
+bars with key markers. No note moves, as when you pick
+**pitch-class set** in the Key menu; Undo takes it back. Where the
+colour is the key already, the line says **(the key)** instead.
+
+![Find the key on the demo Whole-tone haze: "Sounds in the notes here: D major, or A minor, or C major", and under it "Colour in bars 1 to 8: Mayor 1 on C (the key), made of 6-35 (whole-tone scale)" with a Use as the key button](../images/step-9-find-colour.png)
+
+On the micromode demos it names each demo's own micromode, every note
+in place. Whole-tone haze shows why the second line is needed: its
+notes are the whole-tone scale, which fits no major or minor key, so
+the first line's best guess, D major, is a poor one. The colour line
+names what the music is made of: Mayor 1 (C D E), moved by whole tones,
+and the whole-tone scale those forms add up to. A passage that fits no
+micromode shows none.
+
+The work is in `harmony/colour_finding.rs`.
+
+### A micromode: the colour check, twelve times
+
+Finding the micromode of a passage means asking, of each of the twelve:
+if this were the key, how would the [colour check](#checking-the-colour)
+read the notes? The check already finds the cheapest reading, so the
+finder runs it, with each micromode on C as the key, and counts:
+
+```rust
+let fit = colour::fit(notes, micromode.key(PitchClass::C));
+let share = 1.0 - fit.out as f32 / fit.notes.max(1) as f32;
+if share < MICROMODE_FIT {
+    return None;
+}
+```
+
+`fit.out` counts the notes outside their form, and each note missing
+from a form left unfinished. A micromode is proposed when 90% of the
+notes or more are in place (`MICROMODE_FIT`); the others shown are
+within five points of the best, two at most. Which form is the home?
+The one heard longest, added up over every stretch the check reads in
+it, as the key of a tonal piece is the chord it comes back to. It
+becomes the key's own form, T0, so the forms of the passage get their
+degrees from it.
+
+### Leaving out the micromodes that cannot fit
+
+Twelve readings of a long passage take time. Most micromodes can be
+left out before reading at all, with a sum that costs almost nothing:
+the **fewest** notes a reading must leave out of place. The notes that
+start together make a group, and each group has its distinct notes:
+
+```rust
+fn least_out(groups: &[PitchSet], micromode: &Micromode) -> usize {
+    let forms = micromode.members();
+    groups
+        .iter()
+        .map(|&group| match group.len() {
+            n if n > 3 => n - 3,
+            _ if forms
+                .iter()
+                .any(|form| form.bits() & group.bits() == group.bits()) =>
+            {
+                0
+            }
+            _ => 1,
+        })
+        .sum()
+}
+```
+
+A form has three notes, so a group of five leaves two out however it is
+read. A group of three or fewer leaves none out only if some form holds
+all its notes: `form.bits() & group.bits() == group.bits()` asks
+whether the group's twelve bits are all in the form's (see [Set theory
+in twelve bits](sets.md#set-theory-in-twelve-bits)). Otherwise one note
+at least is out. The real reading can only leave out more, so a
+micromode whose bound alone takes it under 90% is left out, and only
+the rest are read. A passage of four-note chords fits no micromode, and
+none is read.
+
+The bound is a **lower bound**: it never says a micromode fits when it
+does not, it only says early that one cannot. That is the usual way to
+make an exact search fast: prune with something cheap that can never be
+wrong in the direction that matters.
+
+### A collection: the notes that sound most
+
+The collection is simpler. Each pitch class is weighed by how long it
+sounds, and the longest are taken, one by one, until they sound 97% of
+the time (`COLLECTION_TIME`): a passing note or two does not count.
+Their set is proposed when it has four to six notes, or up to nine when
+it is a collection music is made of: one with a name, such as the
+octatonic scale (8-28) or the harmonic minor (7-32), or the diatonic
+7-35. Seven or eight notes without a name are most often a key with a
+chromatic note or two, which says nothing new. A collection that is
+just the major or minor key Find the key shows is left out too: the
+key says it already.
+
+A set as a key needs a root, the note its forms are counted from. The
+whole-tone scale on C and on D are the same six notes, but T2 on one is
+T0 on the other. So the collection takes the root of the micromode's
+home, when that note is in it; else the root of the key found; else
+the first note of its normal form:
+
+```rust
+fn key_of(set: PitchSet, roots: &[Option<PitchClass>]) -> Scale {
+    let root = roots
+        .iter()
+        .flatten()
+        .copied()
+        .find(|&root| set.contains(root))
+        .or_else(|| set.normal_form().first().copied())
+        .unwrap_or(PitchClass::C);
+    Scale::set(root, set)
+}
+```
+
+`flatten` on an iterator of `&Option<PitchClass>` skips the `None`s and
+gives the values inside the `Some`s: an `Option` is a little iterator of
+zero or one item. Whole-tone haze is made of Mayor 1 on C, so its
+collection is the whole-tone scale on C, though the key found there,
+D major, would have put it on D.
+
+### Eight bars at a time
+
+A colour read over a whole long passage would hide the bars that change
+it, and take long to read. `Project::colour_passage` takes the stretch
+the song's key holds, from the key marker before the playhead to the
+next one, and cuts it into blocks of eight bars from its start; a last
+block of fewer than four bars joins the one before. (Not the stretches
+Find the key hears in one major or minor key: in music made of a
+micromode, those come and go every few bars, as no such key fits it
+well.)
+
+```rust
+let mut edges: Vec<usize> = bars.iter().step_by(COLOUR_BARS).copied().collect();
+// ...
+let last = bars.len().saturating_sub(1) / COLOUR_BARS * COLOUR_BARS;
+if edges.len() > 1 && bars.len() - last < COLOUR_BARS / 2 {
+    edges.pop();
+}
+edges.push(end);
+```
+
+`step_by(8)` takes every eighth bar line, the start of each block.
+`last` is where the last block starts; if fewer than four bars are left
+from there, its edge is dropped, and the block before it runs to the
+end. The app reads the block at the playhead once and keeps what it
+found until the playhead moves into another block or the song changes.
+In pattern mode the whole pattern is one passage: "Colour in this
+pattern".
+
+**Use as the key** calls `Project::set_key_between`: a key marker where
+the block starts, and, unless the song ends there or a marker is there
+already, one where it ends, back to the key that was there. Markers
+between the two are taken away. Then the key map is tidied, so a
+marker that changes nothing is not kept, and a block from the start of
+the song changes the song's own key instead.
+
 ## The window: a clock drawn with egui's painter
 
 The twelve notes sit round a circle like the hours of a clock, C at the

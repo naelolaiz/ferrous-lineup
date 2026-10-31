@@ -113,6 +113,7 @@ Ecualizador: mixer.md#efectos
 Editor de estilos: style-editor.md
 Efectos: mixer.md#efectos
 El acompañamiento sigue los acordes: harmony-keys.md#tocar-acordes-para-la-banda, midi.md#tocar-acordes-para-la-banda
+Encontrar el color: sets-rows-micromodes.md#encontrar-el-color
 Entrenador de velocidad: practising.md#el-entrenador-de-velocidad
 Entrenamiento auditivo: practising.md#entrenamiento-auditivo-experimental
 Enviar por MIDI: midi.md#enviar-a-un-sintetizador
@@ -195,6 +196,7 @@ Modo mixolidio: keys-and-modes.md#los-modos, concert-hall.md#el-boléro-de-ravel
 Modo patrón: patterns-and-playlist.md#modo-patrón-y-modo-canción
 Modulación: outside-the-key.md#acordes-pivote-cambiar-de-tonalidad, concert-hall.md#el-barroco
 Mostrar (hoja de acordes): sets-rows-micromodes.md#una-armonía-cuatro-nombres
+Mostrar (piano roll): sets-rows-micromodes.md#una-armonía-cuatro-nombres
 Movimiento contrario: voice-leading.md#cómo-se-mueve-cada-parte
 MP4: exporting.md#un-video
 Muestra: channel-rack.md#tus-propios-sonidos

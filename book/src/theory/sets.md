@@ -669,6 +669,71 @@ since seventh chords come before sixth chords in the list. `&&root` in
 the closure's pattern takes apart a reference to a reference: `iter`
 gives `&PitchClass`, and `find` passes its closure a reference to that.
 
+### In the piano roll
+
+The piano roll's chord lane, above the grid, has a **Show** menu too,
+next to **Voice leading**: **Chords**, **Pitch-class sets** or
+**Micromodes**. (There is no As written: the lane names what it hears,
+and nothing there was written.)
+
+![The piano roll of the demo Whole-tone haze with Show set to Pitch-class sets: the Keys row names single notes, and the All row names 2-2, 3-6, 2-2, 2-2 T2, 3-6 T2 and so on, a block for each beat; the line under the toolbar says "Step 22: Keys: D. All: D up to E: a major second. Pitch-class sets: 2-2 T2."](../images/step-9-piano-roll-sets.png)
+
+The lane hears the harmony as an `analysis::Harmony`, not a
+`HarmonyName`, so it has its own way into the same rule:
+
+```rust
+pub fn name_heard(
+    self,
+    harmony: &Harmony,
+    sounding: PitchSet,
+    key: Scale,
+) -> Option<Vec<HarmonyName>> {
+    if !self.groups() {
+        return None;
+    }
+    let heard = |harmony: Harmony| {
+        let all = harmony.pitch_set();
+        let heard = all.intersection(sounding);
+        self.name_group(if heard.len() >= 2 { heard } else { all }, key)
+    };
+    match *harmony {
+        Harmony::Silence | Harmony::Single(_) => None,
+        Harmony::Polychord { upper, lower, bass } => Some(vec![
+            heard(Harmony::Chord { chord: lower, bass }),
+            heard(Harmony::Chord {
+                chord: upper,
+                bass: upper.root,
+            }),
+        ]),
+        other => Some(vec![heard(other)]),
+    }
+}
+```
+
+`None` means "keep the lane's own name": in the Chords view, and for
+silence and a single note, which make no set. Two notes are a set of
+two, an interval class: C and E are 2-4. A chord and its bass are one
+set, so C and C/E, two blocks as chords, are one block as 3-11 T7I.
+
+Why `sounding`? A heard harmony is a chord's **name**, and a name can
+hold a note that does not sound. C, D and E together are heard as
+Cadd9, as a musician would hear them: C major with an added ninth, its
+fifth left out. But Cadd9's notes are C, D, E and G, the set 4-22, and
+no G plays. A set names the notes themselves, so the chord's notes are
+cut down to those that sound: `intersection` is a bitwise AND of the
+two sets' twelve bits (see [Set theory in twelve
+bits](#set-theory-in-twelve-bits)). C D E is 3-6, the micromode Mayor
+1, which is what Whole-tone haze is made of. If fewer than two notes
+were left, the chord's own notes are named, as there would be no set to
+name otherwise.
+
+A set's full name is long for a block of one beat, so a block too narrow
+for it shows its class alone, **3-11** for 3-11 T7I, as the chord sheet
+does when it fits more bars on a line (`stacked_classes`). Pointing at
+the block names it in full in the line under the toolbar. How the lane
+draws its blocks is in [The chord lane: `chunk_by`, then
+measure](../program/editors.md#the-chord-lane-chunk_by-then-measure).
+
 ## Reading the notes themselves
 
 Renaming the sheet's harmonies is half of what an analyst does with
