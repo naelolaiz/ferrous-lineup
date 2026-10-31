@@ -26,6 +26,7 @@ pub mod apply;
 pub mod chart;
 pub mod comping;
 pub mod demo;
+pub mod drum_form;
 pub mod follow;
 pub mod interpret;
 pub mod listen;
