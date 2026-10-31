@@ -22,7 +22,7 @@ De arriba abajo, la ventana tiene:
 
 | Menú | Qué contiene |
 |---|---|
-| **Archivo** | **Nuevo** (una hoja de acordes vacía con una banda), **Nuevo ritmo** (un patrón vacío y una batería), **Abrir…**, **Abrir recientes**, **Demostraciones**, **Importar grabación…**, **Importar archivo MIDI…**, **Importar hoja de acordes…**, **Guardar**, **Guardar como…**, las exportaciones (**Exportar WAV…**, **Exportar video…**, la canción o el patrón como MIDI, la hoja de acordes como texto) y **Salir** |
+| **Archivo** | **Nuevo** (una hoja de acordes vacía con una banda), **Nuevo ritmo** (un patrón vacío y una batería), **Abrir…**, **Abrir recientes**, **Demostraciones**, **Importar archivo MIDI…**, **Importar hoja de acordes…**, **Guardar**, **Guardar como…**, las exportaciones (**Exportar WAV…**, **Exportar video…**, la canción o el patrón como MIDI, la hoja de acordes como texto) y **Salir** |
 | **Edición** | **Deshacer** y **Rehacer**, que nombran lo que deshacen, y **Ajustes…** |
 | **Ver** | cada ventana y el panel, mostrados u ocultos; **Hoja de acordes en la ventana principal**, la **Partitura guía**, el **Editor de estilos…** y el **Entrenamiento auditivo** |
 | **MIDI** | **Teclado del equipo como piano**, **El acompañamiento sigue los acordes**, un teclado con el que tocar (**Entrada**) y un sintetizador en el que tocar (**Salida**) |
@@ -40,6 +40,7 @@ De izquierda a derecha:
 | ▶ | toca desde el cursor de reproducción (**Espacio**). Mientras suena, el mismo botón es ❚❚ **Pausa**: se detiene ahí, y ▶ sigue desde ahí. |
 | ⏹ | detiene, y vuelve a donde pusiste el cursor de reproducción por última vez (**Espacio** mientras suena) |
 | ● | graba en el patrón lo que tocas en un teclado MIDI o en el teclado del equipo (ver [Teclados y sintetizadores MIDI](midi.md#grabar)) |
+| micrófono | graba una **toma**: canta o silba junto con la canción, y tus notas se escriben en una parte (ver [Tomas](takes.md)) |
 | **Seguir el cursor de reproducción** | mantiene a la vista el compás que suena en la lista de reproducción, la hoja de acordes y el piano roll. Apagado, puedes desplazarte libremente mientras suena la canción. |
 | **Cuenta de entrada** | un compás de clics antes de que empiece la música |
 | **Metrónomo** | un clic en cada pulso |
