@@ -101,6 +101,11 @@ Library](styles.md#the-library-settings).
 - **Output**: the sound card in use, with its sample rate and channels.
   **Restart audio** opens it again, for instance after plugging in
   headphones.
+- **Microphone**: takes are recorded from your system's default input.
+  **Move takes later by** moves their notes later on the grid, or
+  earlier with a negative number, in milliseconds, for a sound card
+  whose delays are not what it says (see
+  [Takes](takes.md#if-the-notes-land-late-or-early)).
 - **Instrument playback**: **SoundFont instruments** and **SoundFont
   drums**, and **SoundFont library**: the SoundFont in use and **Choose
   SoundFont…**. See [Sounds](sounds.md).

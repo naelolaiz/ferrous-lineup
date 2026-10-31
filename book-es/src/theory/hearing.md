@@ -807,7 +807,7 @@ mayor.
 
 `Project::heard_keys` hace esto para la canción entera: cuentan los
 sintetizadores y los canales MIDI Out que no están silenciados, la
-batería y los samplers (como una grabación importada) no, y cada nota
+batería y los samplers (como la grabación de una toma) no, y cada nota
 cuenta tanto como suena en cada compás. Devuelve `KeySpan`s, cada uno
 con un inicio, un final y todas las tonalidades ordenadas. **Marcar en
 la lista de reproducción**, junto a la tonalidad escuchada, los
@@ -849,12 +849,10 @@ menor; unos compases después el oyente se decide por Do mayor, clara.
 
 La aplicación muestra la tonalidad de la fuente más inmediata que tiene
 (ver `key_finder.rs`): lo que tocas, si tocaste en los últimos cuatro
-compases; si no, las tonalidades oídas en una grabación importada, o en
-las notas de la canción en el cabezal; en el modo de patrón, las notas
-del patrón seleccionado. La línea dice cuál: «Suena en lo que tocas:»,
-«en las notas de aquí», «en este patrón». Cómo se oyen las tonalidades
-de una grabación está en [Importar una grabación
-(experimental)](listen.md).
+compases; si no, las tonalidades oídas en las notas de la canción en el
+cabezal; en el modo de patrón, las notas del patrón seleccionado. La
+línea dice cuál: «Suena en lo que tocas:», «en las notas de aquí», «en
+este patrón».
 
 ### Qué es un acorde en cada tonalidad
 

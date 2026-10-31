@@ -44,6 +44,11 @@
   <key>NSHumanReadableCopyright</key>
   <string>GPL-3.0-or-later</string>
 
+  <!-- macOS asks before the app hears the microphone, with this reason:
+       takes are recorded from it (see crates/lineup-audio/src/input.rs). -->
+  <key>NSMicrophoneUsageDescription</key>
+  <string>Ferrous Lineup records your singing or whistling as a take, and writes its notes into the song.</string>
+
   <!-- Finder opens .lineup projects with the app (see
        crates/lineup-app/src/open_files.rs for how the app takes them). -->
   <key>CFBundleDocumentTypes</key>
