@@ -11,8 +11,9 @@ use crate::band::{Player, band_styles};
 use crate::chord_sheet::notation::{Grouping, Notation};
 use crate::chord_sheet::{Push, Stop};
 use crate::ear_training::{
-    ChordPool, ChordQuestion, ChordSettings, Direction, Exercise, Interval, KeyChoice, Players,
-    chord_sound,
+    Choices, ChordPool, ChordQuestion, ChordSettings, Direction, Exercise, FormQuestion,
+    FormSettings, Interval, KeyChoice, MicromodeAnswer, MicromodeQuestion, MicromodeSettings,
+    Players, RowQuestion, RowSettings, RowSource, Texture, chord_sound,
 };
 use crate::effects::Delay;
 use crate::general_midi;
@@ -111,6 +112,9 @@ fn texts() -> Vec<&'static str> {
     texts.extend(KeyChoice::ALL.map(KeyChoice::name));
     texts.extend(ChordPool::ALL.map(ChordPool::name));
     texts.extend(Players::ALL.map(Players::name));
+    texts.extend(MicromodeAnswer::ALL.map(MicromodeAnswer::name));
+    texts.extend(Texture::ALL.map(Texture::name));
+    texts.extend(RowSource::ALL.map(RowSource::name));
     for interval in Interval::ALL {
         texts.extend([interval.short(), interval.sound()]);
         texts.extend(interval.tune());
@@ -240,6 +244,28 @@ fn written() {
     }
     for function in [Function::Tonic, Function::Subdominant, Function::Dominant] {
         super::tr_string(format!("The {}", function.name()));
+    }
+    // The exercises beyond keys, every way they can be asked.
+    for seed in 0..400 {
+        for spread in [false, true] {
+            let settings = MicromodeSettings {
+                spread,
+                ..MicromodeSettings::default()
+            };
+            MicromodeQuestion::new(&settings, seed).explain();
+        }
+        let forms = FormSettings {
+            sizes: Choices::of(&[0, 1, 2]),
+            textures: Choices::of(&[0, 1]),
+        };
+        FormQuestion::new(&forms, seed).explain();
+        for source in RowSource::ALL {
+            let rows = RowSettings {
+                source,
+                ..RowSettings::default()
+            };
+            RowQuestion::new(&rows, seed).explain();
+        }
     }
 }
 
