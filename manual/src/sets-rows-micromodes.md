@@ -82,21 +82,29 @@ after picking **pitch-class set** in the Key menu), the harmony keys can
 play two things, chosen at the left:
 
 - **Chords**: chords stacked from the set's notes, three or four at a
-  time.
+  time, each called by the set it makes, as the chord sheet writes it:
+  **3-11 T7I** is C E G.
 - **Forms**: the set's own **forms**, the whole set moved or turned
   upside down, each named by its **degree** (T0, T2, T2I…), as for a
   micromode (see [A micromode as the key](#a-micromode-as-the-key)). A
   set of three notes always shows its forms.
 
 The forms come home first, then by how many notes they keep of home,
-brighter the more they keep. When a form is something tonal music has a
-name for, its key says so. In a key that is C E G B♭ as a set (4-27, the
-notes of a dominant seventh), T2I is E G B♭ D, **Em7b5**, the only form
-that keeps three of its notes. In C major as a set (7-35), T7 is **G
-major**, which keeps six. **Near home** shows the forms that keep at
-least half the notes of home, **All forms** shows them all.
+brighter the more they keep. Each key shows the form's notes in their
+most compact order and, under them, the form as the chord sheet writes
+it. A set is music without a key, so neither the keys nor the chords
+stacked from the set are named as the chords and scales of tonal music
+they may sound like. In a key that is C E G B♭ as a set (4-27), T2I is
+D E G B♭, the only form that keeps three of its notes (to a tonal ear,
+E G B♭ D is a half-diminished seventh, but the key does not call it
+that). In C major as a set (7-35), T7 keeps six notes, and its notes
+are still spelled as G major spells them, with F♯. Only Kröpfl's three
+chord micromodes (Acorde disminuido, menor-mayor and aumentado), which
+are triads by name, show the triad each form is (see [A micromode as
+the key](#a-micromode-as-the-key)). **Near home** shows the forms that
+keep at least half the notes of home, **All forms** shows them all.
 
-![The harmony keys in a key that is the set C E G B♭, with Forms on, after T2I was played: T0 (C7), T2I (Em7b5), then T3 (E♭7), T6 (F♯7), T9 (A7) and the half-diminished sevenths that keep two notes; T0 is outlined because it keeps three notes of E G B♭ D](images/set-forms-keys.png)
+![The harmony keys in a key that is the set C E G B♭, set 4-27 in the Key menu, with Forms on, after T2I was played: T0 (E G B♭ C), T2I (D E G B♭), then T3, T6, T9 and the turned forms that keep two notes, each with its name as the chord sheet writes it underneath (4-27 T0I, 4-27 T2…); T0 is outlined because it keeps three notes of T2I](images/set-forms-keys.png)
 
 **A progression of forms.** In a set key, the chord sheet's
 **Progression** button offers ways to chain the set's forms, in place
@@ -258,6 +266,11 @@ sounding together, or in one track's line. Click it to take the song's
 own notes as the key, so nothing has to move. Any other set moves the
 notes as a new micromode does: from another set every form keeps its
 degree, and from a major or minor key the notes stay as they are.
+
+Once a set is the key, the Key menu names it (**set 6-20**) and the
+harmony keys switch to its forms, so you can play them at once (see [A
+set as the key: its forms](#a-set-as-the-key-its-forms)); **Chords**
+brings back the chords stacked from its notes.
 
 ## Twelve-tone rows
 

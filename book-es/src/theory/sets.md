@@ -303,10 +303,10 @@ más arriba, T3I su inversión subida tres. Después:
   construirlos, nombrarlos e
   invertirlos](chords.md#sellos-de-acorde));
 - **Usar como tonalidad** convierte el conjunto en la tonalidad de la
-  canción: el piano roll resalta sus notas y las teclas de armonía tocan
-  acordes apilados con ellas (o, para un conjunto de tres notas, sus
-  formas por grado, como para un micromodo: ver
-  [Micromodos](micromodes.md#un-micromodo-como-tonalidad-grados)).
+  canción: el piano roll resalta sus notas y las teclas de armonía
+  muestran sus formas por grado, como para un micromodo (ver
+  [Micromodos](micromodes.md#un-micromodo-como-tonalidad-grados)), o,
+  con **Acordes**, acordes apilados con ellas.
   Elegido aquí, un conjunto de tres notas se nombra como conjunto, 3-3,
   no como el micromodo que también es (ver [Tres notas: un conjunto o un
   micromodo](#tres-notas-un-conjunto-o-un-micromodo)).
@@ -331,17 +331,20 @@ mismas notas. Ferrous Lineup toma el segundo sentido, porque un conjunto
 es una notación. Do mayor ya *es* un conjunto de clases de altura, Do
 Re Mi Fa Sol La Si, la clase 7-35. Así que pasar la tonalidad de Do
 mayor a «conjunto de clases de alturas» deja quietas todas las notas de
-la canción y solo muestra la misma armonía en notación de conjuntos:
+la canción y solo muestra la misma armonía en notación de conjuntos.
+Las teclas de armonía tocan los mismos acordes que antes, nombrados como
+conjuntos (la última columna es como los llamaba Do mayor; las teclas
+ya no lo hacen):
 
-| Tecla de armonía | Notas | Clase |
-|---|---|---|
-| C | Do Mi Sol | 3-11 |
-| Dm | Re Fa La | 3-11 |
-| Em | Mi Sol Si | 3-11 |
-| F | Fa La Do | 3-11 |
-| G | Sol Si Re | 3-11 |
-| Am | La Do Mi | 3-11 |
-| Bdim | Si Re Fa | 3-10 |
+| Tecla de armonía | Notas | Clase | En Do mayor |
+|---|---|---|---|
+| 3-11 T7I | Do Mi Sol | 3-11 | C |
+| 3-11 T2 | Re Fa La | 3-11 | Dm |
+| 3-11 T4 | Mi Sol Si | 3-11 | Em |
+| 3-11 T0I | Fa La Do | 3-11 | F |
+| 3-11 T2I | Sol Si Re | 3-11 | G |
+| 3-11 T9 | La Do Mi | 3-11 | Am |
+| 3-10 T11 | Si Re Fa | 3-10 | Bdim |
 
 La tabla es una lección en sí misma. Las tríadas mayores y menores son
 la **misma** clase, 3-11, porque una tríada menor es una tríada mayor
@@ -537,6 +540,40 @@ apilados con sus notas, como en la tabla de arriba, o sus formas. Un
 conjunto de tres notas ya es un acorde, así que siempre muestra sus
 formas.
 
+Elegir un conjunto nuevo como tonalidad, en el menú Tonalidad o con
+**Usar como tonalidad**, pasa el selector a **Formas**, porque las
+formas del propio conjunto son de lo que está hecha su música. Nombrar
+las mismas notas como conjunto, como cuando Do mayor pasa a ser 7-35,
+lo pasa a **Acordes**, los acordes que la canción tenía antes. Toda
+manera de cambiar la tonalidad termina en un mismo lugar,
+`RollAction::SetScale` o `HarmonyAction::SetScale` en `app.rs`, así que
+una sola llamada ahí las cubre todas:
+
+```rust
+pub fn key_picked(&mut self, old: Scale, new: Scale) {
+    if !matches!(new.kind, ScaleKind::Set(_)) {
+        return;
+    }
+    if new.pitch_set() != old.pitch_set() {
+        self.forms = true;
+    } else if !matches!(old.kind, ScaleKind::Set(_)) {
+        self.forms = false;
+    }
+}
+```
+
+Una serie o un conjunto es música sin tonalidad, así que sus teclas
+nunca toman los nombres de la música tonal. Un acorde apilado con las
+notas de un conjunto se llama por el conjunto que forma, como lo
+escribe la hoja de acordes: Do Mi Sol en una tonalidad conjunto es
+**3-11 T7I**, no C, con su forma prima, [037], debajo. Un grupo de una
+serie se llama por su lugar en la serie, «1–3», con su clase debajo,
+incluso en la serie *Four triads*, cuyos grupos suenan como tríadas. La
+regla es del dueño del proyecto: los nombres tonales y los de conjuntos
+no se mezclan salvo que se pida. `GroupKey::new` nombra el grupo con
+`HarmonyName::Set(set).to_string()`, el mismo texto que escribe la hoja
+de acordes, así que las teclas y la hoja coinciden.
+
 Los grados se cuentan como en un micromodo: **T*n*** es la forma propia
 de la tonalidad subida *n* semitonos, **T*n*I** la forma de la
 tonalidad dada vuelta alrededor de la nota de la tonalidad y después
@@ -582,12 +619,19 @@ Do La♭ Fa Re, Dm7b5, y un tono más arriba eso es Mi Sol Si♭ Re, Em7b5:
 conservan dos (Eb7, F#7, A7 y seis séptimas semidisminuidas), siete
 conservan una y seis ninguna.
 
-Una tonalidad nombra una forma como lo que es cuando la música tonal
-tiene un nombre para ella: un acorde (C7, Em7b5), deletreado desde su
-fundamental, o, para más de cinco notas, la escala que es cuando es la
-escala de la tonalidad transportada (7-35 subido una quinta desde Do
-mayor es Sol mayor, escrito con Fa♯). Cualquier otra cosa son sus notas
-en forma normal.
+En la aplicación, una tecla nunca llama a una forma de un conjunto por
+el acorde o la escala a la que suena. Su tecla muestra el grado, las
+notas en forma normal y, debajo, la forma como la escribe la hoja de
+acordes: T2I de Do Mi Sol Si♭ es Re Mi Sol Si♭, **4-27 T2**. Una forma
+de más de cinco notas que es la escala de la tonalidad transportada se
+sigue escribiendo como esa escala (7-35 subido una quinta desde Do mayor
+se escribe Sol La Si Do Re Mi Fa♯, con Fa♯, no Sol♭), pero no se llama
+Sol mayor. Solo los tres micromodos acorde de Kröpfl (Acorde
+disminuido, menor-mayor y aumentado), que son tríadas por su nombre,
+muestran la tríada que es cada forma, deletreada desde su fundamental
+(ver [Un micromodo como tonalidad:
+grados](micromodes.md#un-micromodo-como-tonalidad-grados)); las mismas
+tres notas nombradas como conjunto, 3-11, no.
 
 ### Progresiones de formas
 
@@ -685,6 +729,19 @@ así que cuatro notas que solo hacen un acorde dejando una fuera no
 reciben el nombre de ese acorde. Tres notas van al micromodo, que solo
 llama acorde a una tríada: Do Do♯ Mi es Menor 3, no un C#m(maj7)
 incompleto.
+
+La banda la usa para poner en el bajo la fundamental de un acorde. Las
+teclas de armonía solo la consultan en una tonalidad que es un
+micromodo:
+
+```rust
+let triad = scale.micromode().and(form_chord(form));
+```
+
+`Option::and` da la segunda opción cuando la primera es `Some`, y
+`None` cuando es `None`. `Scale::micromode` es `None` para una
+tonalidad nombrada como conjunto, así que sus formas no reciben nombre
+de acorde.
 
 Encontrar las maneras de repartir las doce notas es una búsqueda que
 prueba una forma, sigue, y saca la forma cuando la manera está completa
@@ -1336,9 +1393,14 @@ comprueba que el proyecto está exactamente como estaba.
 
 Las formas de una tonalidad que es un conjunto se prueban donde se
 hacen. `keys.rs` comprueba Do mayor como conjunto (sus formas son las
-doce escalas mayores, ordenadas por el círculo de quintas, Sol mayor
-escrito con Fa♯, nueve cercanas), C7 (casa, después Em7b5 como T2I, 24
-formas en total) y un hexacordo sin nombre. `micromodal.rs` comprueba
+doce escalas mayores, ordenadas por el círculo de quintas, T7 escrita
+con Fa♯, nueve cercanas, ninguna nombrada como escala), C7 (casa,
+después Re Mi Sol Si♭ como T2I, 24 formas en total, ninguna nombrada
+como acorde), un hexacordo sin nombre, y que los acordes apilados con
+un conjunto se nombran como conjuntos («3-11 T7I») y los grupos de una
+serie solo por su lugar. Una prueba de la aplicación elige 6-20 en el
+menú Tonalidad y comprueba que el menú dice «conjunto 6-20» y que las
+teclas de armonía muestran sus formas. `micromodal.rs` comprueba
 las maneras en que los conjuntos reparten las doce notas (18 para Menor
 3, 1 para la tríada aumentada, ninguna para la disminuida, 6 para el
 hexacordo cromático, cada uno a un tritono de su otra mitad), que cada

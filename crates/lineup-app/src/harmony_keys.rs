@@ -310,6 +310,24 @@ pub struct HarmonyKeys {
 }
 
 impl HarmonyKeys {
+    /// Called when a key menu changes the song's key from `old` to `new`.
+    /// A set picked with other notes than the key had, such as 6-20 from
+    /// the menu's list of sets, shows its forms: its own shape is what
+    /// was asked for, not the triads stacked from it. The same notes
+    /// named as a set ("pitch-class set" from C major, 7-35) show the
+    /// chords stacked from them, the key's own triads named as sets, as
+    /// nothing about the music changed.
+    pub fn key_picked(&mut self, old: Scale, new: Scale) {
+        if !matches!(new.kind, ScaleKind::Set(_)) {
+            return;
+        }
+        if new.pitch_set() != old.pitch_set() {
+            self.forms = true;
+        } else if !matches!(old.kind, ScaleKind::Set(_)) {
+            self.forms = false;
+        }
+    }
+
     pub fn new() -> Self {
         HarmonyKeys {
             open: true,
@@ -1381,7 +1399,7 @@ fn fitting_size(ui: &Ui, text: &str, size: f32, width: f32) -> f32 {
 }
 
 /// A harmony key of a row or a set: its label (which notes of the row it
-/// plays, or for a set the chord they make), the notes, and underneath
+/// plays, or for a set the set they make), the notes, and underneath
 /// what the label does not already say (see [`group_footer`]).
 fn group_key(ui: &mut Ui, group: &GroupKey, lit: bool) -> Response {
     let names: Vec<String> = group.names.iter().map(ToString::to_string).collect();
@@ -1487,10 +1505,11 @@ fn form_key(ui: &mut Ui, form: &GroupKey, scale: Scale, lit: bool, outlined: boo
     response
 }
 
-/// What a form's key says under its notes: the chord or the scale it
-/// is, or else the form's own name, as the chord sheet writes it, named
-/// as the key `scale` is ("Menor 3 T4", or "3-3 T4" in a key of three
-/// notes named as a set; "6-1 T2").
+/// What a form's key says under its notes: for a chord micromode, the
+/// triad it is ("Ab"); otherwise the form's own name, as the chord sheet
+/// writes it, named as the key `scale` is ("Menor 3 T4", or "3-3 T4" in
+/// a key of three notes named as a set; "6-1 T2"), never the chord or
+/// scale of tonal music it may sound like.
 fn form_footer(form: &GroupKey, scale: Scale) -> String {
     match &form.chord {
         Some(chord) => chord.clone(),
@@ -1558,32 +1577,26 @@ pub(crate) fn paint_playing(painter: &Painter, rect: Rect) {
 }
 
 /// The small line at the bottom of a group key, saying what its label
-/// does not: "Eb · 3-11" for a row's group that makes a chord (the chord
-/// and the set class), "3-11" for a set's key called by its chord, and
-/// "[015]" (the prime form) for one called by its set class.
+/// does not: "3-11" (the set class) for a row's group, called by its
+/// place in the row, and "[037]" (the prime form) for a set's key,
+/// called by its set already ("3-11 T7I").
 fn group_footer(group: &GroupKey) -> String {
     let class = group.pitch_set().set_class();
-    if group.label == class.name() {
-        return class.prime_text();
-    }
-    match &group.chord {
-        Some(chord) if *chord != group.label => format!("{chord} · {}", class.name()),
-        _ => class.name(),
+    if group.label.split_whitespace().next() == Some(class.name().as_str()) {
+        class.prime_text()
+    } else {
+        class.name()
     }
 }
 
-/// The tooltip of a key of a row or a set: "1–3: Eb G Bb, the chord Eb ·
-/// set 3-11, …" for a row, "Cm/Eb: Eb G C · set 3-11, …" for a set.
+/// The tooltip of a key of a row or a set: "1–3: Eb G Bb · set 3-11, …"
+/// for a row, "3-11 T7I: C E G · set 3-11, …" for a set.
 fn describe_group(group: &GroupKey, index: usize, level: HintLevel) -> String {
     let names: Vec<String> = group.names.iter().map(ToString::to_string).collect();
     let class = group.pitch_set().set_class();
-    let chord = match &group.chord {
-        Some(chord) if *chord != group.label => trf(", the chord {}", &[chord]),
-        _ => String::new(),
-    };
     let mut text = trf(
-        "{}: {}{} · set {}",
-        &[&group.label, &names.join(" "), &chord, &class.name()],
+        "{}: {} · set {}",
+        &[&group.label, &names.join(" "), &class.name()],
     );
     if let Some(nickname) = class.nickname() {
         text += &format!(", {}", tr(nickname));
@@ -1846,28 +1859,31 @@ mod tests {
     fn group_keys_say_what_their_label_does_not() {
         // A set bigger than a micromode stacks its notes into chords.
         let c7 = PitchSet::from_semitones(&[0, 4, 7, 10]);
+        // Each is called by its set, so the footer gives its prime form.
         let groups = keys::group_keys(Scale::set(PitchClass::C, c7), ChordSize::Triads).unwrap();
-        assert_eq!(group_footer(&groups[1]), "3-10");
+        assert_eq!(groups[1].label, "3-10 T4");
+        assert_eq!(group_footer(&groups[1]), "[036]");
         assert_eq!(
             describe_group(&groups[1], 1, HintLevel::Minimal),
-            "Edim: E Bb G · set 3-10, diminished triad"
+            "3-10 T4: E Bb G · set 3-10, diminished triad"
         );
         let chromatic = PitchSet::from_semitones(&[0, 1, 2, 3]);
         let groups =
             keys::group_keys(Scale::set(PitchClass::C, chromatic), ChordSize::Triads).unwrap();
         assert_eq!(groups[0].label, "3-1");
         assert_eq!(group_footer(&groups[0]), "[012]");
-        // A row's group: the chord its notes make, and their set class.
+        // A row's group: its place in the row, and its set class, with no
+        // chord name: a row is music without a key.
         let row = lineup_core::harmony::ROW_PRESETS
             .iter()
             .find(|preset| preset.name == "Four triads")
             .unwrap()
             .row;
         let groups = keys::group_keys(Scale::row(row), ChordSize::Triads).unwrap();
-        assert_eq!(group_footer(&groups[0]), "C · 3-11");
+        assert_eq!(group_footer(&groups[0]), "3-11");
         assert_eq!(
             describe_group(&groups[0], 0, HintLevel::Minimal),
-            "1–3: C E G, the chord C · set 3-11, major or minor triad"
+            "1–3: C E G · set 3-11, major or minor triad"
         );
     }
 }

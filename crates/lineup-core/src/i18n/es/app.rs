@@ -32,7 +32,6 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ),
     ("({} each time)", "({} cada vez)"),
     (", played as {}", ", tocado como {}"),
-    (", the chord {}", ", el acorde {}"),
     (
         ". The speed trainer plays it at {}% now, and moves it towards {}% each time the loop comes round (Settings > Playback)",
         ". El entrenador de velocidad la toca ahora al {}%, y la lleva hacia el {}% cada vez que el bucle vuelve a empezar (Ajustes > Reproducción)",
@@ -2864,7 +2863,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "{}: {}. Double-click for 0 dB.",
         "{}: {}. Doble clic para 0 dB.",
     ),
-    ("{}: {}{} · set {}", "{}: {}{} · conjunto {}"),
+    ("{}: {} · set {}", "{}: {} · conjunto {}"),
     ("| Dm7 G7 | C |", "| {D}m7 {G}7 | {C} |"),
     ("·  or", "·  o"),
     ("· {} BPM", "· {} BPM"),

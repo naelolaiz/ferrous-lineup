@@ -5198,7 +5198,8 @@ fn the_key_menu_lists_the_sets_of_each_size() {
         let output = screen.draw(Vec::new());
         text_rect(&output, text).is_some()
     };
-    screen.click("pitch-class set");
+    // The key menu says which set the key is.
+    screen.click("set 3-11");
     // The sets of three notes, 3-11 among them.
     assert!(shows(&mut screen, "3-11"));
     assert!(shows(&mut screen, "3-12"));
@@ -5218,6 +5219,12 @@ fn the_key_menu_lists_the_sets_of_each_size() {
     );
     assert_eq!(screen.app.project.scale.root, PitchClass::C);
     assert!(!shows(&mut screen, "6-1"));
+    // The key menu says "set 6-20", and the harmony keys show its forms,
+    // named by their degrees, with no chord symbols.
+    assert!(shows(&mut screen, "set 6-20"));
+    assert!(shows(&mut screen, "Near home"));
+    assert!(shows(&mut screen, "T0"));
+    assert!(!shows(&mut screen, "Caug"));
 }
 
 /// A key that is any pitch-class set offers its forms too, and the chord
@@ -5244,13 +5251,14 @@ fn any_set_key_has_forms_and_a_progression_of_them() {
     assert!(shows(&mut screen, "Chords"));
     assert!(!shows(&mut screen, "T2I"));
     screen.click("Forms");
-    // Home, then Em7b5, which keeps three of its notes.
+    // Home, then T2I (D E G Bb), which keeps three of its notes, called
+    // by its degree only: no chord symbol.
     assert!(shows(&mut screen, "T2I"));
-    assert!(shows(&mut screen, "Em7b5"));
+    assert!(!shows(&mut screen, "Em7b5"));
     assert!(shows(&mut screen, "Near home"));
-    // The Progression menu writes eight bars. C7 keeps three notes only
-    // of Em7b5, so the walk goes there and on, keeping as many notes as
-    // it can without going straight back.
+    // The Progression menu writes eight bars. Home keeps three notes
+    // only with T2I, so the walk goes there and on, keeping as many
+    // notes as it can without going straight back.
     screen.app.chord_sheet.open = true;
     screen.click("Progression");
     screen.click("Keep as many notes as it can");

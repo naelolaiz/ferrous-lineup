@@ -963,6 +963,7 @@ impl LineupApp {
                 }
             }
             RollAction::SetScale(scale) => {
+                self.harmony_keys.key_picked(self.project.scale, scale);
                 self.edit("change key", |project| project.change_key(scale))
             }
             RollAction::SelectPattern(pattern) => self.select_pattern(pattern),
@@ -1000,6 +1001,7 @@ impl LineupApp {
     fn apply_harmony(&mut self, action: HarmonyAction) {
         match action {
             HarmonyAction::SetScale(scale) => {
+                self.harmony_keys.key_picked(self.project.scale, scale);
                 self.edit("change key", |project| project.change_key(scale));
             }
             HarmonyAction::SetTime(time) => self.set_song_time(time),
