@@ -477,6 +477,39 @@ mod tests {
     }
 
     #[test]
+    fn a_locked_keys_of_the_song_keeps_playing_its_part() {
+        let song = crate::library::SONGS
+            .iter()
+            .find(|song| song.name == "Ode to Joy")
+            .unwrap();
+        let mut project = crate::library::demo::song_demo(song);
+        let keys = project
+            .channels()
+            .iter()
+            .position(|channel| channel.name == KEYS)
+            .unwrap();
+        let notes = |project: &Project| -> Vec<Vec<NoteEvent>> {
+            project
+                .patterns()
+                .iter()
+                .map(|pattern| pattern.notes(keys).to_vec())
+                .collect()
+        };
+        let before = notes(&project);
+        project.set_locked(keys, true);
+        project.apply_micromode_style(named("Menor 3 colour"), StyleParts::default());
+        // The song's Keys plays as it did, and the band leaves the piano's
+        // part to it; the bass and the line are the style's.
+        let after = notes(&project);
+        assert_eq!(after[..before.len()], before[..]);
+        assert!(after[before.len()..].iter().all(Vec::is_empty));
+        assert!(!project.channels()[keys].muted);
+        assert!(part(&project, Player::Piano).is_empty());
+        assert!(!part(&project, Player::Bass).is_empty());
+        assert!(!part(&project, Player::Soloist).is_empty());
+    }
+
+    #[test]
     fn a_micromode_band_is_saved_and_read_again() {
         let mut project = Project::empty();
         project.apply_micromode_style(named("Menor 3 colour"), StyleParts::default());
