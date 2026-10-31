@@ -948,8 +948,8 @@ mod tests {
     #[test]
     fn rhythms_close_every_part_of_the_song() {
         // Candombe para Gardel's parts are 12, 8, 8, 4, 7 and 12 bars
-        // long. The candombe ends each with the repique's call, its
-        // closing, wherever the part ends in the rhythm's cycle, and
+        // long. The candombe ends each with the repique's call, one of
+        // its closings, wherever the part ends in the rhythm's cycle, and
         // opens the song with the clave.
         let song = super::super::Song::named("Candombe para Gardel").unwrap();
         let mut project = super::super::demo::song_demo(song);
@@ -983,16 +983,17 @@ mod tests {
                 continue;
             };
             let length = project.pattern(clip.pattern).unwrap().length();
-            for drum in rhythm.drums() {
-                for (back, line) in [(2, layout.closing_from()), (1, layout.closing_from() + 1)] {
-                    assert_eq!(
-                        played(clip.pattern, length - back * bar, drum),
-                        rhythm.bar_notes(drum, line, time, bar),
-                        "{} {drum:?}",
-                        section.name
-                    );
-                }
-            }
+            // The phrases take turns with the closings.
+            let closes = (0..layout.closings).any(|turn| {
+                let from = layout.closing_at(turn);
+                rhythm.drums().all(|drum| {
+                    [(2, from), (1, from + 1)].into_iter().all(|(back, line)| {
+                        played(clip.pattern, length - back * bar, drum)
+                            == rhythm.bar_notes(drum, line, time, bar)
+                    })
+                })
+            });
+            assert!(closes, "{}", section.name);
         }
         let intro = project
             .playlist()

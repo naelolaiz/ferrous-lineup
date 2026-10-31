@@ -1090,7 +1090,7 @@ mod tests {
 
         // Saved and opened again, the take is still a take, in a format
         // older versions know they cannot read.
-        assert_eq!(crate::file::format_for(&project), 31);
+        assert_eq!(crate::file::format_for(&project), 32);
         let text = crate::file::to_text(&project).unwrap();
         let opened = crate::file::from_text(&text).unwrap();
         assert!(opened.channels()[take_channel].is_take());
