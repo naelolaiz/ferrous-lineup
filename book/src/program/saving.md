@@ -768,9 +768,9 @@ panic on a file name that is not valid UTF-8, which Linux allows.
 `skip(1)` skips the first argument, which is the program's own name.
 
 A `.lineup` file dropped on the window is opened too, after the same
-"Save changes?" question, and a MIDI file, a chord sheet or a recording
-is imported. Other dropped WAV files go to the channel rack (see
-[Importing recordings](../theory/listen.md#from-the-menu-the-command-line-or-a-drop)
+"Save changes?" question, a MIDI file or a chord sheet is imported, and
+a recording is added to the song as a take. Other dropped WAV files go
+to the channel rack (see [Takes](../theory/listen.md#from-the-menu-the-command-line-or-a-drop)
 for which WAV is which).
 
 ## File > Open recent

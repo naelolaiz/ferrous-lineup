@@ -18,7 +18,8 @@ the instrument of every channel. One file holds the whole song.
 | **Quit** | **Ctrl+Q** | closes Ferrous Lineup |
 
 The **Import** and **Export** items are in [Opening MIDI files and
-recordings](importing.md) and [Exporting](exporting.md).
+chord sheets](importing.md) and [Exporting](exporting.md), and **Add a
+recording…** in [Takes](takes.md#adding-a-recording-made-before).
 
 The window's title names the song, with a **\*** after it while it has
 changes that are not saved. **Ctrl+Z** back to where it was saved takes
@@ -53,17 +54,17 @@ quit** or **Keep exporting**.
 ## Opening files in other ways
 
 - **Drop a file on the window** from your file manager. A .lineup file
-  opens; a MIDI file, a text chord sheet or a
-  [recording](importing.md#recordings-experimental) (MP3, FLAC, Ogg,
-  or a WAV longer than ten seconds) is imported. Drop one at a time:
-  with several, none is opened. A shorter WAV file is a sound: it
+  opens; a MIDI file or a text chord sheet is imported; a recording
+  (MP3, FLAC, Ogg, or a WAV longer than ten seconds) is [added to the
+  song as a take](takes.md#adding-a-recording-made-before). Drop one at
+  a time: with several, none is opened. A shorter WAV file is a sound: it
   becomes a channel that plays it, or, dropped on a channel of the
   rack, that channel's sound (see [The channel rack](channel-rack.md)).
 - **Open a file with Ferrous Lineup** from your file manager, or give
   it to the program on the command line, as in `ferrous-lineup
   song.lineup`. A .lineup file opens, a MIDI file is imported, a text
-  file is imported as a chord sheet, and a sound file is imported as a
-  recording.
+  file is imported as a chord sheet, and a sound file starts a new song
+  with it as a take.
 
 ## Recovering unsaved work
 
@@ -95,10 +96,12 @@ folder, in **soundfonts**.
 ## Sharing a song
 
 A .lineup file opens on Linux, macOS and Windows alike. What it doesn't
-hold are the sound files it uses: a WAV played by a channel, or an
-imported recording, stays where it was, and the song only says where.
-To give someone a song that uses them, send the sound files too, and
-put them back on the channels on the other computer.
+hold are the sound files it uses: a WAV played by a channel stays where
+it was, and the song only says where. To give someone a song that uses
+them, send the sound files too, and put them back on the channels on
+the other computer. A song's [takes](takes.md) are in a folder next to
+it: send that folder with the song, and put it next to the song again,
+and the takes are found.
 
 A song made only with things an older version of Ferrous Lineup knows
 is saved so that the older version opens it too. A song that uses

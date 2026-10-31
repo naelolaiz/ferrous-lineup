@@ -1,10 +1,10 @@
-# Abrir archivos MIDI y grabaciones
+# Abrir archivos MIDI y hojas de acordes
 
 Ferrous Lineup puede abrir música hecha en otra parte: un **archivo
-MIDI** de una obra, una **hoja de acordes** guardada como texto o, como
-experimento, una **grabación**. Cada uno se vuelve una canción nueva,
-con sus acordes en la hoja de acordes y su tonalidad en las teclas de
-armonía, para que la estudies como una demostración. Si la canción
+MIDI** de una obra o una **hoja de acordes** guardada como texto. Cada
+uno se vuelve una canción nueva, con sus acordes en la hoja de acordes
+y su tonalidad en las teclas de armonía, para que la estudies como una
+demostración. Si la canción
 abierta tiene cambios sin guardar, primero se te pregunta.
 
 ## Archivos MIDI
@@ -61,38 +61,9 @@ Ese texto es lo que escribe **Archivo > Exportar hoja de acordes…**, y
 lo que se encuentra en cancioneros y en sitios web. El formato está en
 [La hoja de acordes](chord-sheet.md#hojas-de-acordes-como-texto).
 
-## Grabaciones (experimental)
+## Grabaciones
 
-**Archivo > Importar grabación…** abre un archivo de sonido (MP3, WAV,
-FLAC u Ogg) e intenta tocar junto con él. También puedes soltar el
-archivo sobre la ventana, o abrirlo con Ferrous Lineup desde tu gestor
-de archivos. (Un archivo WAV de diez segundos o menos soltado sobre la
-ventana se toma como un sonido para un canal: ver [El rack de
-canales](channel-rack.md#tus-propios-sonidos).) Escucha durante unos segundos
-(*Escuchando …* en la barra de estado), y luego arma una canción con dos
-pistas:
-
-- **Grabación**: un canal que toca toda la grabación;
-- **Armonía**: un acorde en cada pulso, con los acordes que oyó.
-
-También adivina el tempo, el compás, la tonalidad y los cambios de
-tonalidad, para que las barras de compás, la hoja de acordes y las
-teclas de armonía sigan la música. La tonalidad de la canción es
-aquella en la que la grabación se queda más tiempo. La grabación suena
-desde donde empieces: desde el principio, desde un compás en el que
-hagas clic, o después de un salto. La barra de estado dice lo que
-encontró, como en *canon-in-d: 63.9 BPM, 4/4, Re mayor, acordes en 43 de
-43 pulsos*.
-
-Oír una grabación completa es mucho más difícil que leer un archivo
-MIDI, y el resultado suele estar mal: el tempo puede salir a la mitad
-o al doble, y se pueden oír acordes donde solo pasa una nota de la
-melodía. Tómalo como un punto de partida para corregir, y confía en tu
-oído más que en él.
-
-La grabación se guarda de nuevo como un archivo WAV junto al original,
-con un nombre como *cancion.ferrous-lineup.wav* (o en la carpeta
-temporal del sistema si no se puede escribir en esa carpeta), con un
-poco de silencio delante para que su primer pulso fuerte caiga en una
-barra de compás. La canción toca ese archivo y solo dice dónde está,
-así que guárdalo junto con la canción.
+Un archivo de sonido (MP3, WAV, FLAC u Ogg) no se abre como una canción
+propia: **Archivo > Añadir una grabación…** lo pone sobre la canción que
+tienes abierta, y escribe las notas cantadas o tocadas en él, como una
+toma (ver [Tomas](takes.md#añadir-una-grabación-hecha-antes)).

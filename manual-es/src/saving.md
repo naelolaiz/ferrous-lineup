@@ -19,7 +19,8 @@ tiene toda la canción.
 | **Salir** | **Ctrl+Q** | cierra Ferrous Lineup |
 
 Los elementos **Importar** y **Exportar** están en [Abrir archivos MIDI
-y grabaciones](importing.md) y en [Exportar](exporting.md).
+y hojas de acordes](importing.md) y en [Exportar](exporting.md), y
+**Añadir una grabación…** en [Tomas](takes.md#añadir-una-grabación-hecha-antes).
 
 El título de la ventana nombra la canción, con un **\*** después
 mientras tiene cambios sin guardar. Volver con **Ctrl+Z** hasta donde
@@ -56,10 +57,11 @@ pregunta si **Detener y salir** o **Continuar exportando**.
 ## Abrir archivos de otras maneras
 
 - **Suelta un archivo sobre la ventana** desde tu gestor de archivos.
-  Un archivo .lineup se abre; un archivo MIDI, una hoja de acordes en
-  texto o una [grabación](importing.md#grabaciones-experimental) (MP3,
-  FLAC, Ogg, o un WAV de más de diez segundos) se importa. Suelta uno a
-  la vez: con varios, no se abre ninguno. Un archivo WAV más corto es
+  Un archivo .lineup se abre; un archivo MIDI o una hoja de acordes en
+  texto se importa; una grabación (MP3, FLAC, Ogg, o un WAV de más de
+  diez segundos) se [añade a la canción como una
+  toma](takes.md#añadir-una-grabación-hecha-antes). Suelta uno a la
+  vez: con varios, no se abre ninguno. Un archivo WAV más corto es
   un sonido: se vuelve un canal que lo toca, o, soltado sobre un canal
   del rack, el sonido de ese canal (ver [El rack de
   canales](channel-rack.md)).
@@ -67,7 +69,7 @@ pregunta si **Detener y salir** o **Continuar exportando**.
   o dáselo al programa en la línea de comandos, como en `ferrous-lineup
   cancion.lineup`. Un archivo .lineup se abre, un archivo MIDI se
   importa, un archivo de texto se importa como hoja de acordes, y un
-  archivo de sonido se importa como grabación.
+  archivo de sonido empieza una canción nueva con él como toma.
 
 ## Recuperar el trabajo sin guardar
 
@@ -103,11 +105,13 @@ carpeta, en **soundfonts**.
 ## Compartir una canción
 
 Un archivo .lineup se abre igual en Linux, macOS y Windows. Lo que no
-contiene son los archivos de sonido que usa: un WAV que toca un canal,
-o una grabación importada, se queda donde estaba, y la canción solo
-dice dónde. Para darle a alguien una canción que los usa, envía también
-los archivos de sonido, y vuelve a ponerlos en los canales en la otra
-computadora.
+contiene son los archivos de sonido que usa: un WAV que toca un canal
+se queda donde estaba, y la canción solo dice dónde. Para darle a
+alguien una canción que los usa, envía también los archivos de sonido,
+y vuelve a ponerlos en los canales en la otra computadora. Las
+[tomas](takes.md) de una canción están en una carpeta junto a ella:
+envía esa carpeta con la canción, vuelve a ponerla junto a la canción,
+y las tomas se encuentran.
 
 Una canción hecha solo con lo que conoce una versión anterior de
 Ferrous Lineup se guarda de modo que esa versión también la abra. Una

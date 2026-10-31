@@ -108,7 +108,7 @@ cualquier otro crate, así que solo ve lo que el crate hace público.
 | `lineup-core/tests/chord_reading.rs` | qué tan bien nombra la hoja de acordes lo que tocan las demostraciones más difíciles: el acorde de los Augurios, el acorde de Petrushka, una pila de cuartas |
 | `lineup-core/tests/key_finding.rs` | cuántos compases de las demostraciones oye el detector de tonalidad en su tonalidad escrita, y que encuentre las modulaciones claras en su compás |
 | `lineup-core/tests/damaged_files.rs` | que un proyecto, un archivo MIDI o una hoja de acordes dañados terminen en un error o en un proyecto, nunca en un cierre inesperado |
-| `lineup-listen/tests/key_changes.rs` | qué tan bien se encuentran los cambios de tonalidad en demostraciones convertidas en audio |
+| `lineup-listen/tests/sung_notes.rs` | qué tan bien se oyen la altura y las notas de un canto real, con el conjunto de datos vocadito (que se descarga antes, ver [Cómo se prueba](../theory/listen.md#cómo-se-prueba)) |
 
 ### Archivos dañados
 
@@ -136,7 +136,9 @@ Los tests corrientes de al lado impiden que la cifra baje:
 de los compases se oyen en su tonalidad. El informe dice por qué un
 cambio movió esa cifra; el test se asegura de que nunca se mueva para el
 lado equivocado sin que nadie lo note (ver [Qué tan bien
-escucha](../theory/hearing.md#qué-tan-bien-escucha)).
+escucha](../theory/hearing.md#qué-tan-bien-escucha)). `sung_notes.rs`
+es un informe del mismo tipo, hecho con grabaciones que no están en el
+repositorio, así que no tiene un test normal al lado.
 
 ## Tests de ventana
 

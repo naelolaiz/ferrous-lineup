@@ -247,7 +247,8 @@ el sonido de ese canal; un archivo soltado en cualquier otro sitio se
 convierte en un canal nuevo con el nombre del archivo
 (`path.file_stem()` es el nombre del archivo sin su extensión). Un
 archivo de proyecto, MIDI o de hoja de acordes, o una grabación, se
-deja para la app, que lo abre o lo importa.
+deja para la app, que lo abre, lo importa o lo añade a la canción como
+toma.
 
 La carga ocurre en `LineupApp::load_sample`, en el hilo de la ventana,
 porque leer archivos es lento y nunca debe ocurrir en el hilo de audio.
