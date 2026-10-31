@@ -1703,10 +1703,11 @@ pub static RHYTHMS: &[Rhythm] = &[
     // so no two phrases in a row sound the same; and two closings of two
     // bars, taken in turns too. The repique plays the 3-2 clave on the
     // wood (Rim) in the opening and in the first bar of every second
-    // phrase and of every second closing, its "continuo" base (High
+    // phrase, never just before a new part; its "continuo" base (High
     // tom) in the grooves, the "continuo variante" in every second bar
     // of B parts and in three of four in their second turn, and its
-    // "fraseo" to close. The piano (Low tom) plays its base: "tapado"
+    // "fraseo" to close, the second closing leading into it from the
+    // continuo variante. The piano (Low tom) plays its base: "tapado"
     // strokes, stick and hand together, and loud open strokes just
     // before beats 2 and 4, with accents on beats 3 and 4 as recordings
     // of candombe drumming measure them (Maia, Rocamora, Biscainho and
@@ -1734,7 +1735,7 @@ pub static RHYTHMS: &[Rhythm] = &[
                  .... .... .... .... | .... .... .... .... | \
                  .... .... .... .... | .... .... .... .... | \
                  .... .... .... .... | .... .... .... .... | \
-                 x..x ..x. ..x. x... | .... .... .... ....",
+                 .... .... .... .... | .... .... .... ....",
             ),
             (
                 HighTom,
@@ -1749,7 +1750,7 @@ pub static RHYTHMS: &[Rhythm] = &[
                  xxxx xx.x xx.x xx.x | xxxx xx.x xx.x xx.x | \
                  xx.x xx.x xx.x xx.x | xxxx xx.x xx.x xx.x | \
                  .x.x x... .x.x x... | .x.x xx.x xx.x x... | \
-                 .... .... .... .... | .x.x xx.x xx.x x...",
+                 xxxx xx.x xx.x xx.x | .x.x xx.x xx.x x...",
             ),
             (
                 LowTom,
@@ -1791,7 +1792,7 @@ pub static RHYTHMS: &[Rhythm] = &[
          its muffled ones, which it accents on beats 3 and 4, with a variation every \
          fourth bar. Phrases take turns, so no two in a row sound the same: every second \
          one opens with a bar of clave on the wood and varies the piano every second bar, \
-         and every second call starts on the wood too. A part of another kind, a refrain \
+         and every second call starts from the repique's busier base. A part of another kind, a refrain \
          after the verse, mixes the repique's busier base into its own and varies the \
          piano every second bar, more often still on its second turn.",
     )
@@ -1814,7 +1815,7 @@ pub static RHYTHMS: &[Rhythm] = &[
                  .... .... .... .... | .... .... .... .... | \
                  .... .... .... .... | .... .... .... .... | \
                  .... .... .... .... | .... .... .... .... | \
-                 x..x .x.x x..x x..x | .... .... .... ....",
+                 .... .... .... .... | .... .... .... ....",
             ),
             (
                 HighTom,
@@ -1829,7 +1830,7 @@ pub static RHYTHMS: &[Rhythm] = &[
                  xxxx xx.x xx.x xx.x | xxxx xx.x xx.x xx.x | \
                  xx.x xx.x xx.x xx.x | xxxx xx.x xx.x xx.x | \
                  .x.x x... .x.x x... | .x.x xx.x xx.x x... | \
-                 .... .... .... .... | .x.x xx.x xx.x x...",
+                 xxxx xx.x xx.x xx.x | .x.x xx.x xx.x x...",
             ),
             (
                 LowTom,
