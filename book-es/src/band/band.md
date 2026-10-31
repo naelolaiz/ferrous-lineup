@@ -483,11 +483,13 @@ un pulso antes.
 
 ### La batería
 
-La batería toca el ritmo del estilo en cada compás, con su relleno en
-el último compás de cada ocho (`PHRASE_BARS`, como se construyen la
-mayoría de las canciones), en el último compás antes de una sección o
-de un cambio de variación, y al final de la introducción y de la vuelta.
-Un cambio de variación o de estilo empieza con un platillo crash. Las
+La batería reparte el ritmo del estilo sobre las partes de la canción,
+sus secciones o las partes oídas en sus notas: un relleno cierra cada
+parte, uno pequeño marca cada ocho compases dentro de las largas, la
+parte que sigue a un relleno empieza con un platillo crash, y una parte
+de otra clase pasa el hi-hat al ride (ver [La batería por
+partes](song-form.md#la-batería-por-partes)). Un relleno también lleva a
+un cambio de variación o de estilo, que empieza con un crash. Las
 variaciones, la introducción y el final están en [Forma, secciones,
 variaciones y bloqueos](song-form.md).
 
@@ -496,10 +498,12 @@ variaciones y bloqueos](song-form.md).
 Una canción entera no cabe en un patrón (un patrón tiene como mucho 256
 pasos, 16 compases de 4/4), y un patrón gigante sería difícil de leer.
 `chunks` corta la canción en tramos: compases enteros de un mismo
-compás, dentro de una sección, tan largos como puede ser un patrón.
+compás, dentro de una de las partes de la canción (sus secciones, o las
+partes oídas en sus notas), tan largos como puede ser un patrón.
 `write_part` corta las notas en esas líneas (una nota que dura más allá
-del final de un tramo sigue al comienzo del siguiente) y compara las
-notas de cada tramo con las de los anteriores:
+del final de un tramo sigue al comienzo del siguiente, y una nota
+sostenida sobre el comienzo de una parte une los dos tramos en uno) y
+compara las notas de cada tramo con las de los anteriores:
 
 ```rust
 let index = match contents.iter().position(|known| *known == content) {
