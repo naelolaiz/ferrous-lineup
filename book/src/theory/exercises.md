@@ -2,7 +2,7 @@
 
 These exercises practise this part on the real code: notes and chords,
 numerals, the editing tools, the hearing of chords and keys, sets, rows
-and micromodes, voice leading and the import of recordings. Each one
+and micromodes, voice leading and takes. Each one
 says what is **already there**, so you extend it rather than build it
 again. Some are things to play in the app and listen to; some are
 pieces of Rust with a clear end; the ones called "Think about it" are
@@ -599,63 +599,65 @@ Which other moves change size?
 
 *Practises:* letters and semitones, again.
 
-## Importing a recording
+## Takes
 
-### 42. A sus4 template (lineup-listen, medium)
+### 42. A legato repeat (lineup-listen, medium)
 
-`chords.rs` knows six qualities. Add `ChordQuality::Sus4` to
-`QUALITIES` and see what it does on a recording with a sus chord in it:
-render a demo with one to WAV (the `write_wav` test in
-`tests/key_changes.rs` does that). More candidates means more ways to
-be wrong. Does `SEVENTH_COST` need a cousin for rare chords?
+`voice::notes` cuts a note sung again on the same pitch where the
+loudness dips or jumps (see [From a pitch line to
+notes](listen.md#from-a-pitch-line-to-notes)), so "la, la" is two notes
+but a repeat sung legato, with no dip and no new attack, is one. Make a
+test voice that sings the same pitch twice with only a 3 dB dip between
+them, and see what comes out. What else changes at the start of a sung
+syllable? (Think of the consonant: a short burst of noise, with no
+pitch, where the pitch finder's best candidate has a low probability.)
+Try cutting where the voicing probability drops for a frame or two.
 
 *Practises:* measuring a change on known data.
 
-### 43. Six-eight (lineup-listen, medium)
+### 43. Vibrato that wobbles too far (lineup-listen, easy)
 
-`meter::guess` knows 3 and 4 beats to the bar. Add 6/8: six beats in
-two groups of three, where the chords change on beats 1 and 4. How do
-you tell 6/8 from 3/4 at twice the tempo, when both put changes every
-three beats? (Perhaps you cannot, from chords alone: what else could
-tell them apart?)
+`pitch_cuts` takes a move of more than three quarters of a semitone,
+held for 70 ms, as a new note. An opera singer's vibrato can swing a
+whole semitone, five or six times a second. Make a test voice with a
+vibrato of ±1 semitone at 5.5 Hz (the test's `voice` uses ±0.25) and
+see whether it breaks into notes. Which of `AWAY` and `STAYS` would you
+change, and what would that cost a fast run of sixteenth notes?
 
 *Practises:* the limits of a method.
 
-### 44. A recording without a copy (lineup-audio, lineup-core and lineup-listen, harder)
+### 44. Which take wins (lineup-core, medium)
 
-The import saves a copy of the recording with a lead-in of silence (see
-[Rough edges](listen.md#rough-edges)), only because a sampler note
-plays its sound from the first sample. The sampler can already start a
-voice partway (`start_at`, used by `resume`, see [Starting
-partway](../sound/instruments.md#starting-partway)). Give
-`SampleSource::File` a start offset in seconds, negative for silence
-before the sound, and let the sampler's `note_on` start there. Then
-delete `write_wav`, and set the offset from the lead-in instead. What
-must `resume` add to `elapsed`? And `SampleSource` is saved in project
-files: which format number does the change need, and what does an older
-file read as?
+Where two runs cover the same bars, the later one is kept (`kept` in
+`take.rs`): sing the chorus again until it is right. Some singers would
+rather keep the take that was most in tune. Every `SungNote` has its
+pitch with a fraction, so how far each note was from its semitone is
+known. Write a version of `kept` that keeps, for each stretch sung more
+than once, the run whose notes were closest to their semitones, and a
+test with two runs over the same bars.
 
-*Practises:* changing a type that is saved in files, the audio thread.
+*Practises:* walking ranges, choosing by a measure.
 
-### 45. A clear key, or the whole recording's (lineup-listen, easy)
+### 45. A take that follows a performance (lineup-core, harder)
 
-`keys::main_key` takes the key of the longest stretch, even when that
-stretch's key is not clear (`KeySpan::is_clear`, see [Key
-changes](listen.md#key-changes)). Try two other rules: the key of the
-longest *clear* stretch, and `bpm-key`'s key of the whole recording
-(`whole` in `analyze`) whenever the longest stretch is not clear. Run
-the report in `tests/key_changes.rs` for each. Which rule gets the most
-songs right, and are the songs it gets wrong the same?
+`Take::laid` places a recording added from a file straight on at the
+song's tempo, so a performance that slows down drifts from the bars
+(see [Rough edges](listen.md#rough-edges)). If the song has tempo
+markers that follow the performance, the marks already follow them.
+What could find those markers from the recording itself? (A beat
+tracker, such as Dan Ellis's dynamic programming, used for MIDI
+performances in [From a MIDI performance or a score to a
+demo](../songs/from-midi-and-scores.md#finding-the-beat).) Sketch what
+it would take, and which crate each part would go in.
 
-*Practises:* letting a measurement decide.
+*Practises:* planning across crates.
 
-### 46. Think about it: listening
+### 46. Think about it: takes
 
-- Chords are named per beat, and a beat's chroma is the average of its
-  frames. What happens to a chord that changes on the "and" of a beat,
-  as in a lot of jazz and Latin music?
-- Why is the meter guessed from the chords and not from the loudness
-  of the beats, the way a listener feels the downbeat?
-- The import runs on its own thread and is let go, not stopped, when
-  another project opens. When would it be worth stopping it, and how
-  would you tell a thread to stop? (See how an export is stopped.)
+- The tuning of a take is one number for the whole take. A singer who
+  goes flat slowly over a long take would need what instead?
+- Why does a take keep its recording as a reference, rather than only
+  the notes heard in it?
+- The marks are written by a thread that wakes every 5 ms. Why can the
+  microphone's callback not write them itself, and what would go wrong
+  if the recorder thread fell behind by a second?
