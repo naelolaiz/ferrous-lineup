@@ -5173,6 +5173,94 @@ fn a_micromode_style_plays_the_forms_written_on_the_sheet() {
     assert!(screen.app.project.band().unwrap().micromode.is_none());
 }
 
+/// A twelve-tone style in a song whose key is your row plays your row,
+/// and the plan of forms written on the chord sheet, in its order.
+#[test]
+fn a_row_style_plays_your_row_and_the_forms_on_the_sheet() {
+    use crate::library_browser::LibraryAction;
+    use lineup_core::harmony::{ROW_PRESETS, RowForm, RowLabel};
+    use lineup_core::library::RowStyle;
+    use lineup_core::{ChordMarker, HarmonyName, PitchSet, Player};
+    let mut screen = Screen::new();
+    let mut project = Project::with_band();
+    let row = ROW_PRESETS[1].row.starting_on(lineup_core::PitchClass::D);
+    project.scale = Scale::row(row);
+    let meter = project.meter();
+    let plan = [
+        RowLabel::new(RowForm::Prime, 2),
+        RowLabel::new(RowForm::RetrogradeInversion, 7),
+        RowLabel::new(RowForm::Inversion, 5),
+        RowLabel::new(RowForm::Retrograde, 2),
+    ];
+    for (index, label) in plan.iter().enumerate() {
+        let (start, end) = (meter.bar(index).start, meter.bar(index).end());
+        let marker = ChordMarker::new(start, HarmonyName::Row(*label));
+        project.set_chords(start, end, &[marker]);
+    }
+    project.follow_chord_sheet();
+    screen.app.replace_project(project, None);
+    screen.app.set_mode(PlayMode::Song);
+    let sheet = screen.app.project.playlist().chord_markers().to_vec();
+    let style = RowStyle::named("Triad chorale").unwrap();
+    screen.app.try_from_library(LibraryAction::RowStyle(style));
+    let project = &screen.app.project;
+    assert_eq!(project.band().unwrap().row, Some(style));
+    assert!(screen.app.tried().row_style == Some(style));
+    // The plan and the row stay as they were written.
+    assert_eq!(project.playlist().chord_markers(), sheet.as_slice());
+    assert_eq!(project.scale.tone_row(), Some(row));
+    // Each bar opens with the first three notes of its form, as a chord.
+    for (index, label) in plan.iter().enumerate() {
+        let start = meter.bar(index).start;
+        let chord: PitchSet = project
+            .playlist()
+            .clips()
+            .iter()
+            .filter(|clip| project.pattern(clip.pattern).unwrap().player == Some(Player::Piano))
+            .flat_map(|clip| {
+                let pattern = project.pattern(clip.pattern).unwrap();
+                pattern
+                    .all_notes()
+                    .filter(|(_, note)| clip.start + note.start == start)
+                    .map(|(_, note)| note.pitch.pitch_class())
+                    .collect::<Vec<_>>()
+            })
+            .collect();
+        let three: PitchSet = row.form(*label).pitch_classes()[..3]
+            .iter()
+            .copied()
+            .collect();
+        assert_eq!(chord, three, "{label}");
+    }
+    // One step to undo.
+    screen.app.undo();
+    assert!(screen.app.project.band().unwrap().row.is_none());
+}
+
+/// Tried in a pattern while the key is a row, a twelve-tone style plays
+/// that row; with Chord progression, its own.
+#[test]
+fn a_row_style_tried_in_a_pattern_keeps_the_key_row() {
+    use crate::library_browser::LibraryAction;
+    use lineup_core::harmony::ROW_PRESETS;
+    use lineup_core::library::RowStyle;
+    let mut screen = Screen::new();
+    let mut project = Project::empty();
+    let row = ROW_PRESETS[2].row.starting_on(lineup_core::PitchClass::G);
+    project.scale = Scale::row(row);
+    screen.app.replace_project(project, None);
+    let style = RowStyle::named("Row melody").unwrap();
+    screen.app.try_from_library(LibraryAction::RowStyle(style));
+    assert_eq!(screen.app.project.scale.tone_row(), Some(row));
+    screen.app.undo();
+    screen.app.playlist.library_parts_mut().progression = true;
+    screen.app.try_from_library(LibraryAction::RowStyle(style));
+    assert_eq!(
+        screen.app.project.scale.tone_row(),
+        Some(style.row().starting_on(lineup_core::PitchClass::G))
+    );
+}
+
 /// Picking another micromode in the harmony keys' key menu changes the
 /// colour of the whole piece and keeps every form's degree: the Menor 3
 /// demo in Menor 5 plays T2 of Menor 5 where it played T2 of Menor 3.
