@@ -505,6 +505,9 @@ pub fn change_key(note: Note, from: Scale, to: Scale) -> Note {
     if !from.kind.notes_follow(to.kind) {
         return note;
     }
+    if from.tone_row().is_some() && to.tone_row().is_some() {
+        return change_row(note, None, from, to);
+    }
     let up = from.root.semitones_up_to(to.root) as i32;
     let shift = if up > 6 { up - 12 } else { up };
     let Some(moved) = note.transpose(shift) else {
@@ -574,6 +577,11 @@ Algunas notas necesitan una regla propia:
   roll. Un conjunto cuyas notas son exactamente una tonalidad, como Do
   mayor mostrado como el conjunto 7-35, sigue moviéndose como esa
   tonalidad (`from_key`).
+- Entre dos **series**, una nota conserva su lugar en su forma, como
+  una nota conserva su grado entre dos modos: lo hace `change_row`
+  ([Otra serie para la misma
+  pieza](twelve-tone.md#otra-serie-para-la-misma-pieza)). Llamada desde
+  aquí no sabe la forma, y toma la propia de la tonalidad.
 
 `let Some(moved) = ... else { return note; };` es un **let-else**: si el
 patrón no encaja, el bloque `else` tiene que salir de la función. Aquí
@@ -749,7 +757,7 @@ pub fn moved_key(key: Scale, from: Scale, to: Scale) -> Scale {
     }
     let up = from.root.semitones_up_to(to.root);
     let root = key.root.transpose(up as i32);
-    let kind = if key.kind == from.kind && from.kind.is_tonal() && to.kind.is_tonal() {
+    let kind = if key.kind == from.kind {
         to.kind
     } else {
         key.kind
@@ -763,13 +771,18 @@ pub fn moved_key(key: Scale, from: Scale, to: Scale) -> Scale {
 
 La tónica se mueve los mismos semitonos. Una tonalidad en el modo viejo
 de la canción toma el modo nuevo: una canción en Do mayor con un pasaje
-en Sol mayor, llevada a Do dórico, tiene ese pasaje en Sol dórico. Una
-tonalidad en otro modo conserva el suyo: en una canción en La menor
+en Sol mayor, llevada a Do dórico, tiene ese pasaje en Sol dórico. Lo
+mismo vale para una serie o un conjunto: un pasaje en la serie vieja de
+la canción toma la serie nueva. Una tonalidad en otro modo conserva el suyo: en una canción en La menor
 subida una tercera menor a Do menor, la marcha en La mayor pasa a Do
 mayor y el episodio en Fa♯ menor a La menor, como se leería una
 partitura transportada. Después `change_key` mueve cada patrón de la
 tonalidad en que se tocaba a la tonalidad en que se toca ahora, que es
 lo que guardaban `before` y `after` más arriba.
+
+Un cambio de tonalidad también puede ser un micromodo, o un conjunto o
+una serie en que está la canción: ver
+[Micromodos](micromodes.md#cambios-de-tonalidad-en-cualquier-color).
 
 Los archivos MIDI también guardan los cambios de tonalidad, como eventos
 de armadura; ver [MIDI: mensajes, dispositivos, grabación y

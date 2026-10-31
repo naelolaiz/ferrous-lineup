@@ -28,15 +28,16 @@ use serde::{Deserialize, Serialize};
 
 use crate::chord_sheet::{ChordMarker, HarmonyName, read_bar};
 use crate::general_midi;
-use crate::harmony::{Chord, PitchSet, Scale, ScaleKind};
+use crate::harmony::{Chord, Degree, Micromode, PitchSet, Scale, ScaleKind};
 use crate::i18n::{tr, trf};
 use crate::library::apply::{self, BASS, KEYS};
 use crate::library::comping::{Bass, BassPart, Comping, Played};
 use crate::library::drum_form::{self, DrumPart, PartKind, Then};
 use crate::library::interpret::{self, Role};
 use crate::library::voicing::bass_line;
-use crate::library::{Genre, RHYTHMS, Rhythm, Style};
+use crate::library::{Genre, MicromodeStyle, RHYTHMS, Rhythm, RowStyle, Style};
 use crate::meter::{Bar, TimeSignature};
+use crate::micromodal::{self, Walk};
 use crate::pattern::{MAX_STEPS, NoteEvent};
 use crate::pitch::{Note, PitchClass};
 use crate::playlist::{Clip, MAX_SONG_STEPS, Section, Track};
@@ -49,6 +50,8 @@ mod form;
 mod guitar;
 pub mod horns;
 pub mod locks;
+mod micromode;
+mod row;
 pub mod sections;
 pub mod solo;
 pub(crate) mod stops;
@@ -545,6 +548,14 @@ pub struct Band {
     pub(crate) solo: Option<u64>,
     /// Whether the horn section plays.
     pub(crate) horns: bool,
+    /// The micromode style the band plays the forms on the chord sheet
+    /// in, if it plays one: its voices take the place of the piano, the
+    /// bass and the soloist (see [`Project::apply_micromode_style`]).
+    pub micromode: Option<&'static MicromodeStyle>,
+    /// The twelve-tone style the band plays the forms of the row on the
+    /// chord sheet in, if it plays one: its voices take the place of the
+    /// piano, the bass and the soloist (see [`Project::apply_row_style`]).
+    pub row: Option<&'static RowStyle>,
 }
 
 impl Band {
@@ -568,6 +579,8 @@ impl Band {
             styles: Vec::new(),
             solo: None,
             horns: style.brings_horns(),
+            micromode: None,
+            row: None,
         }
     }
 
@@ -628,6 +641,12 @@ impl Band {
     /// Who plays: the style's players, and the soloist and the horns
     /// when they are there.
     pub fn players(&self) -> Vec<Player> {
+        if let Some(style) = self.micromode {
+            return self.micromode_players(style);
+        }
+        if let Some(style) = self.row {
+            return self.row_players(style);
+        }
         if let Some(style) = &self.custom_rhythm {
             let mut players = self
                 .custom_instruments
@@ -727,6 +746,12 @@ impl Band {
     }
 
     pub fn name(&self) -> &str {
+        if let Some(style) = self.micromode {
+            return style.name;
+        }
+        if let Some(style) = self.row {
+            return style.name;
+        }
         if let Some(style) = &self.custom_rhythm {
             return &style.name;
         }
@@ -735,6 +760,12 @@ impl Band {
     }
 
     pub fn instrument_name(&self) -> &str {
+        if let Some(style) = self.micromode {
+            return style.name;
+        }
+        if let Some(style) = self.row {
+            return style.name;
+        }
         self.custom_instruments
             .as_ref()
             .map_or(self.instrument_style.name, |style| &style.name)
@@ -869,6 +900,12 @@ pub(crate) struct BandFile {
     pub variations: Vec<VariationMarker>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub styles: Vec<StyleMarkerFile>,
+    /// The micromode style it plays the chord sheet in, by name.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub micromode: Option<String>,
+    /// The twelve-tone style it plays the chord sheet in, by name.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub row: Option<String>,
 }
 
 /// Whose drums a band plays, as it is saved, when not its style's.
@@ -922,6 +959,8 @@ impl From<&Band> for BandFile {
             form: band.form,
             variations: band.variations.clone(),
             styles: band.styles.iter().map(StyleMarkerFile::from).collect(),
+            micromode: band.micromode.map(|style| style.name.to_string()),
+            row: band.row.map(|style| style.name.to_string()),
         }
     }
 }
@@ -979,6 +1018,30 @@ impl BandFile {
         {
             style.validate()?;
         }
+        let micromode = self
+            .micromode
+            .as_deref()
+            .map(|name| {
+                MicromodeStyle::named(name).ok_or_else(|| {
+                    trf(
+                        "its band plays \"{}\", a micromode style this version does not know",
+                        &[&name],
+                    )
+                })
+            })
+            .transpose()?;
+        let row = self
+            .row
+            .as_deref()
+            .map(|name| {
+                RowStyle::named(name).ok_or_else(|| {
+                    trf(
+                        "its band plays \"{}\", a twelve-tone style this version does not know",
+                        &[&name],
+                    )
+                })
+            })
+            .transpose()?;
         Ok(Band {
             custom_rhythm: self.custom_rhythm,
             custom_instruments: self.custom_instruments,
@@ -1034,6 +1097,8 @@ impl BandFile {
             },
             solo: self.solo,
             horns: self.with_horns,
+            micromode,
+            row,
         })
     }
 }
@@ -1113,12 +1178,13 @@ struct Content {
     rows: Vec<(usize, Vec<NoteEvent>)>,
 }
 
-/// The pitch class a group of notes is played over: the first of its
-/// normal form, its most compact arrangement. A set has no root, so this
-/// is a choice, but a fixed one: the same set always gets the same bass.
+/// The note a group of notes is played over: the root of the chord it
+/// is (a triad, C7, Em7b5), or else the first note of its normal form,
+/// its most compact arrangement (see [`micromodal::bass_note`]). A set
+/// has no root, so this is a choice, but a fixed one: the same set
+/// always gets the same bass.
 fn group_bass(set: PitchSet) -> Note {
-    let first = set.normal_form().first().copied().unwrap_or(PitchClass::C);
-    Note::new(36 + first.semitone())
+    Note::new(36 + micromodal::bass_note(set).semitone())
 }
 
 /// The notes of a group, from middle C up, each above the last.
@@ -1227,6 +1293,9 @@ struct Score {
     /// waits on through after a break (see [`drum_form::pickup_bars`]).
     pickups: Vec<Bar>,
     harmonies: Vec<Played>,
+    /// The harmonies of the chord sheet as written, each from the step
+    /// it starts on to the step the next one starts on.
+    spans: Vec<(usize, usize, HarmonyName)>,
     keys: crate::key_map::KeyMap,
     runs: Vec<Run>,
     variations: Vec<VariationMarker>,
@@ -1409,6 +1478,8 @@ impl Project {
                 && band.drums == BandDrums::Style
                 && band.custom_rhythm.is_none()
                 && band.custom_instruments.is_none()
+                && band.micromode.is_none()
+                && band.row.is_none()
         }) {
             return;
         }
@@ -1434,6 +1505,8 @@ impl Project {
             band.harmony_style = None;
             band.accents_only = false;
             band.drums = BandDrums::Style;
+            band.micromode = None;
+            band.row = None;
         }
         let empty = self.playlist.chord_markers.is_empty() && self.song_length() == 0;
         let other_meter =
@@ -1505,6 +1578,8 @@ impl Project {
             band.style = style;
             band.harmony_style = harmony;
             band.accents_only = false;
+            band.micromode = None;
+            band.row = None;
         }
         let mut drums_come = false;
         if parts.rhythm {
@@ -1640,6 +1715,8 @@ impl Project {
                 band.custom_rhythm = Some(Box::new(style.clone()));
                 band.accents_only = false;
                 band.harmony_style = None;
+                band.micromode = None;
+                band.row = None;
             }
             if parts.rhythm {
                 drums_come = band.drums == BandDrums::Song;
@@ -1988,6 +2065,60 @@ impl Project {
         written
     }
 
+    /// Writes a progression of the forms of the set the key is on the
+    /// chord sheet, from bar `from` on, one form a bar, each following
+    /// the one before as `walk` says (see [`micromodal::walk_forms`]),
+    /// and returns how many bars were written: eight, or two rounds of
+    /// all twelve notes for [`Walk::AllTwelve`]. It starts from the form
+    /// sounding at bar `from` if that is a form of the key's set, and
+    /// otherwise from home. In a key that is not a set it writes nothing.
+    pub fn write_form_progression(&mut self, from: usize, walk: Walk) -> usize {
+        let meter = self.meter();
+        let keys = self.key_map();
+        let first_bar = meter.bar(from);
+        let key = keys.key_at(first_bar.start);
+        let ScaleKind::Set(_) = key.kind else {
+            return 0;
+        };
+        let home = key.pitch_set();
+        let start = self
+            .chord_at(first_bar.start)
+            .and_then(|marker| match marker.harmony {
+                HarmonyName::Set(set) | HarmonyName::Micromode(set)
+                    if Degree::of(key, set).is_some() =>
+                {
+                    Some(set)
+                }
+                _ => None,
+            })
+            .unwrap_or(home);
+        let count = match walk {
+            Walk::AllTwelve if !micromodal::aggregates(home).is_empty() => 2 * (12 / home.len()),
+            _ => 8,
+        };
+        let mut written = 0;
+        for (index, form) in micromodal::walk_forms(start, walk, count)
+            .into_iter()
+            .enumerate()
+        {
+            let bar = meter.bar(from + index);
+            if bar.end() > MAX_SONG_STEPS {
+                break;
+            }
+            let harmony = match Micromode::of(form) {
+                Some(_) => HarmonyName::Micromode(form),
+                None => HarmonyName::Set(form),
+            };
+            self.set_chords(
+                bar.start,
+                bar.end(),
+                &[ChordMarker::new(bar.start, harmony)],
+            );
+            written += 1;
+        }
+        written
+    }
+
     // ----- Writing the parts -----
 
     /// Puts the mix back as it starts: the master level, the reverb and no
@@ -2031,6 +2162,19 @@ impl Project {
         let mut channels = band.channels;
         for player in Player::ALL {
             let sound = match player {
+                // A micromode style's voices play in place of the piano,
+                // the bass and the soloist, and no one else does.
+                _ if band
+                    .micromode
+                    .is_some_and(|style| micromode::takes_over(style, player)) =>
+                {
+                    band.micromode
+                        .and_then(|style| micromode::sound(style, player))
+                }
+                // So do a twelve-tone style's.
+                _ if band.row.is_some_and(|style| row::takes_over(style, player)) => {
+                    band.row.and_then(|style| row::sound(style, player))
+                }
                 Player::Piano => Some((KEYS, style.piano_program())),
                 Player::Bass => Some((BASS, style.bass_program())),
                 Player::Drums => None,
@@ -2281,6 +2425,15 @@ impl Project {
             if band.horns {
                 print.bytes(b"horns");
             }
+            // The same for a micromode style.
+            if let Some(style) = band.micromode {
+                print.bytes(b"micromode");
+                print.bytes(style.name.as_bytes());
+            }
+            if let Some(style) = band.row {
+                print.bytes(b"row");
+                print.bytes(style.name.as_bytes());
+            }
             // Only bands whose drums come from elsewhere count them.
             if band.drums != BandDrums::Style {
                 print.bytes(b"drums");
@@ -2475,6 +2628,14 @@ impl Project {
             markers.push(ChordMarker::new(ending.start, ending.harmony));
         }
         let harmonies = self.played_harmonies(&markers, parts_end, band.style.comping);
+        let spans = markers
+            .iter()
+            .enumerate()
+            .map(|(index, marker)| {
+                let stop = markers.get(index + 1).map_or(parts_end, |next| next.start);
+                (marker.start, stop, marker.harmony)
+            })
+            .collect();
         let keys = self.key_map();
         let breaks = stops::Breaks::of(&markers, parts_end);
         let part_breaks = drum_form::break_bars(&bars, &form, end);
@@ -2498,6 +2659,7 @@ impl Project {
             part_breaks,
             pickups,
             harmonies,
+            spans,
             keys,
             runs,
             variations,
@@ -2604,6 +2766,16 @@ impl Project {
         player: Player,
         score: &Score,
     ) -> Vec<(usize, NoteEvent)> {
+        if let Some(style) = band.micromode
+            && micromode::takes_over(style, player)
+        {
+            return self.micromode_notes(band, style, player, score);
+        }
+        if let Some(style) = band.row
+            && row::takes_over(style, player)
+        {
+            return self.row_notes(band, style, player, score);
+        }
         let extras = band.extras();
         let seed = |player: Player| interpret::seed("band", band.style.name, player.name());
         // The variation the last bar of an ending is played in.
@@ -2859,8 +3031,13 @@ impl Project {
     ///
     /// Chords are voiced each from the one before, as the band comps
     /// (see [`Comping::voicings`]), over the line their bass notes make
-    /// (see [`bass_line`]). A pitch-class set or a micromode is played from
-    /// middle C in its normal form, over its first note. A row form is a
+    /// (see [`bass_line`]). A pitch-class set or a micromode is voiced
+    /// from the harmony before as a micromode style voices its forms:
+    /// the notes they share stay where they are, and the others move to
+    /// the nearest notes left (see [`micromodal::voice`]); the first, in
+    /// close position from the G below middle C. Its bass is the root of
+    /// the chord it is, if it is one, or else the first note of its normal
+    /// form. A row form is a
     /// line of twelve notes, not a chord: its four groups of three notes,
     /// in the row's order, are played one after another, each over its
     /// first note. No chord plays nothing.
@@ -2916,9 +3093,13 @@ impl Project {
                 HarmonyName::NoChord => None,
             }
         };
-        let mut played = Vec::new();
+        let mut played: Vec<Played> = Vec::new();
         let mut chord_index = 0;
         for (index, &(start, stop, harmony)) in spans.iter().enumerate() {
+            let before = played
+                .last()
+                .map(|last| last.voicing.clone())
+                .unwrap_or_default();
             match harmony {
                 HarmonyName::Chord(_) => {
                     let (chord, ..) = chords[chord_index];
@@ -2947,7 +3128,7 @@ impl Project {
                 HarmonyName::Set(set) | HarmonyName::Micromode(set) => played.push(Played {
                     start,
                     end: stop,
-                    voicing: group_voicing(set.normal_form()),
+                    voicing: micromodal::voice(set, &before, Note::new(55)),
                     bass: BassPart::Pedal(group_bass(set)),
                 }),
                 HarmonyName::Row(label) => {
@@ -3582,6 +3763,95 @@ mod tests {
         assert_eq!(pitch_classes_at(&project, Player::Piano, 0), [0, 1, 2]);
         assert_eq!(pitch_classes_at(&project, Player::Piano, 4), [3, 4, 5]);
         assert_eq!(pitch_classes_at(&project, Player::Bass, 12), [9]);
+    }
+
+    #[test]
+    fn the_band_keeps_the_notes_two_forms_share() {
+        let mut project = Project::with_band();
+        // Menor 3 on C: C C#, E; then A C C# (T1I), then E F G# (T4).
+        project.scale = Scale::set(PitchClass::C, PitchSet::from_semitones(&[0, 1, 4]));
+        write(&mut project, &["T0", "T1I", "T4"]);
+        let keys_at = |step: usize| -> Vec<u8> {
+            let mut keys: Vec<u8> = part(&project, Player::Piano)
+                .into_iter()
+                .filter(|&(at, ..)| at == step)
+                .map(|(.., midi)| midi)
+                .collect();
+            keys.sort_unstable();
+            keys.dedup();
+            keys
+        };
+        let bar = project.meter().bar(1).start;
+        let first = keys_at(0);
+        let second = keys_at(bar);
+        assert_eq!(first.iter().map(|m| m % 12).collect::<Vec<_>>().len(), 3);
+        // C and C# stay on the very same keys; E moves to the nearest A.
+        for kept in [0, 1] {
+            let note = first.iter().find(|&&m| m % 12 == kept).unwrap();
+            assert!(second.contains(note), "{first:?} {second:?}");
+        }
+        let e = first.iter().find(|&&m| m % 12 == 4).unwrap();
+        let a = second.iter().find(|&&m| m % 12 == 9).unwrap();
+        assert!(e.abs_diff(*a) <= 6, "{first:?} {second:?}");
+        // The bass of a triad form is its root: C E G over C, and A C E
+        // (T4I, C E G upside down around C and moved up a major third)
+        // over A.
+        let mut project = Project::with_band();
+        project.scale = Scale::set(PitchClass::C, PitchSet::from_semitones(&[0, 4, 7]));
+        write(&mut project, &["T0", "T4I"]);
+        assert_eq!(pitch_classes_at(&project, Player::Bass, 0), [0]);
+        assert_eq!(pitch_classes_at(&project, Player::Bass, bar), [9]);
+    }
+
+    #[test]
+    fn a_progression_of_forms_goes_on_the_sheet() {
+        let mut project = Project::with_band();
+        let menor_3 = PitchSet::from_semitones(&[0, 1, 4]);
+        project.scale = Scale::set(PitchClass::C, menor_3);
+        assert_eq!(project.write_form_progression(0, Walk::AllTwelve), 8);
+        let forms: Vec<PitchSet> = project
+            .playlist()
+            .chord_markers()
+            .iter()
+            .map(|marker| match marker.harmony {
+                HarmonyName::Micromode(set) => set,
+                other => panic!("{other}"),
+            })
+            .collect();
+        assert_eq!(forms.len(), 8);
+        assert_eq!(forms[0], menor_3);
+        for group in forms.chunks(4) {
+            assert_eq!(group.iter().fold(0, |bits, f| bits | f.bits()), 0xFFF);
+        }
+        // From a form already on the sheet: bar 3 starts from what is
+        // there, keeping two notes each time.
+        let third = forms[2];
+        assert_eq!(project.write_form_progression(2, Walk::CommonTones), 8);
+        let after: Vec<HarmonyName> = project
+            .playlist()
+            .chord_markers()
+            .iter()
+            .map(|marker| marker.harmony)
+            .collect();
+        assert_eq!(after[2], HarmonyName::Micromode(third));
+        for pair in after[2..].windows(2) {
+            let (HarmonyName::Micromode(a), HarmonyName::Micromode(b)) = (pair[0], pair[1]) else {
+                panic!();
+            };
+            assert_eq!(crate::harmony::degree::kept(a, b), 2);
+        }
+        // Any set: C major as a set, by fifths, written as sets.
+        let mut project = Project::with_band();
+        let c_major = PitchSet::from_semitones(&[0, 2, 4, 5, 7, 9, 11]);
+        project.scale = Scale::set(PitchClass::C, c_major);
+        assert_eq!(project.write_form_progression(0, Walk::Transpose(7)), 8);
+        assert_eq!(
+            project.playlist().chord_markers()[1].harmony,
+            HarmonyName::Set(c_major.transpose(7))
+        );
+        // A tonal key has no forms to write.
+        let mut project = Project::with_band();
+        assert_eq!(project.write_form_progression(0, Walk::CommonTones), 0);
     }
 
     #[test]

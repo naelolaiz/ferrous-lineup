@@ -11,7 +11,7 @@ pattern. None of it is code. It is *knowledge*, and the best way to put
 knowledge into a program is to write it down as data, in a form a
 person can read and check, and to keep the code that uses it small.
 
-The library does that: 215 harmony styles, 139 rhythms and 6 fills,
+The library does that: 217 harmony styles, 141 rhythms and 7 fills,
 each a few lines in a table, plus the twelve-tone and micromode styles
 of the theory chapters and the songs of [How a demo is
 written](../songs/demos.md). This chapter goes through the notations,
@@ -924,7 +924,8 @@ undo: after Ctrl+Z brings the previous style back, the pattern matches
 an older copy, and the next click still swaps it in place.
 
 Harmony styles and rhythms take the parts you ticked (see [Which parts
-to take](#which-parts-to-take)). Row styles and micromode styles have no such choice: they
+to take](#which-parts-to-take)). Row styles and micromode styles have no such choice (only
+Chord progression gives a row style its own row in place of the key's): they
 are tried the same way, and differ only in the notes they write. So
 their shared steps are one method, and the different step is a closure
 passed in:

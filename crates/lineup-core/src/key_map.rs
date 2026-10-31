@@ -107,8 +107,10 @@ impl KeyMap {
 /// mode takes its new one as well (a C major song going to G major, in
 /// C minor, goes to G minor); a key in another mode keeps it (the A
 /// major march of a song in A minor stays major when the song goes to
-/// A Dorian). Where the song's notes stay put, as from a key to a
-/// twelve-tone row or a set, its key changes stay put too.
+/// A Dorian). So does a key in the song's old row or set: a song that
+/// goes from one row to another takes its sections in the old row,
+/// moved, into the new one. Where the song's notes stay put, as from a
+/// key to a twelve-tone row or a set, its key changes stay put too.
 ///
 /// A key that moves takes the usual name of the key it lands on (see
 /// [`Scale::spelling`]). One that stays where it is keeps its name, so
@@ -121,7 +123,7 @@ pub fn moved_key(key: Scale, from: Scale, to: Scale) -> Scale {
     }
     let up = from.root.semitones_up_to(to.root);
     let root = key.root.transpose(up as i32);
-    let kind = if key.kind == from.kind && from.kind.is_tonal() && to.kind.is_tonal() {
+    let kind = if key.kind == from.kind {
         to.kind
     } else {
         key.kind
@@ -202,5 +204,24 @@ mod tests {
         let row = Scale::row(crate::harmony::ToneRow::CHROMATIC.starting_on(PitchClass::E));
         let g_major = key(PitchClass::G, ScaleKind::Major);
         assert_eq!(moved_key(g_major, c_major, row), g_major);
+        // From one row to another, a section in the old row takes the
+        // new one, a fifth above the song's key note as before; a section
+        // in a row of its own keeps its row and moves with the key note.
+        use crate::harmony::RowPreset;
+        let row_on = |name: &str, root: PitchClass| {
+            Scale::row(RowPreset::named(name).unwrap().row.starting_on(root))
+        };
+        let (lineup, berg) = (
+            row_on("Lineup row", PitchClass::C),
+            row_on("Berg's Lyric Suite", PitchClass::D),
+        );
+        assert_eq!(
+            moved_key(row_on("Lineup row", PitchClass::G), lineup, berg),
+            row_on("Berg's Lyric Suite", PitchClass::A)
+        );
+        assert_eq!(
+            moved_key(row_on("Webern's Symphony", PitchClass::G), lineup, berg),
+            row_on("Webern's Symphony", PitchClass::A)
+        );
     }
 }

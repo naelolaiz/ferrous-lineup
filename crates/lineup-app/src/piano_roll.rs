@@ -261,11 +261,45 @@ enum Tool {
     Shift(isize),
     Quantize,
     SnapToKey,
-    Invert { up: bool },
+    Invert {
+        up: bool,
+    },
+    /// The notes backwards in time, rhythm and all.
+    Backwards,
+    /// The pitches backwards, in the same rhythm.
+    PitchesBackwards,
+    /// Every interval from the first note turned the other way.
+    UpsideDown,
+    /// The same, counted in notes of the key.
+    UpsideDownInKey,
     Arpeggiate,
     Delete,
     SelectAll,
     SelectNone,
+}
+
+/// What a tool of the Tools menu does, for the ones whose name needs
+/// saying more about.
+fn tool_about(tool: Tool) -> Option<&'static str> {
+    match tool {
+        Tool::Backwards => Some(
+            "The notes in the opposite order in time, rhythm and all, as in a crab \
+             canon. A form of a row becomes its retrograde: P0 becomes R0.",
+        ),
+        Tool::PitchesBackwards => Some(
+            "The pitches in the opposite order, in the same rhythm: the first note \
+             takes the last one's pitch. P0 becomes R0, in the rhythm P0 had.",
+        ),
+        Tool::UpsideDown => Some(
+            "Every interval from the first note turned the other way: up a third \
+             becomes down a third, a major chord becomes minor, and P0 becomes I0.",
+        ),
+        Tool::UpsideDownInKey => Some(
+            "Every note as many notes of the key below the first note as it was \
+             above it, so the tune stays in the key: in C major, around C, E becomes A.",
+        ),
+        _ => None,
+    }
 }
 
 /// What the grid needs to know besides the notes, gathered in one value
@@ -1710,7 +1744,11 @@ impl PianoRoll {
                         if let Some(shortcut) = shortcut {
                             button = button.shortcut_text(crate::i18n::shortcut(&ctx, &shortcut));
                         }
-                        if ui.add(button).clicked() {
+                        let mut response = ui.add(button);
+                        if let Some(about) = tool_about(tool) {
+                            response = response.on_hover_text(tr_str(about));
+                        }
+                        if response.clicked() {
                             picked = Some(tool);
                             ui.close();
                         }
@@ -1741,6 +1779,11 @@ impl PianoRoll {
                 item(ui, "Snap to the key", Tool::SnapToKey, None);
                 item(ui, "Invert chords up", Tool::Invert { up: true }, None);
                 item(ui, "Invert chords down", Tool::Invert { up: false }, None);
+                ui.separator();
+                item(ui, "Backwards", Tool::Backwards, None);
+                item(ui, "Pitches backwards", Tool::PitchesBackwards, None);
+                item(ui, "Upside down", Tool::UpsideDown, None);
+                item(ui, "Upside down in the key", Tool::UpsideDownInKey, None);
                 ui.separator();
                 ui.horizontal(|ui| {
                     ui.label(tr("Arpeggio"));
@@ -2890,6 +2933,16 @@ impl PianoRoll {
                 Some(tools::snap_to_scale(&targets, scale)),
             ),
             Tool::Invert { up } => ("invert chords", tools::invert(&targets, up)),
+            Tool::Backwards => ("play notes backwards", Some(tools::backwards(&targets))),
+            Tool::PitchesBackwards => (
+                "turn pitches backwards",
+                Some(tools::pitches_backwards(&targets)),
+            ),
+            Tool::UpsideDown => ("turn notes upside down", tools::upside_down(&targets)),
+            Tool::UpsideDownInKey => (
+                "turn notes upside down in key",
+                tools::upside_down_in_key(&targets, scale),
+            ),
             Tool::Arpeggiate => (
                 "arpeggiate chords",
                 Some(tools::arpeggiate(
@@ -2908,7 +2961,11 @@ impl PianoRoll {
         // Let the user hear what moved: the first chord (or note) of it.
         if matches!(
             tool,
-            Tool::Transpose(_) | Tool::InKey(_) | Tool::Invert { .. }
+            Tool::Transpose(_)
+                | Tool::InKey(_)
+                | Tool::Invert { .. }
+                | Tool::UpsideDown
+                | Tool::UpsideDownInKey
         ) && let Some(first) = tools::chords(&new).into_iter().next()
         {
             actions.push(RollAction::Preview {

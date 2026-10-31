@@ -33,6 +33,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "3 + 3 + 3 + 3 + 2 + 2 en semicorcheas: los acentos inquietos del tango nuevo de los años cincuenta.",
     ),
     (
+        "A 1930s dance band's foxtrot: the bass drum feathered on every beat, brushes sweeping the snare in eighths with the weight on 2 and 4, and the hi-hat pedal on 2 and 4.",
+        "El foxtrot de una orquesta de baile de los años treinta: el bombo «emplumado», suave en cada pulso, las escobillas barriendo la caja en corcheas con el peso en 2 y 4, y el pedal del charles en 2 y 4.",
+    ),
+    (
         "A 1960s spy theme in 5/4: a minor chord held over the beat, moving to iv as a blues does, then bVI and the V with the leading note bring it home.",
         "Un tema de espías de los años sesenta en 5/4: un acorde menor sostenido sobre el ritmo, que pasa a iv como lo hace un blues, y luego bVI y la V con la sensible lo llevan a casa.",
     ),
@@ -561,6 +565,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Four on the floor, un poco más rápido, hecho para largas subidas y drops.",
     ),
     ("Fourths groove", "Groove de cuartas"),
+    ("Foxtrot", "Foxtrot"),
     ("Freylekhs", "Freylekhs"),
     (
         "From Corrientes: the guitar's bass and chords move in 3/4 while the accordion and the drums play 6/8, so every bar is three against two.",
@@ -1518,6 +1523,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     (
         "The slow Latin love song: soft bongos and maracas, and the rim on 2 and 4.",
         "La canción de amor latina lenta: bongós y maracas suaves, y el aro en 2 y 4.",
+    ),
+    (
+        "The slow foxtrot of the 1930s dance bands, the ballroom's basic step, in a gentle two-beat: the bass on 1 and 3, the piano's chord on 2 and 4, the guitar strumming four to the bar and brushes on the snare, under a song's chords, a sixth chord, the passing diminished seventh and the long turnaround, iii7, VI7, ii7, V7.",
+        "El foxtrot lento de las orquestas de baile de los años treinta, el paso básico del salón, en un suave compás de dos: el bajo en 1 y 3, el acorde del piano en 2 y 4, la guitarra rasgueando cuatro por compás y escobillas en la caja, bajo los acordes de una canción, un acorde de sexta, la séptima disminuida de paso y el turnaround largo, iii7, VI7, ii7, V7.",
     ),
     (
         "The snare on all four beats and a tambourine on 2 and 4.",
