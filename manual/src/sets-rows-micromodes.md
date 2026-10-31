@@ -127,6 +127,20 @@ The band plays each form as a chord whose shared notes stay on the same
 keys, over its root when the form is a chord (C under C7) and otherwise
 over the first note of its most compact order.
 
+**A micromode style over your forms.** In a song, a style from the
+Library's **Micromodes (Kröpfl)** group plays the forms written on the
+chord sheet, in your order, the way a style plays the chords of a tonal
+song: change a bar and the style plays the new form. It works in any
+set key, not only a micromode: **Viennese points** can play C7, Em7b5,
+A7… in a key that is C E G B♭ as a set. The style's keys, bass and line
+play in place of the band's piano, bass and soloist, and the guitar,
+strings and organ rest. When the sheet holds no forms of the key (a
+song in a major or minor key, or an empty sheet), or when the Library's
+**Chord progression** box is ticked, the style writes its own walk of
+forms on the sheet instead, and the key becomes its micromode, starting
+on the key note. A style of your own, played over a set, plays only the
+set's notes.
+
 ## One harmony, four names
 
 A set is another way to **name** notes, not other notes. C major's
@@ -303,7 +317,8 @@ T4I` for one of its forms.
 The four groups of three in the row of Webern's Concerto, Op. 24, in the
 picture of the Row window, are all Menor 3. The Library's **Micromodes
 (Kröpfl)** group has seven styles, and **File > Demos > Micromodes**
-plays each of them.
+plays each of them. In a song, the band plays them from the chord sheet
+(see [A micromode style over your forms](#a-set-as-the-key-its-forms)).
 
 ### A micromode as the key
 
