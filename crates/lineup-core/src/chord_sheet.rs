@@ -336,22 +336,6 @@ fn read_notes(text: &str) -> Option<Result<PitchSet, String>> {
     Some(Ok(set))
 }
 
-/// A row form, such as "P0", "I5", "R3" or "RI11".
-fn read_row_form(text: &str) -> Option<RowLabel> {
-    use crate::harmony::RowForm;
-    let forms = [
-        ("RI", RowForm::RetrogradeInversion),
-        ("P", RowForm::Prime),
-        ("I", RowForm::Inversion),
-        ("R", RowForm::Retrograde),
-    ];
-    let (form, number) = forms
-        .into_iter()
-        .find_map(|(letters, form)| Some((form, text.strip_prefix(letters)?)))?;
-    let number: u8 = number.parse().ok()?;
-    (number < 12).then(|| RowLabel::new(form, number))
-}
-
 /// A Forte name such as "3-11" or "4-Z15".
 fn read_forte(text: &str) -> Option<Result<&'static SetClass, String>> {
     let (size, _) = text.split_once('-')?;
@@ -379,7 +363,7 @@ impl HarmonyName {
         if let Some(set) = read_notes(text) {
             return set.map(HarmonyName::Set);
         }
-        if let Some(label) = read_row_form(text) {
+        if let Some(label) = RowLabel::parse(text) {
             return Ok(HarmonyName::Row(label));
         }
         let (name, step) = read_move(text);
@@ -498,7 +482,9 @@ impl HarmonyName {
     /// Menor 3 T2 becomes Menor 5 T2, and a chord that is a form, as
     /// Em7b5 is of C7 as a set, becomes the form at its degree, named as
     /// a chord if it is one. Other sets and micromodes keep their shape
-    /// and only move with the root; a row form moves with the row. When
+    /// and only move with the root. A row form keeps its name, moved with
+    /// the key note, into a new row as well (see [`tools::change_row`]):
+    /// RI5 in a row on C is RI7 in a row on D. When
     /// the notes of the song stay put (a key and a row have nothing to
     /// move by), so does the harmony.
     pub fn moved(self, from: Scale, to: Scale) -> HarmonyName {

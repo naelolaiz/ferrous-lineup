@@ -3603,6 +3603,95 @@ fn opening_a_song_forgets_the_clips_selected_in_the_last_one() {
 }
 
 #[test]
+fn the_tools_menu_turns_notes_backwards_and_upside_down() {
+    let mut screen = shortcut_screen();
+    // C4 on step 4 and G4 on step 12, a beat each, and E4 between them.
+    screen
+        .app
+        .project
+        .pattern_mut(0)
+        .unwrap()
+        .add_note(0, lineup_core::NoteEvent::new(Note::new(64), 8, 2));
+    screen.app.piano_roll.open_for(0);
+    let before = screen.app.project.clone();
+    let notes = |screen: &Screen| -> Vec<(u8, usize, usize)> {
+        let mut notes = screen.app.project.pattern(0).unwrap().notes(0).to_vec();
+        notes.sort_by_key(|note| note.start);
+        notes
+            .iter()
+            .map(|note| (note.pitch.midi(), note.start, note.length))
+            .collect()
+    };
+    // Where the menu opens, to scroll it: it opens scrolled as it was
+    // left, after the first time.
+    screen.click("Tools");
+    let menu = text_rect(&screen.draw(vec![]), "Up a semitone")
+        .unwrap()
+        .center();
+    screen.key(Key::Escape);
+    let use_tool = |screen: &mut Screen, tool: &str| {
+        screen.click("Tools");
+        screen.scroll_to_at(tool, menu);
+        screen.click(tool);
+    };
+    for (tool, expected) in [
+        // Every note in the other's place, the rest after the E too.
+        ("Backwards", [(67, 4, 4), (64, 10, 2), (60, 12, 4)]),
+        // The rhythm stays; the pitches come the other way round.
+        ("Pitches backwards", [(67, 4, 4), (64, 8, 2), (60, 12, 4)]),
+        // Up a major third and a fifth from C becomes down them: Ab, F.
+        ("Upside down", [(60, 4, 4), (56, 8, 2), (53, 12, 4)]),
+        // In C major, two and four notes of the key down: A and F.
+        (
+            "Upside down in the key",
+            [(60, 4, 4), (57, 8, 2), (53, 12, 4)],
+        ),
+    ] {
+        use_tool(&mut screen, tool);
+        assert_eq!(notes(&screen), expected, "{tool}");
+        screen.app.undo();
+        assert_eq!(screen.app.project, before, "{tool} is undone");
+    }
+}
+
+#[test]
+fn row_window_writes_a_plan_of_forms() {
+    use lineup_core::harmony::{RowForm, RowLabel, RowPreset};
+    use lineup_core::serial::{RowWriting, write_plan};
+    let mut screen = Screen::new();
+    let channel = first_synth(&screen.app.project);
+    let before = screen.app.project.clone();
+    let length = before.pattern(screen.app.pattern).unwrap().length();
+    screen.app.rack_open = false;
+    screen.app.piano_roll.open_for(channel);
+    screen.click("Row…");
+    let window = egui::pos2(450.0, 500.0);
+    screen.scroll_to_at("Save to new pattern", window);
+    screen.click("Repeat");
+    screen.click("A plan of forms");
+    // The plan starts with the form chosen, and the forms clicked
+    // around the matrix go after it.
+    screen.scroll_back_to_at("RI5", window);
+    screen.click("RI5");
+    screen.click("I7");
+    screen.scroll_to_at("Save to new pattern", window);
+    screen.click("Write P0 RI5 I7 into current pattern");
+    let row = RowPreset::named("Lineup row").unwrap().row;
+    let plan = [
+        RowLabel::new(RowForm::Prime, 0),
+        RowLabel::new(RowForm::RetrogradeInversion, 5),
+        RowLabel::new(RowForm::Inversion, 7),
+    ];
+    let notes = lineup_core::tidy_notes(write_plan(row, &RowWriting::default(), &plan, length));
+    let mut written = before.clone();
+    written
+        .pattern_mut(screen.app.pattern)
+        .unwrap()
+        .set_notes(channel, notes);
+    assert_eq!(screen.app.project, written);
+}
+
+#[test]
 fn the_tools_menu_pastes_what_another_roll_copied() {
     use lineup_core::NoteEvent;
     let mut screen = shortcut_screen();

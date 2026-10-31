@@ -15,7 +15,7 @@ use lineup_core::harmony::{Micromode, MicromodeFamily, micromodes_in};
 use lineup_core::harmony::{
     ROW_PRESETS, RowForm, RowLabel, RowPreset, SetClass, ToneRow, digits, pc_digit,
 };
-use lineup_core::serial::{Chain, Register, RowWriting, write_row};
+use lineup_core::serial::{Chain, Register, RowWriting, read_plan, write_plan, write_row};
 use lineup_core::{
     Chord, ChordStamp, Note, NoteEvent, NoteName, PitchClass, PitchSet, Scale, ScaleKind, Spelling,
 };
@@ -430,6 +430,12 @@ pub struct RowWindow {
     text: String,
     error: Option<String>,
     writing: RowWriting,
+    /// Whether "Then" is a plan of forms typed in `plan_text`, rather
+    /// than one of the chains: the forms read from it, or what is wrong
+    /// with it.
+    planned: bool,
+    plan_text: String,
+    plan: Result<Vec<RowLabel>, String>,
     numbers: bool,
     seed: u64,
     /// The key the window last saw, to follow changes made elsewhere.
@@ -449,6 +455,9 @@ impl RowWindow {
                 label: row.label(),
                 ..RowWriting::default()
             },
+            planned: false,
+            plan_text: String::new(),
+            plan: Ok(Vec::new()),
             numbers: false,
             seed: 1,
             seen: None,
@@ -676,6 +685,16 @@ impl RowWindow {
             });
         if let Some(label) = chosen {
             self.writing.label = label;
+            // With a plan, the form clicked goes at its end.
+            if self.planned {
+                let text = self.plan_text.trim_end();
+                self.plan_text = if text.is_empty() {
+                    label.to_string()
+                } else {
+                    format!("{text} {label}")
+                };
+                self.plan = read_plan(&self.plan_text);
+            }
         }
     }
 
@@ -727,13 +746,37 @@ impl RowWindow {
         actions: &mut Vec<RowAction>,
     ) {
         let writing = &mut self.writing;
+        let planned = &mut self.planned;
+        let (plan_text, plan) = (&mut self.plan_text, &mut self.plan);
         ui.horizontal_wrapped(|ui| {
             ui.label(tr("Then"));
+            let then = if *planned {
+                tr("A plan of forms")
+            } else {
+                tr(writing.chain.name())
+            };
             egui::ComboBox::from_id_salt("row-chain")
-                .selected_text(tr(writing.chain.name()))
+                .selected_text(then)
                 .show_ui(ui, |ui| {
                     for chain in Chain::ALL {
-                        ui.selectable_value(&mut writing.chain, chain, tr(chain.name()));
+                        let chosen = !*planned && writing.chain == chain;
+                        if ui.selectable_label(chosen, tr(chain.name())).clicked() {
+                            writing.chain = chain;
+                            *planned = false;
+                        }
+                    }
+                    if ui
+                        .selectable_label(*planned, tr("A plan of forms"))
+                        .on_hover_text(tr(
+                            "Forms you choose, one after another, such as P0 RI5 I7 R0",
+                        ))
+                        .clicked()
+                    {
+                        *planned = true;
+                        if plan_text.trim().is_empty() {
+                            *plan_text = writing.label.to_string();
+                            *plan = read_plan(plan_text);
+                        }
                     }
                 })
                 .response
@@ -765,6 +808,35 @@ impl RowWindow {
                     }
                 });
         });
+        if *planned {
+            ui.horizontal(|ui| {
+                ui.label(tr("Plan"));
+                let edit = ui
+                    .add(
+                        egui::TextEdit::singleline(plan_text)
+                            .desired_width(240.0)
+                            .hint_text("P0 RI5 I7 R0"),
+                    )
+                    .on_hover_text(tr(
+                        "The forms one after another, then again from the first until the \
+                         pattern is full. Type them, or click them around the matrix.",
+                    ));
+                if edit.changed() {
+                    *plan = read_plan(plan_text);
+                }
+            });
+            match &*plan {
+                Err(error) => {
+                    ui.colored_label(Color32::from_rgb(240, 120, 110), error);
+                }
+                Ok(forms) if forms.is_empty() => {
+                    ui.weak(tr(
+                        "Type the forms to play, or click them around the matrix.",
+                    ));
+                }
+                Ok(_) => {}
+            }
+        }
         ui.horizontal_wrapped(|ui| {
             ui.label(tr("Octaves"));
             egui::ComboBox::from_id_salt("row-register")
@@ -826,7 +898,27 @@ impl RowWindow {
                      own first half, so it has no partner",
             ));
         });
-        let notes = write_row(self.row, writing, length);
+        let planned = self.planned;
+        let forms: &[RowLabel] = match &self.plan {
+            Ok(forms) if planned => forms,
+            _ => &[],
+        };
+        let notes = if planned {
+            write_plan(self.row, writing, forms, length)
+        } else {
+            write_row(self.row, writing, length)
+        };
+        // What the buttons write: the form, or the plan.
+        let what = if planned {
+            forms
+                .iter()
+                .map(ToString::to_string)
+                .collect::<Vec<_>>()
+                .join(" ")
+        } else {
+            writing.label.to_string()
+        };
+        let nothing = notes.is_empty();
         let heard: PitchSet = notes.iter().map(|note| note.pitch.pitch_class()).collect();
         if heard.len() < 12 {
             ui.weak(trf(
@@ -841,25 +933,36 @@ impl RowWindow {
         ));
         ui.horizontal_wrapped(|ui| {
             if ui
-                .button(trf("Write {} into current pattern", &[&writing.label]))
+                .add_enabled(
+                    !nothing,
+                    egui::Button::new(trf("Write {} into current pattern", &[&what])),
+                )
                 .on_hover_text(
                     tr("Replaces this channel's notes in the pattern. Ctrl+Z puts them back."),
                 )
+                .on_disabled_hover_text(tr("Type a plan of forms first."))
                 .clicked()
             {
                 actions.push(RowAction::Write(notes.clone()));
             }
             if ui
-                .add_enabled(can_create_pattern, egui::Button::new(tr("Save to new pattern")))
+                .add_enabled(
+                    can_create_pattern && !nothing,
+                    egui::Button::new(tr("Save to new pattern")),
+                )
                 .on_hover_text(tr("Create and select a new pattern with these notes, the selected instrument, and the current pattern’s length and time signature. Ctrl+Z undoes it."))
-                .on_disabled_hover_text(trf(
-                    "New patterns are available in the song piano roll, up to {} patterns per project.",
-                    &[&lineup_core::MAX_PATTERNS],
-                ))
+                .on_disabled_hover_text(if nothing {
+                    tr("Type a plan of forms first.").to_string()
+                } else {
+                    trf(
+                        "New patterns are available in the song piano roll, up to {} patterns per project.",
+                        &[&lineup_core::MAX_PATTERNS],
+                    )
+                })
                 .clicked()
             {
                 actions.push(RowAction::NewPattern {
-                    name: trf("Row {}", &[&writing.label]),
+                    name: trf("Row {}", &[&what]),
                     notes,
                 });
             }
