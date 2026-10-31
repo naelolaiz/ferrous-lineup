@@ -1706,6 +1706,35 @@ fn paint_clips(
 ) {
     let tracks = project.playlist().tracks();
     let tempo = project.tempo_map();
+    // The takes' channels, and where each of their recordings starts, by
+    // track: a recording is drawn under every clip it plays under, not
+    // only the one whose note starts it (a long take is cut into clips
+    // of at most a pattern's length).
+    let takes: Vec<(usize, &std::path::Path)> = project
+        .channels()
+        .iter()
+        .enumerate()
+        .filter_map(|(channel, c)| match &c.kind {
+            lineup_core::ChannelKind::Sampler(lineup_core::SampleSource::Take(path)) => {
+                Some((channel, path.as_path()))
+            }
+            _ => None,
+        })
+        .collect();
+    let mut recordings: Vec<(usize, usize, &std::path::Path)> = Vec::new();
+    for clip in project.playlist().clips() {
+        let Some(pattern) = project.pattern(clip.pattern) else {
+            continue;
+        };
+        for repeat in 0..clip.repeats {
+            for &(channel, path) in &takes {
+                for note in pattern.notes(channel) {
+                    let from = clip.start + repeat * pattern.length() + note.start;
+                    recordings.push((clip.track, from, path));
+                }
+            }
+        }
+    }
     for clip in project.playlist().clips() {
         let length = project.clip_length(clip);
         let rect = layout.clip_rect(clip, length).shrink2(vec2(0.5, 1.5));
@@ -1753,33 +1782,27 @@ fn paint_clips(
             }
             // A take's recording is drawn as its waveform, other notes
             // as notes.
-            let takes: Vec<(usize, &std::path::Path)> =
-                project
-                    .channels()
-                    .iter()
-                    .enumerate()
-                    .filter_map(|(channel, c)| match &c.kind {
-                        lineup_core::ChannelKind::Sampler(lineup_core::SampleSource::Take(
-                            path,
-                        )) if !pattern.notes(channel).is_empty() => Some((channel, path.as_path())),
-                        _ => None,
-                    })
-                    .collect();
-            if takes.is_empty() {
-                paint_clip_notes(&notes_painter, body, pattern, layout.step_width);
-                continue;
-            }
-            let mut notes_only = pattern.clone();
-            for &(channel, path) in &takes {
-                for note in pattern.notes(channel) {
-                    let Some(wave) = waves.get(painter.ctx(), path) else {
-                        continue;
-                    };
-                    let from = clip.start + repeat * pattern.length() + note.start;
+            let start = clip.start + repeat * pattern.length();
+            let end = start + pattern.length();
+            for &(track, from, path) in &recordings {
+                if track != clip.track || from >= end {
+                    continue;
+                }
+                if let Some(wave) = waves.get(painter.ctx(), path) {
                     paint_wave(&notes_painter, body, layout, &wave, from, |step| {
                         tempo.tempo_at(step)
                     });
                 }
+            }
+            if takes
+                .iter()
+                .all(|&(channel, _)| pattern.notes(channel).is_empty())
+            {
+                paint_clip_notes(&notes_painter, body, pattern, layout.step_width);
+                continue;
+            }
+            let mut notes_only = pattern.clone();
+            for &(channel, _) in &takes {
                 notes_only.set_notes(channel, []);
             }
             if notes_only.all_notes().next().is_some() {
