@@ -146,6 +146,9 @@ micromodo a otro (ver [Un micromodo como
 tonalidad](#un-micromodo-como-tonalidad)): de Do7 como conjunto a Domaj7
 como conjunto, Do7 Mim7b5 La7 pasa a ser Domaj7 Mi♭maj7 Lamaj7.
 
+Con **Conducción de voces** marcada, el piano roll revisa que las notas
+guarden el color del conjunto: ver [Revisar el color](#revisar-el-color).
+
 **Un estilo de micromodo sobre tus formas.** En una canción, un estilo
 del grupo **Micromodos (Kröpfl)** de la Biblioteca toca las formas
 escritas en la hoja de acordes, en tu orden, como un estilo toca los
@@ -458,3 +461,56 @@ es solo una forma movida; al pasar a uno de ellos y volver no se puede
 saber qué formas estaban dadas vuelta. Desde una tonalidad mayor o
 menor a un micromodo, las notas se quedan como están, igual que con
 **conjunto de clases de alturas**.
+
+### Revisar el color
+
+La música hecha con un solo conjunto toma su sonido, su **color**, del
+conjunto, como la música tonal toma su sonido de su tonalidad: sus notas
+salen de formas del conjunto, una forma tras otra. Así que cuando la
+tonalidad es un micromodo o cualquier otro conjunto de clases de
+alturas, la casilla **Conducción de voces** del piano roll revisa el
+color en lugar de las reglas clásicas (ver [Conducción de voces y
+movimiento de las partes](voice-leading.md)).
+
+1. Abre una canción cuya tonalidad sea un conjunto o un micromodo, como
+   **Archivo > Demostraciones > Micromodos > Color Menor 3**.
+2. Abre el piano roll en un patrón con notas y marca **Conducción de
+   voces** arriba.
+3. Aparece una línea **Formas** debajo de los nombres de los acordes.
+   Nombra cada forma que la revisión lee en las notas por su grado,
+   **T0**, **T4I**, encima de las notas que la tocan. Apunta a una forma
+   para leer cómo está hecha y sus notas: «T4I: la forma de la
+   tonalidad dada vuelta alrededor de Do, transportada 4 semitonos hacia
+   arriba: Do Mib Mi.»
+
+La revisión lee sola qué forma suena dónde: no hace falta escribir
+antes las formas en la hoja de acordes. Lo que les pide a las notas
+depende del tamaño del conjunto:
+
+- **Un micromodo se oye entero.** Sus tres notas forman un solo sonido,
+  juntas como un acorde, una tras otra en una línea o repartidas entre
+  las partes. Una nota fuera de la forma que se oye a su alrededor se
+  marca **fuera**. Una forma que se detiene antes de que hayan sonado
+  sus tres notas se marca **hueco**, sobre su última nota, porque dos
+  notas solas forman un intervalo que comparten muchos micromodos: Do y
+  Mi están en Menor 3, en Do mayor y en la tríada aumentada. Cuando
+  falta una sola nota, un contorno punteado muestra dónde podría ir. La
+  primera y la última forma de un patrón no se marcan si quedan sin
+  terminar, porque pueden venir del patrón anterior o seguir en el
+  siguiente.
+- **Un conjunto más grande se usa como una escala.** Una melodía toma
+  unas pocas de sus notas por vez, así que una forma no necesita sonar
+  entera; solo se marcan **fuera** las notas fuera de la forma que se
+  oye a su alrededor. Un pasaje que pasa a otra forma, como una melodía
+  en Do mayor que pasa a Sol mayor con varios Fa♯ y ningún Fa, se lee
+  como la forma nueva (T7). Un solo Fa♯ entre varios Fa queda como una
+  nota fuera de T0.
+
+La línea encima de las filas de acordes lo resume: «Color de Menor 3,
+T0, T5I: todas las notas en el color.» Apunta a un paso con una marca y
+la línea dice qué pasa allí, por ejemplo «Fuera del color: Melodía toca
+Sol4, que no está en T0 (Do Do# Mi), la forma que se oye ahí.»; pasa el
+puntero por la línea para leer por qué la música hecha con un conjunto
+lo evita. Las demostraciones de micromodos guardan todas sus notas en su
+color, así que la revisión no marca nada en ellas hasta que agregues
+una nota suelta o saques una de una forma.

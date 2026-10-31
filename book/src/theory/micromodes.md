@@ -1219,6 +1219,172 @@ written in its place. A key of three notes
 is named by its micromode everywhere, "Menor 5 on C", since every
 group of three notes is one of the twelve.
 
+## Checking the colour
+
+Tonal music takes its sound from its key, and the [voice-leading
+check](voice-leading.md) marks what the classical style avoids in it.
+Music built on one set takes its sound, its **colour**, from the set:
+its notes come from forms of the set, one form after another, as the
+chords of a tonal piece come from its key. So when the key is a
+micromode, or any other pitch-class set, the **Voice leading** tick box
+in the piano roll checks the colour. (With a twelve-tone row as the key
+it follows [the rules of twelve-tone
+writing](twelve-tone.md#the-rules-of-twelve-tone-writing) instead.)
+
+What it asks of the notes depends on how big the set is:
+
+- **A micromode is heard whole.** Kröpfl taught its three notes as one
+  sound: together as a chord, one after another as a figure of a line,
+  or shared out among the parts. So every note belongs to a form, and a
+  form does not stop before its three notes have sounded. Two notes
+  alone make an interval, and an interval belongs to many micromodes:
+  C and E are in Menor 3 (C C♯ E), in the major and minor triads and in
+  the augmented triad, among others. The colour is lost.
+- **A larger set is a collection**, as a scale is. The music takes a
+  few of its notes at a time, and what matters is that they come from
+  it: every note belongs to the form heard around it. A form need not
+  sound whole, as a C major melody need not use all seven notes.
+
+### What you see
+
+- **A Forms line** under the chord names. It names each form the check
+  reads in the notes by its degree, **T0**, **T5I**, over the notes
+  that play it. Point at it to read how the form is made and its notes:
+  "T5I: the key's form upside down around C, moved up 5 semitones: C#
+  E F."
+- **The Voices line** under it marks **out** for a note outside the
+  form heard around it, and, in a micromode, **gap** for a form left
+  unfinished, on its last note. When one note is missing, a dashed
+  outline shows it, at the pitch nearest that last note.
+- **The summary line** names the set, the forms in order and what was
+  found: "Colour of Menor 3 (minor 3), T0, T5I: every note in the
+  colour." Point at a step with a mark and the line says what happens
+  there: "Outside the colour: Melody plays G4, which is not in T0 (C C#
+  E), the form heard there." Hover over it to read why.
+
+The micromode demos keep every note in their colour, so the check is
+quiet on them. Add a stray note, or take one
+note out of a form, and it speaks.
+
+### Reading the forms: the cheapest reading
+
+Which form sounds where is not written in the notes: the check reads
+it, as the [twelve-tone check](twelve-tone.md#the-best-reading-dynamic-programming)
+reads the forms of a row. The notes that start together make a
+**group**, and the groups are shared out among **stretches**, each
+read as one form of the set. Every choice costs something:
+
+```rust
+/// What a reading costs for each note outside its stretch's form, and
+/// for each note of a micromode's form that never sounds in it.
+const OUT_OF_PLACE: u32 = 4;
+
+/// What a new stretch costs in a micromode, and in a larger set.
+const NEW_FORM: u32 = 2;
+const NEW_FORM_OF_A_COLLECTION: u32 = 8;
+```
+
+A new stretch costs something so that one stray note is not read as a
+form of its own: that would take two new stretches, one into the form
+and one out of it. A micromode's forms change every few notes, so for
+it a new stretch costs half a note out of place: one note is enough to
+show the music has moved on. The forms of a larger set share most of
+their notes (C major and G major share six), so a few notes fit many
+of them, and a passage stays longer in one form: a new one costs as
+much as two notes out of place. A melody in C major that turns to G
+major, with two F♯s and no F, moves to T7; a single F♯ among Fs stays
+an **out** in T0.
+
+`best[to]` is the cheapest reading of the first `to` groups. For each
+place a stretch may start, `from`, and each form, the stretch grows a
+group at a time, and its cost grows with it:
+
+```rust
+for to in from + 1..=(from + LONGEST).min(count) {
+    out += outside[to - 1][index];
+    heard = union(heard, common(sounded[to - 1], form));
+    let gaps = match whole {
+        true => (form.len() - heard.len()) as u32,
+        false => 0,
+    };
+    let (missing, unheard) = match may_stop(from, to) {
+        true => (0, before.unheard + gaps),
+        false => (gaps, before.unheard),
+    };
+    let cost = before.cost + new_form + OUT_OF_PLACE * (out + missing);
+    // ...
+}
+```
+
+`outside` was counted once for every group and every form, so growing
+a stretch by a group adds one number. `whole` is true for a set of
+three notes: only then do the notes of the form that never sounded,
+`gaps`, count. `LONGEST`, 64 groups, keeps the work in bounds: a longer
+passage in one form is read as several stretches of it, which costs
+only a little more. Walking back from `best[count]` gives the
+stretches in order. Each becomes a `FormStatement` on the Forms line,
+with a slip for each note outside its form and, for a micromode's form
+left unfinished, one more on its last note.
+
+A pattern is read on its own, but its first form may come in from the
+pattern before, and its last may go on into the next, so neither is
+unfinished:
+
+```rust
+let may_stop = |from: usize, to: usize| !whole || from == 0 || to == count;
+```
+
+### Ties: a tuple, `Reverse` and `is_none_or`
+
+Many readings cost the same. C C♯ E F E C♯ in Menor 3 is T0 (C C♯ E)
+and then T5I (C♯ E F), for two new stretches; but a first stretch of
+the C alone, which may stay unfinished, and then T5I costs the same.
+So the readings are compared by a tuple, which Rust compares item by
+item, the second only when the first ones are equal:
+
+```rust
+let key = (cost, placed, unheard, stretches, Reverse(from));
+if best[to]
+    .is_none_or(|b| key < (b.cost, b.out, b.unheard, b.stretches, Reverse(b.from)))
+{
+```
+
+Of readings as cheap, the one with fewer notes out of place wins; then
+the one with fewer notes missing from the first and the last forms
+(`unheard`, which settles C C♯ E F E C♯); then the one with fewer
+stretches. `Reverse(from)` turns the last comparison round, so the
+reading whose last stretch starts *later* wins: a note that fits
+neither form stays with the form it came in, instead of starting the
+next one early. `Option::is_none_or` is `true` when no reading reached
+`to` yet, and otherwise asks the closure. A new reading replaces an
+old one only when it is strictly better, and the forms are tried in
+order of nearness to the key's own form, so the last ties go to the
+forms nearest home.
+
+### Notes still sounding: `held`
+
+A note held while the line starts a new form sounds in that form too.
+In Menor 3, an E held from T0 (C C♯ E) while C♯ and F start T5I (C♯ E
+F) makes T5I whole without playing E again. `held` finds, for each group, the pitch classes still
+sounding there from the groups before:
+
+```rust
+for (index, group) in groups.iter().enumerate() {
+    for played in group.iter() {
+        let end = played.note.end_tick();
+        let until = ticks.partition_point(|&tick| tick < end);
+        for later in held.iter_mut().take(until).skip(index + 1) {
+            later.insert(played.note.pitch.pitch_class());
+        }
+    }
+}
+```
+
+The groups are sorted by start, so `partition_point` finds, by binary
+search, the first group that starts once the note has ended; every
+group after this one and before that one hears it. A stretch counts the
+notes held at its first group as heard.
+
 ## The window: a clock drawn with egui's painter
 
 The twelve notes sit round a circle like the hours of a clock, C at the
@@ -1440,6 +1606,19 @@ degrees, that chord
 micromodes are spelled as chords (C E♭ G♭), that **▶ Hear it**
 plays the three notes from middle C, and that picking a form shows how
 it was moved.
+
+`harmony/voice_leading/colour.rs` checks the colour check: Menor 3's
+T0 and T5I heard whole, as a line, as chords and shared out among two
+parts, with no mark and with each form's steps and its description;
+a G among C♯, E and C marked out of T0, with its sentence; C C♯ E, D
+F, G G♯ B read as T0, T1 and T7 with T1 left unfinished, C♯ the
+missing note, while the same kind of gap at the first or the last form
+is not marked; in the set of C major, a scale clean in T0 and a G♯
+between G and A marked; a melody that turns to G major read as T0 and
+then T7, while a single F♯ among Fs stays in T0, marked; and nothing
+read after a key marker into C major. The app's test ticks **Voice
+leading** in a song in Menor 3 and finds the Forms line, its degrees,
+the summary and the **out** mark.
 
 Exercises on micromodes are in [Exercises: music theory in
 code](exercises.md).

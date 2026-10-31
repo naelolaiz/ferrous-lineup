@@ -145,7 +145,11 @@ pianist's hands do.
 Where the key is a **twelve-tone row**, the check uses the rules of
 twelve-tone writing instead, and a Row line shows the forms of the row
 it reads in the notes: see [Beyond keys: sets, rows and
-micromodes](sets-rows-micromodes.md#twelve-tone-rows).
+micromodes](sets-rows-micromodes.md#twelve-tone-rows). Where it is a
+**pitch-class set** or a **micromode**, the check makes sure the notes
+keep the set's colour, and a Forms line shows the forms of the set it
+reads in the notes: see [Checking the
+colour](sets-rows-micromodes.md#checking-the-colour).
 
 ## How each part moves
 

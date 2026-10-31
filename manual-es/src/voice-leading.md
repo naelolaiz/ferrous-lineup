@@ -156,7 +156,11 @@ Donde la tonalidad es una **serie dodecafónica**, la revisión usa en
 cambio las reglas de la escritura dodecafónica, y una línea Serie
 muestra las formas de la serie que lee en las notas: ver [Más allá de
 las tonalidades: conjuntos, series y
-micromodos](sets-rows-micromodes.md#series-dodecafónicas).
+micromodos](sets-rows-micromodes.md#series-dodecafónicas). Donde es un
+**conjunto de clases de alturas** o un **micromodo**, la revisión se
+fija en que las notas guarden el color del conjunto, y una línea Formas
+muestra las formas del conjunto que lee en las notas: ver [Revisar el
+color](sets-rows-micromodes.md#revisar-el-color).
 
 ## Cómo se mueve cada parte
 
