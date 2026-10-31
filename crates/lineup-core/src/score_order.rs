@@ -150,6 +150,8 @@ pub fn place(channel: &Channel) -> (Section, usize) {
         }
         // A sound file usually takes a drum's row in the rack.
         ChannelKind::Sampler(SampleSource::File(_)) => (Section::Drums, DRUMS.len() + 1),
+        // A take is a voice, sung or whistled: after the voices that sing.
+        ChannelKind::Sampler(SampleSource::Take(_)) => (Section::Voices, usize::MAX),
         ChannelKind::MidiOut {
             channel: DRUM_CHANNEL,
         } => (Section::Drums, DRUMS.len()),
