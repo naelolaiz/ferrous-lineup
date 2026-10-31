@@ -5907,4 +5907,25 @@ fn voice_leading_in_a_micromode_checks_its_colour() {
         "{texts:?}"
     );
     assert!(text_rect(&output, "out").is_some(), "{texts:?}");
+
+    // The same in Spanish.
+    crate::i18n::set_language(&screen.ctx, crate::i18n::Language::Spanish);
+    screen.draw(vec![]);
+    let output = screen.draw(vec![]);
+    let texts: Vec<String> = output
+        .shapes
+        .iter()
+        .filter_map(|shape| match &shape.shape {
+            Shape::Text(text) => Some(text.galley.text().to_string()),
+            _ => None,
+        })
+        .collect();
+    assert!(text_rect(&output, "Formas").is_some(), "{texts:?}");
+    assert!(
+        texts
+            .iter()
+            .any(|text| text.starts_with("Color de Menor 3, T0, T5I: fuera del color (1).")),
+        "{texts:?}"
+    );
+    assert!(text_rect(&output, "fuera").is_some(), "{texts:?}");
 }
