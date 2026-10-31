@@ -186,7 +186,8 @@ const VOICE_LEADING_HELP: &str = "Checks the parts as classical harmony teaches 
     when it plays chords; with Ghost notes the other tracks are checked too. These are the \
     rules of the style of Bach's chorales and of harmony exercises, not of all music: jazz \
     and pop move in parallel on purpose. Where the key is a twelve-tone row, it checks the \
-    rules of twelve-tone writing instead.";
+    rules of twelve-tone writing instead, and where it is a pitch-class set or a micromode, \
+    the set's colour.";
 
 /// What the line of moves under the chord names says, for its tooltip.
 const MOVES_HELP: &str = "A step is a second, a skip a third, a leap a fourth or more. \
@@ -204,6 +205,14 @@ const TWELVE_TONE_HELP: &str = "Checks the rules of twelve-tone writing, as Scho
     after the other eleven; a form is played whole; no note is doubled in octaves; and no \
     chord sounds like tonal harmony (a major or minor triad, a dominant seventh). The Row \
     line under the chords shows the forms the check reads in the notes.";
+
+/// What "Voice leading" checks where the key is a pitch-class set.
+const COLOUR_HELP: &str = "Checks the colour of the key's set: the notes come from its forms, \
+    the set moved or turned upside down (T2, T5I), one form after another. A note outside \
+    the form heard around it is marked. A micromode, a set of three notes, is heard whole, \
+    as a chord, a figure of a line or shared out among the parts, so a form that stops \
+    before its three notes have sounded is marked too. The Forms line under the chords \
+    shows the forms the check reads in the notes, by their degree in the key.";
 
 /// A drag that started on a note and lasts until the mouse button is released.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -1201,7 +1210,8 @@ impl PianoRoll {
         } else if here.is_empty() {
             let help = match check.rules {
                 Rules::TwelveTone => tr(TWELVE_TONE_HELP),
-                _ => tr(VOICE_LEADING_HELP),
+                Rules::Colour => tr(COLOUR_HELP),
+                Rules::Classical => tr(VOICE_LEADING_HELP),
             };
             ui.add(egui::Label::new(egui::RichText::new(check.summary()).weak()).truncate())
                 .on_hover_text(help);
@@ -1438,7 +1448,7 @@ impl PianoRoll {
         // The chord lane's place is taken now, but it is drawn after the
         // grid, once it is known how far the grid is scrolled sideways.
         let lane_height = match voices.map(|check| check.rules) {
-            Some(Rules::TwelveTone) => LANE_HEIGHT_WITH_ROWS,
+            Some(Rules::TwelveTone | Rules::Colour) => LANE_HEIGHT_WITH_ROWS,
             Some(_) => LANE_HEIGHT_WITH_VOICES,
             None => LANE_HEIGHT,
         };
@@ -2076,9 +2086,16 @@ impl PianoRoll {
         }
         if let Some(check) = voices {
             let mut below = rows.len();
-            if check.rules == Rules::TwelveTone {
-                self.form_row(ui, row(below), response, drawing, check, lanes);
-                below += 1;
+            match check.rules {
+                Rules::TwelveTone => {
+                    self.form_row(ui, row(below), response, drawing, check, lanes);
+                    below += 1;
+                }
+                Rules::Colour => {
+                    self.colour_row(ui, row(below), response, check, lanes);
+                    below += 1;
+                }
+                Rules::Classical => {}
             }
             self.slip_row(ui, row(below), response, drawing, check, lanes);
         }
@@ -2153,6 +2170,67 @@ impl PianoRoll {
                     }
                     None => row.describe(),
                 })
+                .collect();
+            if !found.is_empty() {
+                response
+                    .clone()
+                    .on_hover_text_at_pointer(found.join("\n\n"));
+            }
+        }
+    }
+
+    /// The chord lane's row for the forms of a pitch-class set that the
+    /// colour check reads in the notes: a block over each, named by its
+    /// degree in the key ("T0", "T5I"). Pointing at one says how it is
+    /// made from the key's own form, and lists its notes.
+    fn colour_row(
+        &mut self,
+        ui: &mut Ui,
+        rect: Rect,
+        response: &Response,
+        check: &VoiceLeading,
+        lanes: Lanes,
+    ) {
+        let lane = lanes.grid(rect, self.time);
+        let cells = lane.cells();
+        let pointed = response
+            .hover_pos()
+            .filter(|pos| rect.contains(*pos) && cells.contains(*pos))
+            .map(|pos| lane.cell_at(pos).0);
+        if pointed.is_some() {
+            self.hovered_step = pointed;
+        }
+
+        let painter = ui.painter_at(rect);
+        paint_lane_name(ui, &painter, rect, tr("Forms"));
+        painter.rect_filled(cells, 2.0, LANE_BACKGROUND);
+        let painter = painter.with_clip_rect(cells);
+        for statement in &check.forms {
+            let block = Rect::from_min_max(
+                pos2(lane.x(statement.start), lane.rect.top()),
+                pos2(lane.x(statement.end), lane.rect.bottom()),
+            )
+            .shrink2(vec2(1.0, 1.0));
+            painter.rect_filled(block, 3.0, LANE_ROW_FORM);
+            let Some(degree) = statement.degree() else {
+                continue;
+            };
+            let name =
+                painter.layout_no_wrap(degree.to_string(), FontId::proportional(11.0), LANE_TEXT);
+            if name.size().x <= block.width() - 4.0 {
+                painter.with_clip_rect(block).galley(
+                    pos2(block.left() + 4.0, block.center().y - name.size().y / 2.0),
+                    name,
+                    LANE_TEXT,
+                );
+            }
+        }
+        if let Some(step) = pointed {
+            let found: Vec<String> = check
+                .forms
+                .iter()
+                .filter(|form| (form.start..form.end).contains(&step))
+                .map(|form| form.describe())
                 .collect();
             if !found.is_empty() {
                 response
