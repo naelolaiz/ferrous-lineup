@@ -31,7 +31,10 @@ from your file manager. The song that comes out:
   signatures**. A file with no key, or one that says C major when its
   notes are plainly in another key (many programs write C major when
   nobody chose), gets the key its notes fit best;
-- gets on its **chord sheet** the chords the app hears in it.
+- gets on its **chord sheet** the chords the app hears in it;
+- has its **parts** heard in its notes: the band plays by them, and they
+  show faint over the playlist until you keep them (see [Parts the band
+  hears](song-form.md#parts-the-band-hears)).
 
 The status bar sums it up, as in *canon-in-d: 3 channels, 77 notes, 9
 bars, 4/4, 72 BPM, D major*:
