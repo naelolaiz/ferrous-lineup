@@ -1329,8 +1329,8 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "El marcato: cada pulso tocado corto y fuerte, piano y contrabajo juntos, con el V7 mayor de la menor armónica.",
     ),
     (
-        "The marcha camión of Montevideo's carnival murgas, named after the trucks that carried them through the city: bombo, platillo (here a hi-hat) and redoblante (a snare), under a choir. Its time is 2/4; each bar here lasts two.",
-        "La marcha camión de las murgas del carnaval de Montevideo, llamada así por los camiones que las llevaban por la ciudad: bombo, platillo (aquí un charles) y redoblante (una caja), bajo un coro. Su compás es 2/4; cada compás aquí dura dos.",
+        "The marcha camión of Montevideo's carnival murgas, named after the trucks that carried them through the city, as its percussionists write it: the bombo struck on 1, on the sixteenth before 2, on 3 and on its \"and\", the left hand damping the head between; the platillo (a hi-hat) closed on the beats and open on the \"ands\"; and the redoblante four to the beat, a stroke, two stick-on-stick clicks, the second accented, and a buzz.",
+        "La marcha camión de las murgas del carnaval de Montevideo, llamada así por los camiones que las llevaban por la ciudad, tal como la escriben sus percusionistas: el bombo golpeado en el 1, en la semicorchea antes del 2, en el 3 y en su «y», con la mano izquierda apagando el parche entre medio; el platillo (un charles) cerrado en los pulsos y abierto en los «y»; y el redoblante a cuatro por pulso, un golpe, dos palo sobre palo, el segundo acentuado, y un redoble.",
     ),
     (
         "The mariachi son of Jalisco, which the jarabe strings together: 6/8 and 3/4 in turn, the guitarrón on the two beats of one bar and the three of the next, the vihuela and guitar strumming between them.",

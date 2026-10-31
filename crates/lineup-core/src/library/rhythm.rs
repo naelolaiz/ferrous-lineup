@@ -1654,14 +1654,19 @@ pub static RHYTHMS: &[Rhythm] = &[
         Folklore,
         116.0,
         &[
-            (Kick, "X... ..x. X... ..x."),
-            (HiHat, "..x. ..x. ..x. ..x."),
-            (Snare, "xoxo xoXo xoxo xoXo"),
+            (Kick, "X.ox ..o. X.x. ..o."),
+            (HiHat, "x... x... x... x..."),
+            (OpenHat, "..x. ..x. ..x. ..x."),
+            (Snare, "x..o x..o x..o x..o"),
+            (Rim, ".ox. .ox. .ox. .ox."),
         ],
         "",
         "The marcha camión of Montevideo's carnival murgas, named after the trucks that \
-         carried them through the city: bombo, platillo (here a hi-hat) and redoblante (a \
-         snare), under a choir. Its time is 2/4; each bar here lasts two.",
+         carried them through the city, as its percussionists write it: the bombo struck on \
+         1, on the sixteenth before 2, on 3 and on its \"and\", the left hand damping the head \
+         between; the platillo (a hi-hat) closed on the beats and open on the \"ands\"; and \
+         the redoblante four to the beat, a stroke, two stick-on-stick clicks, the second \
+         accented, and a buzz.",
     ),
     // ----- Flamenco -----
     rhythm(
