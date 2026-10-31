@@ -603,6 +603,11 @@ its closest rivals fainter beside it, and what the chord playing does
 in each. It is an experiment, so it is off until you turn it on. The
 work is in `harmony/key_finding.rs`.
 
+Music made of a micromode or another set has no major or minor key.
+For it, a second line names the passage's **colour**, the micromode or
+the collection of notes it is made of: see [Finding the
+colour](micromodes.md#finding-the-colour).
+
 ### What a key sounds like: profiles
 
 Carol Krumhansl and Edward Kessler (1982) played listeners a scale and

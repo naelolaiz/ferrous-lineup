@@ -102,6 +102,7 @@ Fermata: stops.md#the-music
 File menu: saving.md#the-file-menu
 Fill: not patterns-and-playlist.md, styles.md#finding-a-style, song-form.md#variations-a-and-b
 Filters (Library): styles.md#finding-a-style
+Find the colour: sets-rows-micromodes.md#finding-the-colour
 Find the key: keys-and-modes.md#finding-the-key-experimental
 Follow playhead: patterns-and-playlist.md#moving-around, settings.md#playback
 Forte number: sets-rows-micromodes.md#pitch-class-sets
@@ -244,6 +245,7 @@ Settings: settings.md#settings
 Seventh chord: chords.md#seventh-chords
 Shot: stops.md
 Show (chord sheet): sets-rows-micromodes.md#one-harmony-four-names
+Show (piano roll): sets-rows-micromodes.md#one-harmony-four-names
 Shuffle: swing.md#where-swing-doesnt-apply
 Slash chord: chords.md#slash-chords-and-inversions
 Snap: patterns-and-playlist.md#placing-and-moving-clips
