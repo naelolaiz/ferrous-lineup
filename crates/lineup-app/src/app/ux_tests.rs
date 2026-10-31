@@ -5853,3 +5853,79 @@ fn a_song_without_sections_shows_the_ones_heard_and_keeps_them_with_a_click() {
     screen.app.undo();
     assert!(screen.app.project.playlist().sections().is_empty());
 }
+
+/// In a micromode key, Voice leading checks the colour: a Forms line
+/// names the forms read in the notes by degree, and a stray note is
+/// marked outside the colour.
+#[test]
+fn voice_leading_in_a_micromode_checks_its_colour() {
+    use lineup_core::harmony::Micromode;
+    let mut screen = Screen::new();
+    let mut project = Project::empty();
+    project.add_channel(lineup_core::Channel::synth());
+    project.scale = Micromode::named("Menor 3")
+        .unwrap()
+        .key(lineup_core::PitchClass::C);
+    let pattern = project.pattern_mut(0).unwrap();
+    pattern.set_length(32);
+    // C C# E, a stray G, then C# E F (T5I).
+    for (step, pitch) in [
+        (0, 60),
+        (4, 61),
+        (8, 64),
+        (12, 67),
+        (16, 61),
+        (20, 64),
+        (24, 65),
+    ] {
+        pattern.add_note(0, lineup_core::NoteEvent::new(Note::new(pitch), step, 4));
+    }
+    project.add_clip(lineup_core::Clip::new(0, 0, 0));
+    screen.app.replace_project(project, None);
+    screen.app.rack_open = false;
+    screen.app.piano_roll.open_for(0);
+    screen.draw(vec![]);
+    screen.draw(vec![]);
+    screen.click("Voice leading");
+    screen.draw(vec![]);
+    let output = screen.draw(vec![]);
+    let texts: Vec<String> = output
+        .shapes
+        .iter()
+        .filter_map(|shape| match &shape.shape {
+            Shape::Text(text) => Some(text.galley.text().to_string()),
+            _ => None,
+        })
+        .collect();
+    assert!(text_rect(&output, "Forms").is_some(), "{texts:?}");
+    assert!(text_rect(&output, "T0").is_some(), "{texts:?}");
+    assert!(text_rect(&output, "T5I").is_some(), "{texts:?}");
+    assert!(
+        texts
+            .iter()
+            .any(|text| text.starts_with("Colour of Menor 3 (minor 3), T0, T5I")),
+        "{texts:?}"
+    );
+    assert!(text_rect(&output, "out").is_some(), "{texts:?}");
+
+    // The same in Spanish.
+    crate::i18n::set_language(&screen.ctx, crate::i18n::Language::Spanish);
+    screen.draw(vec![]);
+    let output = screen.draw(vec![]);
+    let texts: Vec<String> = output
+        .shapes
+        .iter()
+        .filter_map(|shape| match &shape.shape {
+            Shape::Text(text) => Some(text.galley.text().to_string()),
+            _ => None,
+        })
+        .collect();
+    assert!(text_rect(&output, "Formas").is_some(), "{texts:?}");
+    assert!(
+        texts
+            .iter()
+            .any(|text| text.starts_with("Color de Menor 3, T0, T5I: fuera del color (1).")),
+        "{texts:?}"
+    );
+    assert!(text_rect(&output, "fuera").is_some(), "{texts:?}");
+}

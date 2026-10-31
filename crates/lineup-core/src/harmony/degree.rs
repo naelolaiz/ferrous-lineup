@@ -27,7 +27,7 @@
 use std::fmt;
 
 use super::{PitchSet, Scale};
-use crate::i18n::tr;
+use crate::i18n::{tr, trf};
 use crate::pitch::PitchClass;
 
 /// The degree of a form: how it is made from the key's own form (see the
@@ -79,6 +79,26 @@ impl Degree {
             own
         };
         Some(shape.transpose(self.up % 12))
+    }
+
+    /// How the form is made from the key's own, in words: "the key's
+    /// form moved up 2 semitones", "the key's form upside down around C".
+    pub fn describe(self, key: Scale) -> String {
+        let note = key.spell(key.root);
+        match (self.inverted, self.up) {
+            (false, 0) => tr("the key's own form").to_string(),
+            (false, 1) => tr("the key's form moved up a semitone").to_string(),
+            (false, up) => trf("the key's form moved up {} semitones", &[&up]),
+            (true, 0) => trf("the key's form upside down around {}", &[&note]),
+            (true, 1) => trf(
+                "the key's form upside down around {}, moved up a semitone",
+                &[&note],
+            ),
+            (true, up) => trf(
+                "the key's form upside down around {}, moved up {} semitones",
+                &[&note, &up],
+            ),
+        }
     }
 
     /// Reads a degree as the chord sheet writes it: "T2", "T7I", "t0".
