@@ -289,8 +289,10 @@ pub fn kind_menu(
     // A key of three notes is one of the micromodes, named as one unless
     // it was picked as a pitch-class set.
     let chosen = KindChoice::of(scale);
+    // A set says which one, as a micromode does: "set 6-20".
     let selected = match chosen {
         KindChoice::Micromode(micromode) => micromode.name.to_string(),
+        KindChoice::Set => trf("set {}", &[&scale.pitch_set().set_class().name()]),
         _ => crate::i18n::tr(scale.kind.name()).to_string(),
     };
     // For how many frames the menu has been open: in its first frames,
@@ -1967,16 +1969,18 @@ mod tests {
                 format!("{} {} {class}", key.label, names.join(" "))
             })
             .collect();
+        // The same notes as the key's chords, named as sets: C E G is
+        // 3-11 T7I, B D F 3-10 T11.
         assert_eq!(
             described,
             [
-                "C C E G 3-11",
-                "Dm D F A 3-11",
-                "Em E G B 3-11",
-                "F F A C 3-11",
-                "G G B D 3-11",
-                "Am A C E 3-11",
-                "Bdim B D F 3-10",
+                "3-11 T7I C E G 3-11",
+                "3-11 T2 D F A 3-11",
+                "3-11 T4 E G B 3-11",
+                "3-11 T0I F A C 3-11",
+                "3-11 T2I G B D 3-11",
+                "3-11 T9 A C E 3-11",
+                "3-10 T11 B D F 3-10",
             ]
         );
     }

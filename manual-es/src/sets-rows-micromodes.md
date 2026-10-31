@@ -89,7 +89,8 @@ alturas** en el menú Tonalidad), las teclas de armonía pueden tocar dos
 cosas, que se eligen a la izquierda:
 
 - **Acordes**: acordes apilados con las notas del conjunto, de tres o
-  cuatro notas.
+  cuatro notas, cada uno llamado por el conjunto que forma, como lo
+  escribe la hoja de acordes: **3-11 T7I** es Do Mi Sol.
 - **Formas**: las **formas** del propio conjunto, el conjunto entero
   transportado o dado vuelta, cada una nombrada por su **grado** (T0,
   T2, T2I…), como en un micromodo (ver [Un micromodo como
@@ -97,16 +98,24 @@ cosas, que se eligen a la izquierda:
   muestra siempre sus formas.
 
 Las formas empiezan por casa y siguen según cuántas notas conservan de
-casa, más brillantes cuantas más conservan. Cuando una forma es algo que
-la música tonal sabe nombrar, su tecla lo dice. En una tonalidad que es
-el conjunto Do Mi Sol Si♭ (4-27, las notas de una séptima de
-dominante), T2I es Mi Sol Si♭ Re, **Mim7b5**, la única forma que conserva
-tres de sus notas. En Do mayor como conjunto (7-35), T7 es **Sol
-mayor**, que conserva seis. **Cercanas** muestra las formas que
-conservan al menos la mitad de las notas de casa, **Todas las formas**
-las muestra todas.
+casa, más brillantes cuantas más conservan. Cada tecla muestra las
+notas de la forma en su orden más compacto y, debajo, la forma como la
+escribe la hoja de acordes. Un conjunto es música sin tonalidad, así
+que ni las teclas ni los acordes apilados con el conjunto llevan los
+nombres de los acordes y escalas de la música tonal a los que pueden
+sonar. En una tonalidad que es el conjunto Do Mi Sol Si♭ (4-27), T2I es
+Re Mi Sol Si♭, la única forma que conserva tres de sus notas (para un
+oído tonal, Mi Sol Si♭ Re es una séptima semidisminuida, pero la tecla
+no la llama así). En Do mayor como conjunto (7-35), T7 conserva seis
+notas, y sus notas se siguen escribiendo como las escribe Sol mayor,
+con Fa♯. Solo los tres micromodos acorde de Kröpfl (Acorde disminuido,
+menor-mayor y aumentado), que son tríadas por su nombre, muestran la
+tríada que es cada forma (ver [Un micromodo como
+tonalidad](#un-micromodo-como-tonalidad)). **Cercanas** muestra las
+formas que conservan al menos la mitad de las notas de casa, **Todas las
+formas** las muestra todas.
 
-![Las teclas de armonía en una tonalidad que es el conjunto Do Mi Sol Si♭, con Formas activado, después de tocar T2I: T0 (Do7), T2I (Mim7b5), después T3 (Mib7), T6 (Fa♯7), T9 (La7) y las séptimas semidisminuidas que conservan dos notas; T0 aparece con borde porque conserva tres notas de Mi Sol Si♭ Re](images/set-forms-keys.png)
+![Las teclas de armonía en una tonalidad que es el conjunto Do Mi Sol Si♭, conjunto 4-27 en el menú Tonalidad, con Formas activado, después de tocar T2I: T0 (Mi Sol Si♭ Do), T2I (Re Mi Sol Si♭), después T3, T6, T9 y las formas dadas vuelta que conservan dos notas, cada una con su nombre como lo escribe la hoja de acordes debajo (4-27 T0I, 4-27 T2…); T0 aparece con borde porque conserva tres notas de T2I](images/set-forms-keys.png)
 
 **Una progresión de formas.** En una tonalidad que es un conjunto, el
 botón **Progresión** de la hoja de acordes ofrece maneras de encadenar
@@ -287,6 +296,12 @@ tonalidad, así nada tiene que moverse. Cualquier otro conjunto mueve
 las notas como lo hace un micromodo nuevo: desde otro conjunto cada
 forma conserva su grado, y desde una tonalidad mayor o menor las notas
 se quedan como están.
+
+Una vez que un conjunto es la tonalidad, el menú Tonalidad lo nombra
+(**conjunto 6-20**) y las teclas de armonía pasan a sus formas, para
+que puedas tocarlas enseguida (ver [Un conjunto como tonalidad: sus
+formas](#un-conjunto-como-tonalidad-sus-formas)); **Acordes** vuelve a
+los acordes apilados con sus notas.
 
 ## Series dodecafónicas
 
