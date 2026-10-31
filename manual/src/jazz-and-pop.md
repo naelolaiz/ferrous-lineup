@@ -73,7 +73,9 @@ bigger band and the horns](bigger-band.md#the-horn-section)). For your
 own chords, the Library's **Big band** style brings the whole band: a
 walking bass, the guitar four to the bar, and the horns riffing together
 over a jazz blues. **Big band ballad** holds the chords on the
-saxophones.
+saxophones. **Foxtrot** is the dance band's slow two-beat for the
+ballroom: the bass on 1 and 3, the chord and the brushes on 2 and 4, the
+guitar four to the bar.
 
 ## The blues
 
