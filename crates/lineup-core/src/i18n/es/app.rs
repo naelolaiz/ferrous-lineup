@@ -1984,10 +1984,6 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "primero la nota más grave, subiendo",
     ),
     (
-        "the micromode instead of the chords",
-        "el micromodo en lugar de los acordes",
-    ),
-    (
         "The notes it leaves out form {}{}.",
         "Las notas que deja afuera forman {}{}.",
     ),

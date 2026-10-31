@@ -675,15 +675,20 @@ impl LineupApp {
         if self.band_plays_parts(action, parts, edited) {
             return;
         }
+        // The band plays a micromode style in a song with music; an empty
+        // one tries it in a pattern.
+        if let LibraryAction::MicromodeStyle(style) = action {
+            self.try_micromode_style(style);
+            return;
+        }
         let (name, tempo, label) = match action {
-            LibraryAction::UserStyle(_) => unreachable!("handled above"),
+            LibraryAction::UserStyle(_) | LibraryAction::MicromodeStyle(_) => {
+                unreachable!("handled above")
+            }
             LibraryAction::Style(style) | LibraryAction::StyleInSong(style) => {
                 (style.name, Some(style.tempo), "change the style")
             }
             LibraryAction::RowStyle(style) => (style.name, Some(style.tempo), "change the style"),
-            LibraryAction::MicromodeStyle(style) => {
-                (style.name, Some(style.tempo), "change the style")
-            }
             LibraryAction::Rhythm(rhythm) | LibraryAction::RhythmInSong(rhythm)
                 if FILLS.contains(rhythm) =>
             {
@@ -733,9 +738,7 @@ impl LineupApp {
                     apply::use_style_parts(project, style, parts)
                 }
                 LibraryAction::RowStyle(style) => rows::use_row_style(project, style),
-                LibraryAction::MicromodeStyle(style) => {
-                    micromodes::use_micromode_style(project, style)
-                }
+                LibraryAction::MicromodeStyle(_) => unreachable!("handled above"),
                 LibraryAction::Rhythm(rhythm) | LibraryAction::RhythmInSong(rhythm)
                     if FILLS.contains(rhythm) =>
                 {
@@ -782,7 +785,6 @@ impl LineupApp {
         if change.harmony > 0 {
             let what = match action {
                 LibraryAction::RowStyle(_) => "the row instead of the chords",
-                LibraryAction::MicromodeStyle(_) => "the micromode instead of the chords",
                 _ => "chords and bass played again",
             };
             descriptions.push(trf("{} in {}", &[&tr(what), &patterns(change.harmony)]));
@@ -810,11 +812,6 @@ impl LineupApp {
                 LibraryAction::RowStyle(style) => Tried {
                     rhythm: style.rhythm().or(song_library.rhythm),
                     row_style: Some(style),
-                    ..Tried::default()
-                },
-                LibraryAction::MicromodeStyle(style) => Tried {
-                    rhythm: style.rhythm().or(song_library.rhythm),
-                    micromode_style: Some(style),
                     ..Tried::default()
                 },
                 LibraryAction::Rhythm(rhythm) | LibraryAction::RhythmInSong(rhythm)
