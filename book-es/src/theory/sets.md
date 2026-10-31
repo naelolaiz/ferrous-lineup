@@ -304,7 +304,9 @@ más arriba, T3I su inversión subida tres. Después:
   invertirlos](chords.md#sellos-de-acorde));
 - **Usar como tonalidad** convierte el conjunto en la tonalidad de la
   canción: el piano roll resalta sus notas y las teclas de armonía tocan
-  acordes apilados con ellas.
+  acordes apilados con ellas (o, para un conjunto de tres notas, un
+  micromodo, sus formas por grado: ver
+  [Micromodos](micromodes.md#un-micromodo-como-tonalidad-grados)).
 
 Un conjunto de tres notas es además uno de los micromodos de Kröpfl, y
 la ventana enlaza con él (ver [Micromodos](micromodes.md)).
