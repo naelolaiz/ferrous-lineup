@@ -453,6 +453,48 @@ pub static RHYTHMS: &[Rhythm] = &[
         "Latin fill",
         "A rolling West African groove: the kick plays 3 + 3 + 2 and the shaker never stops.",
     ),
+    rhythm(
+        "Highlife",
+        Pop,
+        116.0,
+        &[
+            (Cowbell, "x..x ..x. ..x. x..."),
+            (Conga, "..o. h.h. ..o. h.hh"),
+            (Kick, "X... ..x. X... ...."),
+            (Shaker, "x.x. x.x. x.x. x.x."),
+        ],
+        "Latin fill",
+        "Ghana's highlife: the bell's time line, 3 + 3 + 4 + 2 + 4 sixteenths, congas and a \
+         light kick, under bright, ringing guitars.",
+    ),
+    rhythm(
+        "Soukous",
+        Pop,
+        132.0,
+        &[
+            (Kick, "X... X... X... X..."),
+            (Snare, "x.xx x.xx x.xx x.xx"),
+            (HiHat, "..x. ..x. ..x. ..x."),
+        ],
+        "Snare roll",
+        "Congolese soukous, the dance music of Kinshasa: the snare gallops in sixteenths, \
+         the \"cavacha\", over a kick on every beat.",
+    ),
+    rhythm(
+        "Kizomba",
+        Pop,
+        92.0,
+        &[
+            (Kick, "X... ..x. X... ...."),
+            (Rim, ".... x... .... x..."),
+            (Shaker, "xoox ooxo xoox ooxo"),
+            (Conga, "...o ..o. ...o .o.."),
+        ],
+        "",
+        "Angolan kizomba, born in the 1980s from semba and the zouk of the French Antilles: \
+         slow and rolling, the bass drum on 1 and 3 with a pickup between them, a soft rim on \
+         2 and 4, and the shaker leaning on 3 + 3 + 2.",
+    ),
     // ----- Rock -----
     rhythm(
         "Rock beat",
@@ -664,6 +706,82 @@ pub static RHYTHMS: &[Rhythm] = &[
          eighths go 3 + 3 + 2 + 2, the bass drum and the high conga on each start.",
     )
     .in_time(TimeSignature::of_groups(&[3, 2], 4)),
+    rhythm(
+        "Cakewalk",
+        Jazz,
+        104.0,
+        &[
+            (Kick, "X... x... X... x..."),
+            (Snare, ".... ..x. .... ..x."),
+            (Rim, ".o.o .... .o.o ...."),
+        ],
+        "Snare roll",
+        "The drummer of a ragtime band around 1900, when the cakewalk was the dance craze: \
+         the bass drum on every beat, the rim completing the cakewalk's own figure on the \
+         first, short-long-short, and the snare after the second with the piano's chord. \
+         Ragtime is written in 2/4; each bar here lasts two.",
+    ),
+    rhythm(
+        "Stride",
+        Jazz,
+        176.0,
+        &[
+            (HiHat, ".... x... .... x..."),
+            (Shaker, "o.o. o.o. o.o. o.o."),
+            (Kick, "o... .... o... ...."),
+        ],
+        "",
+        "Brushes behind a Harlem stride pianist: the hi-hat on 2 and 4 with the left hand's \
+         chords, and a soft sweep in swung eighths.",
+    )
+    .swung(100),
+    rhythm(
+        "Big band swing",
+        Jazz,
+        160.0,
+        &[
+            (
+                Ride,
+                "x... x.x. x... x.x. | x... x.x. x... x.x. | x... x.x. x... x.x. | x... x.x. x... x.x.",
+            ),
+            (
+                HiHat,
+                ".... x... .... x... | .... x... .... x... | .... x... .... x... | .... x... .... x...",
+            ),
+            (
+                Kick,
+                "o... o... o... o... | o... o... o... o... | o... o... o... o... | o... o... o... o...",
+            ),
+            (
+                Snare,
+                ".... ..o. .... .... | .... .... ..o. ..x. | .... ..o. .... .... | .... .... ..o. ..x.",
+            ),
+            (
+                Crash,
+                "x... .... .... .... | .... .... .... .... | .... .... .... .... | .... .... .... ....",
+            ),
+        ],
+        "Snare roll",
+        "The drummer of a swing big band in the 1930s and 1940s: the ride and the hi-hat as in \
+         a small group, the bass drum \"feathered\" softly on every beat, the snare kicking \
+         the horns' figures, and a crash every four bars where the phrase starts again.",
+    )
+    .swung(100),
+    rhythm(
+        "Big band ballad",
+        Jazz,
+        66.0,
+        &[
+            (Ride, "o... o.o. o... o.o."),
+            (Shaker, "o.o. o.o. o.o. o.o."),
+            (HiHat, ".... x... .... x..."),
+            (Kick, "o... .... o... ...."),
+        ],
+        "",
+        "Brushes under a big band's ballad: the saxophones hold the chords while the drums \
+         only keep time.",
+    )
+    .swung(100),
     // ----- Soul, funk and R&B -----
     rhythm(
         "Motown",
@@ -726,6 +844,21 @@ pub static RHYTHMS: &[Rhythm] = &[
         ],
         "Hip hop fill",
         "Late-1980s R&B: a hip hop kick and snare with a skipping hi-hat.",
+    ),
+    rhythm(
+        "Afrobeat",
+        Soul,
+        108.0,
+        &[
+            (Kick, "X..x ..x. X... ..x."),
+            (Snare, "..o. x.o. .o.. x..o"),
+            (HiHat, "xxXx xxXx xxXx xxXx"),
+            (Rim, "x..x ..x. ..x. x..."),
+        ],
+        "Snare roll",
+        "Fela Kuti's Afrobeat, from 1970s Lagos, after Tony Allen's drumming: a busy hi-hat \
+         in sixteenths, ghost notes on the snare, a kick that dodges the beat, and claves \
+         keeping a time line under the long, funky vamp.",
     ),
     // ----- Hip hop -----
     rhythm(
@@ -1110,6 +1243,75 @@ pub static RHYTHMS: &[Rhythm] = &[
          the vihuela strums beats 2 and 3. A soft kick and rim stand in for them.",
     )
     .in_time(THREE_FOUR),
+    rhythm(
+        "Mambo",
+        Latin,
+        104.0,
+        &[
+            (Rim, "x.xx .x.x x.x. xx.x"),
+            (Cowbell, "X... X... X... X..."),
+            (Conga, "o.x. o.hh o.x. o.hh"),
+        ],
+        "Latin fill",
+        "The mambo of 1950s Havana, Mexico City and New York: the timbales' sticks on the \
+         drum's shell, the bongo player's bell on every beat, and the conga's tumbao.",
+    ),
+    rhythm(
+        "Guaguancó",
+        Latin,
+        100.0,
+        &[
+            (Rim, "x..x ...x ..x. x..."),
+            (Conga, "..o. h.hl ..o. h.hh"),
+            (Shaker, "x.x. x.x. x.x. x.x."),
+        ],
+        "Latin fill",
+        "The Cuban street rumba: the rumba clave, whose third stroke comes a step later than \
+         the son clave's, under the conversation of the conga drums.",
+    ),
+    rhythm(
+        "Afro-Cuban 6/8",
+        Latin,
+        150.0,
+        &[
+            (Cowbell, "x...x. ..x.x. ..x... x...x."),
+            (Kick, "X..... x..... X..... x....."),
+            (Conga, "....h. ....h. ....h. ....h."),
+            (Shaker, "x.x.x. x.x.x. x.x.x. x.x.x."),
+        ],
+        "",
+        "The 6/8 of Cuba's drums of African origin, as in the bembé: a bell plays the \
+         seven-stroke pattern, twelve eighths long, that the whole band listens to, over four \
+         slow beats. Afro-Cuban jazz took it up.",
+    )
+    .in_time(TWELVE_EIGHT),
+    rhythm(
+        "Baião",
+        Latin,
+        104.0,
+        &[
+            (Kick, "X..X .... X..X ...."),
+            (Rim, "..x. ..x. ..x. ..x."),
+            (HiHat, "x.xx x.xx x.xx x.xx"),
+        ],
+        "Latin fill",
+        "The baião of Brazil's northeast, Luiz Gonzaga's dance: the zabumba drum's long-short \
+         on the beat, its stick between the beats, and a triangle that never stops. The baião \
+         is in 2/4; each bar here lasts two.",
+    ),
+    rhythm(
+        "Vallenato",
+        Latin,
+        100.0,
+        &[
+            (Kick, "X... .... X... ...."),
+            (Conga, "h..x h.x. h..x h.x."),
+            (Shaker, "x.xx x.xx x.xx x.xx"),
+        ],
+        "Latin fill",
+        "The paseo of Colombia's vallenato: the caja, a small drum played with the hands, and \
+         the guacharaca, a ridged stick scraped with a fork, under the accordion.",
+    ),
     // ----- Tango -----
     rhythm(
         "Tango marcato",
@@ -1371,13 +1573,52 @@ pub static RHYTHMS: &[Rhythm] = &[
         Folklore,
         110.0,
         &[
-            (Rim, "X..X ..X. X..X ..X."),
-            (LowTom, "X... ..X. X... X..."),
-            (Conga, ".xx. .xx. .xx. .xx."),
+            // Eight bars, as the patterns of two candombe percussion sheets
+            // ("Materiales de la cuerda del Candombe" and a murga sheet's
+            // candombe page) take turns. The repique plays the two-bar 3-2
+            // clave on the wood (Rim) twice, then its own base for two bars
+            // and a two-bar phrase (High tom). The piano (Low tom) plays its base
+            // with the Cuareim variation every fourth bar: "tapado" strokes,
+            // stick and hand together, and loud open strokes just before
+            // beats 2 and 4. The chico (Conga) keeps its ostinato, the
+            // hand's accent then two stick strokes, and plays every
+            // sixteenth ("repicado") in the last bar.
+            (
+                Rim,
+                "x..x ..x. ..x. x... | x..x ..x. ..x. x... | \
+                 x..x ..x. ..x. x... | x..x ..x. ..x. x... | \
+                 .... .... .... .... | .... .... .... .... | \
+                 .... .... .... .... | .... .... .... ....",
+            ),
+            (
+                HighTom,
+                ".... .... .... .... | .... .... .... .... | \
+                 .... .... .... .... | .... .... .... .... | \
+                 xx.x xx.x xx.x xx.x | xx.x xx.x xx.x xx.x | \
+                 .x.x x... .x.x x... | .x.x xx.x xx.x x...",
+            ),
+            (
+                LowTom,
+                "x..X .x.. x..X x... | x..X .x.. x..X x... | \
+                 x..X .x.. x..X x... | x..X .xx. x..X x.x. | \
+                 x..X .x.. x..X x... | x..X .x.. x..X x... | \
+                 x..X .x.. x..X x... | x..X .xx. x..X x.x.",
+            ),
+            (
+                Conga,
+                ".Xxx .Xxx .Xxx .Xxx | .Xxx .Xxx .Xxx .Xxx | \
+                 .Xxx .Xxx .Xxx .Xxx | .Xxx .Xxx .Xxx .Xxx | \
+                 .Xxx .Xxx .Xxx .Xxx | .Xxx .Xxx .Xxx .Xxx | \
+                 .Xxx .Xxx .Xxx .Xxx | xXxx xXxx xXxx xXxx",
+            ),
         ],
         "",
-        "Montevideo's candombe: the stick on the drum's wooden shell plays the clave, \
-         3 + 3 + 2 twice, under the piano, repique and chico drums.",
+        "Montevideo's candombe, eight bars that start again with each part of a song. The \
+         chico keeps its ostinato, the three sixteenths after each beat, the hand's accent \
+         on the first, and plays every sixteenth in the last bar. The piano's open strokes \
+         ring just before beats 2 and 4 among its muffled ones, with a variation every \
+         fourth bar. The repique plays the 3-2 clave on the drum's wooden shell for four \
+         bars, then its own base for two and a two-bar phrase.",
     ),
     rhythm(
         "Polca",
@@ -1413,6 +1654,59 @@ pub static RHYTHMS: &[Rhythm] = &[
          guitar strumming between them.",
     )
     .in_time(SIX_EIGHT),
+    rhythm(
+        "Peruvian waltz",
+        Folklore,
+        156.0,
+        &[(Kick, "X... .... ...."), (Rim, "..x. x.x. x...")],
+        "",
+        "The vals criollo of Lima, the waltz of Chabuca Granda: quick, with the cajón's bass \
+         on beat 1 and its slaps between the beats, under two guitars.",
+    )
+    .in_time(THREE_FOUR),
+    rhythm(
+        "Festejo",
+        Folklore,
+        165.0,
+        &[
+            (Kick, "X..... X....."),
+            (Rim, "...x.x ...x.x"),
+            (Cowbell, "x...x. x.x.x."),
+        ],
+        "",
+        "The Afro-Peruvian festejo, fast and syncopated: the cajón and the cowbell in 6/8, \
+         while the guitar's chords fall in 3/4, three against two.",
+    )
+    .in_time(SIX_EIGHT),
+    rhythm(
+        "Rasguido doble",
+        Folklore,
+        100.0,
+        &[(Kick, "X..x .... X..x ...."), (Rim, ".... x.x. .... x.x.")],
+        "",
+        "The rasguido doble of Corrientes and Chaco, \"a tango played badly\": a lively dance \
+         in two whose guitar strums the habanera's long-short, the bass strings on the beat \
+         and the muted treble strings after it. Its time is 2/4; each bar here lasts two.",
+    ),
+    rhythm(
+        "Murga",
+        Folklore,
+        116.0,
+        &[
+            (Kick, "X.ox ..o. X.x. ..o."),
+            (HiHat, "x... x... x... x..."),
+            (OpenHat, "..x. ..x. ..x. ..x."),
+            (Snare, "x..o x..o x..o x..o"),
+            (Rim, ".ox. .ox. .ox. .ox."),
+        ],
+        "",
+        "The marcha camión of Montevideo's carnival murgas, named after the trucks that \
+         carried them through the city, as its percussionists write it: the bombo struck on \
+         1, on the sixteenth before 2, on 3 and on its \"and\", the left hand damping the head \
+         between; the platillo (a hi-hat) closed on the beats and open on the \"ands\"; and \
+         the redoblante four to the beat, a stroke, two stick-on-stick clicks, the second \
+         accented, and a buzz.",
+    ),
     // ----- Flamenco -----
     rhythm(
         "Rumba flamenca",
@@ -1426,6 +1720,35 @@ pub static RHYTHMS: &[Rhythm] = &[
         "Latin fill",
         "Hand claps (palmas) and the bass and slap of a cajón.",
     ),
+    rhythm(
+        "Pasodoble",
+        Flamenco,
+        120.0,
+        &[
+            (Kick, "X... X..."),
+            (Crash, "x... ...."),
+            (Snare, "..x. ..x."),
+        ],
+        "",
+        "The pasodoble of bullfights and village bands: a march in 2/4, the bass drum on the \
+         beats, a cymbal on the first, and the snare between them.",
+    )
+    .in_time(TWO_FOUR),
+    rhythm(
+        "Twelve-beat compás",
+        Flamenco,
+        110.0,
+        &[
+            (Clap, "X.o.o. X.o.o. X.o. X.o. X.o."),
+            (Kick, "X..... ...... x... .... ...."),
+            (Rim, "...... x..... .... x... x..."),
+        ],
+        "",
+        "The twelve beats of soleá, alegrías and bulerías, counted from 12 as flamenco \
+         does: 12 1 2, 3 4 5, 6 7, 8 9, 10 11, the palmas loudest on 12, 3, 6, 8 and 10. \
+         Written here as 3 + 3 + 2 + 2 + 2 eighths.",
+    )
+    .in_time(TimeSignature::of_groups(&[3, 3, 2, 2, 2], 8)),
     // ----- Balkan and Turkish -----
     // Dances in bars of short and long beats: a long beat is three
     // eighths, a short one two. The big drum (the tapan, the daouli, the
@@ -1623,6 +1946,18 @@ pub static RHYTHMS: &[Rhythm] = &[
          beat, tek on the second, düm on the third and tek on the long last one.",
     )
     .in_time(TimeSignature::of_groups(&[3, 2, 2, 3], 8)),
+    rhythm(
+        "Freylekhs",
+        Balkan,
+        136.0,
+        &[
+            (Kick, "X... ..X. .... X..."),
+            (Snare, "..x. x... x.x. ..x."),
+        ],
+        "",
+        "The freylekhs, the joyful circle dance of klezmer weddings: the bass drum plays the \
+         bulgar's 3 + 3 + 2 in eighths, and the snare fills the eighths between.",
+    ),
     // ----- Reggae and ska -----
     rhythm(
         "One drop",
@@ -1683,6 +2018,33 @@ pub static RHYTHMS: &[Rhythm] = &[
         ],
         "",
         "Digital Jamaican dance music: the kick in 3 + 3 + 2 under a snare on 2 and 4.",
+    ),
+    rhythm(
+        "Calypso",
+        Reggae,
+        108.0,
+        &[
+            (Kick, "X... ..x. X... ..x."),
+            (Rim, "..x. x... ..x. x..."),
+            (Cowbell, "x.xx x.xx x.xx x.xx"),
+        ],
+        "Latin fill",
+        "Trinidad's calypso: the bass drum in 3 + 3 + 2 eighths, rim clicks after the beats, \
+         and the iron, a brake drum struck with a metal rod, in long-short-short.",
+    ),
+    rhythm(
+        "Soca",
+        Reggae,
+        128.0,
+        &[
+            (Kick, "X... X... X... X..."),
+            (Snare, ".... ..x. .... x..."),
+            (HiHat, "..x. ..x. ..x. ..x."),
+            (Cowbell, "x.xx x.x. x.xx x.x."),
+        ],
+        "Snare roll",
+        "Soca, the \"soul of calypso\" from 1970s Trinidad: faster, with a kick on every beat \
+         and the iron's syncopations, for the carnival's road marches.",
     ),
     // ----- Country and folk -----
     rhythm(
@@ -1777,6 +2139,62 @@ pub static RHYTHMS: &[Rhythm] = &[
         "A whirling southern Italian dance in fast 6/8, with a tambourine.",
     )
     .in_time(SIX_EIGHT),
+    rhythm(
+        "Western swing",
+        Folk,
+        176.0,
+        &[
+            (Snare, "x.x. X.x. x.x. X.x."),
+            (Kick, "X... .... X... ...."),
+            (HiHat, ".... x... .... x..."),
+        ],
+        "",
+        "Texas dance halls of the 1930s and 1940s, Bob Wills's band: the snare brushed in \
+         swung eighths, louder on 2 and 4, the bass drum on 1 and 3.",
+    )
+    .swung(100),
+    rhythm(
+        "Honky-tonk shuffle",
+        Folk,
+        116.0,
+        &[
+            (Kick, "X... .... X... ...."),
+            (Snare, "o.o. X.o. o.o. X.o."),
+            (HiHat, "x.x. x.x. x.x. x.x."),
+        ],
+        "Snare roll",
+        "The Texas shuffle of honky-tonk bars: the snare shuffles long-short and cracks on 2 \
+         and 4.",
+    )
+    .swung(100),
+    rhythm(
+        "Cajun two-step",
+        Folk,
+        120.0,
+        &[
+            (Kick, "X... x... X... x..."),
+            (Snare, "..o. ..x. ..o. ..x."),
+            (HiHat, "x.X. x.X. x.X. x.X."),
+        ],
+        "",
+        "The two-step of Louisiana's Cajun dance halls: the triangle (the \"tit fer\") ringing \
+         every eighth, louder off the beat, over the bass drum on the beats. The dance is in \
+         2/4; each bar here lasts two.",
+    ),
+    rhythm(
+        "Musette",
+        Folk,
+        184.0,
+        &[
+            (Kick, "X... .... ...."),
+            (Snare, ".... o... o..."),
+            (HiHat, ".... x... x..."),
+        ],
+        "",
+        "The valse musette of the Paris dance halls (the bals musette): a fast waltz felt in \
+         one, for accordion, guitar and brushes.",
+    )
+    .in_time(THREE_FOUR),
     // ----- Classical and film -----
     rhythm(
         "Epic toms",
@@ -1802,6 +2220,16 @@ pub static RHYTHMS: &[Rhythm] = &[
         "Snare roll",
         "The military snare: a roll into every other beat.",
     ),
+    rhythm(
+        "Six-eight march",
+        Classical,
+        180.0,
+        &[(Kick, "X..... x....."), (Snare, "x...x. x.x.x.")],
+        "",
+        "A march in 6/8, as in Sousa's Washington Post: two beats to the bar, each made of \
+         three eighths, the bass drum on both and the snare in their long-short lilt.",
+    )
+    .in_time(SIX_EIGHT),
     rhythm(
         "Orchestra",
         Classical,

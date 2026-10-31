@@ -81,7 +81,7 @@ the chain into a loop as fast as one written by hand.
 
 ## Tests over data
 
-Much of Ferrous Lineup is data: 343 songs, 177 harmony styles, 112
+Much of Ferrous Lineup is data: 343 songs, 215 harmony styles, 139
 rhythms, the twelve-tone and micromode styles. Tests read all of it, so
 a mistake in a table fails before anyone hears it: a bar that does not
 add up, a chord that cannot be read, a name used twice, a style whose

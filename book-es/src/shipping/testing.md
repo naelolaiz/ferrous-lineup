@@ -87,8 +87,8 @@ mano.
 
 ## Tests sobre datos
 
-Buena parte de Ferrous Lineup son datos: 343 canciones, 177 estilos
-armónicos, 112 ritmos, los estilos dodecafónicos y de micromodos. Los
+Buena parte de Ferrous Lineup son datos: 343 canciones, 215 estilos
+armónicos, 139 ritmos, los estilos dodecafónicos y de micromodos. Los
 tests los leen todos, así que un error en una tabla falla antes de que
 nadie lo oiga: un compás que no suma, un acorde que no se puede leer, un
 nombre repetido, un estilo cuyo ritmo no existe (ver [Cómo se
