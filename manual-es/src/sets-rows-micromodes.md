@@ -379,7 +379,9 @@ semitono; y el resto son las tres tríadas, que llevan su nombre. La
 tríada menor y la mayor son un mismo micromodo, **Acorde menor-mayor**,
 porque cada una es la otra dada vuelta: todos los acordes de un I, IV,
 V, I tienen el mismo color, y la música tonal trabaja con *cuáles* de
-sus formas usa.
+sus formas usa. Para aprender a oír las familias y después cada
+micromodo, usa la pestaña **Micromodos** de la ventana [Entrenamiento
+auditivo](practising.md#entrenamiento-auditivo-experimental).
 
 **Micromodos…**, en el piano roll, muestra las tres familias, cada
 micromodo dibujado en un reloj de las doce notas, con su forma prima,

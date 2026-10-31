@@ -119,6 +119,10 @@ each other, so they are one micromode, and its name says both. Every
 chord of a I–IV–V–I progression is the same micromode; what tonal music
 does with them is a matter of *which* forms, not which colour.
 
+To learn to hear the families, and then each micromode, the Ear
+training window has a **Micromodes** tab (see [Ear
+training](../band/practice.md#micromodes)).
+
 ### Finding the micromode of three notes by hand
 
 Cetta gives two examples of Menor 3: E, F and A♭, and F, D and G♭.

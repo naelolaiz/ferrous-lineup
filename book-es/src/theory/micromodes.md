@@ -121,6 +121,10 @@ nombre dice las dos cosas. Todos los acordes de una progresión I–IV–V–I
 son el mismo micromodo; lo que la música tonal hace con ellos es
 cuestión de *qué* formas, no de qué color.
 
+Para aprender a oír las familias, y después cada micromodo, la ventana
+Entrenamiento auditivo tiene una pestaña **Micromodos** (ver
+[Entrenamiento auditivo](../band/practice.md#micromodos)).
+
 ### Encontrar a mano el micromodo de tres notas
 
 Cetta da dos ejemplos de Menor 3: Mi, Fa y La♭, y Fa, Re y Sol♭.
