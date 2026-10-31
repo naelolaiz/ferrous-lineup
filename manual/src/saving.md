@@ -18,8 +18,9 @@ the instrument of every channel. One file holds the whole song.
 | **Quit** | **Ctrl+Q** | closes Ferrous Lineup |
 
 The **Import** and **Export** items are in [Opening MIDI files and
-chord sheets](importing.md) and [Exporting](exporting.md), and **Add a
-recording…** in [Takes](takes.md#adding-a-recording-made-before).
+chord sheets](importing.md) and [Exporting](exporting.md). A recording
+goes on the song from the playlist: see
+[Takes](takes.md#adding-a-recording-made-before).
 
 The window's title names the song, with a **\*** after it while it has
 changes that are not saved. **Ctrl+Z** back to where it was saved takes
@@ -56,7 +57,8 @@ quit** or **Keep exporting**.
 - **Drop a file on the window** from your file manager. A .lineup file
   opens; a MIDI file or a text chord sheet is imported; a recording
   (MP3, FLAC, Ogg, or a WAV longer than ten seconds) is [added to the
-  song as a take](takes.md#adding-a-recording-made-before). Drop one at
+  song as a take](takes.md#adding-a-recording-made-before), on the
+  track and from the bar where you drop it. Drop one at
   a time: with several, none is opened. A shorter WAV file is a sound: it
   becomes a channel that plays it, or, dropped on a channel of the
   rack, that channel's sound (see [The channel rack](channel-rack.md)).

@@ -804,7 +804,7 @@ Un archivo `.lineup` soltado sobre la ventana también se abre, tras la
 misma pregunta «¿Guardar cambios?», un archivo MIDI o una hoja de
 acordes se importan, y una grabación se añade a la canción como toma.
 Los demás archivos WAV soltados van al rack de canales (en
-[Tomas](../theory/listen.md#desde-el-menú-la-línea-de-comandos-o-soltada)
+[Tomas](../theory/listen.md#desde-la-lista-de-reproducción-la-línea-de-comandos-o-soltada)
 está cuál WAV es cuál).
 
 ## Archivo > Abrir recientes

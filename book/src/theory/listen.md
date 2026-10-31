@@ -6,17 +6,18 @@ Files: [`crates/lineup-listen/src/voice.rs`](https://github.com/naelolaiz/ferrou
 and [`crates/lineup-app/src/app/voice.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/voice.rs)
 
 A **take** is a tune sung or whistled along with the song. The
-microphone button next to Rec records one while the song plays; **File >
-Add a recording…** lays a recording made before on the song, from the
-playhead. Either way the app hears the notes in it, with their pitch,
+microphone button next to Rec records one while the song plays;
+**➕ Recording** in the playlist, or a file dropped on a track, lays a
+recording made before on the song. Either way the app hears the notes in it, with their pitch,
 their timing and how loud each was sung, and the **Your take** window
 asks where they go: in place of what the Lead played there, on another
 channel, on a new one, or nowhere. The recording itself stays on a
-track of the playlist, where it plays with the song as a reference. How
+track of the playlist, drawn as its waveform, where it plays with the
+song as a reference. How
 to use it is in the manual's
 [Takes](https://naelolaiz.github.io/ferrous-lineup/manual/takes.html).
 
-![The Your take window over the playlist: the notes heard and the bars they were sung in, the first ones named, Notes go to Lead, the grid in sixteenth notes, and the recording kept on a track of its own](../images/take-review.png)
+![The Your take window over the playlist: the notes heard and the bars they were sung in, the first ones named, Notes go to Lead, the grid in sixteenth notes, the pitches as sung, and the recording kept on a track of its own](../images/take-review.png)
 
 Three questions have to be answered for that, and each is answered in a
 different crate:
@@ -488,7 +489,9 @@ recording, starting on the first whole step inside it.
   quarter notes;
 - its pitch, less the take's tuning, is rounded to a semitone; a pitch
   right between two (from 0.35 to 0.65 of the way) goes to the one in
-  the key there;
+  the key there; or it goes to a note of the key, or of the chord's
+  scale, as the window asks (see [Pitches: as sung, in the key, or with
+  the chords](#pitches-as-sung-in-the-key-or-with-the-chords));
 - how loud it was sung sets its **velocity**: a note as loud as the
   middle one of the take plays at 100, louder ones harder, softer ones
   softer.
@@ -512,6 +515,62 @@ on the same step the longer one sung stays, a note ends where the next
 one starts, and a gap of a step or two (a breath, a consonant) is
 closed rather than written as a rest.
 
+### Pitches: as sung, in the key, or with the chords
+
+A singer a little out of tune, or a whistle that slides, can land
+nearer a wrong semitone than the right one. `take::transcribe_with`
+takes a `Pitches` that says how strict to be:
+
+```rust
+pub enum Pitches {
+    #[default]
+    AsSung,
+    InKey,
+    WithChords,
+}
+```
+
+**As sung** is the rounding above. **In the key** writes the nearest
+note of the key there: in D major, a D♯ sung a quarter of a semitone
+sharp is an E, since D♯ is not in the key. **Key and chords** writes the
+nearest note of the scale a soloist plays over the chord on the chord
+sheet there, in the key: the **chord scale** that `chord_scale` picks
+for the [soloist](../band/soloist.md#choosing-a-chord-scale). Over D7 in
+C major, the V7 of G, it is G major, C D E F♯ G A B, so a sung F is
+written F♯, while G, the note D7 leads to, stays. Over Fm, borrowed from
+C minor, it is F G A♭ B♭ C D E♭. Bars with no chord keep to the key; a
+micromode on the chord sheet is the scale there.
+
+`allowed_at` gives two [sets of pitch
+classes](pitch.md#a-set-of-pitch-classes-in-twelve-bits) for a step:
+the notes a pitch may be written as, and the ones preferred right
+between two, the chord's own:
+
+```rust
+let allowed = match harmony {
+    Some(HarmonyName::Chord(symbol)) => {
+        let mut allowed = chord_scale(symbol.chord(), scale);
+        allowed.insert(symbol.bass_pitch_class());
+        allowed
+    }
+    // A micromode is the scale there.
+    Some(HarmonyName::Micromode(set)) => set,
+    // A set, or two chords at once: the key with their notes.
+    _ => PitchSet::from_bits(key.bits() | chord.bits()),
+};
+```
+
+The bass of a slash chord is added, since G/F♯ has an F♯ under it
+that the G chord's scale may not hold. `PitchSet::from_bits(a.bits() |
+b.bits())` is a union: each set is twelve bits, one per pitch class, so
+the bitwise or of the two holds every note in either.
+
+`nearest_in` then looks at every note within an octave of the pitch
+sung, keeps the allowed ones, and takes the nearest; at the same
+distance, one in the preferred set wins. The window transcribes the
+take again each time the choice changes, so the notes it lists show
+the difference at once.
+
 ## Writing it in
 
 `Project::add_take` writes a transcription into the song, where the
@@ -529,8 +588,13 @@ In song mode the notes go into the **patterns that already hold that
 channel's notes** where they were sung, in place of the notes there:
 correct the tune once, and it is corrected wherever its pattern plays.
 `Added::shared` lists those patterns that play more than once, so the
-app can say so. Notes sung where no pattern holds the channel's notes
-go into the take's own clips. In pattern mode they go into the pattern.
+app can say so. Notes sung where no pattern holds the channel's notes,
+and every note for a new channel, go into clips of their own, on a
+track **right under the recording's**, named by `Keep::notes`, as
+*Take 1 notes*: the recording and its notes stay side by side, and
+each can be muted on its own. Without a recording kept, those clips go
+on the track the window chose. In pattern mode the notes go into the
+pattern.
 
 The recording is kept as a WAV file per piece (`lineup_listen::wav`,
 32-bit floating point, so nothing recorded is lost), in a folder next
@@ -590,8 +654,8 @@ in it (see [Settings that live on a
 thread](../sound/export.md#settings-that-live-on-a-thread)).
 
 The window changes nothing until **Write it in**. Choosing another grid
-transcribes the take again, which is quick, since the notes were
-already heard. **Write it in** transcribes once more, in case the song
+or another way of writing the pitches transcribes the take again, which
+is quick, since the notes were already heard. **Write it in** transcribes once more, in case the song
 changed while the window was open, saves the pieces, and writes the
 take with `self.edit`, so it is **one step of undo**. **Throw it away**,
 or closing the window, keeps nothing.
@@ -600,12 +664,79 @@ On macOS an app has to say why it wants the microphone before the
 system lets it listen, so `packaging/macos/Info.plist` has an
 `NSMicrophoneUsageDescription`, which macOS shows the first time.
 
-### From the menu, the command line or a drop
+### Drawing a take: its waveform
 
-A recording reaches the app from **File > Add a recording…**, from the
-command line, or dropped on the window. **File > Add a recording…** and
-a drop lay it on the song from the playhead (from bar 1 in pattern
-mode, which switches to song mode). A file named on the command line,
+A take's clips hold one note, on the piece's first step, so drawn as
+notes they would show a dot. The playlist draws its **waveform**
+instead: a vertical line for each column of pixels, as tall as the
+loudest sample in the stretch of the recording under it.
+
+Reading a long recording takes a moment, too long to hold up a frame,
+so `Waves` reads each file once on a thread of its own and keeps the
+`JoinHandle` in a `HashMap` keyed by the file's path. Until the thread
+`is_finished()`, the clip is drawn empty and the playlist asks for
+another frame in 100 ms; then it `join`s, and keeps the result behind
+an `Arc`, so drawing can hold it while the map is borrowed again.
+`Wave::read` decodes the file with `lineup_listen::decode_file` and
+keeps the loudest sample of every 1/400 s. Then it divides them all by
+the loudest of the whole take, with a floor of 0.01 so near silence
+stays near silence: a take sung softly fills its clip as one sung
+loudly does.
+
+A long take is cut into several clips, each at most a pattern long,
+and only the first holds the note that starts it. So `paint_clips`
+first gathers where each recording starts, by track, and draws each
+one under every clip of its track it plays under, not only under the
+one that starts it.
+
+The recording plays straight on in seconds while the playlist is laid
+out in steps, and a step's length in seconds changes with the tempo.
+`paint_wave` walks the steps from the piece's start, adding each one's
+length, `seconds_per_beat() / 4.0` at the tempo there, so the waveform
+stays under the bars it is heard with through every tempo change.
+
+### Hearing a take alone
+
+Every track has an **S** next to its mute light. It mutes every other
+track, and a second click unmutes them all. One rule does both: a
+track is alone when it is the only one playing, and the click flips
+between that and everyone playing:
+
+```rust
+let alone = tracks
+    .iter()
+    .enumerate()
+    .all(|(other, t)| (other == track) != t.muted);
+for other in 0..tracks.len() {
+    if let Some(t) = project.track_mut(other) {
+        t.muted = !alone && other != track;
+    }
+}
+```
+
+`(other == track) != t.muted` is true when this track plays and every
+other is muted: `!=` on two `bool`s is "exactly one of them". The S is
+lit while its track is alone. It is one edit, so **Ctrl+Z** brings the
+mutes back as they were, and the mutes are saved with the song, as the
+mute light's always were.
+
+### From the playlist, the command line or a drop
+
+A recording reaches the app from **➕ Recording** in the playlist's
+toolbar, from a track's **Add a recording…**, from the command line, or
+dropped on the window. The button lays it on the song from the playhead
+(from bar 1 in pattern mode, which switches to song mode); the track's
+menu does too, on that track. A drop on the playlist starts it where
+it was dropped, on the bar, beat or step **Snap** says, on the track
+under the pointer; a drop anywhere else starts it at the playhead.
+
+Dropped files reach the app before the playlist is drawn again, so the
+playlist keeps a `DropGrid`, the grid as it was drawn last frame: where
+it is on the screen, the layer it is on, and where each track starts.
+`recording_drop` asks it which step and track the pointer is over, and
+only if no window covers that place (`ctx.layer_id_at` names the
+topmost layer there). While a file is dragged over the playlist, the
+same grid lights the place where it would start. A file named on the command line,
 or opened from a file manager, goes through `open_now`, which opens
 projects too, and which asks `lineup_listen::is_audio_file` first: an
 extension in `AUDIO_EXTENSIONS`, `["mp3", "wav", "flac", "ogg"]`, in

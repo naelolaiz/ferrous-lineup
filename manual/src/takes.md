@@ -48,29 +48,31 @@ When the take stops, the app listens to it for a moment, then the
 bars, and the first ones by name. If you sang a little sharp or flat
 throughout, it says so; the notes are written as you meant them.
 
-![The Your take window: 21 notes, from bar 1 to bar 6, F#5 F#5 G5 A5 A5 G5 F#5 E5 D5 D5 E5 F#5; Notes go to Lead; On the grid of sixteenth notes; The recording: Keep it, on a new track; Write it in and Throw it away](images/take-review.png)
+![The Your take window: 18 notes, from bar 1 to bar 6, F#5 F#5 G5 A5 A5 G5 F#5 E5 D5 D5 E5 F#5; Notes go to Lead; On the grid of sixteenth notes; Pitches as sung; The recording: Keep it, on a new track; Write it in and Throw it away](images/take-review.png)
 
 | Choice | What it does |
 |---|---|
 | **Notes go to** | The channel that plays the tune, the **Lead**, is chosen first. The notes take the place of what that channel played where you sang, and only there. You can also choose any other channel, **A new channel** (named "Sung notes", played by a flute), or **Nowhere: keep only the recording**. |
 | **On the grid of** | Where the starts and ends of the notes snap to: **Sixteenth notes**, **Eighth notes** or **Quarter notes**. A coarser grid tidies a loose rhythm. |
+| **Pitches** | Which notes the pitches you sang are written as. **As sung**: the nearest semitone. **In the key**: the nearest note of the key, so a note sung out of tune does not come out as a wrong note. **Key and chords**: the nearest note of the key as the chord on the chord sheet there colours it; over D7 in C major, F♯ is written instead of F. Bars with no chord keep to the key. The notes listed at the top change as you choose. |
 | **The recording** | **Keep it** keeps what you sang, on a track: **A new track** at the bottom, or one you choose. Untick it to keep only the notes. |
 
 **Write it in** does it, as one step: **Ctrl+Z** takes the whole take
 away again. **Throw it away**, or closing the window, keeps nothing.
 
-The status bar says what changed, as in *Wrote 21 notes on Lead. The
+The status bar says what changed, as in *Wrote 18 notes on Lead. The
 recording plays as Take 1.* When the pattern you sang over plays more
 than once in the song, it says that too: your notes play each time the
 pattern does, so a melody fixed once is fixed everywhere it repeats.
 
-![The playlist after writing the take in: a new track "Take 1" with a pink clip from bar 1 to bar 6, under the Song and Drums tracks, and the status bar saying "Wrote 21 notes on Lead. The recording plays as Take 1. Theme plays 3 times: your notes play each time."](images/take-written.png)
+![The playlist after writing the take in: a new track "Take 1" with the recording's waveform in a pink clip from bar 1 to bar 6, under the Song and Drums tracks, and the status bar saying "Wrote 18 notes on Lead. The recording plays as Take 1. Theme plays 3 times: your notes play each time."](images/take-written.png)
 
 ## How your singing is heard
 
 - **Pitch**: each note is rounded to the nearest semitone, after taking
   out how sharp or flat the whole take was. A note sung right between
-  two goes to the one in the key.
+  two goes to the one in the key. **Pitches** in the Your take window
+  can keep the notes to the key, or to the key and the chords.
 - **Timing**: where each note starts and ends, on the grid you chose. A
   breath or a consonant between two notes is not written as a rest.
 - **Loudness**: how hard each note is played. A note as loud as most of
@@ -90,8 +92,16 @@ Some tips:
 
 ## The take on its track
 
-The kept recording plays with the song, from wherever you start
-playback, like any part: mute its track to hear the song without it.
+The kept recording is drawn on its track as its waveform: tall where
+you sang loud, flat where you were silent. It plays with the song, from
+wherever you start playback, like any part: the **light** at the left
+of its track mutes it, and **S** plays it alone, to hear only what you
+sang (see [Tracks](patterns-and-playlist.md#tracks)).
+
+Notes that go to **A new channel**, or to a channel with nothing to
+play there, go on a track of their own right under the recording,
+named after it, as *Take 1 notes*. Mute either track to hear the
+recording without its notes, or the notes without the recording.
 Its sound is saved as a WAV file in a folder next to the song, named
 after it, as *my song takes* (for a song not saved yet, in Ferrous
 Lineup's own folder). Keep that folder next to the song: moved or
@@ -103,11 +113,21 @@ to open.
 
 ## Adding a recording made before
 
-**File > Add a recording…** puts an MP3, WAV, FLAC or Ogg file on the
-song, from the playhead (from bar 1 in pattern mode, which switches to
-song mode), and hears the notes in it as in a take. You can also drop
-the file on the window. The same **Your take** window asks where the
-notes go.
+An MP3, WAV, FLAC or Ogg file can go on the song as a take, and the
+notes in it are heard as in one you sang. There are three ways:
+
+- **➕ Recording**, in the playlist's toolbar, puts it on the song from
+  the playhead (from bar 1 in pattern mode, which switches to song
+  mode).
+- **Add a recording…**, in the menu you get by right-clicking a track's
+  name, puts it on that track, from the playhead.
+- **Drop the file on a track**: while you drag it over the playlist,
+  the place where it will start is lit, on the bar, beat or step that
+  **Snap** says, and it starts there, on that track. Dropped on the
+  fainter row under the last track, it goes on a track with nothing on
+  it; dropped anywhere else on the window, it starts at the playhead.
+
+The same **Your take** window asks where the notes go.
 
 - The recording goes straight on at the song's tempo, so it lines up
   when it was recorded at that tempo, for instance along with the song.

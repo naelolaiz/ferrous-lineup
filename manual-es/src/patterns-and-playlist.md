@@ -99,13 +99,16 @@ barra de la lista de reproducción, también añade una.
 
 - La **luz** a la izquierda de una pista la silencia y le devuelve el
   sonido.
+- **S**, a su derecha, deja sonar solo esa pista: todas las demás se
+  silencian. Haz clic otra vez para oírlas todas.
 - **Haz clic en su nombre** para cambiarlo.
 - **Arrastra su borde inferior** para hacerla más alta o más baja;
   **doble clic** en el borde le devuelve su alto habitual.
 - **Clic derecho en su nombre** para **Alto de la pista**,
   **Restablecer el alto de la pista**, **Insertar una pista arriba**,
-  **Insertar una pista abajo**, **Subir**, **Bajar** y **Eliminar la
-  pista**, que también elimina sus clips.
+  **Insertar una pista abajo**, **Añadir una grabación…** (ver
+  [Tomas](takes.md#añadir-una-grabación-hecha-antes)), **Subir**,
+  **Bajar** y **Eliminar la pista**, que también elimina sus clips.
 
 ## Las franjas sobre las pistas
 

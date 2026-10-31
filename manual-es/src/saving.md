@@ -19,8 +19,9 @@ tiene toda la canción.
 | **Salir** | **Ctrl+Q** | cierra Ferrous Lineup |
 
 Los elementos **Importar** y **Exportar** están en [Abrir archivos MIDI
-y hojas de acordes](importing.md) y en [Exportar](exporting.md), y
-**Añadir una grabación…** en [Tomas](takes.md#añadir-una-grabación-hecha-antes).
+y hojas de acordes](importing.md) y en [Exportar](exporting.md). Una
+grabación se pone sobre la canción desde la lista de reproducción: ver
+[Tomas](takes.md#añadir-una-grabación-hecha-antes).
 
 El título de la ventana nombra la canción, con un **\*** después
 mientras tiene cambios sin guardar. Volver con **Ctrl+Z** hasta donde
@@ -60,7 +61,8 @@ pregunta si **Detener y salir** o **Continuar exportando**.
   Un archivo .lineup se abre; un archivo MIDI o una hoja de acordes en
   texto se importa; una grabación (MP3, FLAC, Ogg, o un WAV de más de
   diez segundos) se [añade a la canción como una
-  toma](takes.md#añadir-una-grabación-hecha-antes). Suelta uno a la
+  toma](takes.md#añadir-una-grabación-hecha-antes), en la pista y desde
+  el compás donde la sueltas. Suelta uno a la
   vez: con varios, no se abre ninguno. Un archivo WAV más corto es
   un sonido: se vuelve un canal que lo toca, o, soltado sobre un canal
   del rack, el sonido de ese canal (ver [El rack de

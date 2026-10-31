@@ -67,6 +67,7 @@ lo que se encuentra en cancioneros y en sitios web. El formato está en
 ## Grabaciones
 
 Un archivo de sonido (MP3, WAV, FLAC u Ogg) no se abre como una canción
-propia: **Archivo > Añadir una grabación…** lo pone sobre la canción que
-tienes abierta, y escribe las notas cantadas o tocadas en él, como una
-toma (ver [Tomas](takes.md#añadir-una-grabación-hecha-antes)).
+propia: **➕ Grabación**, en la barra de la lista de reproducción, lo
+pone sobre la canción que tienes abierta, y escribe las notas cantadas
+o tocadas en él, como una toma; también soltarlo sobre una pista (ver
+[Tomas](takes.md#añadir-una-grabación-hecha-antes)).
