@@ -140,15 +140,14 @@ fn sung_notes_against_vocadito() {
         let track = voice::pitch_track(&recording.samples, recording.sample_rate);
         let found = voice::notes(&track);
         let truth = rows(&root.join(format!("Annotations/F0/vocadito_{take}_f0.csv")));
-        let written: Vec<Written> = rows(&root.join(format!(
-            "Annotations/Notes/vocadito_{take}_notesA1.csv"
-        )))
-        .iter()
-        .map(|row| Written {
-            start: row[0],
-            pitch: midi_of(row[1] as f32),
-        })
-        .collect();
+        let written: Vec<Written> =
+            rows(&root.join(format!("Annotations/Notes/vocadito_{take}_notesA1.csv")))
+                .iter()
+                .map(|row| Written {
+                    start: row[0],
+                    pitch: midi_of(row[1] as f32),
+                })
+                .collect();
 
         let scores = pitch_scores(&track, &truth);
         totals.0 += scores.0;

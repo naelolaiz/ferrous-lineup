@@ -751,9 +751,14 @@ impl AudioEngine {
         self.song_clock.take()
     }
 
+    /// Gives back the song clock taken with
+    /// [`AudioEngine::take_song_clock`]. A clock this engine still holds
+    /// stays: the one given back came from an engine before it.
     pub fn give_back_song_clock(&mut self, mut clock: SongClock) {
         clock.listen(false);
-        self.song_clock = Some(clock);
+        if self.song_clock.is_none() {
+            self.song_clock = Some(clock);
+        }
     }
 
     /// Frees the instruments and note lists the audio thread has finished

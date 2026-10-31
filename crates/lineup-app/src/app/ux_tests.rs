@@ -5323,6 +5323,32 @@ fn every_window_writes_in_spanish() {
         english(&screen.draw(vec![]), &mut found);
         screen.key(Key::Escape);
     }
+    // A take just sung, and where its notes can go; then written in.
+    let folder = std::env::temp_dir().join(format!(
+        "ferrous-lineup-test-take-in-spanish-{}",
+        std::process::id()
+    ));
+    std::fs::create_dir_all(&folder).unwrap();
+    screen
+        .app
+        .open_demo(library::Demo::Song(Song::named("Ode to Joy").unwrap()));
+    screen.app.set_playing(false);
+    screen.app.chord_sheet.open = false;
+    let sung = lineup_core::take::SungNote {
+        start: 0.0,
+        end: 0.4,
+        pitch: 74.3,
+        loudness: -12.0,
+    };
+    screen.app.heard_take(16.0, 1.0, vec![sung], folder.clone());
+    english(&screen.draw(vec![]), &mut found);
+    let label = text_rect(&screen.draw(vec![]), tr("Notes go to")).unwrap();
+    screen.click_at(label.right_center() + vec2(100.0, 0.0), Modifiers::NONE);
+    english(&screen.draw(vec![]), &mut found);
+    screen.key(Key::Escape);
+    screen.click(tr("Write it in"));
+    english(&screen.draw(vec![]), &mut found);
+    std::fs::remove_dir_all(folder).unwrap();
     let missed = take_missed();
     assert!(
         missed.is_empty() && found.is_empty(),
@@ -5396,4 +5422,149 @@ fn a_recording_dropped_on_the_window_is_imported_and_a_short_sound_goes_to_the_s
         );
     }
     std::fs::remove_dir_all(recording.parent().unwrap()).ok();
+}
+
+mod takes {
+    use super::*;
+    use lineup_core::Note;
+    use lineup_core::library::Song;
+    use lineup_core::take::SungNote;
+
+    fn ode_to_joy() -> Screen {
+        let mut screen = Screen::new();
+        screen
+            .app
+            .open_demo(library::Demo::Song(Song::named("Ode to Joy").unwrap()));
+        screen.app.set_playing(false);
+        screen.app.chord_sheet.open = false;
+        screen
+    }
+
+    fn folder(name: &str) -> std::path::PathBuf {
+        let folder =
+            std::env::temp_dir().join(format!("ferrous-lineup-test-{name}-{}", std::process::id()));
+        std::fs::create_dir_all(&folder).unwrap();
+        folder
+    }
+
+    /// The notes the Lead plays from step `from` to step `to` of the
+    /// pattern its first clip plays.
+    fn lead_notes(project: &Project, from: usize, to: usize) -> Vec<(usize, u8)> {
+        let lead = project
+            .channels()
+            .iter()
+            .position(|c| c.name == "Lead")
+            .unwrap();
+        let pattern = project.playlist().clips()[0].pattern;
+        project.patterns()[pattern]
+            .notes(lead)
+            .iter()
+            .filter(|note| (from..to).contains(&note.start))
+            .map(|note| (note.start, note.pitch.midi()))
+            .collect()
+    }
+
+    fn sung(start: f64, end: f64, pitch: f32) -> SungNote {
+        SungNote {
+            start,
+            end,
+            pitch,
+            loudness: -12.0,
+        }
+    }
+
+    #[test]
+    fn a_take_sung_over_the_tune_replaces_its_notes_and_keeps_the_recording() {
+        let mut screen = ode_to_joy();
+        let before = screen.app.project.clone();
+        let original = lead_notes(&before, 16, 24);
+        assert_eq!(original, [(16, 81), (20, 79)], "A5 and G5 in bar 2");
+        let beat = 60.0 / f64::from(screen.app.project.tempo.bpm());
+        let folder = folder("take");
+        // Sung from bar 2: D5 and E5 instead of A5 and G5.
+        let notes = vec![sung(0.0, beat * 0.9, 74.0), sung(beat, beat * 1.9, 76.1)];
+        screen
+            .app
+            .heard_take(16.0, beat * 2.0, notes, folder.clone());
+        screen.draw(vec![]);
+        // The notes go to the Lead unless you choose otherwise.
+        screen.click(tr("Write it in"));
+
+        let project = &screen.app.project;
+        assert_eq!(lead_notes(project, 16, 24), [(16, 74), (20, 76)]);
+        assert_eq!(lead_notes(project, 0, 16), lead_notes(&before, 0, 16));
+        let take = project.channels().iter().position(|c| c.is_take()).unwrap();
+        assert_eq!(project.channels()[take].name, "Take 1");
+        let tracks = project.playlist().tracks();
+        assert_eq!(tracks.last().unwrap().name, "Take 1");
+        assert_eq!(tracks.len(), before.playlist().tracks().len() + 1);
+        let saved: Vec<_> = std::fs::read_dir(&folder).unwrap().collect();
+        assert_eq!(saved.len(), 1, "one recording saved");
+        let notice = screen.app.notice.clone().unwrap_or_default();
+        assert!(notice.contains("Wrote 2 notes on Lead"), "{notice}");
+
+        // One step of undo takes it all back.
+        screen.app.undo();
+        assert_eq!(screen.app.project, before);
+        std::fs::remove_dir_all(folder).unwrap();
+    }
+
+    #[test]
+    fn a_take_can_keep_only_its_notes_on_a_new_channel() {
+        let mut screen = ode_to_joy();
+        let before = screen.app.project.clone();
+        let beat = 60.0 / f64::from(screen.app.project.tempo.bpm());
+        let folder = folder("take-new-channel");
+        screen.app.heard_take(
+            16.0,
+            beat * 2.0,
+            vec![sung(0.0, beat * 0.9, 74.0)],
+            folder.clone(),
+        );
+        // The list of where the notes go, right of its label.
+        screen.draw(vec![]);
+        let label = text_rect(&screen.draw(vec![]), tr("Notes go to")).unwrap();
+        screen.click_at(label.right_center() + vec2(100.0, 0.0), Modifiers::NONE);
+        screen.click(tr("A new channel"));
+        screen.click(tr("Keep it"));
+        screen.click(tr("Write it in"));
+
+        let project = &screen.app.project;
+        assert_eq!(
+            lead_notes(project, 0, 256),
+            lead_notes(&before, 0, 256),
+            "the Lead stays"
+        );
+        assert!(
+            !project.channels().iter().any(|c| c.is_take()),
+            "no recording kept"
+        );
+        let sung = project
+            .channels()
+            .iter()
+            .position(|c| c.name == "Sung notes")
+            .unwrap();
+        let clip = *project.playlist().clips().last().unwrap();
+        assert_eq!(
+            project.patterns()[clip.pattern].notes(sung)[0].pitch,
+            Note::new(74)
+        );
+        assert_eq!(std::fs::read_dir(&folder).unwrap().count(), 0);
+        std::fs::remove_dir_all(folder).unwrap();
+    }
+
+    #[test]
+    fn throwing_a_take_away_changes_nothing() {
+        let mut screen = ode_to_joy();
+        let before = screen.app.project.clone();
+        let folder = folder("take-thrown");
+        screen
+            .app
+            .heard_take(16.0, 1.0, vec![sung(0.0, 0.4, 74.0)], folder.clone());
+        screen.click(tr("Throw it away"));
+        screen.draw(vec![]);
+        assert_eq!(screen.app.project, before);
+        assert!(text_rect(&screen.draw(vec![]), tr("Your take")).is_none());
+        std::fs::remove_dir_all(folder).unwrap();
+    }
 }

@@ -213,19 +213,28 @@ impl Take {
             .marks
             .partition_point(|mark| mark.frame <= frame)
             .saturating_sub(1);
-        let speed = self.marks.get(index).map_or(0.0, |mark| mark.steps_per_second);
+        let speed = self
+            .marks
+            .get(index)
+            .map_or(0.0, |mark| mark.steps_per_second);
         frames as f64 / f64::from(self.sample_rate.max(1)) * speed
     }
 
     /// Whether the song went straight on from sample `from`, heard at
-    /// `at`, to sample `to`: no jump, a little slack for rounding.
+    /// `at`, to sample `to`: no jump. The sound card's clocks wobble by a
+    /// few milliseconds from block to block, so the song may seem to go
+    /// back that much, or on a little further.
     fn goes_on(&self, from: usize, at: f64, to: usize) -> bool {
+        /// How far back the song may seem to go: 20 ms.
+        const WOBBLE_SECONDS: f64 = 0.02;
         let Some(then) = self.place(to) else {
             return false;
         };
         let expected = self.steps_in(from, to - from);
+        let wobble = (WOBBLE_SECONDS * f64::from(self.sample_rate)) as usize;
+        let back = self.steps_in(from, wobble).max(0.01);
         let moved = then - at;
-        moved >= -0.01 && moved <= expected + 0.25
+        moved >= -back && moved <= expected + 0.25
     }
 
     /// The stretches of the take where the playlist position goes
@@ -377,6 +386,10 @@ fn meant(pitch: f32, scale: crate::Scale) -> Note {
     Note::new(midi.clamp(0.0, 127.0) as u8)
 }
 
+/// How long before the song is heard a note may start and still be
+/// kept, from where the song starts: 150 ms.
+const EARLY_SECONDS: f64 = 0.15;
+
 /// Works out where in the song `take` was sung, and which notes:
 /// `sung` are the notes heard in it, `grid` how many steps the notes
 /// snap to (1 for every step, 2 for eighth notes, 4 for beats) and
@@ -412,10 +425,25 @@ pub fn transcribe(
 
     // Each note's place, if it was sung in a part that is kept.
     let mut heard: Vec<(f64, f64, f32, f32, f64)> = Vec::new(); // start, end, pitch, loudness, seconds
+    // A note that starts a moment before the song is heard (the pitch
+    // finder can hear its start a frame or two early) starts with it.
+    let early = (EARLY_SECONDS * rate) as usize;
     for note in sung {
-        let first = (note.start.max(0.0) * rate) as usize;
-        let Some(index) = runs.iter().position(|run| run.frames.contains(&first)) else {
-            continue;
+        let mut first = (note.start.max(0.0) * rate) as usize;
+        let after = (note.end * rate) as usize;
+        let index = match runs.iter().position(|run| run.frames.contains(&first)) {
+            Some(index) => index,
+            None => {
+                let Some(index) = runs.iter().position(|run| {
+                    run.frames.start > first
+                        && run.frames.start < after
+                        && run.frames.start - first <= early
+                }) else {
+                    continue;
+                };
+                first = runs[index].frames.start;
+                index
+            }
         };
         let run = &runs[index];
         let Some(start) = take.place(first) else {
@@ -511,7 +539,9 @@ pub enum Target {
 pub struct Keep {
     /// The name of the take, as "Take 1".
     pub name: String,
-    /// The playlist track its clips go on, in song mode.
+    /// The playlist track its clips go on, in song mode: past the last
+    /// track for a new one at the bottom. An empty track with the name
+    /// it was given ("Track 5") takes the name of the take.
     pub track: usize,
     /// The recording of each piece of the take, saved as a WAV file, in
     /// the order of [`Transcription::pieces`]; empty to keep no
@@ -542,7 +572,13 @@ impl Project {
     /// target channel's notes where they were sung, so a tune corrected
     /// once is corrected wherever its pattern plays. Where no pattern
     /// holds them, they go into the take's own clips, on its track.
-    pub fn add_take(&mut self, along: &Along, transcription: &Transcription, target: &Target, keep: &Keep) -> Added {
+    pub fn add_take(
+        &mut self,
+        along: &Along,
+        transcription: &Transcription,
+        target: &Target,
+        keep: &Keep,
+    ) -> Added {
         let mut added = Added::default();
         let channel = match target {
             Target::Channel(channel) if *channel < self.channels().len() => Some(*channel),
@@ -572,7 +608,8 @@ impl Project {
             Along::Pattern { pattern, .. } => {
                 let pattern = *pattern;
                 if let (Some(channel), Some(range)) = (channel, transcription.range()) {
-                    added.notes = self.replace_in_pattern(pattern, channel, range, 0, &transcription.notes);
+                    added.notes =
+                        self.replace_in_pattern(pattern, channel, range, 0, &transcription.notes);
                 }
                 for (piece, &take) in transcription.pieces.iter().zip(&recordings) {
                     if let Some(pattern) = self.pattern_mut(pattern) {
@@ -581,7 +618,13 @@ impl Project {
                 }
             }
             Along::Song(_) => {
-                added.notes = self.write_take_in_song(transcription, channel, &recordings, keep, &mut added.shared);
+                added.notes = self.write_take_in_song(
+                    transcription,
+                    channel,
+                    &recordings,
+                    keep,
+                    &mut added.shared,
+                );
             }
         }
         added
@@ -604,7 +647,8 @@ impl Project {
             return 0;
         };
         let length = target.length();
-        let local = range.start.saturating_sub(offset)..range.end.saturating_sub(offset).min(length);
+        let local =
+            range.start.saturating_sub(offset)..range.end.saturating_sub(offset).min(length);
         let mut kept: Vec<NoteEvent> = target
             .notes(channel)
             .iter()
@@ -657,7 +701,9 @@ impl Project {
                     let end = clip.start + self.clip_length(clip);
                     clip.start < range.end
                         && end > range.start
-                        && self.pattern(clip.pattern).is_some_and(|p| !p.notes(channel).is_empty())
+                        && self
+                            .pattern(clip.pattern)
+                            .is_some_and(|p| !p.notes(channel).is_empty())
                 })
                 .collect(),
             _ => Vec::new(),
@@ -687,9 +733,13 @@ impl Project {
                             .notes
                             .iter()
                             .copied()
-                            .filter(|note| here.contains(&note.start) && first_home(&homes, note.start, self) == Some(*clip))
+                            .filter(|note| {
+                                here.contains(&note.start)
+                                    && first_home(&homes, note.start, self) == Some(*clip)
+                            })
                             .collect();
-                        written += self.replace_in_pattern(clip.pattern, channel, here, offset, &notes);
+                        written +=
+                            self.replace_in_pattern(clip.pattern, channel, here, offset, &notes);
                     }
                     offset += length;
                 }
@@ -716,9 +766,14 @@ impl Project {
         // where it (or its last note without a home) ends, in patterns of
         // at most MAX_STEPS steps that start on bar lines.
         let recorded = transcription.recorded();
-        let notes_span = homeless
-            .first()
-            .map(|first| first.start..homeless.iter().map(Placed::end).max().unwrap_or(first.end()));
+        let notes_span = homeless.first().map(|first| {
+            first.start
+                ..homeless
+                    .iter()
+                    .map(Placed::end)
+                    .max()
+                    .unwrap_or(first.end())
+        });
         let span = match (recorded, notes_span) {
             (Some(a), Some(b)) => Some(a.start.min(b.start)..a.end.max(b.end)),
             (a, b) => a.or(b),
@@ -726,6 +781,7 @@ impl Project {
         let Some(span) = span else {
             return written;
         };
+        let track = self.take_track(keep);
         let meter = self.meter();
         let mut start = meter.floor_to_bar(span.start);
         let mut chunk = 0;
@@ -748,7 +804,9 @@ impl Project {
             } else {
                 format!("{} ({chunk})", keep.name)
             };
-            let Some(pattern) = self.push_pattern(Pattern::new(name, self.channels().len(), end - start)) else {
+            let Some(pattern) =
+                self.push_pattern(Pattern::new(name, self.channels().len(), end - start))
+            else {
                 break;
             };
             for (piece, &take) in transcription.pieces.iter().zip(recordings) {
@@ -768,10 +826,38 @@ impl Project {
                     written += self.replace_in_pattern(pattern, channel, start..end, start, &notes);
                 }
             }
-            self.add_clip(Clip::new(pattern, keep.track, start));
+            self.add_clip(Clip::new(pattern, track, start));
             start = end;
         }
         written
+    }
+}
+
+impl Project {
+    /// The track a take's clips go on: `keep.track`, or a new one at the
+    /// bottom. An empty track still called as it was made ("Track 5") is
+    /// named after the take.
+    fn take_track(&mut self, keep: &Keep) -> usize {
+        let tracks = self.playlist().tracks().len();
+        let track = if keep.track < tracks {
+            keep.track
+        } else {
+            self.add_track().unwrap_or(tracks.saturating_sub(1))
+        };
+        let empty = !self
+            .playlist()
+            .clips()
+            .iter()
+            .any(|clip| clip.track == track);
+        if let Some(named) = self.track_mut(track)
+            && empty
+            && named.name.strip_prefix("Track ").is_some_and(|number| {
+                !number.is_empty() && number.chars().all(|c| c.is_ascii_digit())
+            })
+        {
+            named.name.clone_from(&keep.name);
+        }
+        track
     }
 }
 
@@ -865,7 +951,9 @@ mod tests {
         Keep {
             name: "Take 1".into(),
             track: 1.min(project.playlist().tracks().len() - 1),
-            recordings: (0..pieces).map(|i| PathBuf::from(format!("take-{i}.wav"))).collect(),
+            recordings: (0..pieces)
+                .map(|i| PathBuf::from(format!("take-{i}.wav")))
+                .collect(),
         }
     }
 
@@ -890,7 +978,12 @@ mod tests {
             .collect();
         assert_eq!(
             placed,
-            [(16, 4, 64, 100), (20, 4, 67, 100), (24, 8, 72, 127), (32, 3, 69, 48)]
+            [
+                (16, 4, 64, 100),
+                (20, 4, 67, 100),
+                (24, 8, 72, 127),
+                (32, 3, 69, 48)
+            ]
         );
         assert_eq!(heard.range(), Some(16..35));
         assert_eq!(heard.pieces.len(), 1);
@@ -930,8 +1023,51 @@ mod tests {
         let pattern = &project.patterns()[clip.pattern];
         assert_eq!(pattern.name, "Take 1");
         assert_eq!(pattern.length(), 32);
-        assert_eq!(pattern.notes(take_channel), [NoteEvent::new(STEP_NOTE, 0, 1)]);
+        assert_eq!(
+            pattern.notes(take_channel),
+            [NoteEvent::new(STEP_NOTE, 0, 1)]
+        );
         assert!(pattern.notes(0).is_empty(), "the tune's notes found a home");
+        // Track 2 was empty and had the name it was made with.
+        assert_eq!(project.playlist().tracks()[1].name, "Take 1");
+    }
+
+    #[test]
+    fn a_take_can_go_on_a_new_track_and_changes_only_the_parts_it_sings() {
+        use crate::sources::SongPart;
+        let mut project = song();
+        let parts = |project: &Project| SongPart::ALL.map(|part| project.part_fingerprint(part));
+        let before = parts(&project);
+        let tracks = project.playlist().tracks().len();
+        let along = Along::Song(project.playback_arrangement());
+        let take = take(along.clone(), 16.0, 2.0);
+        let heard = transcribe(&project, &take, &[sung(0.0, 0.45, 67.0, -12.0)], 1, 0.0);
+        let keep = Keep {
+            track: tracks,
+            ..keep(&project, heard.pieces.len())
+        };
+        project.add_take(&along, &heard, &Target::Nowhere, &keep);
+        assert_eq!(project.playlist().tracks().len(), tracks + 1);
+        assert_eq!(project.playlist().tracks()[tracks].name, "Take 1");
+        assert_eq!(project.playlist().clips().last().unwrap().track, tracks);
+        // Only the recording came: no part of the song changed.
+        assert_eq!(parts(&project), before);
+
+        // Its notes on the Lead change the melody, and only that.
+        let keep = Keep {
+            name: "Take 2".into(),
+            track: tracks + 1,
+            recordings: Vec::new(),
+        };
+        project.add_take(&along, &heard, &Target::Channel(0), &keep);
+        let after = parts(&project);
+        for (index, part) in SongPart::ALL.iter().enumerate() {
+            assert_eq!(
+                after[index] != before[index],
+                *part == SongPart::Melody,
+                "{part:?}"
+            );
+        }
     }
 
     #[test]
@@ -968,7 +1104,11 @@ mod tests {
         let take = take(along.clone(), 0.0, 4.0);
         let notes = [sung(0.0, 0.45, 64.0, -12.0), sung(2.0, 2.45, 67.0, -12.0)];
         let heard = transcribe(&project, &take, &notes, 1, 0.0);
-        let placed: Vec<(usize, u8)> = heard.notes.iter().map(|n| (n.start, n.pitch.midi())).collect();
+        let placed: Vec<(usize, u8)> = heard
+            .notes
+            .iter()
+            .map(|n| (n.start, n.pitch.midi()))
+            .collect();
         assert_eq!(placed, [(0, 67)]);
         assert_eq!(heard.pieces.len(), 1);
         let piece = &heard.pieces[0];
@@ -978,7 +1118,10 @@ mod tests {
         let keep = keep(&project, 1);
         let added = project.add_take(&along, &heard, &Target::Channel(0), &keep);
         let take = added.recordings[0];
-        assert_eq!(project.patterns()[0].notes(take), [NoteEvent::new(STEP_NOTE, 0, 1)]);
+        assert_eq!(
+            project.patterns()[0].notes(take),
+            [NoteEvent::new(STEP_NOTE, 0, 1)]
+        );
         assert_eq!(project.patterns()[0].notes(0)[0].pitch, Note::new(67));
     }
 
@@ -992,7 +1135,11 @@ mod tests {
         let take = take(along, 0.0, 4.0);
         let notes = [sung(0.0, 0.45, 64.0, -12.0), sung(2.0, 2.45, 67.0, -12.0)];
         let heard = transcribe(&project, &take, &notes, 1, 0.0);
-        let placed: Vec<(usize, u8)> = heard.notes.iter().map(|n| (n.start, n.pitch.midi())).collect();
+        let placed: Vec<(usize, u8)> = heard
+            .notes
+            .iter()
+            .map(|n| (n.start, n.pitch.midi()))
+            .collect();
         assert_eq!(placed, [(0, 67)]);
         assert_eq!(heard.pieces.len(), 1);
         assert_eq!(heard.pieces[0].step, 0);
@@ -1010,9 +1157,52 @@ mod tests {
         }
         let notes = [sung(0.2, 0.6, 60.0, -12.0), sung(1.0, 1.4, 64.0, -12.0)];
         let heard = transcribe(&project, &take, &notes, 1, 0.0);
-        let placed: Vec<(usize, u8)> = heard.notes.iter().map(|n| (n.start, n.pitch.midi())).collect();
+        let placed: Vec<(usize, u8)> = heard
+            .notes
+            .iter()
+            .map(|n| (n.start, n.pitch.midi()))
+            .collect();
         assert_eq!(placed, [(16, 64)]);
         assert_eq!(heard.pieces[0].frames.start, 1000);
+    }
+
+    #[test]
+    fn a_sound_card_whose_clock_wobbles_does_not_cut_the_take() {
+        let project = song();
+        let along = Along::Song(project.playback_arrangement());
+        let mut take = take(along, 16.0, 4.0);
+        // Every so often, a mark 4 ms late, and the next one on time: the
+        // song seems to go back 4 ms.
+        for (index, mark) in take.marks.iter_mut().enumerate() {
+            if index % 97 == 50 {
+                mark.position += 0.004 * SPEED;
+            }
+        }
+        let heard = transcribe(&project, &take, &[sung(0.0, 3.5, 67.0, -12.0)], 1, 0.0);
+        assert_eq!(heard.pieces.len(), 1, "{:?}", heard.pieces);
+        assert_eq!(heard.pieces[0].step, 16);
+    }
+
+    #[test]
+    fn a_note_heard_a_moment_before_the_song_starts_with_it() {
+        let project = song();
+        let along = Along::Song(project.playback_arrangement());
+        let mut take = take(along, 0.0, 2.0);
+        // The song is heard from 0.1 s into the take on.
+        let delay = RATE as usize / 10;
+        take.frames += delay;
+        for mark in &mut take.marks {
+            mark.frame += delay;
+        }
+        let notes = [sung(0.09, 0.55, 66.0, -12.0), sung(0.0, 0.05, 60.0, -12.0)];
+        let heard = transcribe(&project, &take, &notes, 1, 0.0);
+        let placed: Vec<(usize, u8)> = heard
+            .notes
+            .iter()
+            .map(|n| (n.start, n.pitch.midi()))
+            .collect();
+        // The first starts with the song; the second ends before it.
+        assert_eq!(placed, [(0, 66)]);
     }
 
     #[test]
