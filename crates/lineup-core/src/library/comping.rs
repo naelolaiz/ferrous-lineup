@@ -161,6 +161,10 @@ pub enum Comping {
     /// "and" and a punch on 4, as in the last chorus of a swing chart,
     /// the *shout chorus*.
     Shout,
+    /// The candombe's chord blocks ("bloques"), set in the clave: a
+    /// chord on 1, just before beat 2, on the "and" of 2 held over beat
+    /// 3, on the "and" of 3, and on 4. Play it with [`Bass::Tresillo`].
+    Bloques,
 }
 
 impl Comping {
@@ -496,6 +500,20 @@ impl Comping {
                     hit!(8, 2, Upper, 74),
                     hit!(10, 2, Nth(0), 70),
                     hit!(14, 2, Nth(2), 76),
+                ],
+            ),
+            // From a candombe guitar method ("Bloques", Federico A. Rosso,
+            // mateamargo.com.ar), its first bar: a dotted eighth and a
+            // sixteenth, an eighth's rest, an eighth tied over beat 3, an
+            // eighth and a quarter.
+            Comping::Bloques => (
+                16,
+                &[
+                    hit!(0, 3, All, 100),
+                    hit!(3, 1, All, 82),
+                    hit!(6, 4, All, 96),
+                    hit!(10, 2, All, 84),
+                    hit!(12, 4, All, 94),
                 ],
             ),
             Comping::Shout => (
@@ -1505,6 +1523,24 @@ mod tests {
         assert_eq!(starts(&notes), [0, 6, 16, 22]);
         let last = notes.last().unwrap();
         assert_eq!(last.start + last.length, 24);
+    }
+
+    #[test]
+    fn the_candombe_blocks_follow_the_clave_and_the_bass_its_tresillo() {
+        let notes = Comping::Bloques.play(FOUR, &c_major(), 0, 32);
+        // The 3-2 clave the repique plays on the wood, in both bars.
+        assert_eq!(starts(&notes), [0, 3, 6, 10, 12, 16, 19, 22, 26, 28]);
+        // The chord on the "and" of 2 is held over beat 3, the one just
+        // before beat 2 is short.
+        let at = |step| notes.iter().find(|note| note.start == step).unwrap();
+        assert_eq!(at(6).length, 4);
+        assert_eq!(at(3).length, 1);
+        assert!(at(0).velocity > at(3).velocity);
+        // The bass under them, as the guitar method writes it: on 1, on
+        // the "and" of 2 held over beat 3, and on 4.
+        let chord = Chord::new(C, Major);
+        let bass = Bass::Tresillo.play(FOUR, chord, chord, 0, 16);
+        assert_eq!(starts(&bass), [0, 6, 12]);
     }
 
     #[test]

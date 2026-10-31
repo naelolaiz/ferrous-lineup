@@ -1810,7 +1810,7 @@ pub static STYLES: &[Style] = &[
         Folklore,
         Major,
         "I | IV | V7 | I",
-        Comping::Offbeat,
+        Comping::Bloques,
         Bass::Tresillo,
         110.0,
         "Candombe",
@@ -1822,7 +1822,7 @@ pub static STYLES: &[Style] = &[
         Folklore,
         Major,
         "I | IV | V7 | I",
-        Comping::Offbeat,
+        Comping::Bloques,
         Bass::Tresillo,
         110.0,
         "Candombe Ansina",
@@ -2816,6 +2816,26 @@ mod tests {
         assert!(!backing.chords.is_empty() && !backing.bass.is_empty());
         let end = backing.chords.iter().map(|note| note.end()).max();
         assert_eq!(end, Some(style.length()), "nothing sounds past the end");
+    }
+
+    #[test]
+    fn the_candombes_play_their_chords_in_the_clave() {
+        for name in ["Candombe", "Candombe Ansina"] {
+            let style = Style::named(name).unwrap();
+            assert_eq!(
+                (style.comping, style.bass),
+                (Comping::Bloques, Bass::Tresillo)
+            );
+            let backing = style.render(PitchClass::C);
+            let mut starts: Vec<usize> = backing
+                .chords
+                .iter()
+                .filter(|note| note.start < 16)
+                .map(|note| note.start)
+                .collect();
+            starts.dedup();
+            assert_eq!(starts, [0, 3, 6, 10, 12], "{name}");
+        }
     }
 
     #[test]
