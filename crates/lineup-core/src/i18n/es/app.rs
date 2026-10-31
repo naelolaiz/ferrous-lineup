@@ -2718,4 +2718,90 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("🔒 Kept: {}", "🔒 Se conservan: {}"),
     ("🔒 Locked", "🔒 Bloqueado"),
     ("🗑 Delete section", "🗑 Eliminar sección"),
+    ("Spread out", "Abiertas"),
+    (
+        "The three notes in any order from the bottom, up to two octaves wide: C C# E can sound as E C C#",
+        "Las tres notas en cualquier orden desde abajo, hasta dos octavas de ancho: Do Do# Mi puede sonar como Mi Do Do#",
+    ),
+    (
+        "Minor (with a semitone), major (a whole tone, no semitone) or a chord (two thirds or more)",
+        "Menor (con un semitono), mayor (un tono, sin semitono) o un acorde (dos terceras o más)",
+    ),
+    ("Which of the twelve", "Cuál de los doce"),
+    (
+        "the lowest note first, going up",
+        "primero la nota más grave, subiendo",
+    ),
+    (
+        "the highest note first, going down",
+        "primero la nota más aguda, bajando",
+    ),
+    ("the three notes at once", "las tres notas a la vez"),
+    (
+        "Sets of three notes: the seven micromodes that change upside down",
+        "Conjuntos de tres notas: los siete micromodos que cambian dados vuelta",
+    ),
+    (
+        "Sets of four notes, such as the dominant seventh chord",
+        "Conjuntos de cuatro notas, como el acorde de séptima de dominante",
+    ),
+    ("Sets of five notes", "Conjuntos de cinco notas"),
+    (
+        "One note after another: a figure",
+        "Una nota tras otra: una figura",
+    ),
+    ("All the notes at once", "Todas las notas a la vez"),
+    (
+        "The rows of the Row window: Schoenberg's, Berg's, Webern's and more",
+        "Las series de la ventana Serie dodecafónica: la de Schoenberg, la de Berg, las de Webern y más",
+    ),
+    (
+        "The twelve notes in any order",
+        "Las doce notas en cualquier orden",
+    ),
+    (
+        "Three notes play. Are they a minor micromode (with a semitone), a major one (a whole tone, no semitone) or a chord?",
+        "Suenan tres notas. ¿Son un micromodo menor (con un semitono), uno mayor (un tono, sin semitono) o un acorde?",
+    ),
+    (
+        "Three notes play. Which of the twelve micromodes are they?",
+        "Suenan tres notas. ¿Cuál de los doce micromodos son?",
+    ),
+    (
+        "A figure plays, then another form of the same set. Is the second the first moved, or turned upside down?",
+        "Suena una figura, y después otra forma del mismo conjunto. ¿La segunda es la primera transportada, o dada vuelta?",
+    ),
+    (
+        "A twelve-tone row plays, then one of its forms. Is it the row moved (P), upside down (I), backwards (R), or upside down and backwards (RI)?",
+        "Suena una serie dodecafónica, y después una de sus formas. ¿Es la serie transportada (P), dada vuelta (I), hacia atrás (R), o dada vuelta y hacia atrás (RI)?",
+    ),
+    (
+        "Which family of micromodes is this?",
+        "¿De qué familia de micromodos es?",
+    ),
+    ("Which micromode is this?", "¿Qué micromodo es?"),
+    (
+        "Is the second form the first moved, or upside down?",
+        "¿La segunda forma es la primera transportada, o dada vuelta?",
+    ),
+    (
+        "Which form of the row is the second?",
+        "¿Qué forma de la serie es la segunda?",
+    ),
+    (
+        "Menor: with a semitone. Mayor: a whole tone and no semitone. Acorde: two thirds or more.",
+        "Menor: con un semitono. Mayor: un tono y ningún semitono. Acorde: dos terceras o más.",
+    ),
+    ("Moved", "Transportada"),
+    ("moved", "transportada"),
+    ("upside down", "dada vuelta"),
+    (
+        "Moved, every step stays the same; upside down, every step goes the other way.",
+        "Transportada, cada paso queda igual; dada vuelta, cada paso va hacia el otro lado.",
+    ),
+    (
+        "P: the same shape, moved. I: every step the other way. R: backwards. RI: upside down and backwards.",
+        "P: la misma forma, transportada. I: cada paso hacia el otro lado. R: hacia atrás. RI: dada vuelta y hacia atrás.",
+    ),
+    ("form|Upside down", "Dada vuelta"),
 ];
