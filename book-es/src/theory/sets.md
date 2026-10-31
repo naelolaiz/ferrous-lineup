@@ -304,9 +304,12 @@ más arriba, T3I su inversión subida tres. Después:
   invertirlos](chords.md#sellos-de-acorde));
 - **Usar como tonalidad** convierte el conjunto en la tonalidad de la
   canción: el piano roll resalta sus notas y las teclas de armonía tocan
-  acordes apilados con ellas (o, para un conjunto de tres notas, un
-  micromodo, sus formas por grado: ver
+  acordes apilados con ellas (o, para un conjunto de tres notas, sus
+  formas por grado, como para un micromodo: ver
   [Micromodos](micromodes.md#un-micromodo-como-tonalidad-grados)).
+  Elegido aquí, un conjunto de tres notas se nombra como conjunto, 3-3,
+  no como el micromodo que también es (ver [Tres notas: un conjunto o un
+  micromodo](#tres-notas-un-conjunto-o-un-micromodo)).
 
 Un conjunto de tres notas es además uno de los micromodos de Kröpfl, y
 la ventana enlaza con él (ver [Micromodos](micromodes.md)).
@@ -354,13 +357,16 @@ puede ser cualquier conjunto.
 `set_key`, en la aplicación, elige el conjunto al que pasa el menú:
 
 ```rust
-fn set_key(ctx: &egui::Context, scale: Scale, root: PitchClass) -> Scale {
+pub(crate) fn set_key(ctx: &egui::Context, scale: Scale, root: PitchClass) -> Scale {
     let up = scale.root.semitones_up_to(root);
     if let Some(group) = scale
         .tone_row()
         .and_then(|row| row.segments(3).first().copied())
     {
-        return Scale::set(root, group.transpose(up));
+        return Scale::set(root, group.transpose(up)).named_as_set();
+    }
+    if let ScaleKind::Set(_) = scale.kind {
+        return Scale::set(root, scale.pitch_set().transpose(up)).named_as_set();
     }
     if scale.kind.is_tonal() && scale.kind != ScaleKind::Chromatic {
         let set = Scale::set(root, scale.pitch_set().transpose(up));
@@ -373,18 +379,63 @@ fn set_key(ctx: &egui::Context, scale: Scale, root: PitchClass) -> Scale {
     }
     let set = remembered_set(ctx);
     let start = set.normal_form().first().copied().unwrap_or(root);
-    Scale::set(root, set.transpose(start.semitones_up_to(root)))
+    Scale::set(root, set.transpose(start.semitones_up_to(root))).named_as_set()
 }
 ```
 
 Desde una tonalidad es la escala de la propia tonalidad; desde una
 serie dodecafónica, las tres primeras notas de la serie, que son lo que
-tocaban las teclas de armonía; desde la escala cromática, que tiene
-todas las notas y no dice nada de la armonía, el último conjunto usado.
-Un conjunto cuyas notas son exactamente una escala sobre su fundamental
-se escribe como esa escala, y sigue como esa tonalidad cuando la
-tonalidad vuelve a cambiar (`set_as_scale` y `as_key`, en [Escalas,
-modos y tonalidades](scales.md)).
+tocaban las teclas de armonía; desde un micromodo, sus propias tres
+notas; desde la escala cromática, que tiene todas las notas y no dice
+nada de la armonía, el último conjunto usado. Un conjunto cuyas notas
+son exactamente una escala sobre su fundamental se escribe como esa
+escala, y sigue como esa tonalidad cuando la tonalidad vuelve a cambiar
+(`set_as_scale` y `as_key`, en [Escalas, modos y
+tonalidades](scales.md)).
+
+### Tres notas: un conjunto o un micromodo
+
+Todo grupo de tres notas es uno de los doce micromodos de Kröpfl (ver
+[Micromodos](micromodes.md)), así que tres notas solas no pueden decir
+si la tonalidad es el conjunto 3-3 o el micromodo Menor 3: los dos son
+Do Do♯ Mi. Lo dice la tonalidad, con un campo de `Scale` junto al que
+escribe Sol♭ mayor al revés:
+
+```rust
+/// Whether a key of three notes is named as a pitch-class set, "set
+/// 3-3 on C", rather than as the micromode it also is, "Menor 3 on
+/// C" (see [`Scale::micromode`]).
+#[serde(default, skip_serializing_if = "std::ops::Not::not")]
+as_set: bool,
+```
+
+`Scale::micromode` da el micromodo con que se nombra una tonalidad, o
+`None`, y todo lo que nombra una tonalidad o sus formas se lo pregunta:
+el nombre de la tonalidad en los números de compás, las teclas de
+armonía, las formas que escribe la hoja de acordes
+(`HarmonyName::form_in`) y la revisión del color. `named_as_set` y
+`named_as_micromode` dan la misma tonalidad nombrada de la otra
+manera, así que elegir **conjunto de clases de alturas** en un menú
+Tonalidad mientras la tonalidad es Menor 3 nombra sus tres notas 3-3, y
+elegir **Menor 3** las vuelve a nombrar. Ninguno de los dos mueve una
+nota. Un cambio de tonalidad nombrado como la tonalidad de la canción
+la sigue (`key_map::moved_key`), y uno que pasa a otra fundamental
+conserva su nombre (`named_like`).
+
+`serde` escribe el campo solo cuando es `true`, así que una tonalidad
+nombrada como su micromodo escribe lo de siempre, y una versión
+anterior de Ferrous Lineup lee `as_set:true` como algo que no conoce y
+nombra la tonalidad como su micromodo, con las mismas notas.
+
+Qué opción muestra elegida un menú Tonalidad es una función,
+`KindChoice::of`, y lo que hace una opción es otra, `KindChoice::key`,
+que usan los dos menús Tonalidad y el menú de cambio de tonalidad de
+los números de compás. Una prueba elige cada opción desde cada clase de
+tonalidad (una tonalidad mayor, una escrita al revés, la escala
+cromática, una serie, un micromodo, un conjunto, las mismas notas
+nombradas de las dos maneras) y comprueba que la opción elegida es la
+que se muestra: el error que escondía **conjunto de clases de alturas**
+detrás de Menor 3 no puede volver sin que se note.
 
 ## Un conjunto como tonalidad: sus formas
 
@@ -589,8 +640,9 @@ le pasa.
 ## Una armonía, cuatro nombres
 
 La hoja de acordes aplica la misma regla a cada armonía. Su fila
-superior tiene un menú **Mostrar**: **Como está escrito**, **Acordes**,
-**Conjuntos de clases de alturas** o **Micromodos**. Las notas siguen
+superior tiene un menú **Mostrar**: **Según la tonalidad**, **Como está
+escrito**, **Acordes**, **Conjuntos de clases de alturas** o
+**Micromodos**. Las notas siguen
 siendo las mismas, solo cambian sus nombres, y nada de la canción se
 toca:
 
@@ -630,6 +682,39 @@ Cómo leerla:
   N.C. en todas las vistas, y una forma de serie (P0, RI7) queda como forma de
   serie: una serie es una línea de doce notas, no un grupo.
 
+Toda canción se abre **Según la tonalidad**: cada armonía se nombra en
+la notación de la tonalidad en que está. En una tonalidad mayor o
+menor, o en un modo, son acordes; en un conjunto de clases de alturas o
+una serie dodecafónica, conjuntos; en un micromodo, micromodos. La hoja
+de una canción en Do mayor muestra C, Am y F, la de una demostración de
+micromodos sus formas, Menor 3 T2, y una canción que cambia de
+tonalidad a mitad de camino cambia de notación con ella. Otra opción
+vale solo para la canción en pantalla: la siguiente vuelve a abrirse
+según su tonalidad, así que una canción en Do mayor no se muestra en
+micromodos porque la anterior se mostraba así. `Notation::in_key` es la
+regla:
+
+```rust
+pub fn in_key(self, key: Scale) -> Notation {
+    match self {
+        Notation::Key if key.micromode().is_some() => Notation::Micromodes,
+        Notation::Key if matches!(key.kind, ScaleKind::Set(_) | ScaleKind::Row(_)) => {
+            Notation::Sets
+        }
+        Notation::Key => Notation::Chords,
+        other => other,
+    }
+}
+```
+
+Los brazos de un `match` se prueban en orden, y un brazo con una
+**guarda** (`if` después del patrón) solo encaja si además la guarda es
+verdadera. Una tonalidad que es un micromodo también es un conjunto,
+así que el primer brazo tiene que ir antes que el segundo. Toda función
+que nombra una armonía (`rename`, `name_group`, `name_heard`) empieza
+con `self.in_key(key)`, con la tonalidad del compás en que está la
+armonía, así que ninguna tiene que saber de `Notation::Key`.
+
 Un poliacorde son dos grupos de notas, uno sobre otro, y juntarlos en un
 solo conjunto perdería lo que lo hace un poliacorde. Así que cada acorde
 se nombra por separado, y se escriben el de arriba primero, como se
@@ -641,17 +726,20 @@ Eb7|Fb   →   4-27 T3I|3-11 T11I
 
 ### En Rust: un solo `match` decide
 
-`Notation` es un enum de cuatro variantes, con `#[default]` en `Written`
-para que la hoja empiece como siempre. Renombrar una armonía es un solo
-`match` sobre una **tupla** de la notación y la armonía. Rust prueba los
+`Notation` es un enum de cinco variantes, con `#[default]` en `Key`
+para que toda canción empiece según su tonalidad. Renombrar una armonía
+primero convierte `Key` en la notación de la tonalidad de la armonía
+(`in_key`, más arriba), y después es un solo `match` sobre una
+**tupla** de la notación y la armonía. Rust prueba los
 brazos de arriba abajo, así que su orden es la regla: primero lo que
 nunca cambia, después la vista Acordes, después dos acordes a la vez, y
 después todo lo demás.
 
 ```rust
 pub fn rename(self, harmony: HarmonyName, key: Scale) -> Vec<HarmonyName> {
-    let group = |set: PitchSet| self.name_group(set, key);
-    match (self, harmony) {
+    let notation = self.in_key(key);
+    let group = |set: PitchSet| notation.name_group(set, key);
+    match (notation, harmony) {
         (Notation::Written, _)
         | (_, HarmonyName::NoChord)
         | (_, HarmonyName::Row(_))
@@ -713,8 +801,9 @@ referencia a eso.
 ### En el piano roll
 
 El carril de acordes del piano roll, sobre la cuadrícula, también tiene
-un menú **Mostrar**, junto a **Conducción de voces**: **Acordes**,
-**Conjuntos de clases de alturas** o **Micromodos**. (No hay Como está
+un menú **Mostrar**, junto a **Conducción de voces**: **Según la
+tonalidad**, con el que empieza, **Acordes**, **Conjuntos de clases de
+alturas** o **Micromodos**. (No hay Como está
 escrito: el carril nombra lo que oye, y ahí no hay nada escrito.)
 
 ![El piano roll de la demostración Bruma de tonos enteros con Mostrar en Conjuntos de clases de alturas: la fila Teclados nombra notas sueltas, y la fila Todo nombra 2-2, 3-6, 2-2, 2-2 T2, 3-6 T2 y así, un bloque por pulso; la línea bajo la barra de herramientas dice «Paso 22: Teclados: Re. Todos: Re subiendo a Mi: una segunda mayor. Conjuntos de clases de alturas: 2-2 T2.»](../images/step-9-piano-roll-sets.png)
