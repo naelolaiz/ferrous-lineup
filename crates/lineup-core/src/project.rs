@@ -583,7 +583,7 @@ impl Project {
                     .clips
                     .iter()
                     .filter(|clip| clip.pattern == pattern)
-                    .map(|clip| clip.start)
+                    .map(|clip| clip.origin(self.patterns[pattern].length()))
                     .min()
             })
             .collect();
@@ -1008,15 +1008,40 @@ impl Project {
         }
     }
 
+    /// Moves the edges of clip `index` to those of `trimmed`, which is
+    /// the same clip trimmed (see [`Clip::trimmed_from`] and
+    /// [`Clip::trimmed_to`]). Returns `false` if there is no such clip,
+    /// `trimmed` plays another pattern or on another track, it would not
+    /// fit, or another clip of its pattern starts there.
+    pub fn trim_clip(&mut self, index: usize, trimmed: Clip) -> bool {
+        let Some(clip) = self.playlist.clips.get(index) else {
+            return false;
+        };
+        let length = self.patterns.get(clip.pattern).map_or(0, Pattern::length);
+        // Each edge leaves out less than a time round, and something is
+        // left to play.
+        let plays = trimmed.skip.max(trimmed.cut) < length
+            && trimmed.skip + trimmed.cut < length * trimmed.repeats;
+        if (clip.pattern, clip.track) != (trimmed.pattern, trimmed.track)
+            || !plays
+            || !self.clip_fits(trimmed)
+            || self.clip_taken(&trimmed, Some(index))
+        {
+            return false;
+        }
+        self.playlist.clips[index] = trimmed;
+        true
+    }
+
     pub fn remove_clip(&mut self, index: usize) -> Option<Clip> {
         let clips = &mut self.playlist.clips;
         (index < clips.len()).then(|| clips.remove(index))
     }
 
     /// How many steps a clip lasts: the length of its pattern, times
-    /// the number of times it repeats.
+    /// the number of times it repeats, less the steps it leaves out.
     pub fn clip_length(&self, clip: &Clip) -> usize {
-        self.patterns.get(clip.pattern).map_or(0, Pattern::length) * clip.repeats
+        clip.length(self.patterns.get(clip.pattern).map_or(0, Pattern::length))
     }
 
     /// An estimate of the heap memory this project uses, in bytes: its
@@ -1130,7 +1155,7 @@ impl Project {
             .clips
             .iter()
             .filter(|clip| clip.pattern == pattern)
-            .map(|clip| clip.start)
+            .map(|clip| clip.origin(self.patterns[pattern].length()))
             .min()
             .map_or(own, |start| self.meter().time_at(start))
     }
@@ -1216,7 +1241,7 @@ impl Project {
             .clips
             .iter()
             .filter(|clip| clip.pattern == pattern)
-            .map(|clip| clip.start)
+            .map(|clip| clip.origin(self.patterns[pattern].length()))
             .min()
             .map_or(self.scale, |start| self.key_at(start + step))
     }
@@ -1861,9 +1886,8 @@ impl Project {
     /// and partly outside it: it starts before the section and lasts into
     /// it, or starts inside and lasts past its end.
     ///
-    /// Such a section cannot be written out: a clip always starts at the
-    /// start of its pattern, so there is no clip that plays just the part
-    /// inside, and the copies would sound different from the repeats.
+    /// Such a section is not written out: its copies would hold only
+    /// part of that clip, and would sound different from the repeats.
     pub fn section_cuts_a_clip(&self, index: usize) -> bool {
         let Some(section) = self.playlist.sections.get(index) else {
             return false;
@@ -2084,29 +2108,25 @@ impl Project {
                 continue;
             };
             let length = pattern.length();
-            let clip_end = clip.start + length * clip.repeats;
-            if length == 0 || clip_end <= start || clip.start >= end {
+            if length == 0 || clip.end(length) <= start || clip.start >= end {
                 continue;
             }
             for (index, channel) in self.channels.iter().enumerate() {
                 if !channel.plays_notes() {
                     continue;
                 }
-                for time in 0..clip.repeats {
-                    let from = clip.start + time * length;
-                    if from >= end || from + length <= start {
+                for round in clip.rounds(length) {
+                    if round.at >= end || round.end() <= start {
                         continue;
                     }
-                    for note in pattern.notes(index) {
-                        let note_start = from + note.start;
-                        let note_end = (note_start + note.length).min(from + length);
-                        if note_end <= start || note_start >= end {
+                    for note in pattern.notes(index).iter().filter_map(|n| round.place(n)) {
+                        if note.end() <= start || note.start >= end {
                             continue;
                         }
                         heard.push(HeardNote {
                             pitch: note.pitch,
-                            start: note_start as f32 - start as f32,
-                            end: note_end as f32 - start as f32,
+                            start: note.start as f32 - start as f32,
+                            end: note.end() as f32 - start as f32,
                             part: index,
                         });
                     }
@@ -2154,7 +2174,8 @@ impl Project {
             .filter(|clip| clip.pattern == pattern)
             .min_by_key(|clip| clip.start);
         if let Some(clip) = first {
-            return self.hearing_at(clip.start + step);
+            let length = self.patterns.get(pattern).map_or(0, Pattern::length);
+            return self.hearing_at(clip.origin(length) + step);
         }
         let Some(notes) = self.patterns.get(pattern) else {
             return hear(&[], 0.0);
@@ -2198,7 +2219,8 @@ impl Project {
         let mut heard = Vec::new();
         if let Some(clip) = first {
             let meter = self.meter();
-            let (start, end) = (clip.start, clip.start + length);
+            let start = clip.origin(length);
+            let end = start + length;
             for bar in meter
                 .bars()
                 .skip_while(|bar| bar.end() <= start)
@@ -2282,8 +2304,9 @@ impl Project {
             .audible_clips()
             .filter(|clip| clip.pattern == pattern)
             .min_by_key(|clip| clip.start);
+        let length = self.patterns.get(pattern).map_or(0, Pattern::length);
         match first {
-            Some(clip) => self.chord_notes_in_song(clip.start + step),
+            Some(clip) => self.chord_notes_in_song(clip.origin(length) + step),
             None => self.chord_notes_in_pattern(pattern, step),
         }
     }
@@ -2421,20 +2444,13 @@ impl Project {
                 if !melodic || channel.muted {
                     continue;
                 }
-                for note in pattern
-                    .notes(index)
-                    .iter()
-                    .filter(|note| note.start < length)
-                {
-                    let held = note.length.min(length - note.start);
-                    for round in 0..clip.repeats {
-                        let note = NoteEvent {
-                            start: clip.start + round * length + note.start,
-                            length: held,
-                            ..*note
-                        };
-                        notes.push((index, note));
-                    }
+                for round in clip.rounds(length) {
+                    notes.extend(
+                        pattern
+                            .notes(index)
+                            .iter()
+                            .filter_map(|n| Some((index, round.place(n)?))),
+                    );
                 }
             }
         }
@@ -2469,10 +2485,9 @@ impl Project {
     /// again at step 0 each time round.
     fn step_in_clip(&self, clip: &Clip, step: usize) -> Option<usize> {
         let pattern_length = self.patterns.get(clip.pattern).map_or(0, Pattern::length);
-        let end = clip.start + pattern_length * clip.repeats;
-        (clip.start..end)
-            .contains(&step)
-            .then(|| (step - clip.start) % pattern_length)
+        clip.rounds(pattern_length)
+            .find(|round| (round.at..round.end()).contains(&step))
+            .map(|round| round.steps.start + step - round.at)
     }
 }
 

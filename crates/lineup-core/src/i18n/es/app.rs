@@ -510,8 +510,8 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Haz clic para abrir el piano roll",
     ),
     (
-        "Click to place \"{}\". Double-click a clip to edit it, drag to move it, drag its right edge to repeat it, right-click it for its menu. Drag along the top strip to mark a section, along the bar numbers to loop.",
-        "Haz clic para colocar «{}». Doble clic en un clip para editarlo, arrástralo para moverlo, arrastra su borde derecho para repetirlo, clic derecho para ver su menú. Arrastra por la franja de arriba para marcar una sección, por los números de compás para repetir.",
+        "Click to place \"{}\". Double-click a clip to edit it, drag to move it, drag its edges to trim or repeat it, right-click it for its menu. Drag along the top strip to mark a section, along the bar numbers to loop.",
+        "Haz clic para colocar «{}». Doble clic en un clip para editarlo, arrástralo para moverlo, arrastra sus bordes para recortarlo o repetirlo, clic derecho para ver su menú. Arrastra por la franja de arriba para marcar una sección, por los números de compás para repetir.",
     ),
     (
         "Click to rename. Right-click to insert, delete or move tracks",
@@ -1687,7 +1687,6 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("remove time signature change", "quitar cambio de compás"),
     ("rename pattern", "renombrar patrón"),
     ("rename track", "renombrar pista"),
-    ("repeat clip", "repetir clip"),
     (
         "Replace the song’s chords with this preset’s chart. The melody is kept. Leave this off to keep the song’s harmony while changing its playing style or instruments: each style you try then plays the chords already there, and in a new trial pattern, those of the first style you tried.",
         "Reemplaza los acordes de la canción por el esquema de este preajuste. La melodía se conserva. Déjalo desactivado para conservar la armonía de la canción al cambiar su estilo de ejecución o sus instrumentos: cada estilo que pruebes tocará entonces los acordes que ya están, y en un patrón de prueba nuevo, los del primer estilo que probaste.",
@@ -2446,6 +2445,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("trichords", "tricordios"),
     ("Trichords", "Tricordios"),
     ("Trichords of {}", "Tricordios de {}"),
+    ("trim clip", "recortar clip"),
     (
         "Trumpet, clarinet, soprano and tenor sax: written a major second higher, in the octave that fits the staff",
         "Trompeta, clarinete, saxo soprano y tenor: escrita una segunda mayor más arriba, en la octava que entra en el pentagrama",

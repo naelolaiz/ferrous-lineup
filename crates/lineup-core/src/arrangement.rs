@@ -27,16 +27,23 @@ use crate::playlist::Clip;
 use crate::project::Project;
 
 /// A piece of a pattern that the song plays: from song step `start`, for
-/// `length` steps, beginning `skip` steps into the clip.
+/// `length` steps, beginning `skip` steps into the pattern, counting
+/// every time round.
 ///
 /// The pattern loops for as long as the piece lasts, so a clip that
 /// repeats its pattern three times is one `Play` three patterns long.
 /// `skip` is not zero when the song jumps into the middle of a clip: when
 /// a repeated section starts again, or a loop region starts, partway
-/// through it.
+/// through it. It is not zero either when the clip is trimmed at the
+/// start (see [`Clip::skip`]).
+///
+/// `track` is the playlist track of its clip. A take's recording is
+/// heard only where a clip of its track plays (see
+/// [`Play::covers`]).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Play {
     pub pattern: usize,
+    pub track: usize,
     pub start: usize,
     pub skip: usize,
     pub length: usize,
@@ -46,6 +53,18 @@ impl Play {
     /// The step just after its last one.
     pub fn end(&self) -> usize {
         self.start + self.length
+    }
+
+    /// Whether it plays on song step `step`.
+    pub fn covers(&self, step: usize) -> bool {
+        (self.start..self.end()).contains(&step)
+    }
+
+    /// The song step its pattern's first time round would start on, were
+    /// none of it left out: below zero when more of it is left out than
+    /// the song has steps before it.
+    pub fn origin(&self) -> isize {
+        self.start as isize - self.skip as isize
     }
 
     /// The step of the pattern played on song step `step`, if this piece
@@ -174,10 +193,15 @@ pub(crate) fn arrange(project: &Project, from: usize, to: usize) -> Arrangement 
                 if begin >= end {
                     continue;
                 }
+                // A clip trimmed at the start starts inside its pattern.
+                let first = project
+                    .pattern(clip.pattern)
+                    .map_or(0, |p| clip.first_step(p.length()));
                 let play = Play {
                     pattern: clip.pattern,
+                    track: clip.track,
                     start: start + (begin - piece_from),
-                    skip: begin - clip.start,
+                    skip: first + (begin - clip.start),
                     length: end - begin,
                 };
                 // Does it carry on where the clip's last piece ended, both
@@ -269,6 +293,7 @@ mod tests {
         // Three times a 16-step pattern, starting at song step 32.
         let play = Play {
             pattern: 0,
+            track: 0,
             start: 32,
             skip: 0,
             length: 48,
@@ -287,6 +312,7 @@ mod tests {
         // The last 4 steps of the first round, then a whole round.
         let play = Play {
             pattern: 0,
+            track: 0,
             start: 0,
             skip: 12,
             length: 20,
@@ -320,11 +346,41 @@ mod tests {
             song.plays,
             [Play {
                 pattern: 0,
+                track: 0,
                 start: 16,
                 skip: 0,
                 length: 48
             }]
         );
+    }
+
+    #[test]
+    fn a_trimmed_clip_plays_only_what_it_shows() {
+        // A 16-step pattern from step 16, three times round, without its
+        // first 4 steps and the last 2 of its last time round.
+        let mut project = Project::template();
+        assert!(project.add_clip(Clip::new(0, 0, 16).repeated(3)).is_some());
+        let clip = project.playlist().clips()[0];
+        let trimmed = clip
+            .trimmed_from(20, 16)
+            .unwrap()
+            .trimmed_to(62, 16)
+            .unwrap();
+        assert!(project.trim_clip(0, trimmed));
+        let song = project.arrangement();
+        assert_eq!(
+            song.plays,
+            [Play {
+                pattern: 0,
+                track: 0,
+                start: 20,
+                skip: 4,
+                length: 42
+            }]
+        );
+        assert_eq!(song.plays[0].pattern_step(20, 16), Some(4));
+        assert_eq!(song.plays[0].pattern_step(61, 16), Some(13));
+        assert_eq!(song.plays[0].pattern_step(62, 16), None);
     }
 
     #[test]
@@ -406,6 +462,7 @@ mod tests {
             song.plays,
             [Play {
                 pattern: 0,
+                track: 0,
                 start: 0,
                 skip: 0,
                 length: 64
@@ -464,6 +521,7 @@ mod tests {
         // The chords clip of bars 3 and 4 is cut in half: its second bar.
         assert!(looped.plays.contains(&Play {
             pattern: 1,
+            track: 0,
             start: 0,
             skip: 16,
             length: 16

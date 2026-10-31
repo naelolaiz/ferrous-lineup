@@ -7,7 +7,7 @@ mismos tipos, y lo guarda con la extensión `.lineup`.
 
 ```text
 (
-    format: 32,
+    format: 33,
     tempo: 130.0,
     scale: (root: C, kind: Major),
     channels: [
@@ -20,7 +20,7 @@ mismos tipos, y lo guarda con la extensión `.lineup`.
 
 [Guardar](../program/saving.md) explica RON, serde y el struct
 `ProjectFile` que media entre el archivo y el `Project` en vivo. Esta
-página es la referencia del número de arriba: `FORMAT_VERSION` es **32**
+página es la referencia del número de arriba: `FORMAT_VERSION` es **33**
 en
 [`crates/lineup-core/src/file.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/file.rs).
 
@@ -30,7 +30,7 @@ El número dice qué características puede contener un archivo. No es la
 versión de la aplicación.
 
 `format_for` escribe el formato **más bajo** que puede contener el
-proyecto, no siempre el 32. Un proyecto sencillo se queda en el formato
+proyecto, no siempre el 33. Un proyecto sencillo se queda en el formato
 1, así que cualquier versión de Ferrous Lineup puede abrirlo. Una
 canción con hoja de acordes pero sin banda es el formato 12; una banda
 es el formato 13; un canal bloqueado es al menos el formato 23. El
@@ -77,6 +77,7 @@ ningún paso de conversión al abrirse: lleva solo lo que usa.
 | 30 | Una banda que toca la hoja de acordes con un estilo de micromodo. | Tocaría las formas como acordes y una línea de bajo. | [Micromodos](../theory/micromodes.md#en-una-canción-la-banda-toca-las-formas-de-la-hoja) |
 | 31 | Una banda que toca la hoja de acordes con un estilo dodecafónico. | Tocaría cada forma de la serie como cuatro acordes de tres notas. | [Series dodecafónicas](../theory/twelve-tone.md#en-una-canción-la-banda-toca-las-formas-de-la-hoja) |
 | 32 | Tomas: un canal sampler que toca una voz grabada junto con la canción, `Sampler(Take(...))` con la ruta de su archivo WAV. | No podría leer el canal de una toma, así que no podría abrir el archivo. | [Tomas](../theory/listen.md#escribirla) |
+| 33 | Un clip recortado, que deja fuera el comienzo o el final de su patrón: `skip` y `cut` en el clip. | Tocaría el patrón entero, desde el primer paso del clip. | [El proyecto](../program/project.md#recortar-un-clip) |
 
 Dos registros pueden estar en un archivo de cualquier formato, porque
 una versión que se los salta sigue tocando la canción exactamente
@@ -97,7 +98,7 @@ cambiado. Así que el lector comprueba el número de formato y rechaza
 todo lo que esté por encima de `FORMAT_VERSION`:
 
 ```text
-this file uses format 33, made by a newer version of Ferrous Lineup (this one reads up to format 32)
+this file uses format 34, made by a newer version of Ferrous Lineup (this one reads up to format 33)
 ```
 
 Primero se lee el archivo entero, y el número se comprueba después.

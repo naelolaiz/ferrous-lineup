@@ -7,7 +7,7 @@ with the extension `.lineup`.
 
 ```text
 (
-    format: 32,
+    format: 33,
     tempo: 130.0,
     scale: (root: C, kind: Major),
     channels: [
@@ -20,7 +20,7 @@ with the extension `.lineup`.
 
 [Saving](../program/saving.md) explains RON, serde and the `ProjectFile`
 struct that stands between the file and the live `Project`. This page is
-the reference for the number at the top: `FORMAT_VERSION` is **32** in
+the reference for the number at the top: `FORMAT_VERSION` is **33** in
 [`crates/lineup-core/src/file.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/file.rs).
 
 ## The format number
@@ -29,7 +29,7 @@ The number says which features a file may contain. It is not the app's
 version.
 
 `format_for` writes the **lowest** format that can hold the project, not
-always 32. A plain project stays format 1, so any version of Ferrous
+always 33. A plain project stays format 1, so any version of Ferrous
 Lineup can open it. A song with a chord sheet but no band is format 12;
 a band is format 13; a locked channel is at least format 23. The number
 is that of the highest feature the song uses, and each format can hold
@@ -75,6 +75,7 @@ what it uses.
 | 30 | A band playing the chord sheet in a micromode style. | It would play the forms as chords and a bass line. | [Micromodes](../theory/micromodes.md#in-a-song-the-band-plays-the-forms-on-the-sheet) |
 | 31 | A band playing the chord sheet in a twelve-tone style. | It would play each form of the row as four chords of three notes. | [Twelve-tone rows](../theory/twelve-tone.md#in-a-song-the-band-plays-the-forms-on-the-sheet) |
 | 32 | Takes: a sampler channel playing a voice recorded along with the song, `Sampler(Take(...))` with the path of its WAV file. | It could not read a take's channel, so it could not open the file. | [Takes](../theory/listen.md#writing-it-in) |
+| 33 | A trimmed clip, which leaves out the start or the end of its pattern: `skip` and `cut` on the clip. | It would play the whole pattern, from the clip's first step. | [The project](../program/project.md#trimming-a-clip) |
 
 Two records can be in a file of any format, because a version that
 skips them still plays the song exactly. One says where each part of the
@@ -93,7 +94,7 @@ if it reads, their meaning may have changed. So the reader checks the
 format number and refuses anything above `FORMAT_VERSION`:
 
 ```text
-this file uses format 33, made by a newer version of Ferrous Lineup (this one reads up to format 32)
+this file uses format 34, made by a newer version of Ferrous Lineup (this one reads up to format 33)
 ```
 
 The whole file is read first, and the number checked after. When the

@@ -109,9 +109,8 @@ impl Following {
             if pattern.player.is_some() || length == 0 {
                 continue;
             }
-            for time in 0..clip.repeats {
-                let from = clip.start + time * length;
-                if from >= end {
+            for round in clip.rounds(length) {
+                if round.at >= end {
                     break;
                 }
                 for (channel, note) in pattern.all_notes() {
@@ -119,12 +118,15 @@ impl Following {
                         .channels()
                         .get(channel)
                         .is_some_and(|channel| !channel.muted);
-                    let at = from + note.start;
-                    if heard && at < end {
-                        struck
-                            .entry(at)
-                            .or_default()
-                            .push((channel, note.velocity, note.length));
+                    let Some(note) = round.place(note) else {
+                        continue;
+                    };
+                    if heard && note.start < end {
+                        struck.entry(note.start).or_default().push((
+                            channel,
+                            note.velocity,
+                            note.length,
+                        ));
                     }
                 }
             }

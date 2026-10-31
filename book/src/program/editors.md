@@ -1428,9 +1428,9 @@ if name_response.changed() && name != shown {
 - `Frame::NONE` removes the field's border, so it looks like a label
   until you click it.
 
-### Placing, moving and stretching clips
+### Placing, moving and trimming clips
 
-Placing, moving and deleting clips follows the piano roll's pattern: a
+Placing, moving and trimming clips follows the piano roll's pattern: a
 press decides what the drag is, and the drag follows the pointer until
 the button is released.
 
@@ -1438,15 +1438,23 @@ the button is released.
 struct ClipDrag {
     index: usize,
     grab: usize,
-    stretch: bool,
+    /// The edge dragged, if the drag trims the clip.
+    edge: Option<Edge>,
+}
+
+enum Edge {
+    Left,
+    Right,
 }
 ```
 
 A press on empty space places a clip of the selected pattern and starts
 moving it; a press on a clip starts moving that clip and selects its
-pattern; a press on a clip's right edge starts stretching it, which
-repeats its pattern as many times as fit up to the pointer. The press
-is handled where the button went down:
+pattern; a press on a clip's left or right edge starts trimming it (see
+[Trimming a clip](project.md#trimming-a-clip)). Dragged in, an edge
+hides the start or the end of the pattern; dragged out past the end,
+the right edge repeats it. The press is handled where the button went
+down:
 
 ```rust
 // A press is handled where the button went down. A quick hand can
@@ -1460,7 +1468,7 @@ let pressed_at = press_origin.filter(|pos| {
 if let Some(pos) = pressed_at {
     let (track, step) = layout.cell_at(pos);
     match clip_at(project, layout, pos) {
-        Some(index) => { /* start moving or stretching that clip */ }
+        Some(index) => { /* start moving or trimming that clip */ }
         None => { /* add a clip of the selected pattern, and start moving it */ }
     }
 }
@@ -1485,6 +1493,28 @@ fn floor(self, step: usize, meter: &Meter) -> usize {
     }
 }
 ```
+
+A dragged edge snaps the same way, and also to the nearest place where
+the clip's pattern starts again, so a whole number of repeats stays
+easy to reach. Whichever of those is nearest the pointer wins:
+
+```rust
+let mut nearest = vec![self.snap.floor(step, meter), self.snap.next(step, meter)];
+if pattern_length > 0 {
+    let length = pattern_length as f32;
+    let origin = clip.start as f32 - clip.first_step(pattern_length) as f32;
+    let round = origin + ((at - origin) / length).round() * length;
+    if round >= 0.0 {
+        nearest.push(round as usize);
+    }
+}
+```
+
+`at` is the pointer's step with its fraction, and `origin` the song step
+where the pattern's first time round starts, heard or not. Each edge
+has a hand-sized strip, but on a clip narrower than two strips the left
+edge only gets a third of it, so the right edge, which can always be
+dragged out to make room, wins.
 
 Ctrl or Shift and a click adds a clip to the selection, Ctrl and a drag
 on empty space draws a box around clips, and dragging one of several

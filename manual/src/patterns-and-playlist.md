@@ -50,13 +50,22 @@ and playing your part](locks.md)).
 Each block on the playlist is a **clip**: one pattern, at one place on
 one track. The playlist's toolbar line says it in short: "Click to
 place "Beat". Double-click a clip to edit it, drag to move it, drag its
-right edge to repeat it, right-click it for its menu."
+edges to trim or repeat it, right-click it for its menu."
 
 - **Click** an empty place on a track to put a clip of the selected
   pattern there.
 - **Drag** a clip to move it, to another bar or another track.
-- **Drag its right edge** to repeat it: the clip grows by whole
-  patterns, and plays the pattern that many times in a row.
+- **Drag its left or right edge in** to trim it, as in most audio
+  programs: the clip hides the start or the end of its pattern, and
+  those notes are not heard. They stay in the pattern, so dragging the
+  edge back out brings them back, and every note still heard stays
+  where it was in the song.
+- **Drag its right edge past the end of the pattern** to repeat it:
+  the pattern plays again from its start for as long as the clip
+  lasts, and the clip's name says how many times it starts, as "×2".
+  It can stop partway through, on any bar, beat or step. Dragged out
+  past the start, the left edge plays the end of the pattern once more
+  before it.
 - **Double-click** a clip to edit it: melodies and chords open in the
   piano roll, drums in the channel rack.
 - **Right-click** a clip for its menu: **Edit its pattern**, as a
@@ -65,7 +74,11 @@ right edge to repeat it, right-click it for its menu."
   takes the place of Edit (see [Takes](takes.md#transcribing-a-take-again)).
 
 **Snap**, in the playlist's toolbar, says where clips land: on a
-**Bar**, a **Beat** or a **Step** (a sixteenth note).
+**Bar**, a **Beat** or a **Step** (a sixteenth note). A dragged edge
+snaps the same way, and also to the places where the pattern starts
+again, so a whole number of repeats is easy to reach. **Ctrl+Z** undoes
+each trim. A song with a trimmed clip needs this version of Ferrous
+Lineup or a newer one to open.
 
 To work with several clips at once, **Ctrl+click** them one by one, or
 **Ctrl+drag** a box around them on an empty part of the playlist; drag

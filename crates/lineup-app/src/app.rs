@@ -1379,10 +1379,8 @@ impl LineupApp {
                     .map_or(0, |pass| pass.start + (step - pass.from));
                 self.seek(step);
             }
-            PlaylistAction::SetClipRepeats { index, repeats } => {
-                self.edit("repeat clip", |project| {
-                    project.set_clip_repeats(index, repeats)
-                });
+            PlaylistAction::TrimClip { index, clip } => {
+                self.edit("trim clip", |project| project.trim_clip(index, clip));
             }
             PlaylistAction::AddSection(section) => {
                 self.edit("add section", |project| project.add_section(section));

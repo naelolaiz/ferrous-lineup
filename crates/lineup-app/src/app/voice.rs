@@ -1306,6 +1306,88 @@ mod tests {
     }
 
     #[test]
+    fn a_recording_trimmed_at_both_ends_plays_only_what_its_clip_shows() {
+        // Eight seconds of a tone that rises, so each moment of it sounds
+        // different: four bars at 120 BPM.
+        let rate = 44_100;
+        let samples: Vec<f32> = (0..8 * rate)
+            .map(|frame| {
+                let t = frame as f32 / rate as f32;
+                (t * (220.0 + 20.0 * t) * std::f32::consts::TAU).sin() * 0.3
+            })
+            .collect();
+        let dir = std::env::temp_dir().join(format!("lineup-trimmed-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("rising.wav");
+        lineup_listen::wav::write(&samples, rate, &path).unwrap();
+        let mut app = app();
+        app.voice.folder = Some(dir.clone());
+        app.open_recording(path);
+        while app.hearing_recording() {
+            std::thread::sleep(Duration::from_millis(20));
+            app.check_loading(&egui::Context::default());
+        }
+        app.voice.review.as_mut().unwrap().destination = Destination::Nowhere;
+        app.write_take();
+        // The frame song step `step` starts on.
+        let song = app.project.playback_arrangement();
+        let tempos = app.project.played_tempos(&song);
+        let tempo = app.project.tempo;
+        let at = |step: usize| {
+            let seconds = lineup_core::tempo::seconds(step, |step| {
+                tempos.get(step).copied().unwrap_or(tempo)
+            });
+            (seconds * f64::from(rate)) as usize
+        };
+        let whole = played_from(&mut app, 0, at(64));
+
+        // Its clip, from bar 2 to bar 4 only.
+        let (index, clip) = app
+            .project
+            .playlist()
+            .clips()
+            .iter()
+            .copied()
+            .enumerate()
+            .find(|(_, clip)| clip.start == 0)
+            .unwrap();
+        let length = app.project.patterns()[clip.pattern].length();
+        let trimmed = clip
+            .trimmed_from(16, length)
+            .and_then(|clip| clip.trimmed_to(48, length))
+            .unwrap();
+        assert!(app.project.trim_clip(index, trimmed));
+        let out = played_from(&mut app, 0, at(64));
+        assert!(
+            loudness(&out[..at(16)]) < 0.001,
+            "silent before the left edge"
+        );
+        // Under the clip, the very same sound as before, from the middle
+        // of the recording on.
+        let (from, to) = (at(16) + 100, at(48));
+        let difference: Vec<f32> = out[from..to]
+            .iter()
+            .zip(&whole[from..to])
+            .map(|(a, b)| a - b)
+            .collect();
+        assert!(loudness(&out[from..to]) > 0.1);
+        assert!(loudness(&difference) < 0.01, "{}", loudness(&difference));
+        assert!(
+            loudness(&out[at(49)..]) < 0.001,
+            "silent after the right edge"
+        );
+        // Played from step 20, it comes in at once, as it would.
+        let from_20 = played_from(&mut app, 20, at(21) - at(20));
+        let difference: Vec<f32> = from_20
+            .iter()
+            .zip(&whole[at(20)..at(21)])
+            .map(|(a, b)| a - b)
+            .collect();
+        assert!(loudness(&difference) < 0.01, "{}", loudness(&difference));
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
     fn opening_another_project_stops_hearing_the_recording_added() {
         let mut app = app();
         app.voice.loading = Some(Loading {

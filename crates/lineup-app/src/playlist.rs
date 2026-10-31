@@ -56,10 +56,11 @@ pub enum PlaylistAction {
     RemoveClip(usize),
     RemoveClips(Vec<usize>),
     PasteClips(Vec<Clip>),
-    /// Play the clip's pattern this many times in a row.
-    SetClipRepeats {
+    /// Move a clip's edges: it becomes `clip`, the same clip trimmed
+    /// or repeating its pattern more or fewer times.
+    TrimClip {
         index: usize,
-        repeats: usize,
+        clip: Clip,
     },
     /// Open the editor for a clip's pattern (a double-click on the clip).
     EditClip(usize),
@@ -150,7 +151,8 @@ const SECTION_HEIGHT: f32 = 22.0;
 const TEMPO_HEIGHT: f32 = 28.0;
 /// The strips at the top, which stay put while the tracks scroll.
 const TOP: f32 = SECTION_HEIGHT + TEMPO_HEIGHT + RULER_HEIGHT;
-/// How close to a clip's right edge the pointer must be to repeat it.
+/// How close to a clip's left or right edge the pointer must be to trim
+/// it.
 const CLIP_EDGE: f32 = 6.0;
 /// How tall a track is at 100%. The vertical zoom multiplies it.
 const TRACK_HEIGHT: f32 = 36.0;
@@ -249,13 +251,37 @@ impl Snap {
 
 /// A clip being dragged. `grab` is how many steps after the clip's start
 /// the pointer took hold of it, so the clip does not jump under the pointer.
-/// A clip taken by its right edge is not moved but stretched: it repeats
-/// its pattern as many times as fit up to the pointer.
+/// A clip taken by an edge is not moved but trimmed: that edge follows
+/// the pointer, hiding the pattern's notes or bringing them back, and
+/// past the end of the pattern the clip plays it again.
 #[derive(Debug, Clone, Copy)]
 struct ClipDrag {
     index: usize,
     grab: usize,
-    stretch: bool,
+    edge: Option<Edge>,
+}
+
+/// Which edge of a clip is dragged.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Edge {
+    Left,
+    Right,
+}
+
+impl Edge {
+    /// The edge of a clip drawn in `rect` that `x` is on, if any. On a
+    /// clip too narrow for both, the right edge wins: dragging it out
+    /// makes room.
+    fn at(rect: Rect, x: f32) -> Option<Edge> {
+        let reach = CLIP_EDGE.min(rect.width() / 3.0);
+        if x > rect.right() - CLIP_EDGE {
+            Some(Edge::Right)
+        } else if x < rect.left() + reach {
+            Some(Edge::Left)
+        } else {
+            None
+        }
+    }
 }
 
 /// Where the grid of tracks and steps is on screen.
@@ -682,7 +708,7 @@ impl PlaylistView {
             // sentence shows when you point at it.
             let help = trf(
                 "Click to place \"{}\". Double-click a clip to edit it, drag to \
-                 move it, drag its right edge to repeat it, right-click it for its menu. Drag \
+                 move it, drag its edges to trim or repeat it, right-click it for its menu. Drag \
                  along the top strip to mark a section, along the bar numbers to loop.",
                 &[&tr_name(current_name)],
             );
@@ -1292,7 +1318,7 @@ impl PlaylistView {
                     self.drag = Some(ClipDrag {
                         index,
                         grab: step.saturating_sub(clip.start),
-                        stretch: pos.x > rect.right() - CLIP_EDGE,
+                        edge: Edge::at(rect, pos.x),
                     });
                     if clip.pattern != current {
                         actions.push(PlaylistAction::SelectPattern(clip.pattern));
@@ -1314,7 +1340,7 @@ impl PlaylistView {
                     self.drag = Some(ClipDrag {
                         index: clips.len(),
                         grab: step - start,
-                        stretch: false,
+                        edge: None,
                     });
                 }
             }
@@ -1356,12 +1382,12 @@ impl PlaylistView {
                 .show(|ui| clip_menu(ui, project, index, step, selected, actions));
         }
 
-        // The right edge of a clip stretches it: show it with the cursor.
+        // The edges of a clip trim it: show them with the cursor.
         if let Some(pos) = hovered
-            && self.drag.is_none_or(|drag| drag.stretch)
+            && self.drag.is_none_or(|drag| drag.edge.is_some())
             && clip_at(project, layout, pos).is_some_and(|index| {
                 let clip = &clips[index];
-                pos.x > layout.clip_rect(clip, project.clip_length(clip)).right() - CLIP_EDGE
+                Edge::at(layout.clip_rect(clip, project.clip_length(clip)), pos.x).is_some()
             })
         {
             ui.ctx().set_cursor_icon(egui::CursorIcon::ResizeHorizontal);
@@ -1385,20 +1411,20 @@ impl PlaylistView {
             self.selection_box = None;
         }
         if let Some(drag) = self.drag
-            && drag.stretch
+            && let Some(edge) = drag.edge
             && let Some(pos) = pointer
             && let Some(clip) = clips.get(drag.index)
         {
-            // As many whole patterns as reach the pointer, the nearest.
             let pattern_length = project.pattern(clip.pattern).map_or(0, Pattern::length);
-            let reach = (pos.x - layout.x(clip.start)) / layout.step_width;
-            let repeats = (reach / pattern_length.max(1) as f32)
-                .round()
-                .clamp(1.0, MAX_REPEATS as f32) as usize;
-            if repeats != clip.repeats {
-                actions.push(PlaylistAction::SetClipRepeats {
+            let step = self.edge_step(layout, &project.meter(), clip, pattern_length, pos.x);
+            let trimmed = match edge {
+                Edge::Left => clip.trimmed_from(step, pattern_length),
+                Edge::Right => clip.trimmed_to(step, pattern_length),
+            };
+            if let Some(trimmed) = trimmed.filter(|trimmed| trimmed != clip) {
+                actions.push(PlaylistAction::TrimClip {
                     index: drag.index,
-                    repeats,
+                    clip: trimmed,
                 });
             }
             ui.ctx().set_cursor_icon(egui::CursorIcon::ResizeHorizontal);
@@ -1441,6 +1467,36 @@ impl PlaylistView {
                 }
             }
         }
+    }
+
+    /// Where the edge of `clip` that is dragged goes, for the pointer at
+    /// `x`: the nearest bar, beat or step (as snapping says), or the
+    /// nearest place where the clip's pattern starts again, so that the
+    /// clip can still be made to play it a whole number of times.
+    fn edge_step(
+        &self,
+        layout: Layout,
+        meter: &Meter,
+        clip: &Clip,
+        pattern_length: usize,
+        x: f32,
+    ) -> usize {
+        let at = ((x - layout.origin.x) / layout.step_width).max(0.0);
+        let step = at.floor() as usize;
+        let mut nearest = vec![self.snap.floor(step, meter), self.snap.next(step, meter)];
+        if pattern_length > 0 {
+            let length = pattern_length as f32;
+            let origin = clip.start as f32 - clip.first_step(pattern_length) as f32;
+            let round = origin + ((at - origin) / length).round() * length;
+            if round >= 0.0 {
+                nearest.push(round as usize);
+            }
+        }
+        nearest
+            .into_iter()
+            .min_by(|a, b| (*a as f32 - at).abs().total_cmp(&(*b as f32 - at).abs()))
+            .unwrap_or(step)
+            .min(MAX_SONG_STEPS)
     }
 
     fn keys(&mut self, ctx: &egui::Context, project: &Project, actions: &mut Vec<PlaylistAction>) {
@@ -1709,7 +1765,9 @@ fn recordings(project: &Project) -> Vec<Recorded<'_>> {
                 for note in pattern.notes(channel) {
                     recordings.push(Recorded {
                         track: clip.track,
-                        from: clip.start + repeat * pattern.length() + note.start,
+                        from: clip.origin(pattern.length())
+                            + repeat * pattern.length()
+                            + note.start,
                         channel,
                         path,
                     });
@@ -1734,10 +1792,15 @@ fn recording_in<'a>(
     let empty = project
         .pattern(clip.pattern)
         .is_none_or(|pattern| pattern.all_notes().next().is_none());
+    // A clip trimmed at the start still holds a recording that starts in
+    // the part it leaves out.
+    let origin = project
+        .pattern(clip.pattern)
+        .map_or(clip.start, |pattern| clip.origin(pattern.length()));
     let mut here: Vec<Recorded> = recordings
         .iter()
         .copied()
-        .filter(|r| r.track == clip.track && r.from < end && (r.from >= clip.start || empty))
+        .filter(|r| r.track == clip.track && r.from < end && (r.from >= origin || empty))
         .collect();
     here.sort_by_key(|r| r.from);
     here.iter()
@@ -1892,10 +1955,13 @@ fn paint_clips(
             CLIP_TEXT,
         );
         // The notes, once for each time round, with a line between them.
+        // A trimmed clip shows only the notes it plays: the rest of the
+        // pattern is drawn outside the clip, where nothing is painted.
         let round = pattern.length() as f32 * layout.step_width;
         let notes_painter = painter.with_clip_rect(cells.intersect(rect));
+        let skipped = clip.first_step(pattern.length()) as f32 * layout.step_width;
         for repeat in 0..clip.repeats {
-            let left = rect.left() + repeat as f32 * round;
+            let left = rect.left() - skipped + repeat as f32 * round;
             if repeat > 0 {
                 notes_painter.vline(left, rect.y_range(), Stroke::new(1.0, REPEAT_LINE));
             }
@@ -1904,12 +1970,12 @@ fn paint_clips(
                 pos2(left + round, rect.bottom()),
             )
             .shrink(2.0);
-            if !body.intersects(cells) {
+            if !body.intersects(cells.intersect(rect)) {
                 continue;
             }
             // A take's recording is drawn as its waveform, other notes
             // as notes.
-            let start = clip.start + repeat * pattern.length();
+            let start = clip.origin(pattern.length()) + repeat * pattern.length();
             let end = start + pattern.length();
             for recording in &recordings {
                 let from = recording.from;
@@ -2348,6 +2414,78 @@ mod tests {
             }),
             "{actions:?}"
         );
+    }
+
+    #[test]
+    fn dragging_a_clips_edges_trims_it_and_past_its_end_repeats_it() {
+        let ctx = egui::Context::default();
+        let mut view = PlaylistView::new();
+        view.browser_open = false;
+        view.snap = Snap::Step;
+        let mut project = selection_project();
+        frame(&ctx, &mut view, &project, vec![]);
+        frame(&ctx, &mut view, &project, vec![]);
+        let origin = view.view_rect.unwrap().min + vec2(HEADER_WIDTH, TOP);
+        let at = |step: f32| origin + vec2(step * STEP_WIDTH, TRACK_HEIGHT * 0.5);
+        // Drags from `from` to `to` (in steps), applying what the view
+        // asks for, and returns the clip it asked to become.
+        let mut drag = |project: &mut Project, from: f32, to: f32| -> Clip {
+            frame(
+                &ctx,
+                &mut view,
+                project,
+                pointer(at(from), true, egui::Modifiers::NONE),
+            );
+            let actions = frame(&ctx, &mut view, project, vec![Event::PointerMoved(at(to))]);
+            frame(
+                &ctx,
+                &mut view,
+                project,
+                pointer(at(to), false, egui::Modifiers::NONE),
+            );
+            let Some(PlaylistAction::TrimClip { index, clip }) = actions
+                .iter()
+                .find(|action| matches!(action, PlaylistAction::TrimClip { .. }))
+                .cloned()
+            else {
+                panic!("no trim: {actions:?}");
+            };
+            assert!(project.trim_clip(index, clip));
+            clip
+        };
+        // The first clip's right edge, in to step 12: its last four
+        // steps are left out.
+        let clip = drag(&mut project, 15.6, 12.1);
+        assert_eq!(
+            (clip.start, clip.repeats, clip.skip, clip.cut),
+            (0, 1, 0, 4)
+        );
+        // Out to step 40: the pattern plays again, and half a time more.
+        let clip = drag(&mut project, 11.6, 40.1);
+        assert_eq!(
+            (clip.start, clip.repeats, clip.skip, clip.cut),
+            (0, 3, 0, 8)
+        );
+        // Back to the end of a time round: nothing is left out.
+        let clip = drag(&mut project, 39.6, 31.9);
+        assert_eq!(
+            (clip.start, clip.repeats, clip.skip, clip.cut),
+            (0, 2, 0, 0)
+        );
+        // The last clip's left edge, in to step 68, then out past where
+        // its pattern starts, to step 60.
+        let clip = drag(&mut project, 64.4, 68.1);
+        assert_eq!(
+            (clip.start, clip.repeats, clip.skip, clip.cut),
+            (68, 1, 4, 0)
+        );
+        let clip = drag(&mut project, 68.4, 60.1);
+        assert_eq!(
+            (clip.start, clip.repeats, clip.skip, clip.cut),
+            (60, 2, 12, 0)
+        );
+        // Played as before: the notes stay where they were.
+        assert_eq!(project.clip_length(&clip), 20);
     }
 
     #[test]
