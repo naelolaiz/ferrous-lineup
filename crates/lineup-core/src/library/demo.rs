@@ -9,7 +9,7 @@
 use crate::chord_sheet::{ChordMarker, HarmonyName};
 use crate::harmony::{ChordSymbol, Scale};
 use crate::key_map::KeyMarker;
-use crate::meter::{TimeMarker, TimeSignature};
+use crate::meter::{Bar, TimeMarker, TimeSignature};
 use crate::playlist::{Clip, Section};
 use crate::project::{Drum, Project};
 use crate::tempo::{Tempo, TempoMarker};
@@ -17,6 +17,7 @@ use crate::tempo::{Tempo, TempoMarker};
 use super::apply::{self, LEAD};
 use super::chart::{self, ChordSpan, Melody, accompany, accompany_in_bars};
 use super::comping::Bass;
+use super::drum_form;
 use super::interpret::{self, Role};
 use super::micromodes::{self, MicromodeStyle};
 use super::rhythm::{FILLS, RHYTHMS, Rhythm};
@@ -624,6 +625,7 @@ pub fn song_demo(song: &Song) -> Project {
                 spans,
                 tune,
                 drums: None,
+                rhythm: None,
                 from_meters: !part.meters.is_empty(),
                 notes: lines,
             });
@@ -658,6 +660,7 @@ pub fn song_demo(song: &Song) -> Project {
             let drums = drum_pattern(&mut project, &name, piece.length, rhythm, long);
             mark_drums(&mut project, drums, &piece.spans, &piece.tune);
             piece.drums = Some(drums);
+            piece.rhythm = Some(rhythm);
         }
     }
     // The ending is a bar of the last part's time, on the home chord of
@@ -687,6 +690,7 @@ pub fn song_demo(song: &Song) -> Project {
     let mut at = 0;
     let mut time_here = song.time;
     let mut sections: Vec<Section> = Vec::new();
+    let mut drum_places: Vec<(usize, usize)> = Vec::new();
     for (entry, name) in song.form.iter().enumerate() {
         let Some(part) = song.part(name) else {
             continue;
@@ -701,7 +705,11 @@ pub fn song_demo(song: &Song) -> Project {
         for &mark in part.tempo {
             mark_tempo(&mut project, at, mark);
         }
-        for piece in patterns.iter().filter(|piece| piece.part == *name) {
+        for (index, piece) in patterns
+            .iter()
+            .enumerate()
+            .filter(|(_, piece)| piece.part == *name)
+        {
             if piece.time != time_here {
                 project.set_time_marker(TimeMarker::new(at, piece.time));
                 time_here = piece.time;
@@ -711,10 +719,8 @@ pub fn song_demo(song: &Song) -> Project {
             // are only heard (see `Project::heard_chords`).
             write_chart(&mut project, at, &piece.spans, key);
             project.add_clip(Clip::new(piece.pattern, SONG_TRACK, at));
-            if entry >= song.drums_from
-                && let Some(drums) = piece.drums
-            {
-                project.add_clip(Clip::new(drums, DRUM_TRACK, at));
+            if entry >= song.drums_from && piece.drums.is_some() {
+                drum_places.push((index, at));
             }
             at += piece.length;
         }
@@ -730,6 +736,7 @@ pub fn song_demo(song: &Song) -> Project {
             project.add_section(section);
         }
     }
+    place_drums(&mut project, &mut patterns, &drum_places, at);
     if let Some(end) = end {
         project.add_clip(Clip::new(end, SONG_TRACK, at));
         if !project.playlist().chord_markers().is_empty() {
@@ -761,6 +768,91 @@ pub fn song_demo(song: &Song) -> Project {
     project
 }
 
+/// A drum pattern placed for a piece: the piece, the drums it plays and
+/// the pattern.
+type Placed = (usize, Vec<(Drum, NoteEvent)>, usize);
+
+/// Puts the drums of each place in `places` (a piece and where it
+/// starts) on the drum track. A song whose parts all play one rhythm
+/// plays it laid out over the song's sections, up to step `end`, as a
+/// band does (see [`drum_form::song_drums`]): each place gets the drums
+/// of where it is, and places that play alike share a pattern, the
+/// piece's own the first. A song whose rhythm changes from part to part
+/// plays each piece's own pattern.
+fn place_drums(project: &mut Project, pieces: &mut [Piece], places: &[(usize, usize)], end: usize) {
+    let mut rhythms = places.iter().filter_map(|&(piece, _)| pieces[piece].rhythm);
+    let first = rhythms.next();
+    let one = first.filter(|first| rhythms.all(|other| std::ptr::eq(other, *first)));
+    let Some(rhythm) = one else {
+        for &(piece, at) in places {
+            if let Some(drums) = pieces[piece].drums {
+                project.add_clip(Clip::new(drums, DRUM_TRACK, at));
+            }
+        }
+        return;
+    };
+    // The drums start with the first place they play in.
+    let from = places.iter().map(|&(_, at)| at).min().unwrap_or(0);
+    let bars: Vec<Bar> = project
+        .meter()
+        .bars()
+        .skip_while(|bar| bar.start < from)
+        .take_while(|bar| bar.start < end)
+        .collect();
+    let form: Vec<Section> = project
+        .playlist()
+        .sections()
+        .iter()
+        .filter(|section| section.start >= from)
+        .cloned()
+        .collect();
+    let laid = drum_form::song_drums(rhythm, &bars, &form, end);
+    // The patterns each piece plays its places with, by their notes.
+    let mut known: Vec<Placed> = Vec::new();
+    for &(index, at) in places {
+        let piece = &pieces[index];
+        let Some(own) = piece.drums else {
+            continue;
+        };
+        let notes: Vec<(Drum, NoteEvent)> = laid
+            .iter()
+            .filter(|(_, note)| (at..at + piece.length).contains(&note.start))
+            .map(|&(drum, note)| {
+                let start = note.start - at;
+                (
+                    drum,
+                    NoteEvent {
+                        start,
+                        length: note.length.min(piece.length - start),
+                        ..note
+                    },
+                )
+            })
+            .collect();
+        let same = known
+            .iter()
+            .find(|(other, played, _)| *other == index && *played == notes)
+            .map(|&(_, _, pattern)| pattern);
+        let pattern = match same {
+            Some(pattern) => pattern,
+            None => {
+                let takes = known.iter().filter(|(other, _, _)| *other == index).count();
+                let pattern = if takes == 0 {
+                    own
+                } else {
+                    let name = format!("{} drums {}", piece.name, takes + 1);
+                    new_pattern(project, &name, piece.length)
+                };
+                apply::write_drums(project, pattern, &notes);
+                mark_drums(project, pattern, &piece.spans, &piece.tune);
+                known.push((index, notes, pattern));
+                pattern
+            }
+        };
+        project.add_clip(Clip::new(pattern, DRUM_TRACK, at));
+    }
+}
+
 /// One pattern of a song demo: a part, or a run of its bars in one time
 /// signature (see [`Song::part_runs`]).
 struct Piece {
@@ -776,8 +868,9 @@ struct Piece {
     spans: Vec<ChordSpan>,
     /// Its tune as written, whose marks the band follows.
     tune: Melody,
-    /// Its drum pattern, if the song has drums.
+    /// Its drum pattern, if the song has drums, and the rhythm it plays.
     drums: Option<usize>,
+    rhythm: Option<&'static Rhythm>,
     /// Whether it is a run of a part whose meter changes bar by bar.
     from_meters: bool,
     /// The notes of its pattern, channel by channel.
