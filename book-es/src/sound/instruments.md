@@ -380,9 +380,9 @@ for note in channel.notes.get(play.pattern) {
     // `step`, counted from the piece's start, which is
     // below zero for a time in the part of the clip the
     // piece skips.
-    let first = play.start as isize - play.skip as isize + note.start as isize;
-    let times = (first..play.end().min(step) as isize).step_by(length);
-    for at in times.filter(|&at| at < step as isize) {
+    let first = play.origin() + note.start as isize;
+    let times = (first..play.end().min(step + 1) as isize).step_by(length);
+    for at in times.filter(|&at| at < before) {
         let origin = Origin {
             pattern: play.pattern,
             pattern_step: note.start,
@@ -403,11 +403,140 @@ for note in channel.notes.get(play.pattern) {
 ```
 
 `first` es donde cae la nota si el trozo empezara en su propio primer
-paso; es menor que cero cuando el clip deja fuera su comienzo (`skip`),
-y `step_by(length)` da cada repetición del patrón dentro del trozo.
-`frames_between` suma los frames de los pasos desde ahí hasta el cursor
-de reproducción, al tempo de la canción en cada paso, así que una
-grabación bajo un cambio de tempo también empieza en el lugar justo.
+paso: `play.origin()` es `start - skip`, antes del comienzo del trozo
+cuando el trozo deja fuera el comienzo de su clip, o el clip deja fuera
+el comienzo de su patrón, y menor que cero cuando eso es más de lo que
+la canción tiene antes. `step_by(length)` da cada repetición del patrón
+dentro del trozo. `before` es `step`, o `step + 1` cuando la
+reproducción ya va por la mitad de `step` (ver más abajo), así que una
+nota en ese mismo paso también empieza. `frames_between` suma los
+frames de los pasos desde ahí hasta el cursor de reproducción, al tempo
+de la canción en cada paso, así que una grabación bajo un cambio de
+tempo también empieza en el lugar justo.
+
+### Solo bajo sus clips
+
+Una toma se dibuja en la lista de reproducción como su forma de onda,
+en su clip, y ese clip se puede recortar como cualquier otro: arrastra
+hacia adentro su borde izquierdo para que la grabación empiece más
+tarde, o su borde derecho para que termine antes. Una toma larga se
+corta en varios clips seguidos, y solo el primero tiene la nota que
+empieza la grabación; los otros están vacíos, y la forma de onda sigue
+a través de ellos. Así que la regla es la que muestra el dibujo: **la
+grabación de una toma suena solo donde suena un clip de su pista**.
+
+El hilo de audio tiene la canción como `Play`s, y cada uno sabe la
+pista de su clip, así que la regla es una función del paso:
+
+```rust
+fn take_heard(plays: &[Play], notes: &ChannelNotes, step: usize) -> bool {
+    plays.iter().filter(|play| play.covers(step)).any(|play| {
+        plays
+            .iter()
+            .any(|other| other.track == play.track && !notes.get(other.pattern).is_empty())
+    })
+}
+```
+
+Léelo así: algún trozo suena en este paso, en una pista donde algún
+trozo tiene una nota de este canal (la nota que empieza la grabación).
+Se comprueba en cada paso, para cada canal que toca una toma, antes de
+que empiecen las notas del paso:
+
+```rust
+fn keep_takes_to_their_clips(&mut self, step: usize, straight: bool) {
+    // ...for each channel playing a take, not muted:
+    let heard = |step| take_heard(&self.plays, &channel.notes, step);
+    let (here, before) = (heard(step), step > 0 && heard(step - 1));
+    if !here {
+        if channel.instrument.sounds_long() {
+            self.channels[index].instrument.release_long();
+        }
+        continue;
+    }
+    if !straight {
+        continue;
+    }
+    let came_in = self.start_hidden_takes(step, index);
+    if !came_in && !before && !self.channels[index].instrument.sounds_long() {
+        self.resume_long_sounds_of(step, Some(index), 0.0);
+    }
+}
+```
+
+Donde no suena ningún clip de su pista, la grabación se apaga, en los
+mismos 15 ms que con Stop: más allá de un borde derecho arrastrado hacia
+adentro, o en un hueco entre dos clips. Donde termina un hueco, la
+grabación vuelve desde la mitad, con el mismo `resume` que la empieza
+cuando empieza la reproducción.
+
+`straight` dice que la reproducción llegó a este paso desde el paso
+anterior. Cuando empezó aquí, saltó aquí o dio la vuelta al bucle, el
+motor acaba de llamar a `resume_long_sounds` para todos los canales, y
+hacerlo otra vez empezaría la grabación dos veces. El hilo de audio
+guarda `last_step`, el último paso que tocó, y lo pone en `None` donde
+sea que se mueva el secuenciador:
+
+```rust
+let straight = !lap && self.last_step.is_some_and(|last| last + 1 == step);
+self.last_step = Some(step);
+```
+
+Un clip recortado al comienzo oculta la nota que empieza su grabación:
+el secuenciador empieza las notas en los pasos que toca un trozo, y esa
+nota está antes de ellos. `start_hidden_takes` mira los trozos que
+empiezan en este paso y dejan fuera el comienzo de su clip, y empieza
+sus grabaciones tan adentro como estarían si el clip estuviera entero:
+
+```rust
+for play in self.plays.iter().filter(|play| play.start == step) {
+    // ...a piece that leaves nothing out is skipped
+    for note in channel.notes.get(play.pattern) {
+        let first = play.origin() + note.start as isize;
+        if first >= step as isize {
+            continue;
+        }
+        // The same note still sounding from before stops first.
+        channel.instrument.release_unless(|origin| !same(origin));
+        for at in (first..step as isize).step_by(length) {
+            // ...resume it, `frames_between(timing, at, step)` frames in
+        }
+    }
+}
+```
+
+Lo mismo pasa cuando una sección vuelve a sonar desde la mitad de un
+clip: la grabación vuelve a empezar donde empieza la sección, y la que
+sigue sonando de la primera vuelta se detiene, así que no se oye dos
+veces y sigue a tiempo con la canción.
+
+Un caso más es que la canción cambie mientras suena: un borde
+arrastrado de nuevo hacia afuera sobre el cursor de reproducción, o la
+pista de una toma vuelta a encender. El hilo de audio recibe entonces
+una lista nueva de `Play`s; `release_notes_left_out` detiene lo que ya
+no toca, y `bring_back_takes` empieza las grabaciones que toca donde
+está el cursor, si no están sonando. La reproducción va entonces por la
+mitad de un paso, así que `into` es cuántos frames de él ya pasaron, y
+la grabación empieza esa cantidad más adentro.
+
+Una nota empezada desde la mitad tiene su `Origin` en un paso de la
+canción antes de que empiece su trozo, en la parte que el clip oculta.
+`release_notes_left_out` conserva una nota cuyo trozo todavía toca su
+paso, y una nota así no está en los pasos de ningún trozo, así que
+también conserva una que su trozo deja fuera justo antes de empezar:
+
+```rust
+fn hidden_in(play: &Play, origin: Origin, length: usize) -> bool {
+    let offset = origin.song_step as isize - play.origin();
+    length > 0
+        && origin.song_step < play.start
+        && offset >= 0
+        && offset as usize % length == origin.pattern_step
+}
+```
+
+Sin eso, cualquier cambio en la canción mientras suena una toma
+recortada (mover otro clip, por ejemplo) detendría la grabación.
 
 ### Cargar un archivo WAV
 

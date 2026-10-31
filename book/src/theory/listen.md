@@ -665,8 +665,10 @@ or closing the window, keeps nothing.
 A take already written in can be heard again, to write its notes with
 other choices: **Transcribe again…** on its clip's menu. The playlist
 finds the recording a clip shows with `recording_in`: one whose note
-starts in the clip or, for an empty clip (the rest of a long take), the
-last one before it on its track. The app reads that WAV file and hears
+starts in the clip, or in the part a trim hides before it, or, for an
+empty clip (the rest of a long take), the last one before it on its
+track. It hears the whole recording again, the parts its clips hide
+too. The app reads that WAV file and hears
 it as it hears any recording added, on a thread, then lays it from the
 step its note is on with `Take::laid`. A piece of a take starts on a
 whole step and plays straight on at the song's tempo, so laying it there
@@ -715,7 +717,13 @@ A long take is cut into several clips, each at most a pattern long,
 and only the first holds the note that starts it. So `paint_clips`
 first gathers where each recording starts, by track, and draws each
 one under every clip of its track it plays under, not only under the
-one that starts it.
+one that starts it. A clip trimmed at the start hides the note that
+starts its recording, so a recording starts on the step where that
+note would be, `clip.origin(length) + note.start`, and the drawing is
+cut to the clip: the waveform stays where it was, and the clip shows
+the part it still plays. The audio thread keeps to the same rule, a
+recording heard only under the clips of its track (see [Only under its
+clips](../sound/instruments.md#only-under-its-clips)).
 
 The recording plays straight on in seconds while the playlist is laid
 out in steps, and a step's length in seconds changes with the tempo.

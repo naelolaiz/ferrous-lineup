@@ -105,6 +105,19 @@ canción, desde donde empieces la reproducción, como cualquier parte: la
 sola, para oír solo lo que cantaste (ver [Las
 pistas](patterns-and-playlist.md#las-pistas)).
 
+La grabación suena solo bajo los clips de su pista, como se dibuja su
+forma de onda. Su clip se recorta como cualquier otro (ver [Colocar y
+mover clips](patterns-and-playlist.md#colocar-y-mover-clips)): arrastra
+hacia adentro su borde izquierdo para que la grabación empiece más
+tarde, desde la mitad, o su borde derecho para que termine antes, y
+arrastra el borde de nuevo hacia afuera para volver a oír esa parte. La
+forma de onda queda donde estaba, así que el clip muestra la parte de
+la grabación que sigue tocando. Una toma larga se corta en varios clips
+seguidos; donde su pista no tiene clip, en un hueco que quede entre
+ellos, la grabación calla, y sigue de nuevo bajo el siguiente.
+**Transcribir otra vez…** sigue escuchando toda la grabación, también
+las partes que sus clips ocultan.
+
 Las notas que van a **Un canal nuevo**, o a un canal que no tiene nada
 que tocar ahí, van a una pista propia justo debajo de la grabación, con
 su nombre, como *Notas de Toma 1*. Silencia una de las dos pistas para

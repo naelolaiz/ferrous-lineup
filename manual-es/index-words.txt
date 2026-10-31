@@ -240,6 +240,7 @@ Rack de canales: main-window.md#las-ventanas, channel-rack.md
 Ragtime: jazz-and-pop.md#el-ragtime, no finding-a-demo.md
 Rasgueo: bigger-band.md#cómo-toca-la-guitarra
 Reconocimiento de acordes: chords.md#cómo-oye-los-acordes-la-aplicación
+Recortar un clip: patterns-and-playlist.md#colocar-y-mover-clips, takes.md#la-toma-en-su-pista
 Recuperar el trabajo sin guardar: saving.md#recuperar-el-trabajo-sin-guardar
 Registro: settings.md#reproducción
 Relativa: keys-and-modes.md#tonalidades-mayores-y-menores

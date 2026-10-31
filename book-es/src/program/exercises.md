@@ -573,6 +573,16 @@ selección recuerda las notas mismas. ¿Qué podría salir mal con el índice
 si la lista se mantuviera ordenada por inicio, y una nota se moviera
 mientras se arrastra?
 
+El borde arrastrado de un clip envía un clip recortado nuevo en cada
+frame en que se mueve el puntero, cada uno calculado a partir del clip
+tal como lo dejó el frame anterior. Arrastra en papel el borde izquierdo
+de un clip de 16 pasos 4 pasos hacia afuera de su comienzo y de vuelta
+hacia adentro, con `Clip::trimmed_from` (ver [Recortar un
+clip](project.md#recortar-un-clip)): ¿cuánto valen `start`, `skip` y
+`repeats` después de cada frame? ¿Qué mantiene igual `trimmed_from` de
+un frame al siguiente, y por qué eso hace que las notas se queden donde
+estaban por mucho que arrastres?
+
 ## Dos idiomas
 
 ### 31. Letras y solfeo (lineup-core y la app)

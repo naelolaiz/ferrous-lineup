@@ -127,9 +127,15 @@ pub struct Track {
 pub struct Clip {
     pub pattern: usize,
     pub track: usize,
+    /// The first step the clip plays.
     pub start: usize,
-    /// How many times the pattern plays, one after the other.
+    /// How many times round the pattern the clip plays, one after the
+    /// other. A trimmed time round counts.
     pub repeats: usize,
+    /// Steps left out at the start of the first time round, and at the
+    /// end of the last (see "Trimming a clip" below).
+    pub skip: usize,
+    pub cut: usize,
 }
 
 pub struct Playlist {
@@ -139,20 +145,34 @@ pub struct Playlist {
 }
 ```
 
-A clip is three numbers and a repeat count: which pattern, on which
-track, starting at which step of the song, and how many times the pattern
-plays. Notice what is *not* there: the clip's length. It is the pattern's
-length times the number of repeats, so it is worked out when needed:
+A clip is three numbers and a repeat count, and two trims: which
+pattern, on which track, starting at which step of the song, how many
+times the pattern plays, and how much of it is left out at each end.
+Notice what is *not* there: the clip's length. It is the pattern's
+length times the number of repeats, less the trims, so it is worked out
+when needed:
 
 ```rust
 pub fn clip_length(&self, clip: &Clip) -> usize {
-    self.patterns.get(clip.pattern).map_or(0, Pattern::length) * clip.repeats
+    clip.length(self.patterns.get(clip.pattern).map_or(0, Pattern::length))
 }
 
 impl Clip {
-    /// A clip that plays its pattern once.
+    /// A clip that plays its pattern once, whole.
     pub fn new(pattern: usize, track: usize, start: usize) -> Self {
-        Clip { pattern, track, start, repeats: 1 }
+        Clip {
+            pattern,
+            track,
+            start,
+            repeats: 1,
+            skip: 0,
+            cut: 0,
+        }
+    }
+
+    pub fn length(&self, pattern_length: usize) -> usize {
+        let (skip, cut) = self.trims(pattern_length);
+        (pattern_length * self.repeats).saturating_sub(skip + cut)
     }
 }
 ```
@@ -171,6 +191,93 @@ draw, and its `repeats` is the little "×2" on it.
 `map_or(0, Pattern::length)` says "if there is a pattern, call
 `Pattern::length` on it; otherwise use 0". A method can be passed by name,
 like a function, when its only argument is `self`.
+
+### Trimming a clip
+
+Dragging a clip's edge in hides part of its pattern, as an audio
+program trims a sound: the notes stay in the pattern, they are just not
+played, and dragging the edge back out brings them back. `skip` is how
+many steps of the pattern the first time round leaves out, `cut` how
+many the last time round leaves out. Both are less than the pattern is
+long, so the first and the last time round always play something.
+
+`start` stays "the first step heard". So a clip trimmed at the start
+plays its pattern's step `skip` on song step `start`, and the place
+where its pattern's step 0 would be, had it not been trimmed, is
+`start - skip`, the clip's **origin**. That is where an editor looks for
+the time signature and the key a pattern first plays in.
+
+Every reader of the clip used to work out "the pattern starts again
+every `pattern_length` steps from `start`". With trims that is true only
+from the origin, and the first and last time round are shorter. Rather
+than have every reader get that right, the clip says it once:
+
+```rust
+pub struct Round {
+    /// The song step `steps.start` is heard on.
+    pub at: usize,
+    /// The steps of the pattern heard.
+    pub steps: Range<usize>,
+}
+
+pub fn rounds(&self, pattern_length: usize) -> impl Iterator<Item = Round> + '_ {
+    let (skip, cut) = self.trims(pattern_length);
+    let repeats = if pattern_length == 0 { 0 } else { self.repeats };
+    (0..repeats).map(move |round| {
+        let first = if round == 0 { skip } else { 0 };
+        let last = if round + 1 == repeats { pattern_length - cut } else { pattern_length };
+        Round {
+            at: self.start + round * pattern_length - (skip - first),
+            steps: first..last,
+        }
+    })
+}
+```
+
+A note of the pattern is heard in a round if it starts in `steps`, and
+`Round::place` moves it onto the song's timeline, cut short where the
+round ends, so a note held past a trimmed end stops there. Playback,
+the band, the lead sheet, the heard keys and chords, inserting bars and
+changing the time signature all read clips through `rounds()`.
+
+Moving an edge must leave every note still heard where it was. Moving
+the right edge only changes how far the clip reaches into its pattern:
+
+```rust
+let reach = skip + (step - self.start);
+let repeats = reach.div_ceil(pattern_length);
+Clip { repeats, skip, cut: repeats * pattern_length - reach, ..*self }
+```
+
+`div_ceil` rounds up: reaching 20 steps into a 16-step pattern is 2
+time rounds, the second with 12 steps cut. Moving the left edge keeps
+the origin where it is, and works out from it how many rounds the
+clip gains or loses and where the new first round starts:
+
+```rust
+let origin = self.start as isize - skip as isize;
+let from = step as isize - origin;
+let rounds = from.div_euclid(pattern_length as isize);
+let skip = from.rem_euclid(pattern_length as isize) as usize;
+let repeats = self.repeats as isize - rounds;
+```
+
+`div_euclid` and `rem_euclid` are division and remainder that round
+towards minus infinity, so they work for a step before the origin too:
+dragged 4 steps out past the start of a 16-step pattern, `from` is -4,
+`rounds` is -1 (one round gained) and `skip` is 12, so the clip plays
+the last 4 steps of the pattern once more before it. With `/` and `%`,
+-4 / 16 would be 0 and -4 % 16 would be -4.
+
+The playlist reads a clip's trims to draw it: the notes of the first
+time round are drawn starting `skip` steps to the left of the clip, and
+the drawing is cut to the clip's rectangle, so what is hidden is not
+drawn.
+
+`skip` and `cut` are left out of the file when they are 0 (see
+[Saving](saving.md)), so a song without a trimmed clip is written as
+before. One with a trimmed clip is format 33: an older version would
+play the whole pattern.
 
 ## Four rules, one gatekeeper
 
@@ -399,18 +506,18 @@ pub fn pattern_step_in_song(&self, pattern: usize, song_step: usize) -> Option<u
 /// The step of its pattern the clip plays on song step `step`.
 fn step_in_clip(&self, clip: &Clip, step: usize) -> Option<usize> {
     let pattern_length = self.patterns.get(clip.pattern).map_or(0, Pattern::length);
-    let end = clip.start + pattern_length * clip.repeats;
-    (clip.start..end)
-        .contains(&step)
-        .then(|| (step - clip.start) % pattern_length)
+    clip.rounds(pattern_length)
+        .find(|round| (round.at..round.end()).contains(&step))
+        .map(|round| round.steps.start + step - round.at)
 }
 ```
 
 Read it as a sentence: of the clips that can be heard, take those of this
-pattern, find the first one that covers this song step, and tell me how
-far into the clip that step is. The `% pattern_length` is what makes a
-repeated clip start its pattern again each time round: a 16-step clip
-that repeats at song step 16 is on pattern step 0 there. `audible_clips` skips clips
+pattern, find the first one that covers this song step, and tell me which
+step of the pattern that time round plays there. The rounds are what make
+a repeated clip start its pattern again each time round: a 16-step clip
+that repeats at song step 16 is on pattern step 0 there. A clip trimmed
+at the start is on step `skip` at its first step. `audible_clips` skips clips
 on muted tracks:
 
 ```rust
@@ -423,7 +530,7 @@ pub fn audible_clips(&self) -> impl Iterator<Item = Clip> + '_ {
 ```
 
 `.copied()` turns an iterator of `&Clip` into one of `Clip`. That works
-because `Clip` is `Copy` (three numbers), and it means callers get plain
+because `Clip` is `Copy` (a few numbers), and it means callers get plain
 values instead of references into the playlist.
 
 ## The starting song
@@ -496,6 +603,7 @@ pub struct Arrangement {
 
 pub struct Play {
     pub pattern: usize,
+    pub track: usize,  // the track of its clip
     pub start: usize,  // the song step it starts on
     pub skip: usize,   // how far into the clip it starts
     pub length: usize, // how many steps it lasts
@@ -507,7 +615,11 @@ this is round 2 of 2 of section 1". A `Play` says "play pattern 3 from song
 step 64 for 32 steps, starting 0 steps into it". The pattern loops for as
 long as the `Play` lasts, so a clip repeated three times is one `Play`
 three patterns long. `skip` is not zero when a section or the loop region
-starts halfway through a clip.
+starts halfway through a clip, or when the clip is trimmed at the start:
+then it is the clip's own `skip` plus how far into the clip the piece
+starts. `track` is there for one thing: a take's recording is heard only
+under the clips of its track (see [Only under its
+clips](../sound/instruments.md#only-under-its-clips)).
 
 `Project::arrangement()` builds it for the whole song (the exports use
 it), and `Project::playback_arrangement()` for what song mode plays: the

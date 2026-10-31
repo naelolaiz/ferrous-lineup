@@ -113,7 +113,7 @@ fn remeter_song(project: &mut Project, time: TimeSignature) -> bool {
             .clips()
             .iter()
             .filter(|clip| clip.pattern == index)
-            .map(|clip| clip.start)
+            .map(|clip| clip.origin(pattern.length()))
             .min();
         let (remap, origin) = match first_clip {
             Some(start) => (song.clone(), start * TICKS_PER_STEP),
@@ -146,6 +146,7 @@ fn remeter_song(project: &mut Project, time: TimeSignature) -> bool {
 
     // The playlist, while the old meter still holds.
     let playlist = project.playlist().clone();
+    let old_lengths: Vec<usize> = project.patterns().iter().map(|p| p.length()).collect();
 
     // The patterns, cut where they grew too long.
     let chunk = MAX_STEPS / bar * bar;
@@ -226,20 +227,47 @@ fn remeter_song(project: &mut Project, time: TimeSignature) -> bool {
     clips.clear();
     for clip in playlist.clips() {
         let indices = &pieces[clip.pattern];
-        let start = song.step(clip.start);
+        let old_length = old_lengths[clip.pattern];
+        let start = song.step(clip.origin(old_length));
+        // A trimmed clip leaves out what it left out before, in the new
+        // bars: it plays from `heard.start` to `heard.end`.
+        let heard = song.step(clip.start)..song.step(clip.end(old_length));
+        let trim = |whole: Clip| -> Option<Clip> {
+            if !clip.is_trimmed() {
+                return Some(whole);
+            }
+            let length = project.patterns[whole.pattern].length();
+            let mut trimmed = whole;
+            if heard.start >= trimmed.end(length) || heard.end <= trimmed.start {
+                return None;
+            }
+            if heard.start > trimmed.start {
+                trimmed = trimmed.trimmed_from(heard.start, length)?;
+            }
+            if heard.end < trimmed.end(length) {
+                trimmed = trimmed.trimmed_to(heard.end, length)?;
+            }
+            Some(trimmed)
+        };
+        let whole = Clip {
+            start,
+            skip: 0,
+            cut: 0,
+            ..*clip
+        };
         if indices.len() == 1 {
-            clips.push(Clip { start, ..*clip });
+            clips.extend(trim(whole));
             continue;
         }
         let length = project.patterns[indices[0]].length() * (indices.len() - 1)
             + project.patterns[indices[indices.len() - 1]].length();
         for repeat in 0..clip.repeats {
             for (piece, &pattern) in indices.iter().enumerate() {
-                clips.push(Clip::new(
+                clips.extend(trim(Clip::new(
                     pattern,
                     clip.track,
                     start + repeat * length + piece * chunk,
-                ));
+                )));
             }
         }
     }
@@ -338,6 +366,33 @@ mod tests {
                 .iter()
                 .all(|n| n.length == 3 && n.is_on_grid())
         );
+    }
+
+    #[test]
+    fn a_trimmed_clip_leaves_out_the_same_beats_in_the_new_bars() {
+        let mut project = quarter_notes(2);
+        // The first two beats and the last two left out.
+        let clip = project.playlist().clips()[0];
+        let trimmed = clip
+            .trimmed_from(8, 32)
+            .unwrap()
+            .trimmed_to(24, 32)
+            .unwrap();
+        assert!(project.trim_clip(0, trimmed));
+        let starts = |project: &Project| -> Vec<f32> {
+            let end = project.song_length();
+            project
+                .heard_notes(0, end)
+                .iter()
+                .map(|note| note.start)
+                .collect()
+        };
+        assert_eq!(starts(&project), [8.0, 12.0, 16.0, 20.0]);
+        assert!(remeter(&mut project, THREE_FOUR));
+        assert_eq!(starts(&project), [6.0, 9.0, 12.0, 15.0]);
+        assert!(remeter(&mut project, TimeSignature::new(4, 4)));
+        assert_eq!(starts(&project), [8.0, 12.0, 16.0, 20.0]);
+        assert_eq!(project.playlist().clips(), [trimmed]);
     }
 
     #[test]

@@ -72,6 +72,7 @@ pub fn pattern_to_midi(project: &Project, pattern: usize) -> Vec<u8> {
         .map_or(0, |pattern| pattern.length());
     let play = Play {
         pattern,
+        track: 0,
         start: 0,
         skip: 0,
         length,
