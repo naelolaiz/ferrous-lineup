@@ -361,6 +361,20 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("Cakewalk", "Cakewalk"),
     ("Calypso", "Calipso"),
     ("Candombe", "Candombe"),
+    ("Candombe Ansina", "Candombe Ansina"),
+    (
+        "The candombe as the drums of Montevideo's Palermo neighbourhood play it, the Ansina toque, under the same three plain chords.",
+        "El candombe como lo tocan los tambores del barrio Palermo de Montevideo, el toque Ansina, bajo los mismos tres acordes simples.",
+    ),
+    (
+        "Montevideo's candombe in the Ansina toque, from the Palermo neighbourhood: the repique opens on the wooden shell with the Ansina madera, eight strokes a bar, and the piano answers its open stroke before beat 2 with three quick strokes around beat 3, the open hand between two open sticks. It is laid out over each part of a song as the Cuareim candombe is.",
+        "El candombe de Montevideo en el toque Ansina, del barrio Palermo: el repique abre en la madera del tambor con la madera de Ansina, ocho golpes por compás, y el piano responde a su golpe abierto antes del 2 con tres golpes rápidos alrededor del 3, la mano abierta entre dos palos abiertos. Se reparte sobre cada parte de una canción como el candombe de Cuareim.",
+    ),
+    ("Jazz fill", "Relleno de jazz"),
+    (
+        "The snare talks back to the band over the last two beats, the kick drops a bomb, and the ride comes in again on the next one.",
+        "La caja le contesta a la banda en los dos últimos pulsos, el bombo deja caer una bomba y el ride vuelve a entrar en el siguiente.",
+    ),
     ("Canon in D", "Canon en {D}"),
     ("Carnaval cochabambino", "Carnaval cochabambino"),
     ("Carnavalito (2/4)", "Carnavalito (2/4)"),
@@ -774,8 +788,8 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("Mixolydian rock", "Rock mixolidio"),
     ("Modal jazz", "Jazz modal"),
     (
-        "Montevideo's candombe, eight bars that start again with each part of a song. The chico keeps its ostinato, the three sixteenths after each beat, the hand's accent on the first, and plays every sixteenth in the last bar. The piano's open strokes ring just before beats 2 and 4 among its muffled ones, with a variation every fourth bar. The repique plays the 3-2 clave on the drum's wooden shell for four bars, then its own base for two and a two-bar phrase.",
-        "El candombe de Montevideo, ocho compases que vuelven a empezar con cada parte de una canción. El chico mantiene su ostinato, las tres semicorcheas que siguen a cada pulso, con el acento de la mano en la primera, y toca todas las semicorcheas en el último compás. Los golpes abiertos del piano suenan justo antes del 2 y del 4 entre sus golpes tapados, con una variación cada cuatro compases. El repique toca la clave 3-2 en la madera del tambor durante cuatro compases, luego su base durante dos y una frase de dos compases.",
+        "Montevideo's candombe, in the Cuareim toque, laid out over each part of a song. The song opens with the repique playing the 3-2 clave on the drum's wooden shell for four bars; then it plays its base, and closes every phrase with its two-bar call. The chico keeps its ostinato, the three sixteenths after each beat, the hand's accent on the first. The piano's open strokes ring just before beats 2 and 4 among its muffled ones, which it accents on beats 3 and 4, with a variation every fourth bar. A part of another kind, a refrain after the verse, plays the repique's busier base and the piano's variation every second bar.",
+        "El candombe de Montevideo, en el toque Cuareim, repartido sobre cada parte de una canción. La canción abre con el repique tocando la clave 3-2 en la madera del tambor durante cuatro compases; luego toca su base, y cierra cada frase con su llamada de dos compases. El chico mantiene su ostinato, las tres semicorcheas que siguen a cada pulso, con el acento de la mano en la primera. Los golpes abiertos del piano suenan justo antes del 2 y del 4 entre sus golpes tapados, que acentúa en el 3 y en el 4, con una variación cada cuatro compases. Una parte de otra clase, un estribillo después de la estrofa, toca la base más cargada del repique y la variación del piano cada dos compases.",
     ),
     ("Murga", "Murga"),
     ("Musette", "Musette"),
