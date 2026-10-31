@@ -30,6 +30,7 @@ use eframe::egui::{
     self, Align2, Color32, CursorIcon, FontId, Painter, PopupCloseBehavior, Rect, Response, Sense,
     Stroke, StrokeKind, Ui, pos2, vec2,
 };
+use lineup_core::harmony::Micromode;
 use lineup_core::{
     KeyMarker, LoopRegion, MAX_REPEATS, Pass, PitchClass, Project, SECTION_NAMES, Scale, ScaleKind,
     Section, TimeMarker,
@@ -424,12 +425,9 @@ fn key_menu(
         return;
     }
     let marker = keys.markers().iter().find(|marker| marker.start == at);
-    // Twelve-tone rows and sets have no place in a key signature.
-    let kind = if here.kind.is_tonal() {
-        here.kind
-    } else {
-        ScaleKind::Major
-    };
+    // A new note keeps the kind of key, a set or a row too: Menor 3 on
+    // D from here.
+    let kind = here.kind;
     ui.horizontal_wrapped(|ui| {
         ui.set_max_width(260.0);
         for root in PitchClass::ALL {
@@ -457,6 +455,42 @@ fn key_menu(
             let key = Scale::written(here.spell(here.root), kind);
             if ui
                 .selectable_label(here == key, crate::i18n::tr(kind.name()))
+                .clicked()
+            {
+                actions.push(PlaylistAction::SetKeyMarker(KeyMarker::new(at, key)));
+                ui.close();
+            }
+        }
+    });
+    // The micromodes, then the song's own sets and rows, on this note.
+    ui.weak(tr("Micromodes (Kröpfl)"));
+    ui.horizontal_wrapped(|ui| {
+        ui.set_max_width(260.0);
+        let mut offered: Vec<Scale> = Micromode::all()
+            .iter()
+            .map(|micromode| micromode.key(here.root))
+            .collect();
+        for micromode in Micromode::all() {
+            let key = micromode.key(here.root);
+            if ui
+                .selectable_label(here == key, micromode.name)
+                .on_hover_text(micromode.full_name())
+                .clicked()
+            {
+                actions.push(PlaylistAction::SetKeyMarker(KeyMarker::new(at, key)));
+                ui.close();
+            }
+        }
+        let song_keys = std::iter::once(keys.first()).chain(keys.markers().iter().map(|m| m.scale));
+        for key in song_keys {
+            let key = Scale::new(here.root, key.kind);
+            if key.kind.is_tonal() || offered.contains(&key) {
+                continue;
+            }
+            offered.push(key);
+            if ui
+                .selectable_label(here == key, crate::i18n::key_name(key))
+                .on_hover_text(tr("A set or a row this song is in, on this note."))
                 .clicked()
             {
                 actions.push(PlaylistAction::SetKeyMarker(KeyMarker::new(at, key)));

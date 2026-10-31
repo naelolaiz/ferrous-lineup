@@ -381,7 +381,10 @@ so it always shows its forms.
 
 The degrees are counted as for a micromode: **T*n*** is the key's own
 form moved up *n* semitones, **T*n*I** the key's form turned upside
-down around the key's note and then moved up *n*.
+down around the key's note and then moved up *n*. Switching the key to
+another set keeps every form's degree, on the sheet and in the notes,
+as switching a key's mode does (see [Another colour, the same
+degrees](micromodes.md#another-colour-the-same-degrees)).
 
 ### How near: the notes a form keeps
 

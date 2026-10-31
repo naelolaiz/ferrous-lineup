@@ -11,7 +11,7 @@
 //! key menu can switch back to them after the key was a scale for a while.
 
 use eframe::egui::{self, Color32, RichText, Ui};
-use lineup_core::harmony::{Micromode, micromodes_in};
+use lineup_core::harmony::{Micromode, MicromodeFamily, micromodes_in};
 use lineup_core::harmony::{
     ROW_PRESETS, RowForm, RowLabel, RowPreset, SetClass, ToneRow, digits, pc_digit,
 };
@@ -189,10 +189,28 @@ pub fn kind_menu(
     let ctx = ui.ctx().clone();
     let root = tonic.pitch_class();
     let mut picked = None;
+    // A key of three notes is one of the micromodes, named as one.
+    let micromode = match scale.kind {
+        ScaleKind::Set(set) => Micromode::of(set),
+        _ => None,
+    };
+    let selected = match micromode {
+        Some(micromode) => micromode.name.to_string(),
+        None => crate::i18n::tr(scale.kind.name()).to_string(),
+    };
+    // For how many frames the menu has been open: in its first frames,
+    // it scrolls to the key's micromode, at the bottom of the list.
+    let frames_id = egui::Id::unique((salt, "frames open"));
+    let frames = ctx.data(|data| data.get_temp::<u8>(frames_id)).unwrap_or(0);
+    let mut open = false;
     let response = egui::ComboBox::from_id_salt(salt)
         .width(width)
-        .selected_text(RichText::new(crate::i18n::tr(scale.kind.name())).strong())
+        // As tall as there is room for: the scales, the row, the set and
+        // the micromodes.
+        .height(620.0)
+        .selected_text(RichText::new(selected).strong())
         .show_ui(ui, |ui| {
+            open = true;
             for option in ScaleKind::ALL {
                 if ui
                     .selectable_label(scale.kind == option, crate::i18n::tr(option.name()))
@@ -215,7 +233,7 @@ pub fn kind_menu(
             {
                 picked = Some(Scale::row(remembered_row(&ctx).starting_on(root)));
             }
-            let is_set = matches!(scale.kind, ScaleKind::Set(_));
+            let is_set = matches!(scale.kind, ScaleKind::Set(_)) && micromode.is_none();
             if ui
                 .selectable_label(is_set, crate::i18n::tr("pitch-class set"))
                 .on_hover_text(tr(
@@ -229,14 +247,69 @@ pub fn kind_menu(
             {
                 picked = Some(set_key(&ctx, scale, root));
             }
+            ui.separator();
+            ui.weak(tr("Micromodes (Kröpfl)"));
+            // One short row per family, to keep the menu short: Menor 1
+            // to 5, Mayor 1 to 4, and the three triads.
+            for family in MicromodeFamily::ALL {
+                ui.horizontal(|ui| {
+                    ui.add_sized(
+                        [46.0, 18.0],
+                        egui::Label::new(RichText::new(family_word(family)).weak()),
+                    );
+                    for option in Micromode::all().iter().filter(|m| m.family == family) {
+                        let is_key = micromode == Some(option);
+                        let response = micromode_option(ui, option, is_key);
+                        if is_key && frames < 3 {
+                            response.scroll_to_me(Some(egui::Align::Center));
+                        }
+                        if response.clicked() && !is_key {
+                            picked = Some(option.key(root));
+                        }
+                    }
+                });
+            }
         })
         .response;
+    let frames = if open { frames.saturating_add(1) } else { 0 };
+    ctx.data_mut(|data| data.insert_temp(frames_id, frames));
     crate::theme::hint(response, crate::i18n::tr(crate::piano_roll::KEY_HELP));
     // A new root keeps the kind, and with it the row or the set.
     if picked.is_none() && tonic != scale.spell(scale.root) {
         picked = Some(Scale::written(tonic, scale.kind));
     }
     picked.filter(|new| *new != scale)
+}
+
+/// The word a family's micromodes start with: "Menor", "Mayor",
+/// "Acorde", Kröpfl's names in every language.
+fn family_word(family: MicromodeFamily) -> &'static str {
+    match family {
+        MicromodeFamily::Minor => "Menor",
+        MicromodeFamily::Major => "Mayor",
+        MicromodeFamily::Chord => "Acorde",
+    }
+}
+
+/// A micromode's button in the key menu, by its number in its family
+/// (the triads by their chord signs: °, m/M, +), with its whole name
+/// and what picking it does when pointed at.
+fn micromode_option(ui: &mut Ui, option: &Micromode, selected: bool) -> egui::Response {
+    let short = match option.name.rsplit_once(' ') {
+        Some((_, number)) if number.chars().all(|c| c.is_ascii_digit()) => number,
+        _ => match option.number {
+            10 => "°",
+            11 => "m/M",
+            _ => "+",
+        },
+    };
+    ui.selectable_label(selected, short).on_hover_text(trf(
+        "{}: {}. As the key, on the key note. From another set or \
+                         micromode, every form keeps its degree and the notes go with \
+                         it: T2 of Menor 3 becomes T2 of Menor 5. From a key, the notes \
+                         stay as they are.",
+        &[&option.full_name(), &option.intervals()],
+    ))
 }
 
 /// How to write the notes of a set: a [`Scale`] writes them as the key
