@@ -533,11 +533,14 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Copy the preset’s sounds and band players.",
         "Copia los sonidos y los músicos de la banda del preajuste.",
     ),
+    (
+        "Could not add the recording: {}",
+        "No se pudo añadir la grabación: {}",
+    ),
     ("Could not connect: {}", "No se pudo conectar: {}"),
     ("Could not download it: {}", "No se pudo descargar: {}"),
     ("Could not export {}: {}", "No se pudo exportar {}: {}"),
     ("Could not import {}: {}", "No se pudo importar {}: {}"),
-    ("Could not import: {}", "No se pudo importar: {}"),
     (
         "Could not load styles: {}",
         "No se pudieron cargar los estilos: {}",
@@ -632,6 +635,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     (
         "Drop one project file at a time: none was opened.",
         "Suelta un archivo de proyecto a la vez: no se abrió ninguno.",
+    ),
+    (
+        "Drop one recording at a time: none was added.",
+        "Suelta una grabación a la vez: no se añadió ninguna.",
     ),
     ("Drum", "Tambor"),
     ("duplicate section", "duplicar sección"),
@@ -729,6 +736,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     (
         "Find a demo by its title, composer, genre, key or time signature, such as \"choclo\", \"bach\", \"tango\", \"D minor\" or \"3/4\". Enter opens the first one; the arrow keys go through the rest",
         "Busca una demostración por su título, compositor, género, tonalidad o compás, como «choclo», «bach», «tango», «re menor» o «3/4». Intro abre la primera; las flechas recorren las demás",
+    ),
+    (
+        "Finish the take first: write it in or throw it away, then add the recording.",
+        "Termina primero la toma: escríbela o descártala, y luego añade la grabación.",
     ),
     (
         "Fits almost as well ({}% of the weight).",
@@ -916,7 +927,6 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("immediate mode", "modo inmediato"),
     ("Imported {}: 1 bar", "Se importó {}: 1 compás"),
     ("Imported {}: {} bars", "Se importó {}: {} compases"),
-    ("Importing failed", "Falló la importación"),
     ("In Sets →", "En Conjuntos →"),
     ("in the notes here", "en las notas de aquí"),
     ("in the recording here", "en la grabación, aquí"),
@@ -1015,6 +1025,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("Lineup Osc (synth)", "Lineup Osc (sintetizador)"),
     ("Lineup row", "Serie de Lineup"),
     ("Lineup style", "Estilo de Lineup"),
+    (
+        "Listening to the recording failed.",
+        "No se pudo escuchar la grabación.",
+    ),
     (
         "Listening to the take failed.",
         "No se pudo escuchar la toma.",
@@ -1139,10 +1153,6 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("No band", "Sin banda"),
     ("No band.{}", "Sin banda.{}"),
     (
-        "no beat could be heard in it",
-        "no se pudo oír ningún pulso",
-    ),
-    (
         "No change here yet: a new tempo adds one.",
         "Todavía no hay ningún cambio aquí: un tempo nuevo añade uno.",
     ),
@@ -1155,7 +1165,6 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "No chords to name: the song plays no chords yet. Type them in the bars instead.",
         "No hay acordes que nombrar: la canción todavía no toca acordes. Escríbelos en los compases.",
     ),
-    ("no clear key", "ninguna tonalidad clara"),
     ("No demo matches", "Ninguna demostración coincide"),
     (
         "No drum steps in \"{}\": click a step to add one. Drums are in:",
@@ -1826,8 +1835,8 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ),
     ("Stopped exporting {}", "Se detuvo la exportación de {}"),
     (
-        "Stopped importing the recording.",
-        "Se detuvo la importación de la grabación.",
+        "Stopped listening to the recording.",
+        "Se dejó de escuchar la grabación.",
     ),
     ("straight", "sin swing"),
     ("style", "estilo"),
@@ -2406,6 +2415,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("Voices and players", "Voces y músicos"),
     ("VOL", "VOL"),
     ("Volume {}%", "Volumen {}%"),
+    (
+        "Wait until the recording added is heard.",
+        "Espera a que se termine de escuchar la grabación añadida.",
+    ),
     ("was {}", "era {}"),
     ("WAV audio", "Audio WAV"),
     ("Webern's trichords", "Los tricordios de Webern"),
@@ -2674,10 +2687,6 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     (
         "{}: set {}. Click to hear it.",
         "{}: conjunto {}. Haz clic para escucharlo.",
-    ),
-    (
-        "{}: {} BPM, {}/4, {}, chords on {} of {} beats",
-        "{}: {} BPM, {}/4, {}, acordes en {} de {} pulsos",
     ),
     ("{}: {} in {}.", "{}: {} en {}."),
     (

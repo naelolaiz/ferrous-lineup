@@ -34,7 +34,7 @@
 use std::ops::Range;
 use std::path::PathBuf;
 
-use crate::arrangement::Arrangement;
+use crate::arrangement::{Arrangement, Pass};
 use crate::pattern::{MAX_STEPS, NoteEvent, Pattern, STEP_NOTE};
 use crate::pitch::Note;
 use crate::playlist::{Clip, MAX_SONG_STEPS};
@@ -170,6 +170,45 @@ impl Transcription {
 }
 
 impl Take {
+    /// A recording of `frames` samples at `sample_rate` laid on the
+    /// playlist from step `step` on: an audio file added to the song. It
+    /// goes straight on at the song's tempo, through its tempo changes,
+    /// as a sound placed on a track does: the repeats and loops the song
+    /// plays are not followed. It ends at the last step a clip can start
+    /// on.
+    pub fn laid(project: &Project, step: usize, sample_rate: u32, frames: usize) -> Take {
+        let tempo = project.tempo_map();
+        let step_seconds = |step: usize| f64::from(tempo.tempo_at(step).seconds_per_beat()) / 4.0;
+        let rate = f64::from(sample_rate.max(1));
+        // A mark every 10 ms.
+        let every = (sample_rate / 100).max(1) as usize;
+        let mut marks = Vec::new();
+        // The step playing, when it started and how long it lasts.
+        let (mut at, mut started, mut length) = (step, 0.0, step_seconds(step));
+        for frame in (0..frames).step_by(every) {
+            let seconds = frame as f64 / rate;
+            while seconds >= started + length && at < MAX_SONG_STEPS {
+                started += length;
+                at += 1;
+                length = step_seconds(at);
+            }
+            if at >= MAX_SONG_STEPS {
+                break;
+            }
+            marks.push(Mark {
+                frame,
+                position: at as f64 + (seconds - started) / length,
+                steps_per_second: 1.0 / length,
+            });
+        }
+        Take {
+            sample_rate,
+            frames,
+            marks,
+            along: Along::Song(straight_on()),
+        }
+    }
+
     /// The song position heard at sample `frame`, from the last mark at
     /// or before it, or `None` where the song was not heard: before the
     /// first mark, or long after the last (the marks come every few
@@ -384,6 +423,24 @@ fn meant(pitch: f32, scale: crate::Scale) -> Note {
         nearest
     };
     Note::new(midi.clamp(0.0, 127.0) as u8)
+}
+
+/// The playlist played straight on from its start, with no repeats or
+/// loops, as far as a clip can start: where a take laid on it goes.
+fn straight_on() -> Arrangement {
+    Arrangement {
+        plays: Vec::new(),
+        passes: vec![Pass {
+            start: 0,
+            from: 0,
+            length: MAX_SONG_STEPS,
+            section: None,
+            round: 1,
+            rounds: 1,
+            chorus: None,
+        }],
+        length: MAX_SONG_STEPS,
+    }
 }
 
 /// How long before the song is heard a note may start and still be
@@ -1203,6 +1260,39 @@ mod tests {
             .collect();
         // The first starts with the song; the second ends before it.
         assert_eq!(placed, [(0, 66)]);
+    }
+
+    #[test]
+    fn a_recording_laid_on_the_playlist_goes_straight_on_at_the_songs_tempo() {
+        let mut project = song();
+        project.tempo = crate::tempo::Tempo::new(120.0);
+        // Bar 3 on is twice as fast: 240 BPM, 16 steps a second.
+        assert!(project.set_tempo_marker(crate::tempo::TempoMarker::new(32, 240.0)));
+        let rate = 1000;
+        // From bar 2: 16 steps at 120 BPM take 2 s, then 16 a second.
+        let take = Take::laid(&project, 16, rate, 4 * rate as usize);
+        let notes = [
+            sung(0.0, 0.45, 67.0, -12.0),
+            sung(1.5, 1.9, 69.0, -12.0),
+            sung(2.5, 2.7, 71.0, -12.0),
+        ];
+        let heard = transcribe(&project, &take, &notes, 1, 0.0);
+        let placed: Vec<(usize, usize, u8)> = heard
+            .notes
+            .iter()
+            .map(|n| (n.start, n.length, n.pitch.midi()))
+            .collect();
+        assert_eq!(placed, [(16, 4, 67), (28, 3, 69), (40, 3, 71)]);
+        assert_eq!(heard.pieces.len(), 1);
+        assert_eq!(
+            (heard.pieces[0].step, heard.pieces[0].frames.start),
+            (16, 0)
+        );
+        // Past the end of the song, where the song itself would start
+        // again: a sound on a track goes on.
+        let late = Take::laid(&project, 120, rate, 4 * rate as usize);
+        let heard = transcribe(&project, &late, &[sung(2.0, 2.4, 67.0, -12.0)], 1, 0.0);
+        assert_eq!(heard.notes[0].start, 152);
     }
 
     #[test]

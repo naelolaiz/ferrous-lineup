@@ -327,7 +327,7 @@ impl Channel {
 
     /// Whether the channel's notes count in the harmony heard: a synth
     /// or a MIDI Out channel that is not muted, other than the MIDI drum
-    /// channel (10). Samplers, such as an imported recording, do not.
+    /// channel (10). Samplers, such as a take, do not.
     pub fn plays_notes(&self) -> bool {
         let melodic = match self.kind {
             ChannelKind::Synth => true,
@@ -2230,7 +2230,7 @@ impl Project {
     /// imported song with no key signature sounds like it is in.
     ///
     /// Synths and MIDI Out channels that are not muted count, drums and
-    /// samplers (such as an imported recording) do not.
+    /// samplers (such as a take) do not.
     pub fn heard_keys(&self) -> Vec<KeySpan> {
         let meter = self.meter();
         let end = self.song_length();

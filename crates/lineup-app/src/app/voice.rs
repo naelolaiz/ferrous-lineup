@@ -13,6 +13,11 @@
 //! itself is kept on a track of the playlist, where it plays with the song
 //! as a reference. Writing it in is one step of undo (see
 //! `lineup_core::take`).
+//!
+//! A recording made before, in an audio file, becomes a take the same
+//! way: File > Add a recording, or dropping it on the window, lays it on
+//! the playlist from the playhead (see [`Take::laid`]). Opening one
+//! starts a new song with it.
 
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -58,6 +63,7 @@ const NAMED_NOTES: usize = 12;
 pub(super) struct Voice {
     recording: Option<Taking>,
     hearing: Option<JoinHandle<Heard>>,
+    loading: Option<Loading>,
     review: Option<Review>,
     /// The pitch heard last while recording, as the bits of an `f32`
     /// MIDI number; not a number when none.
@@ -79,6 +85,21 @@ struct Heard {
     along: Along,
     notes: Vec<SungNote>,
     tuning: f32,
+    /// The name of a recording added from a file: the file's, without
+    /// its extension. `None` for a take recorded here.
+    name: Option<String>,
+}
+
+/// What reading an audio file gives: its sound, the notes heard in it
+/// and how sharp they were sung, or why it could not be read.
+type Loaded = Result<(lineup_listen::Recording, Vec<SungNote>, f32), String>;
+
+/// A recording added from a file, being read and heard, to lay on the
+/// playlist from step `step` on.
+struct Loading {
+    worker: JoinHandle<Loaded>,
+    step: usize,
+    name: String,
 }
 
 /// Where a take's notes go, as the review window offers it.
@@ -164,10 +185,11 @@ fn free_track(project: &Project, sung: std::ops::Range<usize>) -> usize {
         .unwrap_or(tracks.saturating_sub(1))
 }
 
-/// The name of the next take: "Take 1", or the first number no take has.
-fn next_take_name(project: &Project) -> String {
-    let used = |number: usize| {
-        let name = format!("Take {number}");
+/// A name for a take that no channel, pattern or track has: "Take 1"
+/// (the first number free) for a take recorded here, or the name of the
+/// file it came from ("melody", else "melody 2" and so on).
+fn take_name(project: &Project, file: Option<&str>) -> String {
+    let used = |name: &str| {
         let piece = format!("{name} (");
         let taken = |other: &str| other == name || other.starts_with(&piece);
         project
@@ -184,8 +206,15 @@ fn next_take_name(project: &Project) -> String {
                 .iter()
                 .any(|track| taken(&track.name))
     };
-    let number = (1..).find(|&number| !used(number)).unwrap_or(1);
-    format!("Take {number}")
+    let (base, first) = match file {
+        Some(name) if !used(name) => return name.to_string(),
+        Some(name) => (name, 2),
+        None => ("Take", 1),
+    };
+    let number = (first..)
+        .find(|number| !used(&format!("{base} {number}")))
+        .unwrap_or(first);
+    format!("{base} {number}")
 }
 
 /// A file name for `name` in `folder` that no file has yet: "name.wav",
@@ -203,15 +232,30 @@ fn free_file(folder: &Path, name: &str) -> PathBuf {
 
 /// Hears the notes of a take: run on a thread of its own.
 fn hear(recording: Recording, along: Along) -> Heard {
-    let track = voice::pitch_track(&recording.samples, recording.sample_rate);
-    let notes = voice::notes(&track);
-    let tuning = voice::tuning(&notes);
+    let (notes, tuning) = notes_in(&recording.samples, recording.sample_rate);
     Heard {
         recording,
         along,
         notes,
         tuning,
+        name: None,
     }
+}
+
+/// The notes sung in `samples`, and how sharp they were sung.
+fn notes_in(samples: &[f32], sample_rate: u32) -> (Vec<SungNote>, f32) {
+    let track = voice::pitch_track(samples, sample_rate);
+    let notes = voice::notes(&track);
+    let tuning = voice::tuning(&notes);
+    (notes, tuning)
+}
+
+/// Reads the audio file at `path` and hears its notes: run on a thread
+/// of its own.
+fn load(path: &Path) -> Loaded {
+    let recording = lineup_listen::decode_file(path).map_err(|err| err.to_string())?;
+    let (notes, tuning) = notes_in(&recording.samples, recording.sample_rate);
+    Ok((recording, notes, tuning))
 }
 
 /// The note `pitch` (a MIDI number with its fraction) as a name and how
@@ -261,6 +305,10 @@ impl LineupApp {
     /// Starts recording a take, and plays if not playing.
     fn start_voice(&mut self, ctx: &egui::Context) {
         if self.voice.recording.is_some() || self.voice.hearing.is_some() {
+            return;
+        }
+        if self.voice.loading.is_some() {
+            self.message = Some(tr("Wait until the recording added is heard.").to_string());
             return;
         }
         let Audio::Running(engine) = &mut self.audio else {
@@ -330,8 +378,9 @@ impl LineupApp {
     }
 
     /// Forgets any take: recording, being heard or waiting. For a project
-    /// being replaced, whose song the take does not belong to.
-    pub(super) fn forget_voice(&mut self) {
+    /// being replaced, whose song the take does not belong to. Returns
+    /// whether a recording added from a file was still being heard.
+    pub(super) fn forget_voice(&mut self) -> bool {
         if let Some(recording) = self.voice.recording.take()
             && let Some((_, clock)) = recording.recorder.finish()
             && let Audio::Running(engine) = &mut self.audio
@@ -340,6 +389,82 @@ impl LineupApp {
         }
         self.voice.hearing = None;
         self.voice.review = None;
+        self.voice.loading.take().is_some()
+    }
+
+    /// File > Add a recording: asks for an audio file, and adds it to the
+    /// song as a take, from the playhead.
+    pub(super) fn add_recording(&mut self) {
+        if let Some(path) = rfd::FileDialog::new()
+            .add_filter(tr("Audio"), &lineup_listen::AUDIO_EXTENSIONS)
+            .pick_file()
+        {
+            self.add_recording_path(path);
+        }
+    }
+
+    /// Adds the recording at `path` to the song as a take, from the
+    /// playhead (from the start in pattern mode, which switches to song
+    /// mode): reads it and hears its notes in the background, then asks
+    /// where they go, as for a take recorded here.
+    pub(super) fn add_recording_path(&mut self, path: PathBuf) {
+        let busy = self.voice.recording.is_some()
+            || self.voice.hearing.is_some()
+            || self.voice.loading.is_some();
+        if busy || self.voice.review.is_some() {
+            self.message = Some(
+                tr("Finish the take first: write it in or throw it away, then add the recording.")
+                    .to_string(),
+            );
+            return;
+        }
+        let step = match self.mode {
+            PlayMode::Song => {
+                let here = self.playhead().unwrap_or(self.cursor);
+                self.project
+                    .playback_arrangement()
+                    .timeline_step(here)
+                    .unwrap_or(0)
+            }
+            PlayMode::Pattern => {
+                self.set_mode(PlayMode::Song);
+                0
+            }
+        };
+        let name = path.file_stem().map_or_else(
+            || "Recording".to_string(),
+            |stem| stem.to_string_lossy().into_owned(),
+        );
+        let file = path
+            .file_name()
+            .map_or_else(String::new, |file| file.to_string_lossy().into_owned());
+        self.notice = Some(trf("Listening to {}…", &[&file]));
+        self.message = None;
+        // Errors are written on the worker's thread, in the language
+        // chosen.
+        let language = crate::i18n::Language::current();
+        self.voice.loading = Some(Loading {
+            worker: thread::spawn(move || {
+                language.set();
+                load(&path)
+            }),
+            step,
+            name,
+        });
+    }
+
+    /// Opens the recording at `path` as a new song: an empty one, with the
+    /// recording from its start. Opening an audio file comes here
+    /// (`ferrous-lineup song.mp3`, or File > Open).
+    pub(super) fn open_recording(&mut self, path: PathBuf) {
+        let title = path.file_stem().map_or_else(
+            || "Recording".to_string(),
+            |stem| stem.to_string_lossy().into_owned(),
+        );
+        self.replace_project(Project::empty(), None);
+        self.file.name_imported(&title);
+        self.set_mode(PlayMode::Song);
+        self.add_recording_path(path);
     }
 
     /// Once a frame: stops a take that stopped by itself (the longest
@@ -353,6 +478,7 @@ impl LineupApp {
                 ctx.request_repaint_after(Duration::from_millis(50));
             }
         }
+        self.check_loading(ctx);
         let Some(hearing) = &self.voice.hearing else {
             return;
         };
@@ -366,6 +492,49 @@ impl LineupApp {
                 Ok(heard) => self.voice.review = Some(Review::new(&self.project, heard)),
                 Err(_) => self.message = Some(tr("Listening to the take failed.").to_string()),
             }
+        }
+    }
+
+    /// Lays a recording added from a file on the playlist when its notes
+    /// are heard, and opens the review.
+    fn check_loading(&mut self, ctx: &egui::Context) {
+        let Some(loading) = &self.voice.loading else {
+            return;
+        };
+        if !loading.worker.is_finished() {
+            ctx.request_repaint_after(Duration::from_millis(100));
+            return;
+        }
+        let Some(loading) = self.voice.loading.take() else {
+            return;
+        };
+        self.notice = None;
+        match loading.worker.join() {
+            Ok(Ok((recording, notes, tuning))) => {
+                let take = Take::laid(
+                    &self.project,
+                    loading.step,
+                    recording.sample_rate,
+                    recording.samples.len(),
+                );
+                let heard = Heard {
+                    recording: Recording {
+                        samples: recording.samples,
+                        sample_rate: recording.sample_rate,
+                        marks: take.marks,
+                        lost: 0,
+                    },
+                    along: take.along,
+                    notes,
+                    tuning,
+                    name: Some(loading.name),
+                };
+                self.voice.review = Some(Review::new(&self.project, heard));
+            }
+            Ok(Err(err)) => {
+                self.message = Some(trf("Could not add the recording: {}", &[&err]));
+            }
+            Err(_) => self.message = Some(tr("Listening to the recording failed.").to_string()),
         }
     }
 
@@ -461,16 +630,22 @@ impl LineupApp {
             review.grid,
             review.heard.tuning,
         );
-        let name = next_take_name(&self.project);
+        let name = take_name(&self.project, review.heard.name.as_deref());
         let mut recordings = Vec::new();
         if review.keep {
             let folder = self.takes_folder();
             let rate = review.heard.recording.sample_rate;
             for (index, piece) in transcription.pieces.iter().enumerate() {
-                let file = if index == 0 {
-                    format!("{} - {name}", self.file.stem())
+                let song = self.file.stem();
+                let base = if song == name {
+                    name.clone()
                 } else {
-                    format!("{} - {name} ({})", self.file.stem(), index + 1)
+                    format!("{song} - {name}")
+                };
+                let file = if index == 0 {
+                    base
+                } else {
+                    format!("{base} ({})", index + 1)
                 };
                 let path = free_file(&folder, &file);
                 let samples = &review.heard.recording.samples[piece.frames.clone()];
@@ -781,8 +956,147 @@ impl LineupApp {
             along: Along::Song(self.project.playback_arrangement()),
             notes,
             tuning: 0.0,
+            name: None,
         };
         self.voice.folder = Some(folder);
         self.voice.review = Some(Review::new(&self.project, heard));
+    }
+}
+
+#[cfg(test)]
+impl LineupApp {
+    /// For the tests: whether a recording added from a file is being
+    /// heard.
+    pub(super) fn hearing_recording(&self) -> bool {
+        self.voice.loading.is_some()
+    }
+
+    /// For the tests: whether a take waits in the review window.
+    pub(super) fn take_waiting(&self) -> bool {
+        self.voice.review.is_some()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The song's sound from `step` on, for `frames` frames, as song mode
+    /// plays it: what the app sends the audio thread, then a jump to
+    /// `step` and Play.
+    fn played_from(app: &mut LineupApp, step: usize, frames: usize) -> Vec<f32> {
+        use lineup_audio::{Command, Renderer};
+        let rate = 44_100;
+        let mut renderer = Renderer::new(rate, 1);
+        for command in app.project_commands(rate, 1.0) {
+            renderer.send(command);
+        }
+        let song = app.project.playback_arrangement();
+        renderer.send(Command::SetSongTempos(app.project.played_tempos(&song)));
+        renderer.send(Command::SetSong {
+            plays: song.plays,
+            length: song.length,
+        });
+        renderer.send(Command::SetMode(PlayMode::Song));
+        renderer.send(Command::Seek(step));
+        renderer.send(Command::Play);
+        let mut out = vec![0.0; frames];
+        renderer.render(&mut out);
+        out
+    }
+
+    fn loudness(sound: &[f32]) -> f32 {
+        (sound.iter().map(|s| s * s).sum::<f32>() / sound.len() as f32).sqrt()
+    }
+
+    fn app() -> LineupApp {
+        let ctx = egui::Context::default();
+        LineupApp::with_audio(&ctx, None, Audio::Unavailable("test".into()))
+    }
+
+    #[test]
+    fn a_recording_added_plays_from_wherever_playback_starts() {
+        // Twenty seconds of a C major chord, with a click on every beat at
+        // 120 BPM.
+        let rate = 44_100;
+        let samples: Vec<f32> = (0..20 * rate)
+            .map(|frame| {
+                let t = frame as f32 / rate as f32;
+                let click = if (t * 2.0).fract() < 0.01 { 0.5 } else { 0.0 };
+                let chord: f32 = [261.63_f32, 329.63, 392.0]
+                    .iter()
+                    .map(|hz| (t * hz * std::f32::consts::TAU).sin() * 0.1)
+                    .sum();
+                click + chord
+            })
+            .collect();
+        let dir = std::env::temp_dir().join(format!("lineup-resume-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("clicks.wav");
+        lineup_listen::wav::write(&samples, rate, &path).unwrap();
+
+        let mut app = app();
+        app.voice.folder = Some(dir.clone());
+        app.open_recording(path);
+        while app.hearing_recording() {
+            std::thread::sleep(Duration::from_millis(20));
+            app.check_loading(&egui::Context::default());
+        }
+        let review = app.voice.review.as_mut().unwrap();
+        review.destination = Destination::Nowhere;
+        app.write_take();
+        assert!(app.project.channels().iter().any(|c| c.is_take()));
+
+        // Bar 5, step 64: a second of it, from the start and from there.
+        let song = app.project.playback_arrangement();
+        let tempos = app.project.played_tempos(&song);
+        let before = lineup_core::tempo::seconds(64, |step| {
+            tempos.get(step).copied().unwrap_or(app.project.tempo)
+        });
+        let at = (before * f64::from(rate)) as usize;
+        let whole = played_from(&mut app, 0, at + rate as usize);
+        let from_bar_5 = played_from(&mut app, 64, rate as usize);
+        let heard = loudness(&whole[at..]);
+        assert!(heard > 0.05, "{heard}");
+        let resumed = loudness(&from_bar_5);
+        assert!(
+            (resumed - heard).abs() < heard * 0.2,
+            "{resumed} against {heard}"
+        );
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn opening_another_project_stops_hearing_the_recording_added() {
+        let mut app = app();
+        app.voice.loading = Some(Loading {
+            worker: thread::spawn(|| Err(String::new())),
+            step: 0,
+            name: String::new(),
+        });
+
+        let opened = Project::template();
+        app.replace_project(opened.clone(), None);
+
+        assert!(!app.hearing_recording(), "the recording was let go");
+        assert_eq!(app.project, opened, "the opened project stays");
+        assert_eq!(
+            app.notice.as_deref(),
+            Some("Stopped listening to the recording.")
+        );
+    }
+
+    #[test]
+    fn a_takes_name_is_free() {
+        let mut project = Project::empty();
+        assert_eq!(take_name(&project, None), "Take 1");
+        assert_eq!(take_name(&project, Some("melody")), "melody");
+        project.add_channel(lineup_core::Channel::take("Take 1", PathBuf::from("a.wav")));
+        project.add_channel(lineup_core::Channel::take(
+            "melody (2)",
+            PathBuf::from("b.wav"),
+        ));
+        assert_eq!(take_name(&project, None), "Take 2");
+        assert_eq!(take_name(&project, Some("melody")), "melody 2");
     }
 }
