@@ -713,6 +713,10 @@ pub struct Keep {
     /// the order of [`Transcription::pieces`]; empty to keep no
     /// recording.
     pub recordings: Vec<PathBuf>,
+    /// The track of the take's recording when it is already in the song,
+    /// for a take transcribed again: the notes with no home go on the
+    /// track right under it, as when the take was first written.
+    pub under: Option<usize>,
 }
 
 /// What [`Project::add_take`] did, for the app to say.
@@ -941,7 +945,7 @@ impl Project {
                     .unwrap_or(first.end())
         });
         let recorded = transcription.recorded().filter(|_| !recordings.is_empty());
-        let mut notes_track = None;
+        let mut recording_track = keep.under;
         if let Some(span) = recorded {
             let track = self.take_track(keep.track, &keep.name);
             for (pattern, start, end) in self.bar_clips(span, track, &keep.name) {
@@ -953,13 +957,14 @@ impl Project {
                     }
                 }
             }
-            if notes_span.is_some() {
-                notes_track = Some(match self.insert_track(track + 1) {
-                    Some(below) => self.take_track(below, &keep.notes),
-                    None => track,
-                });
-            }
+            recording_track = Some(track);
         }
+        let notes_track = match (recording_track, &notes_span) {
+            (Some(track), Some(span)) => {
+                Some(self.notes_track_under(track, &keep.notes, span.clone()))
+            }
+            _ => None,
+        };
         if let (Some(channel), Some(span)) = (channel, notes_span) {
             let track = notes_track.unwrap_or_else(|| self.take_track(keep.track, &keep.notes));
             for (pattern, start, end) in self.bar_clips(span, track, &keep.notes) {
@@ -1020,6 +1025,32 @@ impl Project {
 }
 
 impl Project {
+    /// The track right under `track` for the notes of a take sung over
+    /// `span`, named `name`: the one already there if it has that name
+    /// and room there, else a new one (`track` itself if no track can be
+    /// added).
+    fn notes_track_under(&mut self, track: usize, name: &str, span: Range<usize>) -> usize {
+        let below = track + 1;
+        let free = !self.playlist().clips().iter().any(|clip| {
+            clip.track == below
+                && clip.start < span.end
+                && clip.start + self.clip_length(clip) > span.start
+        });
+        if free
+            && self
+                .playlist()
+                .tracks()
+                .get(below)
+                .is_some_and(|t| t.name == name)
+        {
+            return below;
+        }
+        match self.insert_track(below) {
+            Some(below) => self.take_track(below, name),
+            None => track,
+        }
+    }
+
     /// The track a take's clips go on: `track`, or past the last one a
     /// new one at the bottom. An empty track still called as it was made
     /// ("Track 5") is named `name`.
@@ -1141,6 +1172,7 @@ mod tests {
             recordings: (0..pieces)
                 .map(|i| PathBuf::from(format!("take-{i}.wav")))
                 .collect(),
+            under: None,
         }
     }
 
@@ -1254,6 +1286,7 @@ mod tests {
             notes: "Take 2 notes".into(),
             track: tracks + 1,
             recordings: Vec::new(),
+            under: None,
         };
         project.add_take(&along, &heard, &Target::Channel(0), &keep);
         let after = parts(&project);
@@ -1322,6 +1355,65 @@ mod tests {
                 .iter()
                 .all(|&take| notes[0].notes(take).is_empty())
         );
+    }
+
+    #[test]
+    fn a_take_transcribed_again_replaces_its_notes_and_keeps_one_recording() {
+        let mut project = song();
+        let along = Along::Song(project.playback_arrangement());
+        let take = take(along.clone(), 16.0, 2.0);
+        let first = transcribe(&project, &take, &[sung(0.0, 0.45, 67.0, -12.0)], 1, 0.0);
+        let target = Target::New {
+            name: "Sung".into(),
+            program: 53,
+        };
+        let added = project.add_take(&along, &first, &target, &keep(&project, 1));
+        let sung_on = added.channel.unwrap();
+        let channels = project.channels().len();
+        let tracks = project.playlist().tracks().len();
+        let clips = project.playlist().clips().len();
+
+        // Heard again, a different note, written to the same channel with
+        // no recording: it takes the old note's place, in the same clip.
+        let again = transcribe(&project, &take, &[sung(0.0, 0.45, 69.0, -12.0)], 1, 0.0);
+        let keep = Keep {
+            recordings: Vec::new(),
+            under: Some(1),
+            ..keep(&project, 0)
+        };
+        let added = project.add_take(&along, &again, &Target::Channel(sung_on), &keep);
+        assert_eq!(added.notes, 1);
+        assert_eq!(project.channels().len(), channels, "no second recording");
+        assert_eq!(project.playlist().tracks().len(), tracks);
+        assert_eq!(project.playlist().clips().len(), clips);
+        let notes: Vec<_> = project
+            .playlist()
+            .clips()
+            .iter()
+            .filter(|clip| clip.track == 2)
+            .flat_map(|clip| project.patterns()[clip.pattern].notes(sung_on).to_vec())
+            .collect();
+        assert_eq!(notes, [NoteEvent::new(Note::new(69), 0, 4)]);
+
+        // To a new channel this time: its notes need a track of their own,
+        // still right under the recording.
+        let added = project.add_take(&along, &again, &target, &keep);
+        let newer = added.channel.unwrap();
+        let tracks = project.playlist().tracks();
+        assert_eq!(tracks[1].name, "Take 1");
+        assert_eq!(tracks[2].name, "Take 1 notes");
+        let below: Vec<_> = project
+            .playlist()
+            .clips()
+            .iter()
+            .filter(|clip| clip.track == 2)
+            .map(|clip| &project.patterns()[clip.pattern])
+            .collect();
+        assert!(
+            below.iter().any(|p| !p.notes(newer).is_empty()),
+            "the new channel's notes are right under the recording"
+        );
+        assert!(below.iter().all(|p| p.notes(sung_on).is_empty()));
     }
 
     #[test]

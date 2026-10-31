@@ -5873,6 +5873,159 @@ fn a_recording_dropped_on_a_track_starts_at_the_bar_under_the_pointer() {
     std::fs::remove_file(&recording).ok();
 }
 
+/// Right-clicks the playlist at `pos`.
+fn right_click_at(screen: &mut Screen, pos: Pos2) {
+    screen.draw(vec![Event::PointerMoved(pos)]);
+    for pressed in [true, false] {
+        screen.draw(vec![Event::PointerButton {
+            pos,
+            button: PointerButton::Secondary,
+            pressed,
+            modifiers: Modifiers::NONE,
+        }]);
+    }
+}
+
+#[test]
+fn a_right_click_on_a_clip_opens_its_menu_and_deletes_only_from_there() {
+    let mut screen = Screen::new();
+    screen.app.chord_sheet.open = false;
+    screen.app.rack_open = false;
+    screen.draw(vec![]);
+    screen.draw(vec![]);
+    let clips = screen.app.project.playlist().clips().len();
+    let first = screen.app.project.playlist().clips()[0];
+    let pos = screen
+        .app
+        .playlist
+        .cell_center(first.track, first.start + 1)
+        .unwrap();
+    right_click_at(&mut screen, pos);
+    assert_eq!(
+        screen.app.project.playlist().clips().len(),
+        clips,
+        "a right-click deletes nothing by itself"
+    );
+    let output = screen.draw(vec![]);
+    assert!(text_rect(&output, tr("Edit its pattern")).is_some());
+    assert!(text_rect(&output, tr("Transcribe again…")).is_none());
+    screen.click(tr("Delete"));
+    assert_eq!(screen.app.project.playlist().clips().len(), clips - 1);
+    assert_eq!(screen.app.history.undo_label(), Some("delete clips"));
+}
+
+/// A WAV file of `notes` played one after another, each for `seconds`,
+/// as sine waves at their MIDI pitches, in a folder of its own.
+fn tones_wav(name: &str, notes: &[f32], seconds: f32) -> std::path::PathBuf {
+    let folder = std::env::temp_dir().join(format!("lineup-tones-{}", std::process::id()));
+    std::fs::create_dir_all(&folder).unwrap();
+    let path = folder.join(name);
+    let rate = 22_050_u32;
+    let each = (seconds * rate as f32) as usize;
+    let samples: Vec<f32> = notes
+        .iter()
+        .flat_map(|&midi| {
+            let hz = 440.0 * 2f32.powf((midi - 69.0) / 12.0);
+            (0..each).map(move |frame| {
+                (frame as f32 / rate as f32 * hz * std::f32::consts::TAU).sin() * 0.3
+            })
+        })
+        .collect();
+    lineup_listen::wav::write(&samples, rate, &path).unwrap();
+    path
+}
+
+#[test]
+fn a_kept_take_is_transcribed_again_from_its_clip_menu() {
+    // C♯5 then D5 in C major, laid on the song from bar 3.
+    let recording = tones_wav("two notes.wav", &[73.0, 74.0], 1.0);
+    let folder = recording.with_file_name("takes");
+    std::fs::create_dir_all(&folder).unwrap();
+    let mut screen = Screen::new();
+    screen.app.chord_sheet.open = false;
+    screen.app.rack_open = false;
+    screen.app.keep_takes_in(folder.clone());
+    // An empty song in C major: the notes go to a new channel, on a track
+    // under the recording.
+    screen.app.replace_project(Project::empty(), None);
+    assert_eq!(screen.app.project.scale.root, lineup_core::PitchClass::C);
+    screen.draw(vec![]);
+    let bar_3 = 2 * lineup_core::STEPS_PER_BAR;
+    let wait = |screen: &mut Screen| {
+        let started = std::time::Instant::now();
+        while screen.app.hearing_recording() {
+            assert!(started.elapsed().as_secs() < 60, "still hearing it");
+            std::thread::sleep(std::time::Duration::from_millis(20));
+            screen.draw(vec![]);
+        }
+        screen.draw(vec![]);
+    };
+    // The sung notes from bar 3 to bar 5, wherever they are.
+    let sung = |project: &Project| -> Vec<u8> {
+        let Some(lead) = project
+            .channels()
+            .iter()
+            .position(|c| c.name == "Sung notes")
+        else {
+            return Vec::new();
+        };
+        let mut notes: Vec<(usize, u8)> = Vec::new();
+        for clip in project.playlist().clips() {
+            let pattern = &project.patterns()[clip.pattern];
+            for repeat in 0..clip.repeats {
+                for note in pattern.notes(lead) {
+                    let at = clip.start + repeat * pattern.length() + note.start;
+                    if (bar_3..bar_3 + 2 * lineup_core::STEPS_PER_BAR).contains(&at) {
+                        notes.push((at, note.pitch.midi()));
+                    }
+                }
+            }
+        }
+        notes.sort_unstable();
+        notes.into_iter().map(|(_, pitch)| pitch).collect()
+    };
+
+    screen
+        .app
+        .add_recording_path(recording.clone(), Some(bar_3), None);
+    wait(&mut screen);
+    let (_, track) = screen.app.take_place().unwrap();
+    screen.click(tr("Write it in"));
+    assert_eq!(sung(&screen.app.project), [73, 74], "as sung");
+    let takes = |project: &Project| project.channels().iter().filter(|c| c.is_take()).count();
+    let channels = screen.app.project.channels().len();
+    let tracks = screen.app.project.playlist().tracks().len();
+    assert_eq!(takes(&screen.app.project), 1);
+
+    // Its clip's menu hears it again; this time the notes keep to the key.
+    let pos = screen.app.playlist.cell_center(track, bar_3 + 1).unwrap();
+    right_click_at(&mut screen, pos);
+    screen.click(tr("Transcribe again…"));
+    assert!(screen.app.hearing_recording());
+    wait(&mut screen);
+    assert!(screen.app.take_waiting());
+    let output = screen.draw(vec![]);
+    assert!(text_rect(&output, tr("Keep it")).is_none(), "kept already");
+    screen.click(tr("In the key"));
+    screen.click(tr("Write it in"));
+
+    let project = &screen.app.project;
+    // C♯ is not in C major: C and D are as near, a semitone each way.
+    let notes = sung(project);
+    assert_eq!(notes.len(), 2, "in place of the notes written before");
+    assert!([72, 74].contains(&notes[0]), "{notes:?}");
+    assert_eq!(notes[1], 74);
+    assert_eq!(takes(project), 1, "one recording");
+    assert_eq!(project.channels().len(), channels);
+    assert_eq!(project.playlist().tracks().len(), tracks);
+    assert_eq!(std::fs::read_dir(&folder).unwrap().count(), 1, "saved once");
+    assert_eq!(
+        screen.app.history.undo_label(),
+        Some("transcribe a take again")
+    );
+    std::fs::remove_dir_all(recording.parent().unwrap()).ok();
+}
+
 #[test]
 fn the_file_menu_has_no_recording_and_the_playlist_has() {
     let mut screen = Screen::new();
