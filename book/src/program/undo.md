@@ -264,8 +264,10 @@ Follow a few gestures through these two functions:
 - **Typing a tempo.** Clicking the BPM box turns it into a text field,
   so the same rule applies: everything typed there is one step, which
   ends when you leave the box.
-- **Recording a take.** Every note played while recording joins one
-  step, so one undo takes the whole take away.
+- **Recording from a keyboard.** Every note played while recording joins
+  one step, so one undo takes the whole recording away. A sung take
+  written in from the **Your take** window is one step too (see
+  [Takes](../theory/listen.md#in-the-app)).
 
 `start_frame_for_undo` matters for one case: a click that starts while a
 text field still has the focus. The press closes the typing step, so the

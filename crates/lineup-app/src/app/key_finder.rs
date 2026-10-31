@@ -2,15 +2,13 @@
 //! music itself, and shows it under the harmony keys with the closest
 //! other keys beside it, fainter, and what the chord playing is in each.
 //!
-//! There are three sources, from the most to the least immediate:
+//! There are two sources, from the more to the less immediate:
 //!
 //! 1. **What you play** on a MIDI or typing keyboard (or the harmony
 //!    keys), with the bars played before as context: a
 //!    [`KeyListener`]. It counts while you have played in the last few
 //!    bars.
-//! 2. **The recording**, for a project made by File > Import recording:
-//!    the key changes heard in the audio, kept from the import.
-//! 3. **The notes** of the song, or of the selected pattern in pattern
+//! 2. **The notes** of the song, or of the selected pattern in pattern
 //!    mode: [`Project::heard_keys`].
 //!
 //! Nothing here changes the project. The work is done in
@@ -33,8 +31,6 @@ pub(super) struct KeyFinder {
     heard: Option<Vec<KeySpan>>,
     /// The ranking of the selected pattern's notes, and which pattern.
     pattern: Option<(usize, KeySpan)>,
-    /// The key changes heard in an imported recording, in song steps.
-    recording: Vec<KeySpan>,
     /// What you play.
     listener: KeyListener,
     /// How far into the current bar the listener's clock is, in steps.
@@ -50,11 +46,9 @@ impl KeyFinder {
         self.pattern = None;
     }
 
-    /// Forgets everything, for another project. `recording` is the key
-    /// changes heard in it, if it was made from a recording.
-    pub(super) fn new_project(&mut self, project: &Project, recording: Vec<KeySpan>) {
+    /// Forgets everything, for another project.
+    pub(super) fn new_project(&mut self, project: &Project) {
         *self = KeyFinder {
-            recording,
             listener: KeyListener::starting_in(Some(project.scale)),
             ..KeyFinder::default()
         };
@@ -122,15 +116,10 @@ impl LineupApp {
             .listen(&held, seconds, self.project.tempo, steps_per_bar);
     }
 
-    /// The key changes heard in the whole song: in the recording it was
-    /// made from, or else in its notes.
+    /// The key changes heard in the whole song's notes.
     pub(super) fn song_keys_heard(&mut self) -> Vec<KeySpan> {
-        let finder = &mut self.key_finder;
-        if !finder.recording.is_empty() {
-            return finder.recording.clone();
-        }
         let project = &self.project;
-        finder
+        self.key_finder
             .heard
             .get_or_insert_with(|| project.heard_keys())
             .clone()
@@ -154,18 +143,13 @@ impl LineupApp {
         }
         match position {
             Some((step, _)) => {
-                let (spans, from) = if finder.recording.is_empty() {
-                    let project = &self.project;
-                    let spans = finder.heard.get_or_insert_with(|| project.heard_keys());
-                    (&*spans, "in the notes here")
-                } else {
-                    (&finder.recording, "in the recording here")
-                };
+                let project = &self.project;
+                let spans = finder.heard.get_or_insert_with(|| project.heard_keys());
                 let span = spans
                     .iter()
                     .find(|span| (span.start..span.end).contains(&step))
                     .or_else(|| spans.last())?;
-                shown(span, from, true)
+                shown(span, "in the notes here", true)
             }
             None => {
                 let index = self.pattern;

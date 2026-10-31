@@ -97,6 +97,9 @@ impl Instrument {
             ChannelKind::Sampler(SampleSource::File(path)) => {
                 Instrument::Sampler(Sampler::new(samples.get(path)?))
             }
+            ChannelKind::Sampler(SampleSource::Take(path)) => {
+                Instrument::Sampler(Sampler::new(samples.get(path)?).playing_along())
+            }
             ChannelKind::Synth => Instrument::Synth(Synth::with_timbre(
                 sample_rate,
                 Timbre::for_program(channel.program),
@@ -202,7 +205,7 @@ impl Instrument {
 
     /// Starts a long sound of the song partway through, `elapsed` output
     /// frames after its note began, as when playback starts or jumps past
-    /// the note's step: a whole song imported as a recording plays from
+    /// the note's step: a whole song added as a take plays from
     /// wherever playback starts. Only a sampler playing a long sound (one
     /// that stops with the transport, see [`Instrument::release_all`])
     /// does this; every other note waits for its own step, and a sound
@@ -376,6 +379,9 @@ pub struct Sampler {
     /// than eight voices. The box is created here, on the UI thread.
     voices: Box<[SamplerVoice; SAMPLER_VOICES]>,
     notes_started: u64,
+    /// Whether it plays along with the song like a long recording, however
+    /// short it is: a take (see [`Sampler::playing_along`]).
+    along: bool,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -440,6 +446,19 @@ impl Sampler {
             sample,
             voices: Box::default(),
             notes_started: 0,
+            along: false,
+        }
+    }
+
+    /// The same sampler, playing its sound along with the song as a long
+    /// recording does, however short it is: from wherever playback
+    /// starts, and stopping when it stops. A take recorded over two bars
+    /// must start halfway through when playback starts in its second
+    /// bar, as one recorded over the whole song does.
+    pub fn playing_along(self) -> Self {
+        Sampler {
+            along: true,
+            ..self
         }
     }
 
@@ -493,15 +512,17 @@ impl Sampler {
         true
     }
 
-    /// Whether the sound is long, such as a whole song imported as a
-    /// recording: longer than [`LONG_SAMPLE_SECONDS`].
+    /// Whether the sound is long, such as a whole song in a sound file:
+    /// longer than [`LONG_SAMPLE_SECONDS`]. A take counts as
+    /// long, whatever its length.
     fn is_long(&self) -> bool {
-        self.sample.frames().len() as u64
-            > u64::from(self.sample.sample_rate()) * LONG_SAMPLE_SECONDS
+        self.along
+            || self.sample.frames().len() as u64
+                > u64::from(self.sample.sample_rate()) * LONG_SAMPLE_SECONDS
     }
 
     /// Fades out the voices playing a long sound, such as a whole song
-    /// imported as a recording, so that it stops with the transport.
+    /// added as a take, so that it stops with the transport.
     /// Short sounds (drum hits) still ring out.
     pub fn release_all(&mut self) {
         if self.is_long() {

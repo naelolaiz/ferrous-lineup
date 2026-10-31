@@ -33,7 +33,6 @@ rfd = { version = "0.17", default-features = false, features = ["xdg-portal"] }
 midir = "0.11"
 symphonia = { version = "0.6", default-features = false, features = ["mp3", "wav", "pcm", "flac", "ogg", "vorbis"] }
 realfft = "3.5"
-bpm-key = { version = "0.1", default-features = false }
 rustysynth = "1.3"
 # Lead sheets: PDF files, drawn with the outlines of the bundled fonts.
 pdf-writer = "0.15"

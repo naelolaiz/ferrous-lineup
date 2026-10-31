@@ -359,7 +359,8 @@ impl Project {
             },
             SongPart::Melody => self.hash_notes(&mut hasher, is_lead),
             SongPart::Instruments => {
-                for channel in &self.channels {
+                // A take is a recording, not an instrument.
+                for channel in self.channels.iter().filter(|channel| !channel.is_take()) {
                     format!("{:?}", channel.kind).hash(&mut hasher);
                     channel.program.hash(&mut hasher);
                 }
@@ -391,10 +392,20 @@ impl Project {
         hasher.finish()
     }
 
-    /// Adds to `hasher` the length of every pattern and the notes of the
-    /// channels `counted` picks.
+    /// Adds to `hasher` the notes of the channels `counted` picks, and the
+    /// length of each pattern that has some. Takes never count: a take
+    /// recorded adds its own patterns and channels, and changes no part.
     fn hash_notes(&self, hasher: &mut DefaultHasher, counted: impl Fn(&Channel) -> bool) {
+        let counted = |channel: &Channel| !channel.is_take() && counted(channel);
         for pattern in &self.patterns {
+            let any = self
+                .channels
+                .iter()
+                .enumerate()
+                .any(|(index, channel)| counted(channel) && !pattern.notes(index).is_empty());
+            if !any {
+                continue;
+            }
             pattern.length().hash(hasher);
             for (index, channel) in self.channels.iter().enumerate() {
                 if !counted(channel) {
