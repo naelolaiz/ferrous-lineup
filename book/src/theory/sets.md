@@ -367,6 +367,180 @@ root is spelled as that scale, and moves on as that key when the key
 changes again (`set_as_scale` and `as_key`, in [Scales, modes and
 keys](scales.md)).
 
+## A set as the key: its forms
+
+Music built on one set, as Webern's and much of Kröpfl's is, makes its
+harmony of the set's own **forms**: the set moved, or turned upside
+down and moved. A key that is a micromode shows its forms on the
+harmony keys and names them by their degree (see [A micromode as the
+key: degrees](micromodes.md#a-micromode-as-the-key-degrees)). Any set
+can be read the same way, so a key that is a set of 2 to 11 notes has a
+**Chords**/**Forms** switch: chords stacked from its notes, as in the
+table above, or its forms. A set of three notes is one chord already,
+so it always shows its forms.
+
+The degrees are counted as for a micromode: **T*n*** is the key's own
+form moved up *n* semitones, **T*n*I** the key's form turned upside
+down around the key's note and then moved up *n*.
+
+### How near: the notes a form keeps
+
+The forms go from home to the farthest by the notes each keeps of home.
+For C major as a set this is an old friend:
+
+| Form | Scale | Notes kept of C major |
+|---|---|---|
+| T0 | C major | 7 |
+| T5, T7 | F major, G major | 6 |
+| T10, T2 | B♭ major, D major | 5 |
+| T3, T9 | E♭ major, A major | 4 |
+| T8, T4 | A♭ major, E major | 3 |
+| T1, T11, T6 | D♭ major, B major, F♯ major | 2 |
+
+Each step round the circle of fifths changes one note, so the notes in
+common count the fifths between two keys: the circle of fifths is the
+nearness of the forms of 7-35. **Near home** shows the forms that keep
+at least half the notes of home (for three notes, at least one), here
+the nine keys up to four fifths away; **All forms** shows the twelve.
+
+Other sets give less familiar maps. C E G B♭ as a set, 4-27, the notes
+of a dominant seventh, has 24 forms: the twelve dominant sevenths and,
+upside down, the twelve half-diminished sevenths. Turned over around C,
+C E G B♭ becomes C A♭ F D, Dm7b5, and a tone up that is E G B♭ D, Em7b5:
+**T2I**, the only form that keeps three notes of home. Nine more keep
+two (E♭7, F♯7, A7 and six half-diminished sevenths), seven keep one and
+six keep none.
+
+A key names a form as what it is when tonal music has a name for it: a
+chord (C7, Em7b5), spelled from its root, or, for more than five notes,
+the scale it is when it is the key's own scale moved (7-35 moved up a
+fifth from C major is G major, written with F♯). Anything else is its
+notes in normal form.
+
+### Progressions of forms
+
+In a key that is a set, the chord sheet's **Progression** button does
+not offer the Library's progressions, which are chords in a major or
+minor key. It offers ways to chain the set's forms, the walks of
+`micromodal.rs` (see [Music from one
+micromode](micromodes.md#music-from-one-micromode)), now for any set,
+and writes eight bars of them:
+
+- **Keep all notes but one**: each form keeps every note of the one
+  before but one. C major as a set walks round the circle of fifths,
+  flatwards: F major, B♭ major, E♭ major… For three notes this is the
+  micromode walk, **Keep two notes, move one**.
+- **Keep as many notes as it can**, offered instead when the set's
+  forms keep all notes but one only in pairs. 4-27 is such a set: C7
+  and Em7b5 keep three notes of each other and of no other form, so a
+  walk that kept three would rock between them for ever. Since it never
+  goes straight back to the form before, it goes on keeping two: C7,
+  Em7b5, A7, C♯m7b5, C♯7, Fm7b5, A♭7, Cm7b5. Dominant sevenths and
+  half-diminished sevenths take turns, and Em7b5 to A7 is the ii∅–V7 of
+  D minor.
+- **Keep one note, move two**, for three notes: a pivot on one note.
+- **All twelve notes, every *N* forms**: see below.
+- **Sequences**: every note up a semitone, a whole tone, a minor third,
+  a fourth or a fifth each bar.
+
+Each bar gets its form as a set (or a micromode), with its degree and
+the notes it keeps under it, and the band plays the forms as chords
+whose shared notes stay on the same keys (`micromodal::voice`, the
+voicing of a micromode style), over the root when the form is a chord
+and otherwise over the first note of its normal form.
+
+### All twelve notes: aggregates
+
+Twelve-tone music counts in **aggregates**: stretches that hold all
+twelve notes. A set of three, four or six notes can make one out of its
+own forms when some of its forms share no note and between them cover
+the twelve. Menor 3 does it in 18 ways, four forms each time; Webern's
+Concerto row, Op. 24, is four forms of it, one after another. A
+hexachord whose complement, the six notes it leaves out, is a form of
+the hexachord itself is **combinatorial**, Milton Babbitt's word for
+what Schoenberg's rows do with their halves: the six semitones C to F
+and the six from F♯ to B are one such pair. Twenty of the fifty
+hexachord classes are; the other thirty, the Z-related ones, leave out
+six notes of another class. Peter Schat built his *Tone Clock* on
+such groups of trichords, and called his way of making them, one
+trichord moved by the intervals of another, **steering**.
+
+| Set | Ways to split the twelve notes |
+|---|---|
+| Menor 3 (C C♯ E), and the major and minor triads | 18 each |
+| the augmented triad | 1: the four augmented triads |
+| the diminished triad | none: its forms always overlap |
+| four semitones (C C♯ D E♭) | 4 |
+| the diminished seventh chord | 1: the three diminished sevenths |
+| 4-27, the dominant seventh | none |
+| six semitones (C to F) | 6: each with the six a tritone away |
+| the whole-tone scale | 1: the two whole-tone scales |
+
+**All twelve notes, every *N* forms** is offered only for the sets that
+can do it. It plays one way to split the twelve notes, each form going
+to the nearest of the group's forms left, then starts the next group
+from a form of another way that keeps as many notes of the last form as
+it can, so the aggregates join smoothly.
+
+### In Rust: a range in a `match`, and a search that backs up
+
+Which forms are chords is a `match` on the size of the set:
+
+```rust
+pub fn form_chord(form: PitchSet) -> Option<Chord> {
+    match form.len() {
+        3 => Micromode::of(form).and_then(|micromode| micromode.chord(form)),
+        4..=5 => match analyze(stacked(&form.normal_form())) {
+            Harmony::Chord { chord, .. } if chord.pitch_set() == form => Some(chord),
+            _ => None,
+        },
+        _ => None,
+    }
+}
+```
+
+`4..=5` is a **range pattern**: it matches 4 and 5. The `if` after the
+inner pattern is a **match guard**: the arm is taken only when the
+chord found has exactly the form's notes, so four notes that only make a
+chord with one of them left out are not called that chord. Three notes
+go to the micromode, which only calls a triad a chord: C C♯ E is Menor
+3, not an incomplete C♯m(maj7).
+
+Finding the ways to split the twelve notes is a search that tries a
+form, goes on, and takes the form back when the way is finished or
+stuck:
+
+```rust
+fn split(
+    held: u16,
+    chosen: &mut Vec<PitchSet>,
+    forms: &[PitchSet],
+    ways: &mut Vec<Vec<PitchSet>>,
+) {
+    let Some(lowest) = (0..12).find(|&note| held & (1 << note) == 0) else {
+        ways.push(chosen.clone());
+        return;
+    };
+    for &form in forms {
+        if form.bits() & held == 0 && form.bits() & (1 << lowest) != 0 {
+            chosen.push(form);
+            split(held | form.bits(), chosen, forms, ways);
+            chosen.pop();
+        }
+    }
+}
+```
+
+`held` has a bit for each note already taken. The lowest note not yet
+held must be in the next form, so each way is found once, with its
+forms in one order, and a form that shares a note with `held` is never
+tried. When every note is held, `find` gives `None` and `let ... else`
+records the way. One `chosen` vector serves the whole search: `push`
+before going deeper and `pop` after, so it always holds the forms of the
+way being built. This is **backtracking**. `split` is a function inside
+a function: it is only used there, and it cannot capture variables, so
+everything it needs is passed in.
+
 ## One harmony, four names
 
 The chord sheet applies the same rule to every harmony on it. Its top
@@ -693,6 +867,21 @@ fn sets_that_make_a_chord_are_written_as_the_chord() {
 A test of the window (`ux_tests.rs`) plays the Four chords style,
 clicks through the Show menu, checks the names, then switches back and
 checks that the project is exactly as it was.
+
+The forms of a set key are tested where they are made. `keys.rs`
+checks C major as a set (its forms are the twelve major scales, nearest
+by the circle of fifths, G major spelled with F♯, nine near home), C7
+(home, then Em7b5 as T2I, 24 forms in all) and a hexachord with no
+name. `micromodal.rs` checks the ways sets split the twelve notes (18
+for Menor 3, 1 for the augmented triad, none for the diminished triad,
+6 for the chromatic hexachord, each a tritone from its other half),
+that every group of an all-twelve walk holds every note, that C major
+walks by fifths, that the walk from C7 goes to Em7b5 and then on
+without going straight back, and that the bass plays the root of C7
+and Em7b5. `band.rs` checks that the band keeps the notes two forms
+share on the same keys and that a progression of forms lands on the
+sheet; an app test switches a C7 key to **Forms** and writes a
+progression from the **Progression** menu.
 
 Exercises on sets are in [Exercises: music theory in
 code](exercises.md).

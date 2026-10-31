@@ -302,7 +302,11 @@ round all twelve notes. The tests check each of these numbers.
 
 Several forms share two notes with the current one (for Menor 3 on C
 C♯ E there are three: A C C♯, C D♯ E and C♯ E F), so the walk needs a
-rule to pick one. In order:
+rule to pick one. First, the form just before is left out while there
+is anywhere else to go; for a micromode the rules below never pick it
+anyway, but some bigger sets keep their most notes only in pairs and
+would rock between two forms (see [Progressions of
+forms](sets.md#progressions-of-forms)). Then, in order:
 
 1. the form whose **new note** has not been heard for the longest
    time, so the music goes round all the notes it can reach,
@@ -581,10 +585,10 @@ recently, then the smallest move", is one `min_by_key` with a tuple of
 four:
 
 ```rust
-members
+options
     .iter()
     .copied()
-    .filter(|&set| set != current && shared(set) == most)
+    .filter(|&set| shared(set) == most)
     .min_by_key(|&set| {
         let new = PitchSet::from_bits(set.bits() & !current.bits());
         // The new note heard most recently decides; never heard is best.
@@ -603,10 +607,21 @@ members
     .unwrap_or(current)
 ```
 
+`options` is every form of the set (24, 12 or 4 of them for a
+micromode) but the current one and the one before it, which is found
+without a panic when there is none:
+
+```rust
+let back = before.len().checked_sub(2).map(|index| before[index]);
+```
+
+`before.len() - 2` would underflow on a `usize` when fewer than two
+forms have been played, and panic in a debug build; `checked_sub` gives
+`None` instead, and `map` only looks the form up when there is one.
+
 A few things to notice:
 
-- `members` is every form of the micromode (24, 12 or 4 of them).
-  `shared(set)` counts the notes a form has in common with the current
+- `shared(set)` counts the notes a form has in common with the current
   one, with the bits: `set.bits() & current.bits()` keeps the notes in
   both. `set.bits() & !current.bits()` keeps the notes of `set` that
   are *not* in `current`: the new note.
@@ -776,6 +791,14 @@ On the chord sheet, each bar of a micromode key shows its degree, and
 from the second bar on how many notes it keeps of the bar before: "T1I
 · 2 common". The degrees can be typed, too: `T2` and `T5I` mean those
 forms of the key.
+
+The sheet's **Progression** button, in a micromode key, writes eight
+bars of the key's forms by one of the walks of [Music from one
+micromode](#music-from-one-micromode): keep two notes and move one,
+keep one and move two, all twelve notes in every four forms, or a
+sequence. The band plays them as a micromode style would, the shared
+notes held on the same keys. Any pitch-class set can do the same: see
+[A set as the key: its forms](sets.md#a-set-as-the-key-its-forms).
 
 ### Degrees in Rust: a small `Copy` struct
 

@@ -73,7 +73,10 @@ micromodos](sets-rows-micromodes.md)). Cuando la tonalidad es un
 micromodo, las teclas son sus formas, nombradas por su grado (T0, T2,
 T1I…), con **Cercanas** y **Todas las formas** para elegir cuáles (ver
 [Un micromodo como
-tonalidad](sets-rows-micromodes.md#un-micromodo-como-tonalidad)).
+tonalidad](sets-rows-micromodes.md#un-micromodo-como-tonalidad)). Para un
+conjunto más grande, **Acordes** y **Formas** eligen entre las dos cosas
+(ver [Un conjunto como
+tonalidad](sets-rows-micromodes.md#un-conjunto-como-tonalidad-sus-formas)).
 
 ## Tocar acordes para la banda
 
