@@ -35,6 +35,7 @@ use eframe::egui::{
     self, Align2, Color32, FontId, Key, Painter, Rect, Response, Sense, Stroke, StrokeKind, Ui,
     pos2, vec2,
 };
+use lineup_core::harmony::colour_finding::{Colour, ColourGuess, Colours};
 use lineup_core::harmony::degree::{self, Degree};
 use lineup_core::harmony::key_finding::{KeyGuess, read_chord};
 use lineup_core::harmony::keys::{self, ChordKey, ChordSize, Function, GroupKey};
@@ -60,6 +61,13 @@ pub enum HarmonyAction {
     /// Find the key: write the key changes heard in the song as key
     /// markers.
     MarkHeardKeys,
+    /// Find the key: make a colour heard the key of its passage, from
+    /// timeline step `start` up to `end`, moving no note.
+    UseColour {
+        start: usize,
+        end: usize,
+        key: Scale,
+    },
 }
 
 /// The key the music sounds like it is in, for Find the key.
@@ -73,6 +81,112 @@ pub struct KeyHeard {
     /// Whether the key changes heard in the whole song can be written
     /// as key markers (in song mode, from the notes or a recording).
     pub can_mark: bool,
+    /// The micromode or the set the passage is made of, if any fits.
+    pub colours: Option<ColoursHeard>,
+}
+
+/// The colours of the passage around the playhead, for Find the key: the
+/// micromodes it fits and the collection of notes it is made of.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ColoursHeard {
+    pub colours: Colours,
+    /// Where it was heard: "in bars 9 to 16", "in this pattern".
+    pub from: String,
+    /// The passage, in timeline steps, when a colour can be made its key.
+    pub passage: Option<(usize, usize)>,
+    /// The key there now: a colour that is already it is not offered.
+    pub key: Scale,
+}
+
+/// Find the key's line for the colour of the passage: the micromode it
+/// fits best, strong, the others that fit almost as well, fainter, and
+/// the collection of notes it is made of, each with a button that makes
+/// it the passage's key.
+fn colour_line(ui: &mut Ui, heard: &ColoursHeard, actions: &mut Vec<HarmonyAction>) {
+    let percent = |guess: &ColourGuess| (guess.fit * 100.0).round();
+    let notes = |key: Scale| -> String {
+        let order = key.pitch_set().normal_form();
+        let names: Vec<String> = order.iter().map(|&p| key.spell(p).to_string()).collect();
+        names.join(" ")
+    };
+    // A colour that is the key there already needs no button.
+    let is_key = |colour: Colour| match (heard.key.kind, colour) {
+        (ScaleKind::Set(_), Colour::Micromode(micromode)) => {
+            Micromode::of(heard.key.pitch_set()) == Some(micromode)
+        }
+        (ScaleKind::Set(_), Colour::Collection(class)) => {
+            heard.key.pitch_set().set_class() == class
+        }
+        _ => false,
+    };
+    let use_button = |ui: &mut Ui, guess: &ColourGuess, actions: &mut Vec<HarmonyAction>| {
+        if is_key(guess.colour) {
+            ui.weak(tr("(the key)"));
+            return;
+        }
+        let Some((start, end)) = heard.passage else {
+            return;
+        };
+        let button = ui.small_button(tr("Use as the key")).on_hover_text(trf(
+            "Make {} the key {}, with key markers. No note moves; Undo takes it back.",
+            &[&crate::i18n::key_name(guess.key), &heard.from],
+        ));
+        if button.clicked() {
+            actions.push(HarmonyAction::UseColour {
+                start,
+                end,
+                key: guess.key,
+            });
+        }
+    };
+    ui.horizontal_wrapped(|ui| {
+        ui.weak(trf("Colour {}:", &[&heard.from]));
+        let micromodes = &heard.colours.micromodes;
+        if let Some(best) = micromodes.first()
+            && let Colour::Micromode(micromode) = best.colour
+        {
+            ui.label(
+                egui::RichText::new(crate::i18n::key_name(best.key))
+                    .strong()
+                    .size(15.0),
+            )
+            .on_hover_text(trf(
+                "Kröpfl's micromode {}: {}% of the notes are in its forms, read as the \
+                 colour check reads them. Its form heard longest, {}, is its home.",
+                &[&micromode.full_name(), &percent(best), &notes(best.key)],
+            ));
+            use_button(ui, best, actions);
+            for guess in &micromodes[1..] {
+                let Colour::Micromode(other) = guess.colour else {
+                    continue;
+                };
+                ui.weak(tr("·  or"));
+                ui.label(egui::RichText::new(other.full_name()).weak())
+                    .on_hover_text(trf(
+                        "Fits almost as well ({}% of the notes in its forms).",
+                        &[&percent(guess)],
+                    ));
+            }
+        }
+        if let Some(collection) = &heard.colours.collection
+            && let Colour::Collection(class) = collection.colour
+        {
+            if !micromodes.is_empty() {
+                ui.separator();
+            }
+            let name = match class.nickname() {
+                Some(nickname) => format!("{} ({})", class.name(), tr(nickname)),
+                None => class.name(),
+            };
+            ui.weak(tr("made of"));
+            ui.label(egui::RichText::new(name).strong())
+                .on_hover_text(trf(
+                    "The notes that sound {}% of the time make this set: {}.",
+                    &[&percent(collection), &notes(collection.key)],
+                ));
+            use_button(ui, collection, actions);
+        }
+    });
 }
 
 const FIND_KEY_HELP: &str = "Experimental: works out the key from the music itself, \
@@ -259,10 +373,13 @@ impl HarmonyKeys {
         if self.shows_forms(scale)
             && let Some(forms) = keys::form_keys(scale, self.all_forms)
         {
-            return self.show_forms(ui, project, here, &forms, held, heard, digits, parts);
+            let mut actions =
+                self.show_forms(ui, project, here, &forms, held, heard, digits, parts);
+            self.find_key_line(ui, key_heard, &mut actions);
+            return actions;
         }
         if let Some(groups) = keys::group_keys(scale, size) {
-            return self.show_groups(
+            let mut actions = self.show_groups(
                 ui,
                 project,
                 here,
@@ -273,6 +390,8 @@ impl HarmonyKeys {
                 digits,
                 parts,
             );
+            self.find_key_line(ui, key_heard, &mut actions);
+            return actions;
         }
         let mut actions = Vec::new();
         let chord_keys = keys::chord_keys(scale, size);
@@ -709,6 +828,12 @@ impl HarmonyKeys {
                 actions.push(HarmonyAction::MarkHeardKeys);
             }
         });
+        let colours = heard.and_then(|heard| heard.colours.as_ref());
+        if self.find_key
+            && let Some(colours) = colours.filter(|colours| !colours.colours.is_empty())
+        {
+            colour_line(ui, colours, actions);
+        }
     }
 
     /// How much the hints explain.
