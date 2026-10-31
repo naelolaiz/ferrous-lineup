@@ -240,6 +240,25 @@ the **Menor** row of micromodes at the bottom of the menu names the
 same notes as a micromode, "Menor 3 on C". Switching between the two moves nothing,
 and **twelve-tone row** brings back the song's own row.
 
+**Any set as the key.** Under **pitch-class set**, the Key menu lists
+the sets the way it lists the micromodes. **Notes** picks how many
+notes, from 2 to 10, and **Inverted (I)** turns the sets upside down;
+the menu stays open while you change either. Click a set to make it the
+key on the key note: **3-11** on C is C E♭ G, and with **Inverted (I)**
+C E G. A set that is the same upside down, such as **4-28**, the
+diminished seventh, comes out the same either way. The menu opens on
+the key's own number of notes, with its set filled in: C major opens on
+the sets of seven notes.
+
+The set the song itself uses most, among groups of that many notes, is
+outlined. In *Webern's trichords* it is 3-3 among the sets of three and
+6-20 among the sets of six, the two halves of the row. Point at it to
+read how much of the song it fills and where it was found: in the notes
+sounding together, or in one track's line. Click it to take the song's
+own notes as the key, so nothing has to move. Any other set moves the
+notes as a new micromode does: from another set every form keeps its
+degree, and from a major or minor key the notes stay as they are.
+
 ## Twelve-tone rows
 
 Around 1921, Arnold Schoenberg looked for a way to write music in which

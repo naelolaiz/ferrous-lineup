@@ -414,6 +414,88 @@ set, the same notes named both ways) and checks that the choice picked
 is the one shown: the bug that hid **pitch-class set** behind Menor 3
 cannot come back unnoticed.
 
+### Any set, by its size
+
+Under **pitch-class set**, a Key menu lists the set classes of one size
+the way it lists the micromodes under them: a row of sizes from 2 to 10
+notes, an **Inverted (I)** switch, and a button for each class with its
+Forte name. A class is not yet a set: it has no place. Picking one puts
+it on the key note:
+
+```rust
+/// The class's prime form, or its inversion, moved so that the first
+/// note of its normal form goes to `root`: the set a key of this
+/// class on `root` plays.
+pub fn on(&self, root: PitchClass, inverted: bool) -> PitchSet {
+    let form = if inverted {
+        self.prime.invert()
+    } else {
+        self.prime
+    };
+    let first = form
+        .normal_form()
+        .first()
+        .copied()
+        .unwrap_or(PitchClass::C);
+    form.transpose(first.semitones_up_to(root))
+}
+```
+
+3-11 on C is C E♭ G, the minor triad, and inverted C E G, the major
+one. A class that is the same upside down, such as 4-28, gives the same
+set both ways. `is_inverted` answers the other way round, whether a set
+of the class is its inversion moved, and it says no for such a class,
+so the menu marks the key's class whichever way the switch is. A test
+places every class on every note, both ways, and checks that the set
+holds the note and stays in its class.
+
+The pick is `KindChoice::Class { class, inverted }`. It ends in
+`set_choice`, with the other ways of picking a set: if the key already
+is that set on that note, nothing happens, and if it is the micromode
+with those notes, it is only named as a set.
+
+The size and the switch live in egui's memory while the menu is open,
+and start from the key each time it opens: C major opens on the sets of
+seven notes. A click on a size must not close the menu, so the
+`ComboBox` closes only on a click outside it
+(`PopupCloseBehavior::CloseOnClickOutside`), and a pick closes it with
+`ui.close()`.
+
+**The song's own set.** Among the sets of a size, the one the song uses
+most is outlined. `notation::song_set` reads the notes the two ways
+[Reading the notes themselves](#reading-the-notes-themselves) describes:
+all the notes sounding together, and each channel's line on its own,
+since a tune or a bass line is one line, and running two lines into one
+would cut groups across them. Only groups of exactly that many notes
+count, as a chord of three says nothing about sets of four. Each group
+lasts until the next one starts, and two of one class at once count
+once, as in [the most used class](#the-most-used-class). The reading
+where a class sounds longest wins.
+
+```rust
+pub struct SongSet {
+    pub class: &'static SetClass,
+    /// The class's set the song uses most, where it is.
+    pub set: PitchSet,
+    pub steps: usize,
+    pub length: usize,
+    /// How the notes were read: together, or in a line.
+    pub grouping: Grouping,
+    /// The channel whose line it was read in, for a line.
+    pub channel: Option<usize>,
+}
+```
+
+Besides the class, it keeps the class's set the song uses most, where
+it is. In Webern's trichords, in threes, that is 3-3 and B C E♭, the
+row's first trichord; in sixes it is 6-20, the row's first half, read
+in the Lead's line. Picking the outlined button is
+`KindChoice::Found(set)`, which takes that set as it is, on the key
+note if the set has it and on its own first note if not, so the song's
+notes still fit the key. The reading runs when the menu opens or the
+size changes, not on every frame, and is kept in egui's memory with the
+size it was read for.
+
 ## A set as the key: its forms
 
 Music built on one set, as Webern's and much of Kröpfl's is, makes its

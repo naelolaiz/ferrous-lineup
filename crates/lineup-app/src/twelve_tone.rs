@@ -407,7 +407,7 @@ fn found_option(
         .channel
         .and_then(|channel| song.channels().get(channel))
     {
-        Some(channel) => trf("in the line of {}", &[&channel.name]),
+        Some(channel) => trf("in the line of {}", &[&tr_name(&channel.name)]),
         None => tr("in the notes sounding together").to_string(),
     };
     let response = ui.selectable_label(selected, found.class.name());
