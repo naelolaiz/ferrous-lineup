@@ -23,9 +23,10 @@
 //! [`lineup_core::harmony::key_finding`] and
 //! [`lineup_core::harmony::colour_finding`].
 
-use lineup_core::harmony::colour_finding::{Colours, find_colours};
+use lineup_core::harmony::colour_finding::{Colour, Colours, find_colours};
 use lineup_core::harmony::key_finding::{KeyListener, KeySpan, chromas_of_notes, rank_keys};
-use lineup_core::{NoteEvent, Project, Tempo};
+use lineup_core::harmony::{Micromode, PitchSet};
+use lineup_core::{NoteEvent, Project, Scale, ScaleKind, Tempo};
 
 use super::LineupApp;
 use crate::harmony_keys::{ColoursHeard, KeyHeard};
@@ -193,11 +194,12 @@ impl LineupApp {
                 let meter = project.meter();
                 let first = meter.position(passage.0).0;
                 let last = meter.position(passage.1.saturating_sub(1)).0;
+                let key = project.key_at(passage.0);
                 heard.colours = Some(ColoursHeard {
-                    colours: colours.clone(),
+                    colours: colours_in_key(colours, key, heard.alternatives.is_empty()),
                     from: trf("in bars {} to {}", &[&first, &last]),
                     passage: Some(passage),
-                    key: project.key_at(passage.0),
+                    key,
                 });
                 Some(heard)
             }
@@ -235,14 +237,47 @@ impl LineupApp {
                 }
                 let (_, span, colours) = finder.pattern.as_ref()?;
                 let mut heard = shown(span, "in this pattern", false)?;
+                let key = self.project.pattern_key(index);
                 heard.colours = Some(ColoursHeard {
-                    colours: colours.clone(),
+                    colours: colours_in_key(colours, key, heard.alternatives.is_empty()),
                     from: tr("in this pattern").to_string(),
                     passage: None,
-                    key: self.project.pattern_key(index),
+                    key,
                 });
                 Some(heard)
             }
         }
+    }
+}
+
+/// The colours Find the key shows where the song is in `key`, when the
+/// notes there sound `clear`ly like one major or minor key.
+///
+/// A song in a key of tonal music, or one of its modes, is shown as
+/// that: its colour is offered only where its notes do not clearly sound
+/// like a major or minor key, as music made of a micromode does not, and
+/// never as the major and minor triads of Acorde menor-mayor, which
+/// tonal music is made of anyway. In a set, a micromode, a row or the
+/// chromatic scale, every colour found is shown.
+fn colours_in_key(colours: &Colours, key: Scale, clear: bool) -> Colours {
+    let tonal = key.kind.is_tonal() && key.kind != ScaleKind::Chromatic;
+    if !tonal {
+        return colours.clone();
+    }
+    if clear {
+        return Colours::default();
+    }
+    let triads = PitchSet::from_semitones(&[0, 4, 7]);
+    Colours {
+        micromodes: colours
+            .micromodes
+            .iter()
+            .filter(|guess| {
+                !matches!(guess.colour, Colour::Micromode(micromode)
+                    if Some(micromode) == Micromode::of(triads))
+            })
+            .copied()
+            .collect(),
+        collection: colours.collection,
     }
 }

@@ -53,23 +53,30 @@ pub fn remembered_set(ctx: &egui::Context) -> PitchSet {
 /// The key a key menu switches to when "pitch-class set" is picked
 /// while the key is `scale`, on `root`. The notes of the song stay as
 /// they are, so the set is the one they were already in: the notes the
-/// harmony keys were playing, not a set from somewhere else.
+/// harmony keys were playing, not a set from somewhere else. A set of
+/// three notes is named as a set, 3-3, not as the micromode it also is
+/// (see [`Scale::named_as_set`]): "pitch-class set" is what was picked.
 ///
 /// - From a key, it is the key's own scale: C major is the set 7-35 on
 ///   C, and its keys are still C, Dm, Em, F, G, Am and Bdim, named as
 ///   sets too (3-11, 3-10).
 /// - From a row, it is the row's first group of three, where it is
 ///   (Webern's Concerto row on C gives C B Eb, 3-3).
+/// - From a micromode, it is the same three notes: Menor 3 on C becomes
+///   3-3 on C, and every form keeps its degree and its notes.
 /// - From the chromatic scale, which holds every note and so says
 ///   nothing about the harmony, it is the set used last, moved so it
 ///   starts on `root`.
-fn set_key(ctx: &egui::Context, scale: Scale, root: PitchClass) -> Scale {
+pub(crate) fn set_key(ctx: &egui::Context, scale: Scale, root: PitchClass) -> Scale {
     let up = scale.root.semitones_up_to(root);
     if let Some(group) = scale
         .tone_row()
         .and_then(|row| row.segments(3).first().copied())
     {
-        return Scale::set(root, group.transpose(up));
+        return Scale::set(root, group.transpose(up)).named_as_set();
+    }
+    if let ScaleKind::Set(_) = scale.kind {
+        return Scale::set(root, scale.pitch_set().transpose(up)).named_as_set();
     }
     if scale.kind.is_tonal() && scale.kind != ScaleKind::Chromatic {
         let set = Scale::set(root, scale.pitch_set().transpose(up));
@@ -82,7 +89,53 @@ fn set_key(ctx: &egui::Context, scale: Scale, root: PitchClass) -> Scale {
     }
     let set = remembered_set(ctx);
     let start = set.normal_form().first().copied().unwrap_or(root);
-    Scale::set(root, set.transpose(start.semitones_up_to(root)))
+    Scale::set(root, set.transpose(start.semitones_up_to(root))).named_as_set()
+}
+
+/// What a key menu has selected for `scale`: its kind, or, for a key of
+/// three notes named as one, its micromode.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) enum KindChoice {
+    Kind(ScaleKind),
+    Row,
+    Set,
+    Micromode(&'static Micromode),
+}
+
+impl KindChoice {
+    /// The choice a key menu shows as selected while the key is `scale`.
+    pub(crate) fn of(scale: Scale) -> Self {
+        match (scale.kind, scale.micromode()) {
+            (_, Some(micromode)) => KindChoice::Micromode(micromode),
+            (ScaleKind::Row(_), _) => KindChoice::Row,
+            (ScaleKind::Set(_), _) => KindChoice::Set,
+            (kind, _) => KindChoice::Kind(kind),
+        }
+    }
+
+    /// The key picking this choice in a key menu makes of `scale`, with
+    /// the tonic `tonic`, or `None` if it is already the choice.
+    ///
+    /// The notes stay as they are wherever the menu says so: picking
+    /// "pitch-class set" (see [`set_key`]), or picking the micromode a
+    /// set of three notes already is, only names them the other way.
+    pub(crate) fn key(self, ctx: &egui::Context, scale: Scale, tonic: NoteName) -> Option<Scale> {
+        if KindChoice::of(scale) == self {
+            return None;
+        }
+        let root = tonic.pitch_class();
+        Some(match self {
+            KindChoice::Kind(kind) => Scale::written(tonic, kind),
+            KindChoice::Row => Scale::row(remembered_row(ctx).starting_on(root)),
+            KindChoice::Set => set_key(ctx, scale, root),
+            KindChoice::Micromode(micromode)
+                if Micromode::of(scale.pitch_set()) == Some(micromode) && root == scale.root =>
+            {
+                scale.named_as_micromode()
+            }
+            KindChoice::Micromode(micromode) => micromode.key(root),
+        })
+    }
 }
 
 /// Remembers the row or set of `scale`, if it is one.
@@ -187,16 +240,13 @@ pub fn kind_menu(
     width: f32,
 ) -> Option<Scale> {
     let ctx = ui.ctx().clone();
-    let root = tonic.pitch_class();
     let mut picked = None;
-    // A key of three notes is one of the micromodes, named as one.
-    let micromode = match scale.kind {
-        ScaleKind::Set(set) => Micromode::of(set),
-        _ => None,
-    };
-    let selected = match micromode {
-        Some(micromode) => micromode.name.to_string(),
-        None => crate::i18n::tr(scale.kind.name()).to_string(),
+    // A key of three notes is one of the micromodes, named as one unless
+    // it was picked as a pitch-class set.
+    let chosen = KindChoice::of(scale);
+    let selected = match chosen {
+        KindChoice::Micromode(micromode) => micromode.name.to_string(),
+        _ => crate::i18n::tr(scale.kind.name()).to_string(),
     };
     // For how many frames the menu has been open: in its first frames,
     // it scrolls to the key's micromode, at the bottom of the list.
@@ -211,41 +261,36 @@ pub fn kind_menu(
         .selected_text(RichText::new(selected).strong())
         .show_ui(ui, |ui| {
             open = true;
+            let mut pick = |choice: KindChoice| picked = choice.key(&ctx, scale, tonic);
             for option in ScaleKind::ALL {
+                let choice = KindChoice::Kind(option);
                 if ui
-                    .selectable_label(scale.kind == option, crate::i18n::tr(option.name()))
+                    .selectable_label(chosen == choice, crate::i18n::tr(option.name()))
                     .clicked()
                 {
-                    picked = Some(Scale::written(tonic, option));
+                    pick(choice);
                 }
             }
             ui.separator();
-            let is_row = matches!(scale.kind, ScaleKind::Row(_));
             if ui
-                .selectable_label(is_row, crate::i18n::tr("twelve-tone row"))
-                .on_hover_text(tr(
-                    "Music without a key: all twelve notes in an order, used in turn. \
-                     The piano roll numbers the notes in the order of the row. Notes \
-                     already written stay as they are.",
-                ))
+                .selectable_label(
+                    chosen == KindChoice::Row,
+                    crate::i18n::tr("twelve-tone row"),
+                )
+                .on_hover_text(tr(ROW_HELP))
                 .clicked()
-                && !is_row
             {
-                picked = Some(Scale::row(remembered_row(&ctx).starting_on(root)));
+                pick(KindChoice::Row);
             }
-            let is_set = matches!(scale.kind, ScaleKind::Set(_)) && micromode.is_none();
             if ui
-                .selectable_label(is_set, crate::i18n::tr("pitch-class set"))
-                .on_hover_text(tr(
-                    "Any group of notes as a scale, such as the octatonic scale or a \
-                     chord with no name. Notes already written stay as they are: from a \
-                     key, the set is the key's own notes (C major is 7-35), so the harmony \
-                     keys still match the song.",
-                ))
+                .selectable_label(
+                    chosen == KindChoice::Set,
+                    crate::i18n::tr("pitch-class set"),
+                )
+                .on_hover_text(tr(SET_HELP))
                 .clicked()
-                && !is_set
             {
-                picked = Some(set_key(&ctx, scale, root));
+                pick(KindChoice::Set);
             }
             ui.separator();
             ui.weak(tr("Micromodes (Kröpfl)"));
@@ -258,13 +303,14 @@ pub fn kind_menu(
                         egui::Label::new(RichText::new(family_word(family)).weak()),
                     );
                     for option in Micromode::all().iter().filter(|m| m.family == family) {
-                        let is_key = micromode == Some(option);
+                        let choice = KindChoice::Micromode(option);
+                        let is_key = chosen == choice;
                         let response = micromode_option(ui, option, is_key);
                         if is_key && frames < 3 {
                             response.scroll_to_me(Some(egui::Align::Center));
                         }
-                        if response.clicked() && !is_key {
-                            picked = Some(option.key(root));
+                        if response.clicked() {
+                            pick(choice);
                         }
                     }
                 });
@@ -274,12 +320,24 @@ pub fn kind_menu(
     let frames = if open { frames.saturating_add(1) } else { 0 };
     ctx.data_mut(|data| data.insert_temp(frames_id, frames));
     crate::theme::hint(response, crate::i18n::tr(crate::piano_roll::KEY_HELP));
-    // A new root keeps the kind, and with it the row or the set.
+    // A new root keeps the kind, and with it the row or the set, named
+    // as it was.
     if picked.is_none() && tonic != scale.spell(scale.root) {
-        picked = Some(Scale::written(tonic, scale.kind));
+        picked = Some(Scale::written(tonic, scale.kind).named_like(scale));
     }
     picked.filter(|new| *new != scale)
 }
+
+/// What picking "twelve-tone row" in a key menu does.
+pub(crate) const ROW_HELP: &str = "Music without a key: all twelve notes in an order, used in \
+     turn. The piano roll numbers the notes in the order of the row. Notes already written \
+     stay as they are.";
+
+/// What picking "pitch-class set" in a key menu does.
+pub(crate) const SET_HELP: &str = "Any group of notes as a scale, such as the octatonic scale or \
+     a chord with no name. Notes already written stay as they are: from a key, the set is the \
+     key's own notes (C major is 7-35), from a row its first three notes, and from a micromode \
+     the same three notes (Menor 3 is 3-3), so the harmony keys still match the song.";
 
 /// The word a family's micromodes start with: "Menor", "Mayor",
 /// "Acorde", Kröpfl's names in every language.
@@ -1229,7 +1287,9 @@ impl SetWindow {
                 .clicked()
                 && let Some(&root) = set.normal_form().first()
             {
-                actions.push(SetAction::UseAsKey(Scale::set(root, set)));
+                // Picked in the set window, a set of three notes is
+                // named as a set, not as its micromode.
+                actions.push(SetAction::UseAsKey(Scale::set(root, set).named_as_set()));
             }
         });
     }
@@ -1465,6 +1525,143 @@ mod tests {
         let key = set_key(&ctx, chromatic, PitchClass::D);
         assert_eq!(key.pitch_set().set_class().name(), "4-28");
         assert!(key.contains(PitchClass::D));
+    }
+
+    /// Every choice of a Key menu, from every kind of key: once picked,
+    /// it is the choice the menu shows as selected, and picking the
+    /// selected one changes nothing.
+    #[test]
+    fn every_key_menu_choice_is_shown_as_picked() {
+        let ctx = egui::Context::default();
+        let webern = RowPreset::named("Webern's Concerto").unwrap().row;
+        let row = Scale::row(webern.starting_on(PitchClass::C));
+        let menor_3 = Micromode::named("Menor 3").unwrap().key(PitchClass::C);
+        let from_row = set_key(&ctx, row, PitchClass::C);
+        let keys = [
+            Scale::new(PitchClass::C, ScaleKind::Major),
+            Scale::new(PitchClass::FSharp, ScaleKind::Major)
+                .other_spelling()
+                .unwrap(),
+            Scale::new(PitchClass::A, ScaleKind::HarmonicMinor),
+            Scale::new(PitchClass::D, ScaleKind::Chromatic),
+            row,
+            menor_3,
+            menor_3.named_as_set(),
+            // Menor 3 with C B Eb as its own form, as from Webern's row.
+            from_row,
+            from_row.named_as_micromode(),
+            Scale::set(PitchClass::C, PitchSet::from_semitones(&[0, 3, 6, 9])),
+        ];
+        let choices: Vec<KindChoice> = ScaleKind::ALL
+            .into_iter()
+            .map(KindChoice::Kind)
+            .chain([KindChoice::Row, KindChoice::Set])
+            .chain(Micromode::all().iter().map(KindChoice::Micromode))
+            .collect();
+        for key in keys {
+            let tonic = key.spell(key.root);
+            for &choice in &choices {
+                match choice.key(&ctx, key, tonic) {
+                    None => assert_eq!(KindChoice::of(key), choice, "{key:?}: {choice:?}"),
+                    Some(new) => {
+                        assert_ne!(new, key, "{key:?}: {choice:?}");
+                        assert_eq!(KindChoice::of(new), choice, "{key:?} to {new:?}");
+                        assert_eq!(new.root, key.root, "{key:?}: {choice:?}");
+                    }
+                }
+            }
+        }
+    }
+
+    /// "pitch-class set" names the notes the key already had, so the
+    /// song keeps every note; from Webern's row, whose groups of three
+    /// are all Menor 3, it is 3-3, named as a set, not the micromode.
+    #[test]
+    fn picking_pitch_class_set_keeps_every_note() {
+        use lineup_core::Project;
+        use lineup_core::chord_sheet::HarmonyName;
+        use lineup_core::library::{MicromodeStyle, RowStyle, demo};
+        let notes = |project: &Project| -> Vec<(usize, usize, NoteEvent)> {
+            (0..project.patterns().len())
+                .flat_map(|index| {
+                    let pattern = project.pattern(index).unwrap();
+                    pattern
+                        .all_notes()
+                        .map(move |(channel, note)| (index, channel, *note))
+                        .collect::<Vec<_>>()
+                })
+                .collect()
+        };
+        let ctx = egui::Context::default();
+        // The set used last is another one: it must not be what the key
+        // becomes.
+        remember(
+            &ctx,
+            Scale::set(PitchClass::C, PitchSet::from_semitones(&[0, 3, 6, 9])),
+        );
+        let pick = |project: &mut Project, choice: KindChoice| {
+            let key = project.scale;
+            let new = choice
+                .key(&ctx, key, key.spell(key.root))
+                .expect("a new choice");
+            project.change_key(new);
+            assert_eq!(KindChoice::of(project.scale), choice);
+        };
+        let menor_3 = KindChoice::Micromode(Micromode::named("Menor 3").unwrap());
+
+        let mut webern = demo::row_demo(RowStyle::named("Webern's trichords").unwrap());
+        let written = notes(&webern);
+        pick(&mut webern, KindChoice::Set);
+        assert_eq!(notes(&webern), written);
+        assert_eq!(
+            crate::i18n::key_name(webern.scale),
+            "set 3-3 on C",
+            "named as a set"
+        );
+        // Menor 3 is the same notes named as the micromode, and back.
+        let set = webern.scale.pitch_set();
+        pick(&mut webern, menor_3);
+        assert_eq!(webern.scale.pitch_set(), set);
+        assert_eq!(crate::i18n::key_name(webern.scale), "Menor 3 on C");
+        pick(&mut webern, KindChoice::Set);
+        assert_eq!(webern.scale.pitch_set(), set);
+        assert_eq!(notes(&webern), written);
+
+        // From a micromode demo: the same three notes as a set, and the
+        // forms on the chord sheet named as sets too.
+        let style = MicromodeStyle::named("Menor 3 colour").unwrap();
+        let mut song = demo::micromode_demo(style);
+        let written = notes(&song);
+        let key = song.scale;
+        let sheet = |project: &Project| -> Vec<HarmonyName> {
+            project
+                .playlist()
+                .chord_markers()
+                .iter()
+                .map(|marker| marker.harmony)
+                .collect()
+        };
+        assert!(
+            sheet(&song)
+                .iter()
+                .all(|harmony| matches!(harmony, HarmonyName::Micromode(_)))
+        );
+        pick(&mut song, KindChoice::Set);
+        assert_eq!(notes(&song), written);
+        assert_eq!(song.scale.pitch_set(), key.pitch_set());
+        assert!(
+            sheet(&song)
+                .iter()
+                .all(|harmony| matches!(harmony, HarmonyName::Set(_)))
+        );
+        pick(&mut song, menor_3);
+        assert_eq!(song.scale, key);
+        assert_eq!(notes(&song), written);
+        assert!(
+            sheet(&song)
+                .iter()
+                .all(|harmony| matches!(harmony, HarmonyName::Micromode(_)))
+        );
     }
 
     #[test]

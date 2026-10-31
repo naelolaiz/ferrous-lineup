@@ -5072,7 +5072,7 @@ fn the_chord_sheet_shows_its_chords_as_sets_and_micromodes_and_reads_the_notes()
     };
     assert!(shows(&mut screen, "C") && shows(&mut screen, "Am"));
     // C G Am F in C major: the same notes as sets...
-    screen.click("As written");
+    screen.click("As the key");
     screen.click("Pitch-class sets");
     for set in ["3-11 T7I", "3-11 T2I", "3-11 T9", "3-11 T0I"] {
         assert!(shows(&mut screen, set), "{set}");
@@ -5096,6 +5096,36 @@ fn the_chord_sheet_shows_its_chords_as_sets_and_micromodes_and_reads_the_notes()
     screen.click("Chords");
     assert!(shows(&mut screen, "Am") && !shows(&mut screen, "Notes in a line (serial)"));
     assert_eq!(screen.app.project, before);
+    // Shown in micromodes, a song in C major does not pass that on to
+    // the next song: it opens as the key, in chords.
+    screen.click("Chords");
+    screen.click("Micromodes");
+    assert!(shows(&mut screen, "Acorde menor-mayor T7I"));
+    screen.app.replace_project(before.clone(), None);
+    screen.app.chord_sheet.open = true;
+    assert!(shows(&mut screen, "As the key"));
+    assert!(shows(&mut screen, "Am") && !shows(&mut screen, "Acorde menor-mayor T7I"));
+    // A micromode demo opens in its own notation, as the key: its forms
+    // as micromodes.
+    let style = lineup_core::library::MicromodeStyle::named("Menor 3 colour").unwrap();
+    let demo = lineup_core::library::demo::micromode_demo(style);
+    screen.app.replace_project(demo, None);
+    screen.app.chord_sheet.open = true;
+    assert!(shows(&mut screen, "As the key"));
+    screen.draw(Vec::new());
+    let output = screen.draw(Vec::new());
+    let texts: Vec<String> = output
+        .shapes
+        .iter()
+        .filter_map(|shape| match &shape.shape {
+            Shape::Text(text) => Some(text.galley.text().to_string()),
+            _ => None,
+        })
+        .collect();
+    assert!(
+        texts.iter().any(|text| text.starts_with("Menor 3")),
+        "{texts:?}"
+    );
 }
 
 /// In a key that is a micromode, the harmony keys are its forms, called

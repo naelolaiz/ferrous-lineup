@@ -688,6 +688,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("E", "E"),
     ("E minor", "{E} menor"),
     (
+        "Each harmony in the notation of the key it is in: chords in a major or minor key or a mode, pitch-class sets in a set or a twelve-tone row, micromodes in a micromode",
+        "Cada armonía en la notación de la tonalidad en que está: acordes en una tonalidad mayor o menor o en un modo, conjuntos de clases de alturas en un conjunto o una serie dodecafónica, micromodos en un micromodo",
+    ),
+    (
         "Each harmony as it is written: chords as chords, sets and micromodes as they were typed or heard",
         "Cada armonía tal como está escrita: los acordes como acordes, los conjuntos y micromodos como se escribieron o se oyeron",
     ),
