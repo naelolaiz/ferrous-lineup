@@ -807,6 +807,25 @@ impl RowWindow {
                     "One of three octaves for each note, from the numbers of the retrograde",
                 ));
         });
+        let partner = self.row.partner(writing.label);
+        ui.horizontal_wrapped(|ui| {
+            let text = match partner {
+                Some(partner) => trf("With its partner, {}", &[&partner]),
+                None => tr("With its partner").to_string(),
+            };
+            ui.add_enabled(
+                partner.is_some(),
+                egui::Checkbox::new(&mut writing.partner, text),
+            )
+            .on_hover_text(tr(
+                "Its combinatorial partner sounds an octave under it, note for note: the \
+                     first six notes of the two make all twelve, and so do the last six",
+            ))
+            .on_disabled_hover_text(tr(
+                "No form of this row has the six notes the first half leaves out as its \
+                     own first half, so it has no partner",
+            ));
+        });
         let notes = write_row(self.row, writing, length);
         let heard: PitchSet = notes.iter().map(|note| note.pitch.pitch_class()).collect();
         if heard.len() < 12 {
