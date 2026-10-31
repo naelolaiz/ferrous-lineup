@@ -1022,11 +1022,115 @@ pub struct NoteGroup {
 Sus notas son las de la parte en que se leyó, una de cada clase de
 altura de la forma, en el orden en que llegan.
 
+### La clase más usada
+
+Se agrupen como se agrupen las notas, la pregunta que un analista se
+hace después es sobre qué clase vive la música: el micromodo al que un
+pasaje vuelve una y otra vez, o el conjunto del que está hecho. Debajo
+de la fila de la notación, una línea lo responde:
+
+> Más usados: **Menor 3 72%** · 2-3 6% · Menor 2 6% · 2-1 4% · 5 más
+
+Es la melodía de **Color Menor 3** leída **en línea**, de a tres, como
+micromodos. Cada grupo dura desde donde empieza hasta donde empieza el
+siguiente, como la hoja escribe una armonía que dura hasta la próxima,
+así que la parte de una clase es cuánto de la canción ocupa. La primera
+se dibuja más brillante y las demás más tenues; al señalar una se ve
+cuántas veces empieza y sus formas, primero la más usada ("Menor 3 9%,
+Menor 3 T5 9%, Menor 3 T9I 6%, …"). Las díadas son lo que sobra de la
+línea: donde la melodía vuelve a tocar una nota dentro de un grupo,
+Do Mi♭ Do, el grupo tiene dos clases de altura, 2-3.
+
+Leída como **Las armonías de la hoja** o como **Formas de la tonalidad
+(mixtas)**, la misma demostración es Menor 3 en un 100%: cada armonía
+escrita y cada forma leída es una de sus formas. En Do mayor, con
+**Mostrar** en conjuntos de clases de alturas, la canción de inicio es
+3-11 en un 100% también: las tríadas mayores y menores son una sola
+clase. Una clase se cuenta una vez donde suenan dos grupos suyos a la
+vez, así que las dos formas de **3-3|3-3 T7** ocupan el compás una vez,
+no dos, aunque sean dos de sus veces. Los acordes, las formas de la
+serie y N.C. quedan fuera: la línea cuenta lo que la hoja nombra como
+conjuntos o micromodos, y en una canción mostrada como acordes no
+aparece.
+
+`most_used` recibe las armonías como la hoja las nombra, un paso y los
+grupos nombrados ahí, y suma cada clase:
+
+```rust
+pub struct ClassUse {
+    pub class: String,
+    pub steps: usize,
+    pub times: usize,
+    pub forms: Vec<(HarmonyName, usize)>,
+}
+
+pub fn most_used(harmonies: &[(usize, Vec<HarmonyName>)], end: usize) -> Tally {
+    let mut classes: Vec<ClassUse> = Vec::new();
+    for (index, (start, names)) in harmonies.iter().enumerate() {
+        let until = harmonies
+            .get(index + 1)
+            .map_or(end, |(next, _)| *next)
+            .min(end);
+        let steps = until.saturating_sub(*start);
+        let mut counted: Vec<String> = Vec::new();
+        for name in names {
+            let Some(class) = class_of(name) else {
+                continue;
+            };
+            // ... find or add the class's entry ...
+            entry.times += 1;
+            if !counted.contains(&class) {
+                entry.steps += steps;
+                counted.push(class);
+            }
+            // ... and add the steps to its form ...
+        }
+    }
+    // ... sort the forms, then the classes, the longest first ...
+}
+```
+
+`harmonies.get(index + 1)` es la armonía siguiente, o `None` después de
+la última; `map_or(end, …)` convierte ese `None` en el final de la
+canción, así que la última armonía dura hasta que la canción termina.
+`saturating_sub` resta sin bajar de cero, por si una armonía empieza
+después del final. `let Some(class) = class_of(name) else { continue;
+}` es un **let-else**: si el nombre no es un conjunto ni un micromodo,
+el bucle pasa al nombre siguiente; si lo es, `class` guarda su clase
+para el resto del bucle. La lista `counted` es lo que hace que dos
+grupos de una clase a la vez cuenten sus pasos una sola vez.
+
+Las clases se ordenan por tres claves, una tras otra:
+
+```rust
+classes.sort_by(|a, b| {
+    b.steps
+        .cmp(&a.steps)
+        .then(b.times.cmp(&a.times))
+        .then_with(|| a.class.cmp(&b.class))
+});
+```
+
+`b.steps.cmp(&a.steps)`, con `b` primero, ordena de más pasos a menos.
+Donde dos clases suenan lo mismo, `then` compara cuántas veces empieza
+cada una; donde eso también coincide, `then_with` compara sus nombres,
+así el orden nunca depende de qué clase apareció primero. `then_with`
+recibe un cierre y solo lo ejecuta cuando hace falta, lo que vale la
+pena para comparar cadenas.
+
+Donde los compases muestran las armonías de la propia hoja,
+`written_names` renombra cada una en la notación elegida, en la
+tonalidad de su paso, y la última dura hasta el final de su compás o de
+la canción, lo que llegue más tarde. Donde muestran grupos leídos de
+las notas, `heard_names` nombra los mismos grupos que muestran los
+compases, así la línea y los compases nunca se contradicen.
+
 ### Leer solo cuando algo cambia
 
 Cortar una canción entera en grupos y nombrarlos lleva milisegundos en
 una canción larga: demasiado para repetirlo sesenta veces por segundo
-mientras suena. Así que la vista guarda lo que leyó, y de qué lo leyó:
+mientras suena. Así que la vista guarda lo que leyó, de qué lo leyó, y
+el recuento de sus clases:
 
 ```rust
 struct Read {
@@ -1034,6 +1138,8 @@ struct Read {
     notes: Vec<HeardNote>,
     keys: KeyMap,
     shown: Rc<[Shown]>,
+    tally: Rc<Tally>,
+    pass: u64,
 }
 ```
 
@@ -1041,7 +1147,15 @@ En cada fotograma reúne las notas de la canción, que es rápido, y las
 compara, junto con las elecciones y las tonalidades, con lo que leyó la
 última vez. Solo cuando algo es distinto, una elección nueva en un menú,
 una nota editada en el piano roll, un cambio de tonalidad, vuelve a
-cortar y a nombrar los grupos.
+cortar y a nombrar los grupos, y a contar sus clases.
+
+La línea de los más usados se dibuja encima de los compases, así que
+pide los grupos primero, y los compases los vuelven a pedir. Nada de la
+canción cambia entre las dos veces: la aplicación aplica lo que se
+pulsó después de dibujar el fotograma. Así que `pass` guarda el número
+del fotograma en que se revisó la lectura por última vez, el
+`cumulative_pass_nr` de egui, y una segunda pregunta en el mismo
+fotograma recibe la misma respuesta sin volver a reunir las notas.
 
 El resultado es un **`Rc<[Shown]>`**, un puntero con contador de
 referencias a un slice. `Rc` es el primo de un solo hilo de `Arc` (ver

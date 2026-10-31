@@ -159,7 +159,8 @@ At the top of the sheet:
   micromode), **As written**, as **Chords**, as **Pitch-class sets** or
   as **Micromodes**. Another choice holds until you open another song.
   [Beyond keys](sets-rows-micromodes.md#one-harmony-four-names) tells
-  what each says.
+  what each says. For sets and micromodes, a line under it, **Most
+  used**, ranks the classes the sheet shows by how long each sounds.
 - **Bars per line**: **Fit the names** puts as many bars on a line as
   show every name, and the numeral under it, at its full size: 1, 2, 4,
   8, 12 or 16, so that lines start where four-bar phrases do. A name may
