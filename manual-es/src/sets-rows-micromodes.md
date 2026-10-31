@@ -280,12 +280,14 @@ tonalidad como un número romano:
 - **T0** es la forma propia de la tonalidad, casa. En Menor 3 sobre Do
   es Do Do♯ Mi.
 - **T2** es casa subida 2 semitonos: Re Re♯ Fa♯.
-- **T1I** es casa dada vuelta y movida: La Do Do♯.
+- **T0I** es casa dada vuelta alrededor de la nota de la tonalidad, cada
+  nota tan por debajo de Do como estaba por encima: Do Si La♭.
+- **T1I** es eso subido un semitono: La Do Do♯.
 
 Lleva toda la canción a Re y cada forma conserva su grado, como ii sigue
-siendo ii en cualquier tonalidad mayor. Cuando la forma propia de la
-tonalidad es la dada vuelta, como una tríada mayor (la tabla de los
-micromodos escribe la tríada menor), casa es **T0I**.
+siendo ii en cualquier tonalidad mayor. Casa es siempre T0. Con las
+tríadas, el acorde paralelo es T7I: Do menor en Do mayor, y Do mayor en
+Do menor.
 
 ![Las teclas de armonía en una tonalidad de Menor 3 sobre Do después de tocar T1I: T0, T1I, T4I y T5I, después las formas que conservan una nota de casa, cada una con sus notas y su nombre; T0, T8 y T9 aparecen con borde porque conservan dos notas de La Do Do♯, y la ayuda de abajo lo dice](images/micromode-keys.png)
 
