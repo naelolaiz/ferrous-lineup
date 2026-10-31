@@ -14,6 +14,8 @@
 //!   bars. The fills take turns, so a song does not hear the same one at
 //!   every turn, and a song always plays the same ones in the same
 //!   places.
+//! - **Crashes.** A part that comes after a fill starts with the crash
+//!   cymbal on its first beat, as a drummer lands a fill.
 //! - **Grooves.** A part that sounds like an earlier one plays its
 //!   groove again; a part of another kind, a B after the A, a refrain
 //!   after the verse, plays a contrasting one: the hi-hat moves to the
@@ -33,7 +35,7 @@
 use std::ops::Range;
 
 use crate::meter::{Bar, TimeSignature};
-use crate::pattern::NoteEvent;
+use crate::pattern::{NoteEvent, STEP_NOTE};
 use crate::playlist::Section;
 use crate::project::Drum;
 
@@ -42,6 +44,9 @@ use super::rhythm::{FILLS, Layout, Rhythm};
 
 /// The bars of a phrase.
 const PHRASE: usize = 8;
+
+/// How hard the crash cymbal lands a fill.
+const CRASH: u8 = 100;
 
 /// What comes after a part.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -72,6 +77,13 @@ pub struct DrumPart<'a> {
     /// Whether it is the lead-in to the song's first part: a pickup the
     /// tune starts in. It plays the end of a phrase into the first part.
     pub lead_in: bool,
+    /// Whether it starts with the crash cymbal on its first beat: it comes
+    /// after a part that ends with a fill (see [`ends_with_fill`]).
+    pub crash: bool,
+    /// How many phrases of its kind the song played before it: a rhythm
+    /// whose phrases take turns with their grooves and closings (see
+    /// [`Layout`]) goes on from there.
+    pub turn: usize,
 }
 
 /// How big a fill is.
@@ -145,7 +157,7 @@ pub fn drums_used(rhythm: &Rhythm) -> Vec<Drum> {
     let own = rhythm.drums();
     let contrast = rhythm.drums().map(|drum| contrasting(rhythm, drum));
     let fills = fills_of(rhythm).into_iter().flat_map(|fill| match fill {
-        Fill::Library(fill) => fill.drums().collect::<Vec<_>>(),
+        Fill::Library(fill) => fill.drums().chain([Drum::Crash]).collect::<Vec<_>>(),
         Fill::Own => Vec::new(),
     });
     for drum in own.chain(contrast).chain(fills) {
@@ -205,7 +217,7 @@ fn line_bars(rhythm: &Rhythm, part: &DrumPart) -> Vec<usize> {
         return (0..bars).map(|bar| bar % rhythm.bars().max(1)).collect();
     };
     if part.lead_in {
-        return laid_out(&layout, bars, 0, 0);
+        return laid_out(&layout, bars, 0, 0, 0);
     }
     let mut lines = Vec::with_capacity(bars);
     for (index, (_, length)) in phrases(bars).into_iter().enumerate() {
@@ -214,20 +226,27 @@ fn line_bars(rhythm: &Rhythm, part: &DrumPart) -> Vec<usize> {
         } else {
             0
         };
-        lines.extend(laid_out(&layout, length, opening, part.groove));
+        let turn = part.turn + index;
+        lines.extend(laid_out(&layout, length, opening, part.groove, turn));
     }
     lines
 }
 
 /// The bars of `layout`'s lines a phrase of `length` bars plays, opening
-/// with `opening` bars of the opening and grooving with groove `groove`:
-/// the opening, the groove as long as there is room, and the closing. A
-/// phrase too short for them all plays the opening's start and the
-/// closing, or the closing's end.
-fn laid_out(layout: &Layout, length: usize, opening: usize, groove: usize) -> Vec<usize> {
+/// with `opening` bars of the opening and grooving with the groove of
+/// kind `groove` and turn `turn`: the opening, the groove as long as
+/// there is room, and the turn's closing. A phrase too short for them all
+/// plays the opening's start and the closing, or the closing's end.
+fn laid_out(
+    layout: &Layout,
+    length: usize,
+    opening: usize,
+    groove: usize,
+    turn: usize,
+) -> Vec<usize> {
     let closing = layout.closing;
-    let close = layout.closing_from();
-    let (from, groove_bars) = layout.groove(groove);
+    let close = layout.closing_at(turn);
+    let (from, groove_bars) = layout.groove(groove, turn);
     (0..length)
         .map(|bar| {
             if length <= closing {
@@ -387,6 +406,17 @@ fn fill_notes(
     }
 }
 
+/// Whether the drums end `part` with a fill on the drum kit, which the
+/// next part lands with a crash.
+pub fn ends_with_fill(rhythm: &Rhythm, part: &DrumPart) -> bool {
+    let bars = part.bars.len();
+    bars > 0
+        && fill_places(rhythm, part).contains(&(bars - 1, Size::Whole))
+        && fills_of(rhythm)
+            .iter()
+            .any(|fill| matches!(fill, Fill::Library(_)))
+}
+
 /// What the drums play over `part`, each note with its drum, on the
 /// part's timeline. `fills` counts the fills played so far in the song,
 /// so that they take turns.
@@ -456,7 +486,44 @@ pub fn part_drums(rhythm: &Rhythm, part: &DrumPart, fills: &mut usize) -> Vec<(D
             }
         }
     }
+    if part.crash
+        && let Some(first) = part.bars.first()
+        && !notes
+            .iter()
+            .any(|(drum, note)| *drum == Drum::Crash && note.start == first.start)
+    {
+        notes.push((
+            Drum::Crash,
+            NoteEvent {
+                velocity: CRASH,
+                ..NoteEvent::new(STEP_NOTE, first.start, 1)
+            },
+        ));
+    }
     notes
+}
+
+/// How many phrases of each kind of part a song has played so far, for
+/// the parts' turns (see [`DrumPart::turn`]).
+#[derive(Debug, Clone, Default)]
+pub struct Turns(Vec<usize>);
+
+impl Turns {
+    /// The turn the next part of `kind` takes.
+    pub fn of(&self, kind: &PartKind) -> usize {
+        self.0.get(kind.groove).copied().unwrap_or(0)
+    }
+
+    /// Counts the phrases of a part of `kind`, `bars` long.
+    pub fn played(&mut self, kind: &PartKind, bars: usize) {
+        if kind.lead_in {
+            return;
+        }
+        if self.0.len() <= kind.groove {
+            self.0.resize(kind.groove + 1, 0);
+        }
+        self.0[kind.groove] += phrases(bars).len();
+    }
 }
 
 /// What kind of part of the song the drums play (see [`form_parts`]).
@@ -573,6 +640,8 @@ pub fn song_drums(
     let parts = form_parts(bars, form, end, &[], 0);
     let last = parts.len().saturating_sub(1);
     let mut fills = 0;
+    let mut crash = false;
+    let mut turns = Turns::default();
     let mut notes = Vec::new();
     for (index, (range, kind)) in parts.into_iter().enumerate() {
         let part = DrumPart {
@@ -586,8 +655,12 @@ pub fn song_drums(
                 Then::Part
             },
             lead_in: kind.lead_in,
+            crash,
+            turn: turns.of(&kind),
         };
         notes.extend(part_drums(rhythm, &part, &mut fills));
+        crash = ends_with_fill(rhythm, &part);
+        turns.played(&kind, part.bars.len());
     }
     notes
 }
@@ -613,6 +686,8 @@ mod tests {
             contrast: true,
             then: Then::Part,
             lead_in: false,
+            crash: false,
+            turn: 0,
         }
     }
 
@@ -710,6 +785,93 @@ mod tests {
         );
         assert_eq!(last.last().map(|(drum, _)| *drum), Some(Drum::LowTom));
         assert!(fills_of(named("Tango marcato")).is_empty());
+    }
+
+    #[test]
+    fn the_part_after_a_fill_lands_with_a_crash() {
+        let rhythm = named("Pop beat");
+        let bars = bars(16, TimeSignature::COMMON);
+        let crashes = |notes: &[(Drum, NoteEvent)], step: usize| {
+            notes
+                .iter()
+                .filter(|(drum, note)| *drum == Drum::Crash && note.start == step)
+                .count()
+        };
+        let landing = DrumPart {
+            crash: true,
+            ..part(&bars[8..])
+        };
+        let landed = part_drums(rhythm, &landing, &mut 0);
+        assert_eq!(crashes(&landed, 8 * 16), 1);
+        let plain = part_drums(rhythm, &part(&bars[8..]), &mut 0);
+        assert_eq!(crashes(&plain, 8 * 16), 0);
+        // Over a song: the verse ends with a fill, so the chorus lands
+        // with a crash; a tango has no fills, and no crash.
+        let form = [
+            Section::new("Verse", 0, 8 * 16),
+            Section::new("Chorus", 8 * 16, 8 * 16),
+        ];
+        assert!(ends_with_fill(rhythm, &part(&bars[..8])));
+        let song = song_drums(rhythm, &bars, &form, 16 * 16);
+        assert_eq!(crashes(&song, 8 * 16), 1);
+        assert_eq!(crashes(&song, 0), 0);
+        let tango = named("Tango marcato");
+        let bars = self::bars(16, tango.time);
+        let at = bars[8].start;
+        let form = [
+            Section::new("Verse", 0, at),
+            Section::new("Chorus", at, bars[15].end() - at),
+        ];
+        assert!(!ends_with_fill(tango, &part(&bars[..8])));
+        let song = song_drums(tango, &bars, &form, bars[15].end());
+        assert_eq!(crashes(&song, at), 0);
+    }
+
+    #[test]
+    fn the_candombe_phrases_take_turns() {
+        for name in ["Candombe", "Candombe Ansina"] {
+            let rhythm = named(name);
+            let layout = rhythm.layout.unwrap();
+            assert_eq!(rhythm.bars(), layout.bars(), "{name}");
+            // An A part of two phrases: the groove, the second phrase's
+            // groove, and the two closings in turn.
+            let bars = bars(16, TimeSignature::COMMON);
+            let lines = line_bars(rhythm, &part(&bars));
+            assert_eq!(lines[..8], [4, 5, 6, 7, 4, 5, 20, 21], "{name}");
+            assert_eq!(lines[8..], [8, 9, 10, 11, 8, 9, 22, 23], "{name}");
+            // A B part's two phrases have grooves of their own.
+            let b = DrumPart {
+                groove: 1,
+                ..part(&bars)
+            };
+            let lines = line_bars(rhythm, &b);
+            assert_eq!(lines[..4], [12, 13, 14, 15], "{name}");
+            assert_eq!(lines[8..12], [16, 17, 18, 19], "{name}");
+            // A part that comes back carries on the turns: its first
+            // phrase is the second turn.
+            let again = DrumPart {
+                turn: 1,
+                ..part(&bars[..8])
+            };
+            assert_eq!(line_bars(rhythm, &again)[0], 8, "{name}");
+            // And no two turns sound the same.
+            let first = part_drums(rhythm, &part(&bars[..8]), &mut 0);
+            let second = part_drums(rhythm, &again, &mut 0);
+            assert_ne!(first, second, "{name}");
+            // The second turn opens with the clave on the wood.
+            assert!(
+                second
+                    .iter()
+                    .any(|(drum, note)| *drum == Drum::Rim && note.start < 16),
+                "{name}"
+            );
+            assert!(
+                !first
+                    .iter()
+                    .any(|(drum, note)| *drum == Drum::Rim && note.start < 16),
+                "{name}"
+            );
+        }
     }
 
     #[test]
