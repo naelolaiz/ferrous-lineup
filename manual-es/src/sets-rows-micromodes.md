@@ -263,7 +263,11 @@ en cada mitad.
 
 Luego escribe una forma en el patrón: **Juntas** dice cuántas de sus
 notas suenan a la vez, como acorde; **Después**, qué viene después de la
-forma, **Una vez**, **Repetir** o **P, R, I, RI**; el registro,
+forma, **Una vez**, **Repetir** o **P, R, I, RI**, o **Un plan de
+formas**: las formas que escribes en la casilla **Plan**, como P0 RI5
+I7 R0, una tras otra, como una progresión de acordes es el plan de una
+pieza tonal. Un clic en una etiqueta alrededor de la matriz agrega esa
+forma al final del plan. Luego el registro,
 **Cerrado** (todo en una octava), **Suave** (cada nota cerca de la
 anterior) o **Amplio** (saltando por tres octavas, como en Webern).
 **Serialismo** va más allá, como Messiaen, Boulez y Babbitt hacia 1950:
@@ -274,8 +278,9 @@ más abajo y nota por nota con el mismo ritmo, así que las seis primeras
 notas de las dos forman las doce, y también las seis últimas: la manera
 preferida de Schoenberg de mantener las doce notas sonando en dos voces
 a la vez. Una serie sin compañera deja la casilla en gris. **Escribir
-P0 en el patrón actual** reemplaza las notas del canal, y **Guardar en
-un patrón nuevo** las pone en un patrón propio.
+P0 en el patrón actual** (o **Escribir P0 RI5 I7…**, con un plan)
+reemplaza las notas del canal, y **Guardar en un patrón nuevo** las
+pone en un patrón propio.
 
 ### Una serie como tonalidad
 
@@ -286,6 +291,16 @@ sus notas del 1 al 12 en el teclado, en el orden de la serie, así que
 puedes dibujar la serie siguiendo los números. Las teclas de armonía
 tocan los grupos de la serie en lugar de acordes: **3 notas** da cuatro
 teclas, 1–3, 4–6, 7–9 y 10–12; **4 notas**, tres, y **6 notas**, dos.
+
+Toma otra serie en la ventana Serie dodecafónica y haz clic en **Usar
+como tonalidad**, y la pieza se toca sobre la serie nueva: cada nota
+conserva su lugar en su forma, así que la quinta nota de RI5 pasa a ser
+la quinta nota de RI5 de la serie nueva. Ferrous Lineup encuentra de
+qué forma es parte cada nota como lo hace la revisión de conducción de
+voces, así que el plan de formas, el ritmo y los acordes se quedan, y
+solo cambia la serie. Algunas series, como la de Berg, les dan dos
+nombres a cada forma, y volver a la primera serie puede elegir el otro
+nombre: **Ctrl+Z** es la forma segura de volver.
 
 Con **Conducción de voces** marcada, el piano roll revisa las reglas de
 la escritura dodecafónica tal como las aprendían los alumnos de

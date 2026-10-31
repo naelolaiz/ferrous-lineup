@@ -240,7 +240,11 @@ half.
 
 Then write a form into the pattern: **Together** says how many of its
 notes sound at once, as a chord; **Then** what comes after the form,
-**Once**, **Repeat** or **P, R, I, RI**; the register, **Close** (all in
+**Once**, **Repeat** or **P, R, I, RI**, or **A plan of forms**: the
+forms you type in the **Plan** box, such as P0 RI5 I7 R0, one after
+another, as a chord progression is the plan of a tonal piece. Clicking
+a label around the matrix adds that form at the end of the plan. Then
+the register, **Close** (all in
 one octave), **Smooth** (each note near the one before) or **Wide**
 (leaping over three octaves, as in Webern). **Serialism** goes further,
 as Messiaen, Boulez and Babbitt did around 1950: it lets the row
@@ -250,8 +254,9 @@ writes the form's partner with it, an octave lower and note for note in
 the same rhythm, so the first six notes of the two make all twelve, and
 so do the last six: Schoenberg's favourite way of keeping all twelve
 notes going in two voices at once. A row without a partner leaves the
-box grey. **Write P0 into current pattern** replaces the channel's
-notes, and **Save to new pattern** puts them in a pattern of their own.
+box grey. **Write P0 into current pattern** (or **Write P0 RI5 I7…**,
+with a plan) replaces the channel's notes, and **Save to new pattern**
+puts them in a pattern of their own.
 
 ### A row as the key
 
@@ -262,6 +267,16 @@ notes 1 to 12 on the keyboard, in the row's order, so you can draw the
 row by following the numbers. The harmony keys play the row's groups
 instead of chords: **3 notes** gives four keys, 1–3, 4–6, 7–9 and
 10–12; **4 notes** three, and **6 notes** two.
+
+Take another row in the Row window and click **Use as the key**, and
+the piece is played on the new row: every
+note keeps its place in its form, so the fifth note of RI5 becomes the
+fifth note of RI5 of the new row. Ferrous Lineup finds which form each
+note is part of the way the voice-leading check does, so the plan of
+forms, the rhythm and the chords stay, and only the row changes. Some
+rows, such as Berg's, give two names to every form, and going back to
+the first row may then pick the other name: **Ctrl+Z** is the sure way
+back.
 
 With **Voice leading** ticked, the piano roll checks the rules of
 twelve-tone writing as Schoenberg's students learnt them: the notes
