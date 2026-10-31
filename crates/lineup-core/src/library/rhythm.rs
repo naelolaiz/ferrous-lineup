@@ -61,35 +61,48 @@ pub struct Rhythm {
 
 /// How a rhythm whose lines are more than a loop lays them out over a
 /// part of a song. Its lines are, bar after bar, the opening, each groove
-/// and the closing (see [`super::drum_form`]).
+/// and each closing (see [`super::drum_form`]).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Layout {
     /// The bars it opens the song with.
     pub opening: usize,
-    /// How many bars each groove lasts: the first for the song's first
-    /// kind of part (A), the second for the next (B), and so on round.
+    /// How many bars each groove lasts. Each kind of part has `turns` of
+    /// them, which its phrases take turns with: the first ones for the
+    /// song's first kind of part (A), the next for the next (B), and so
+    /// on round.
     pub grooves: &'static [usize],
-    /// The bars that close each phrase.
+    pub turns: usize,
+    /// The bars that close each phrase, and how many closings the
+    /// phrases take turns with.
     pub closing: usize,
+    pub closings: usize,
 }
 
 impl Layout {
     /// How many bars its lines last.
     pub fn bars(&self) -> usize {
-        self.opening + self.grooves.iter().sum::<usize>() + self.closing
+        self.opening + self.grooves.iter().sum::<usize>() + self.closing * self.closings.max(1)
     }
 
-    /// The bar of the lines groove `groove` starts on, and how long it
-    /// lasts.
-    pub fn groove(&self, groove: usize) -> (usize, usize) {
-        let groove = groove % self.grooves.len().max(1);
+    /// The bar of the lines the groove of kind `kind` starts on, in a
+    /// phrase that takes turn `turn`, and how long it lasts.
+    pub fn groove(&self, kind: usize, turn: usize) -> (usize, usize) {
+        let turns = self.turns.max(1);
+        let kinds = (self.grooves.len() / turns).max(1);
+        let groove = ((kind % kinds) * turns + turn % turns) % self.grooves.len().max(1);
         let from = self.opening + self.grooves[..groove].iter().sum::<usize>();
         (from, self.grooves.get(groove).copied().unwrap_or(1).max(1))
     }
 
-    /// The bar of the lines the closing starts on.
+    /// The bar of the lines the first closing starts on.
     pub fn closing_from(&self) -> usize {
         self.opening + self.grooves.iter().sum::<usize>()
+    }
+
+    /// The bar of the lines the closing of a phrase that takes turn
+    /// `turn` starts on.
+    pub fn closing_at(&self, turn: usize) -> usize {
+        self.closing_from() + (turn % self.closings.max(1)) * self.closing
     }
 }
 
@@ -494,12 +507,15 @@ impl Rhythm {
 
 const TWO_FOUR: TimeSignature = TimeSignature::new(2, 4);
 
-/// How the candombes lay out their lines: four bars of opening, four of
-/// groove for A parts and four for B parts, and two of closing.
+/// How the candombes lay out their lines: four bars of opening; two
+/// grooves of four bars for A parts and two for B parts, which their
+/// phrases take turns with; and two closings of two bars.
 const CANDOMBE: Layout = Layout {
     opening: 4,
-    grooves: &[4, 4],
+    grooves: &[4, 4, 4, 4],
+    turns: 2,
     closing: 2,
+    closings: 2,
 };
 const THREE_FOUR: TimeSignature = TimeSignature::new(3, 4);
 const SIX_EIGHT: TimeSignature = TimeSignature::new(6, 8);
@@ -891,6 +907,21 @@ pub static RHYTHMS: &[Rhythm] = &[
          only keep time.",
     )
     .swung(100),
+    rhythm(
+        "Foxtrot",
+        Jazz,
+        120.0,
+        &[
+            (Kick, "o... o... o... o..."),
+            (Snare, "o.o. x.o. o.o. x.o."),
+            (HiHat, ".... x... .... x..."),
+        ],
+        "",
+        "A 1930s dance band's foxtrot: the bass drum feathered on every beat, brushes \
+         sweeping the snare in eighths with the weight on 2 and 4, and the hi-hat pedal on 2 \
+         and 4.",
+    )
+    .swung(75),
     // ----- Soul, funk and R&B -----
     rhythm(
         "Motown",
@@ -1682,20 +1713,25 @@ pub static RHYTHMS: &[Rhythm] = &[
     // Two candombe percussion sheets ("Materiales de la cuerda del
     // Candombe" and a murga sheet's candombe page) give each drum's
     // patterns; the rhythm lays them out over each part of a song (see
-    // `Layout`): four bars of opening, a groove of four bars for A parts
-    // and another for B parts, and two bars that close every phrase.
-    // The repique plays the 3-2 clave on the wood (Rim) in the opening,
-    // its "continuo" base (High tom) in the grooves, the "continuo
-    // variante" in B parts, and its two-bar "fraseo" to close. The piano
-    // (Low tom) plays its base: "tapado" strokes, stick and hand
-    // together, and loud open strokes just before beats 2 and 4, with
-    // accents on beats 3 and 4 as recordings of candombe drumming
-    // measure them (Maia, Rocamora, Biscainho and Fuentes, "Adapting
-    // meter tracking models to Latin American music", ISMIR 2022), and its
-    // "variación" every fourth bar, every second bar in B parts, and in
-    // the closing's last bar. The chico (Conga) keeps its ostinato, the
-    // hand's accent then two stick strokes, and plays every sixteenth
-    // ("repicado") in the closing's last bar.
+    // `Layout`): four bars of opening; two grooves of four bars for A
+    // parts and two for B parts, which a part's phrases take turns with,
+    // so no two phrases in a row sound the same; and two closings of two
+    // bars, taken in turns too. The repique plays the 3-2 clave on the
+    // wood (Rim) in the opening and in the first bar of every second
+    // phrase, never just before a new part; its "continuo" base (High
+    // tom) in the grooves, the "continuo variante" in every second bar
+    // of B parts and in three of four in their second turn, and its
+    // "fraseo" to close, the second closing leading into it from the
+    // continuo variante. The piano (Low tom) plays its base: "tapado"
+    // strokes, stick and hand together, and loud open strokes just
+    // before beats 2 and 4, with accents on beats 3 and 4 as recordings
+    // of candombe drumming measure them (Maia, Rocamora, Biscainho and
+    // Fuentes, "Adapting meter tracking models to Latin American music",
+    // ISMIR 2022), and its "variación" every fourth bar of a first turn,
+    // every second bar of a second turn and of B parts, three of four in
+    // B's second turn, and in the closings. The chico (Conga) keeps its
+    // ostinato, the hand's accent then two stick strokes, and plays
+    // every sixteenth ("repicado") in each closing's last bar.
     rhythm(
         "Candombe",
         Folklore,
@@ -1705,6 +1741,11 @@ pub static RHYTHMS: &[Rhythm] = &[
                 Rim,
                 "x..x ..x. ..x. x... | x..x ..x. ..x. x... | \
                  x..x ..x. ..x. x... | x..x ..x. ..x. x... | \
+                 .... .... .... .... | .... .... .... .... | \
+                 .... .... .... .... | .... .... .... .... | \
+                 x..x ..x. ..x. x... | .... .... .... .... | \
+                 .... .... .... .... | .... .... .... .... | \
+                 .... .... .... .... | .... .... .... .... | \
                  .... .... .... .... | .... .... .... .... | \
                  .... .... .... .... | .... .... .... .... | \
                  .... .... .... .... | .... .... .... .... | \
@@ -1717,9 +1758,14 @@ pub static RHYTHMS: &[Rhythm] = &[
                  .... .... .... .... | .... .... .... .... | \
                  xx.x xx.x xx.x xx.x | xx.x xx.x xx.x xx.x | \
                  xx.x xx.x xx.x xx.x | xx.x xx.x xx.x xx.x | \
+                 .... .... .... .... | xx.x xx.x xx.x xx.x | \
+                 xx.x xx.x xx.x xx.x | xx.x xx.x xx.x xx.x | \
                  xxxx xx.x xx.x xx.x | xx.x xx.x xx.x xx.x | \
                  xxxx xx.x xx.x xx.x | xx.x xx.x xx.x xx.x | \
-                 .x.x x... .x.x x... | .x.x xx.x xx.x x...",
+                 xxxx xx.x xx.x xx.x | xxxx xx.x xx.x xx.x | \
+                 xx.x xx.x xx.x xx.x | xxxx xx.x xx.x xx.x | \
+                 .x.x x... .x.x x... | .x.x xx.x xx.x x... | \
+                 xxxx xx.x xx.x xx.x | .x.x xx.x xx.x x...",
             ),
             (
                 LowTom,
@@ -1729,7 +1775,12 @@ pub static RHYTHMS: &[Rhythm] = &[
                  x..X .x.. X..X X... | x..X .xx. X..X X.x. | \
                  x..X .x.. X..X X... | x..X .xx. X..X X.x. | \
                  x..X .x.. X..X X... | x..X .xx. X..X X.x. | \
-                 x..X .x.. X..X X... | x..X .xx. X..X X.x.",
+                 x..X .x.. X..X X... | x..X .xx. X..X X.x. | \
+                 x..X .x.. X..X X... | x..X .xx. X..X X.x. | \
+                 x..X .xx. X..X X.x. | x..X .x.. X..X X... | \
+                 x..X .xx. X..X X.x. | x..X .xx. X..X X.x. | \
+                 x..X .x.. X..X X... | x..X .xx. X..X X.x. | \
+                 x..X .xx. X..X X.x. | x..X .xx. X..X X.x.",
             ),
             (
                 Conga,
@@ -1739,6 +1790,11 @@ pub static RHYTHMS: &[Rhythm] = &[
                  .Xxx .Xxx .Xxx .Xxx | .Xxx .Xxx .Xxx .Xxx | \
                  .Xxx .Xxx .Xxx .Xxx | .Xxx .Xxx .Xxx .Xxx | \
                  .Xxx .Xxx .Xxx .Xxx | .Xxx .Xxx .Xxx .Xxx | \
+                 .Xxx .Xxx .Xxx .Xxx | .Xxx .Xxx .Xxx .Xxx | \
+                 .Xxx .Xxx .Xxx .Xxx | .Xxx .Xxx .Xxx .Xxx | \
+                 .Xxx .Xxx .Xxx .Xxx | .Xxx .Xxx .Xxx .Xxx | \
+                 .Xxx .Xxx .Xxx .Xxx | .Xxx .Xxx .Xxx .Xxx | \
+                 .Xxx .Xxx .Xxx .Xxx | xXxx xXxx xXxx xXxx | \
                  .Xxx .Xxx .Xxx .Xxx | xXxx xXxx xXxx xXxx",
             ),
         ],
@@ -1749,9 +1805,11 @@ pub static RHYTHMS: &[Rhythm] = &[
          The chico keeps its ostinato, the three sixteenths after each beat, the hand's \
          accent on the first. The piano's open strokes ring just before beats 2 and 4 among \
          its muffled ones, which it accents on beats 3 and 4, with a variation every \
-         fourth bar. A part of another kind, a \
-         refrain after the verse, plays the repique's busier base and the piano's \
-         variation every second bar.",
+         fourth bar. Phrases take turns, so no two in a row sound the same: every second \
+         one opens with a bar of clave on the wood and varies the piano every second bar, \
+         and every second call starts from the repique's busier base. A part of another kind, a refrain \
+         after the verse, mixes the repique's busier base into its own and varies the \
+         piano every second bar, more often still on its second turn.",
     )
     .laid_out(CANDOMBE),
     rhythm(
@@ -1765,6 +1823,11 @@ pub static RHYTHMS: &[Rhythm] = &[
                  x..x .x.x x..x x..x | x..x .x.x x..x x..x | \
                  .... .... .... .... | .... .... .... .... | \
                  .... .... .... .... | .... .... .... .... | \
+                 x..x .x.x x..x x..x | .... .... .... .... | \
+                 .... .... .... .... | .... .... .... .... | \
+                 .... .... .... .... | .... .... .... .... | \
+                 .... .... .... .... | .... .... .... .... | \
+                 .... .... .... .... | .... .... .... .... | \
                  .... .... .... .... | .... .... .... .... | \
                  .... .... .... .... | .... .... .... .... | \
                  .... .... .... .... | .... .... .... ....",
@@ -1775,9 +1838,14 @@ pub static RHYTHMS: &[Rhythm] = &[
                  .... .... .... .... | .... .... .... .... | \
                  xx.x xx.x xx.x xx.x | xx.x xx.x xx.x xx.x | \
                  xx.x xx.x xx.x xx.x | xx.x xx.x xx.x xx.x | \
+                 .... .... .... .... | xx.x xx.x xx.x xx.x | \
+                 xx.x xx.x xx.x xx.x | xx.x xx.x xx.x xx.x | \
                  xxxx xx.x xx.x xx.x | xx.x xx.x xx.x xx.x | \
                  xxxx xx.x xx.x xx.x | xx.x xx.x xx.x xx.x | \
-                 .x.x x... .x.x x... | .x.x xx.x xx.x x...",
+                 xxxx xx.x xx.x xx.x | xxxx xx.x xx.x xx.x | \
+                 xx.x xx.x xx.x xx.x | xxxx xx.x xx.x xx.x | \
+                 .x.x x... .x.x x... | .x.x xx.x xx.x x... | \
+                 xxxx xx.x xx.x xx.x | .x.x xx.x xx.x x...",
             ),
             (
                 LowTom,
@@ -1787,7 +1855,12 @@ pub static RHYTHMS: &[Rhythm] = &[
                  x..X .x.. XxX. X... | x..X .x.. XxXX X... | \
                  x..X .x.. XxX. X... | x..X .x.. XxXX X... | \
                  x..X .x.. XxX. X... | x..X .x.. XxXX X... | \
-                 x..X .x.. XxX. X... | x..X .x.. XxXX X...",
+                 x..X .x.. XxX. X... | x..X .x.. XxXX X... | \
+                 x..X .x.. XxX. X... | x..X .x.. XxXX X... | \
+                 x..X .x.. XxXX X... | x..X .x.. XxX. X... | \
+                 x..X .x.. XxXX X... | x..X .x.. XxXX X... | \
+                 x..X .x.. XxX. X... | x..X .x.. XxXX X... | \
+                 x..X .x.. XxXX X... | x..X .x.. XxXX X...",
             ),
             (
                 Conga,
@@ -1797,6 +1870,11 @@ pub static RHYTHMS: &[Rhythm] = &[
                  .Xxx .Xxx .Xxx .Xxx | .Xxx .Xxx .Xxx .Xxx | \
                  .Xxx .Xxx .Xxx .Xxx | .Xxx .Xxx .Xxx .Xxx | \
                  .Xxx .Xxx .Xxx .Xxx | .Xxx .Xxx .Xxx .Xxx | \
+                 .Xxx .Xxx .Xxx .Xxx | .Xxx .Xxx .Xxx .Xxx | \
+                 .Xxx .Xxx .Xxx .Xxx | .Xxx .Xxx .Xxx .Xxx | \
+                 .Xxx .Xxx .Xxx .Xxx | .Xxx .Xxx .Xxx .Xxx | \
+                 .Xxx .Xxx .Xxx .Xxx | .Xxx .Xxx .Xxx .Xxx | \
+                 .Xxx .Xxx .Xxx .Xxx | xXxx xXxx xXxx xXxx | \
                  .Xxx .Xxx .Xxx .Xxx | xXxx xXxx xXxx xXxx",
             ),
         ],

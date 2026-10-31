@@ -364,12 +364,9 @@ mod tests {
                 apply::use_fill(&mut project, fill);
                 assert_kept(&before, &project, None, &what(fill.name));
 
-                let mut project = before.clone();
-                rows::use_row_style(&mut project, row);
-                assert_kept(&before, &project, None, &what(row.name));
-
-                // A micromode style in a song is the band's: see
-                // `band::micromode` for how it keeps locked parts.
+                // A micromode style or a twelve-tone style in a song is the
+                // band's: see `band::micromode` and `band::row` for how
+                // they keep locked parts.
 
                 // Tried in a pattern of the song, with the locked channel
                 // selected, and in a new one.
@@ -381,7 +378,8 @@ mod tests {
                 assert_kept(&before, &project, None, &what(rhythm.name));
                 let mut project = before.clone();
                 let key = project.scale.root;
-                rows::write_row_style(&mut project, 0, row, key, Some(one));
+                let on = row.row_in(project.scale, false);
+                rows::write_row_style(&mut project, 0, row, on, Some(one));
                 assert_kept(&before, &project, None, &what(row.name));
                 let start = micromodes::DEMO_SECTIONS[0].0;
                 let mut project = before.clone();

@@ -548,7 +548,7 @@ folder of the same name next to the song, the takes folder named after
 the song, and the song's own folder. So a song moved or copied to
 another computer together with its takes folder finds its takes.
 
-A song with a take is saved in [format 31](../reference/project-format.md):
+A song with a take is saved in [format 32](../reference/project-format.md):
 an older Ferrous Lineup does not know what a take is, and says it needs
 a newer version rather than open the song without it.
 

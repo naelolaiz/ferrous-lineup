@@ -457,8 +457,10 @@ mod tests {
             .filter(|&(at, _)| at >= 80)
             .collect();
         assert_eq!(bass_last, [(80, 16)]);
+        // The drums fill into the ending and land on its first beat with
+        // a crash, and crash again on the last hit.
         let crash = channel(&project, "Crash");
-        assert_eq!(notes(&project, Player::Drums, crash), [(80, 1)]);
+        assert_eq!(notes(&project, Player::Drums, crash), [(64, 1), (80, 1)]);
         let snare = channel(&project, "Snare");
         assert!(
             notes(&project, Player::Drums, snare)
