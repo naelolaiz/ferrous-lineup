@@ -170,9 +170,13 @@ lista de reproducción tienen las mismas opciones de insertar y eliminar.
 Arriba de la hoja:
 
 - **Mostrar** nombra la misma armonía de otras maneras, sin cambiar
-  ninguna nota: **Como está escrito**, como **Acordes**, como
-  **Conjuntos de clases de alturas** o como **Micromodos**. [Más allá de
-  las tonalidades](sets-rows-micromodes.md#una-armonía-cuatro-nombres)
+  ninguna nota: **Según la tonalidad**, con la que se abre toda canción
+  (acordes en una tonalidad mayor o menor o en un modo, conjuntos en un
+  conjunto o una serie, micromodos en un micromodo), **Como está
+  escrito**, como **Acordes**, como **Conjuntos de clases de alturas** o
+  como **Micromodos**. Otra elección dura hasta que abres otra canción.
+  [Más allá de las
+  tonalidades](sets-rows-micromodes.md#una-armonía-cuatro-nombres)
   explica qué dice cada uno.
 - **Compases por línea**: **Ajustar a los nombres** pone en una línea
   tantos compases como quepan con cada nombre, y el numeral de debajo, a

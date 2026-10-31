@@ -708,6 +708,15 @@ tres primeras notas de la serie como conjunto, que son las que tocaban
 las teclas de armonía (ver [Una tonalidad como conjunto: las mismas
 notas, otro
 nombre](sets.md#una-tonalidad-como-conjunto-las-mismas-notas-otro-nombre)).
+La serie del Concierto de Webern sobre Do da Do Si Mi♭, nombrada como
+conjunto, 3-3; **Menor 3** entre los micromodos del menú nombra las
+mismas tres notas como el micromodo que también son (ver [Tres notas:
+un conjunto o un
+micromodo](sets.md#tres-notas-un-conjunto-o-un-micromodo)). Elegir otra
+vez **serie dodecafónica** trae de vuelta la serie de la canción, cada
+nota en su lugar: los menús de tonalidad recuerdan la última serie que
+fue la tonalidad, cada vez que se dibujan, y solo una canción que nunca
+tuvo una serie recibe la Serie de Lineup.
 
 ### Otra serie para la misma pieza
 
