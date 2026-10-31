@@ -2200,6 +2200,23 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
          Desde una tonalidad, las notas se quedan como están.",
     ),
     (
+        "{}. The set of {} notes this song uses most: {} of the song, {}. As the key: {}.",
+        "{}. El conjunto de {} notas que esta canción usa más: {} de la canción, {}. Como \
+         tonalidad: {}.",
+    ),
+    ("in the line of {}", "en la línea de {}"),
+    (
+        "in the notes sounding together",
+        "en las notas que suenan juntas",
+    ),
+    (
+        "{}. As the key, on the key note: {}. From another set or micromode, every form keeps \
+         its degree and the notes go with it. From a key, the notes stay as they are.",
+        "{}. Como tonalidad, sobre la tónica: {}. Desde otro conjunto o micromodo, cada forma \
+         conserva su grado y las notas van con ella. Desde una tonalidad, las notas se quedan \
+         como están.",
+    ),
+    (
         "The pattern only has room for {} of the 12 notes. Make it longer, or the steps shorter, to hear the whole row.",
         "El patrón solo tiene lugar para {} de las 12 notas. Alárgalo, o acorta los pasos, para escuchar toda la serie.",
     ),

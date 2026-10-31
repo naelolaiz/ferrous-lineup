@@ -44,7 +44,7 @@ use serde::{Deserialize, Serialize};
 use super::HarmonyName;
 use crate::harmony::voice_leading::{FormStatement, HeardIn, Voice, colour, voices_of};
 use crate::harmony::{
-    ChordQuality, ChordSymbol, Harmony, HeardNote, Micromode, PitchSet, Scale, ScaleKind,
+    ChordQuality, ChordSymbol, Harmony, HeardNote, Micromode, PitchSet, Scale, ScaleKind, SetClass,
 };
 use crate::pitch::Note;
 use crate::{Chord, KeyMap, NoteEvent, Project};
@@ -849,6 +849,130 @@ pub fn tally(
     }
 }
 
+/// The class of sets of one size a song uses most, and the set of it
+/// the song uses most: what the key menu marks among the sets of that
+/// size (see [`song_set`]).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SongSet {
+    pub class: &'static SetClass,
+    /// The class's set the song uses most, where it is: Webern's
+    /// Concerto row on C read in threes is mostly B C Eb.
+    pub set: PitchSet,
+    /// The steps groups of the class sound, as [`most_used`] counts them.
+    pub steps: usize,
+    /// How long the song is, in steps.
+    pub length: usize,
+    /// How the notes were read: together, or in a line.
+    pub grouping: Grouping,
+    /// The channel whose line it was read in, for a line; the notes
+    /// together are read in all the channels at once.
+    pub channel: Option<usize>,
+}
+
+impl SongSet {
+    /// How much of the song the class fills, in hundredths, rounded.
+    pub fn percent(&self) -> usize {
+        (self.steps * 100 + self.length / 2) / self.length.max(1)
+    }
+}
+
+/// The class of sets of `size` notes the song uses most, read from its
+/// notes the two ways an analyst cuts them (see [`Grouping`]): all the
+/// notes sounding together, and each channel's line on its own, as a
+/// tune or a bass line is one line. The reading where a class sounds
+/// longest wins, the notes together when two are as long. Only groups
+/// of exactly `size` different notes count: a chord of three notes says
+/// nothing about sets of four. Each group lasts until the next one
+/// starts, and two groups of one class at once count once, as
+/// [`most_used`] counts them. `None` when no group has that many notes.
+pub fn song_set(project: &Project, size: usize) -> Option<SongSet> {
+    let length = project.song_length();
+    let readings = std::iter::once((Grouping::Together, None))
+        .chain((0..project.channels().len()).map(|channel| (Grouping::InLine, Some(channel))));
+    let mut best: Option<SongSet> = None;
+    for (grouping, channel) in readings {
+        let heard = heard_groups(project, grouping, Some(size), channel);
+        let Some((class, steps, set)) = longest_class(&heard, size, length) else {
+            continue;
+        };
+        if best.is_none_or(|best| steps > best.steps) {
+            best = Some(SongSet {
+                class,
+                set,
+                steps,
+                length,
+                grouping,
+                channel,
+            });
+        }
+    }
+    best
+}
+
+/// Among the groups of exactly `size` notes in `heard`, the class that
+/// sounds longest (then the first in Forte's order), the steps it
+/// sounds, and its set that sounds longest (then the first heard).
+fn longest_class(
+    heard: &[HeardGroups],
+    size: usize,
+    length: usize,
+) -> Option<(&'static SetClass, usize, PitchSet)> {
+    // Each class with its steps, and each of its sets with theirs.
+    struct ClassSteps {
+        class: &'static SetClass,
+        steps: usize,
+        sets: Vec<(PitchSet, usize)>,
+    }
+    let mut classes: Vec<ClassSteps> = Vec::new();
+    for (index, group) in heard.iter().enumerate() {
+        let until = heard
+            .get(index + 1)
+            .map_or(length, |next| next.start)
+            .min(length);
+        let steps = until.saturating_sub(group.start);
+        let mut counted: Vec<&'static SetClass> = Vec::new();
+        for set in group.sets().into_iter().filter(|set| set.len() == size) {
+            let class = set.set_class();
+            let entry = match classes.iter().position(|known| known.class == class) {
+                Some(found) => &mut classes[found],
+                None => {
+                    classes.push(ClassSteps {
+                        class,
+                        steps: 0,
+                        sets: Vec::new(),
+                    });
+                    classes.last_mut().expect("just pushed")
+                }
+            };
+            if !counted.contains(&class) {
+                entry.steps += steps;
+                counted.push(class);
+            }
+            match entry.sets.iter_mut().find(|(member, _)| *member == set) {
+                Some((_, member_steps)) => *member_steps += steps,
+                None => entry.sets.push((set, steps)),
+            }
+        }
+    }
+    let longest = classes.into_iter().min_by(|a, b| {
+        b.steps
+            .cmp(&a.steps)
+            .then((a.class.cardinality, a.class.number).cmp(&(b.class.cardinality, b.class.number)))
+    })?;
+    let (set, _) =
+        longest
+            .sets
+            .into_iter()
+            .fold(
+                None::<(PitchSet, usize)>,
+                |most, (set, set_steps)| match most {
+                    Some((_, most_steps)) if most_steps >= set_steps => most,
+                    _ => Some((set, set_steps)),
+                },
+            )?;
+    (longest.steps > 0).then_some((longest.class, longest.steps, set))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1432,5 +1556,36 @@ mod tests {
         let written = tally(&project, Notation::Key, Grouping::Written, None, None);
         assert_eq!(written.classes[0].class, "Menor 3");
         assert!(written.classes[0].forms.len() >= 3);
+    }
+
+    #[test]
+    fn the_songs_own_set_of_each_size() {
+        use crate::library::{RowStyle, demo};
+        // Webern's trichords: in threes, 3-3 all through; in sixes, the
+        // two halves of the row, 6-20.
+        let webern = demo::row_demo(RowStyle::named("Webern's trichords").unwrap());
+        let three = song_set(&webern, 3).unwrap();
+        assert_eq!(three.class.name(), "3-3");
+        assert_eq!(three.set.set_class(), three.class);
+        assert!(three.percent() >= 90, "{three:?}");
+        let six = song_set(&webern, 6).unwrap();
+        assert_eq!(six.class.name(), "6-20", "{six:?}");
+        assert_eq!(six.grouping, Grouping::InLine);
+        // A song of triads: 3-11, read together, and the set most heard
+        // is one of its chords.
+        let mut song = Project::with_band();
+        let markers = ["C", "F", "G", "C"]
+            .iter()
+            .enumerate()
+            .map(|(bar, text)| crate::ChordMarker::new(bar * 16, name(text)))
+            .collect::<Vec<_>>();
+        assert!(song.set_chords(0, 64, &markers));
+        song.follow_chord_sheet();
+        let triads = song_set(&song, 3).unwrap();
+        assert_eq!(triads.class.name(), "3-11", "{triads:?}");
+        assert_eq!(triads.grouping, Grouping::Together);
+        assert_eq!(triads.set, PitchSet::from_semitones(&[0, 4, 7]));
+        // No group of eleven notes anywhere.
+        assert_eq!(song_set(&song, 11), None);
     }
 }

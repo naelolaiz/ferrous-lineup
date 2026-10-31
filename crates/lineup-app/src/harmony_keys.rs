@@ -868,7 +868,7 @@ impl HarmonyKeys {
             let name = egui::RichText::new(scale.spell(scale.root).to_string()).strong();
             let tonic = crate::twelve_tone::root_menu(ui, "harmony-root", scale, 56.0, name);
             if let Some(new) =
-                crate::twelve_tone::kind_menu(ui, "harmony-kind", scale, tonic, 110.0)
+                crate::twelve_tone::kind_menu(ui, "harmony-kind", scale, tonic, 110.0, project)
             {
                 actions.push(HarmonyAction::SetScale(new));
             }
