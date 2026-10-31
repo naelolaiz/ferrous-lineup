@@ -41,7 +41,7 @@
 - [Series dodecafónicas y sus reglas](theory/twelve-tone.md)
 - [Micromodos](theory/micromodes.md)
 - [Conducción de voces y movimiento de las partes](theory/voice-leading.md)
-- [Importar una grabación (experimental)](theory/listen.md)
+- [Tomas: oír una melodía cantada](theory/listen.md)
 - [Ejercicios: la teoría musical en código](theory/exercises.md)
 
 # Parte IV: La banda

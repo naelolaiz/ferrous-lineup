@@ -63,6 +63,25 @@ nunca se entrecorta (ver [Exportar](exporting.md#un-archivo-de-sonido)).
   canales. Revisa que ese canal no esté silenciado.
 - Ver [Teclados y sintetizadores MIDI](midi.md).
 
+## Tomas
+
+- **«No se pudo grabar una toma: no se encontró ningún micrófono».** El
+  sistema no tiene ninguna entrada desde la que grabar: enchufa un
+  micrófono o unos auriculares con micrófono, o elige uno como entrada
+  en los ajustes de sonido del sistema, y vuelve a hacer clic en el
+  botón del micrófono.
+- **En un Mac, la toma sale en silencio.** Ferrous Lineup necesita
+  permiso para usar el micrófono: actívalo en Ajustes del Sistema >
+  Privacidad y seguridad > Micrófono.
+- **También se escriben las notas de la banda**, o notas que no
+  cantaste: el micrófono oye los altavoces. Usa auriculares.
+- **Las notas caen un poco tarde o temprano.** Ajusta
+  **Ajustes > Audio > Micrófono > Retrasar las tomas en** (ver
+  [Tomas](takes.md#si-las-notas-caen-tarde-o-temprano)).
+- **Tu toma dice «No se oyeron notas: solo se puede conservar la
+  grabación».** El micrófono te oyó demasiado bajo, o nada: revisa su
+  nivel en los ajustes de sonido del sistema, y canta más cerca de él.
+
 ## Las teclas no funcionan
 
 - **Espacio no reproduce**, y las otras teclas no hacen nada: un campo
@@ -95,7 +114,7 @@ nunca se entrecorta (ver [Exportar](exporting.md#un-archivo-de-sonido)).
 - **Los acordes de un archivo MIDI importado están mal.** La aplicación
   los adivina a partir de las notas, y puede equivocarse donde la música
   es escasa o va rápido. Corrígelos en la hoja de acordes (ver [Abrir
-  archivos MIDI y grabaciones](importing.md#corregir-los-acordes)).
+  archivos MIDI y hojas de acordes](importing.md#corregir-los-acordes)).
 - **Los nombres de los acordes no son los que esperaba**, como C en
   lugar de Do, o al revés: **Edición > Ajustes… > Armonía >
   Nomenclatura de notas** elige letras o solfeo.
