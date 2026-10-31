@@ -101,7 +101,7 @@ sees only what the crate makes public.
 | `lineup-core/tests/chord_reading.rs` | how well the chord sheet names what the hardest demos play: the Augurs chord, the Petrushka chord, a stack of fourths |
 | `lineup-core/tests/key_finding.rs` | how many bars of the demos the key finder hears in their written key, and that it finds clear modulations on their bar |
 | `lineup-core/tests/damaged_files.rs` | that a damaged project, MIDI file or chord sheet ends in an error or a project, never in a crash |
-| `lineup-listen/tests/key_changes.rs` | how well key changes are found in demos rendered to audio |
+| `lineup-listen/tests/sung_notes.rs` | how well the pitch and the notes of real singing are heard, on the vocadito dataset (downloaded first, see [Testing it](../theory/listen.md#testing-it)) |
 
 ### Damaged files
 
@@ -128,6 +128,8 @@ The ordinary tests next to them keep the figure from falling:
 of the bars are heard in their key. The report says why a change moved
 that figure; the test makes sure it never moves the wrong way unnoticed
 (see [How well it hears](../theory/hearing.md#how-well-it-hears)).
+`sung_notes.rs` is a report of the same kind, run on recordings that
+are not in the repository, so it has no ordinary test beside it.
 
 ## Window tests
 

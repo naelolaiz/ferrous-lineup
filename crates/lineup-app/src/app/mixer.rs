@@ -270,6 +270,7 @@ fn instrument(channel: &Channel) -> String {
             None => tr("Built-in drum").to_string(),
         },
         ChannelKind::Sampler(SampleSource::File(_)) => tr("Sample").to_string(),
+        ChannelKind::Sampler(SampleSource::Take(_)) => tr("Take").to_string(),
     }
 }
 
