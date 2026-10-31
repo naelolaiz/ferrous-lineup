@@ -331,7 +331,11 @@ pub fn write_rhythm(project: &mut Project, pattern: usize, rhythm: &Rhythm) -> b
 /// `pattern`, in place of whatever the built-in drums played there; the
 /// drums they need are added. Returns `false` if the pattern does not
 /// exist, the rack is full or every drum is locked.
-fn write_drums(project: &mut Project, pattern: usize, notes: &[(Drum, NoteEvent)]) -> bool {
+pub(super) fn write_drums(
+    project: &mut Project,
+    pattern: usize,
+    notes: &[(Drum, NoteEvent)],
+) -> bool {
     let mut rows: Vec<(Drum, usize)> = Vec::new();
     for &(drum, _) in notes {
         if rows.iter().any(|&(known, _)| known == drum) {
@@ -989,7 +993,13 @@ mod tests {
                 }
             }
         }
-        let intro = project.playlist().clips()[1].pattern;
+        let intro = project
+            .playlist()
+            .clips()
+            .iter()
+            .find(|clip| clip.track == 1 && clip.start == 0)
+            .unwrap()
+            .pattern;
         for drum in rhythm.drums() {
             assert_eq!(
                 played(intro, 0, drum),
