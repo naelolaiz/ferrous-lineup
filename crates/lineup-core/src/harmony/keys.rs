@@ -22,9 +22,12 @@
 //!
 //! Music without a key has no home and no functions. For a twelve-tone
 //! row or a pitch-class set, the keys play groups of its notes instead:
-//! see [`group_keys`].
+//! see [`group_keys`]. A key of three notes, one of Kröpfl's micromodes,
+//! has the micromode's own forms as its keys, each named by its degree:
+//! see [`form_keys`].
 
-use super::{Chord, Harmony, PitchSet, Scale, ScaleKind, analyze};
+use super::degree::{self, Degree};
+use super::{Chord, Harmony, Micromode, PitchSet, Scale, ScaleKind, analyze};
 use crate::library::voicing::voice;
 use crate::pitch::{Note, NoteName, PitchClass};
 
@@ -226,6 +229,12 @@ pub struct GroupKey {
     /// The chord the notes make when played from the lowest up, such as
     /// "Cm/Eb", if it has a name.
     pub chord: Option<String>,
+    /// For a form of the set a key is: its degree in the key (see
+    /// [`form_keys`]).
+    pub degree: Option<Degree>,
+    /// For a form of the set a key is: how many notes it shares with the
+    /// key's own form, all of them for that form itself.
+    pub kept: Option<usize>,
 }
 
 impl GroupKey {
@@ -268,6 +277,58 @@ impl GroupKey {
             notes,
             names,
             chord,
+            degree: None,
+            kept: None,
+        }
+    }
+
+    /// The key for `form`, a form of the set the key `scale` is: called
+    /// by its degree, and named as what it is when it is something
+    /// tonal music has a name for: a chord, its notes from the root up
+    /// (C C# E is Menor 3, not an incomplete C#m(maj7), so only a triad
+    /// of three notes is a chord), or a scale, spelled as that scale (the
+    /// set 7-35 moved up a fifth from C major is G major). Its notes are
+    /// otherwise in normal form.
+    fn form(scale: Scale, form: PitchSet, degree: Degree) -> GroupKey {
+        let key = scale.pitch_set();
+        let chord = form_chord(form);
+        // The scale the form is, on the note the key's root moves to.
+        let as_scale = (0..12)
+            .find(|&up| key.transpose(up) == form)
+            .map(|up| Scale::set(scale.root.transpose(i32::from(up)), form).as_key())
+            .filter(|moved| moved.kind.is_tonal() && form.len() > 5);
+        let (notes, names) = match (chord, as_scale) {
+            (Some(chord), _) => {
+                let names = chord.spell(scale.spell_root(chord));
+                (names.iter().map(|name| name.pitch_class()).collect(), names)
+            }
+            (None, Some(moved)) => {
+                let notes: Vec<PitchClass> = moved.pitch_classes().collect();
+                let names = notes.iter().map(|&p| moved.spell(p)).collect();
+                (notes, names)
+            }
+            (None, None) => {
+                let notes = form.normal_form();
+                let names = notes.iter().map(|&p| scale.spell(p)).collect();
+                (notes, names)
+            }
+        };
+        let name = match (chord, as_scale) {
+            (Some(chord), _) => Harmony::Chord {
+                chord,
+                bass: chord.root,
+            }
+            .label_in(scale),
+            (None, Some(moved)) => Some(crate::i18n::key_name(moved)),
+            (None, None) => None,
+        };
+        GroupKey {
+            label: degree.to_string(),
+            notes,
+            names,
+            chord: name,
+            degree: Some(degree),
+            kept: Some(degree::kept(key, form)),
         }
     }
 
@@ -280,6 +341,22 @@ impl GroupKey {
     /// row's order from the bottom up.
     pub fn play(&self) -> Vec<Note> {
         stacked(&self.notes)
+    }
+}
+
+/// The chord the form `form` is, when tonal music has a name for it: a
+/// triad of three notes (C C# E is Menor 3, not an incomplete
+/// C#m(maj7), so only a triad of three notes is a chord), or a chord of
+/// four or five notes that holds them all and nothing else (C E G Bb is
+/// C7, E G Bb D is Em7b5).
+pub fn form_chord(form: PitchSet) -> Option<Chord> {
+    match form.len() {
+        3 => Micromode::of(form).and_then(|micromode| micromode.chord(form)),
+        4..=5 => match analyze(stacked(&form.normal_form())) {
+            Harmony::Chord { chord, .. } if chord.pitch_set() == form => Some(chord),
+            _ => None,
+        },
+        _ => None,
     }
 }
 
@@ -343,6 +420,12 @@ pub fn row_group(size: ChordSize) -> usize {
 /// the bass) and Cm/G. Groups with no chord name are called by their
 /// set class.
 pub fn group_keys(scale: Scale, size: ChordSize) -> Option<Vec<GroupKey>> {
+    // Three notes make one chord, the set itself: its keys are its forms.
+    if scale.pitch_set().len() == 3
+        && let Some(forms) = form_keys(scale, false)
+    {
+        return Some(forms);
+    }
     let notes: Vec<PitchClass> = scale.pitch_classes().collect();
     match scale.kind {
         ScaleKind::Row(_) => {
@@ -389,6 +472,42 @@ pub fn group_keys(scale: Scale, size: ChordSize) -> Option<Vec<GroupKey>> {
         }
         _ => None,
     }
+}
+
+/// The forms of the set a key is, as harmony keys, or `None` for a key
+/// that is not a set (or is all twelve notes, or one).
+///
+/// Music on one pitch-class set, such as one of Kröpfl's micromodes,
+/// makes its harmony of the set's own forms, moved and turned upside
+/// down, so those forms are its keys: the key's own form first, then
+/// the others from the one that keeps the most of its notes (see
+/// [`degree::forms_by_nearness`]), each called by its degree (`T2`,
+/// `T5I`). Unless `all`, the forms that keep fewer than half the notes
+/// of home (for three notes, none) are left out, except when that would
+/// leave fewer than four keys: the augmented triad's four forms share
+/// no notes at all, so all four are its keys.
+pub fn form_keys(scale: Scale, all: bool) -> Option<Vec<GroupKey>> {
+    let ScaleKind::Set(_) = scale.kind else {
+        return None;
+    };
+    let key = scale.pitch_set();
+    if !(2..12).contains(&key.len()) {
+        return None;
+    }
+    let near_enough = (key.len() / 2).max(1);
+    let forms = degree::forms_by_nearness(scale);
+    let near = forms
+        .iter()
+        .filter(|&&(form, _)| degree::kept(key, form) >= near_enough)
+        .count();
+    let shown = if all || near < 4 { forms.len() } else { near };
+    Some(
+        forms
+            .into_iter()
+            .take(shown)
+            .map(|(form, degree)| GroupKey::form(scale, form, degree))
+            .collect(),
+    )
 }
 
 #[cfg(test)]
@@ -590,18 +709,17 @@ mod tests {
 
     #[test]
     fn a_set_names_its_keys_by_their_chords() {
-        let minor = Scale::set(PitchClass::C, PitchSet::from_semitones(&[0, 3, 7]));
-        let keys = group_keys(minor, ChordSize::Triads).unwrap();
+        // Every other note of a four-note set, from each of its notes.
+        let seventh = Scale::set(PitchClass::C, PitchSet::from_semitones(&[0, 4, 7, 10]));
+        let keys = group_keys(seventh, ChordSize::Triads).unwrap();
         let labels: Vec<&str> = keys.iter().map(|key| key.label.as_str()).collect();
-        assert_eq!(labels, ["Cm", "Cm/Eb", "Cm/G"]);
+        assert_eq!(labels, ["C", "Edim", "3-7", "C7/Bb"]);
         let names: Vec<String> = keys[1].names.iter().map(|n| n.to_string()).collect();
-        assert_eq!(names, ["Eb", "G", "C"]);
+        assert_eq!(names, ["E", "Bb", "G"]);
         // A group with no chord name is called by its set class.
-        let viennese = Scale::set(PitchClass::C, PitchSet::from_semitones(&[0, 1, 6]));
-        let keys = group_keys(viennese, ChordSize::Triads).unwrap();
-        assert_eq!(keys[0].label, "3-5");
-        assert_eq!(keys[0].chord, None);
+        assert_eq!(keys[2].chord, None);
         // A three-note set offers only three-note chords.
+        let viennese = Scale::set(PitchClass::C, PitchSet::from_semitones(&[0, 1, 6]));
         assert_eq!(chord_sizes(viennese), [ChordSize::Triads]);
         let octatonic = Scale::set(
             PitchClass::C,
@@ -655,12 +773,109 @@ mod tests {
         );
         let keys = group_keys(whole_tone, ChordSize::Sevenths).unwrap();
         assert_eq!(keys[0].pitch_set(), PitchSet::from_semitones(&[0, 4, 8, 2]));
-        // A three-note set plays all three notes from each of them.
-        let viennese = Scale::set(PitchClass::C, PitchSet::from_semitones(&[0, 1, 6]));
-        let keys = group_keys(viennese, ChordSize::Sevenths).unwrap();
+    }
+
+    #[test]
+    fn every_set_key_has_its_forms_as_keys() {
+        let show = |keys: &[GroupKey]| -> Vec<(String, String, usize)> {
+            keys.iter()
+                .map(|key| {
+                    let name = key.chord.clone().unwrap_or_default();
+                    (key.label.clone(), name, key.kept.unwrap())
+                })
+                .collect()
+        };
+        let row =
+            |label: &str, name: &str, kept: usize| (label.to_string(), name.to_string(), kept);
+        // C major as a set: its forms are the twelve major scales, a
+        // fifth away first (they keep six notes), the tritone last.
+        let c_major = PitchSet::from_semitones(&[0, 2, 4, 5, 7, 9, 11]);
+        let scale = Scale::set(PitchClass::C, c_major);
+        let keys = form_keys(scale, true).unwrap();
+        assert_eq!(keys.len(), 12);
+        assert_eq!(
+            show(&keys)[..5],
+            [
+                row("T0", "C major", 7),
+                row("T5", "F major", 6),
+                row("T7", "G major", 6),
+                row("T2", "D major", 5),
+                row("T10", "Bb major", 5),
+            ]
+        );
+        assert_eq!(show(&keys)[11], row("T11", "B major", 2));
+        // Each spelled as its scale: G major has F#.
+        let names: Vec<String> = keys[2].names.iter().map(ToString::to_string).collect();
+        assert_eq!(names, ["G", "A", "B", "C", "D", "E", "F#"]);
+        // Near home: the forms that keep at least three of its notes.
+        assert_eq!(form_keys(scale, false).unwrap().len(), 9);
+        // The dominant seventh, 4-27: home, then the form that keeps
+        // three of its notes, Em7b5 (E G Bb D): C7 upside down around C is
+        // Dm7b5, and a whole tone up, Em7b5. Another dominant seventh only
+        // keeps two.
+        let c7 = PitchSet::from_semitones(&[0, 4, 7, 10]);
+        let keys = form_keys(Scale::set(PitchClass::C, c7), false).unwrap();
+        assert_eq!(
+            show(&keys)[..2],
+            [row("T0", "C7", 4), row("T2I", "Em7b5", 3)]
+        );
+        assert!(keys.iter().all(|key| key.kept.unwrap() >= 2));
+        assert_eq!(
+            form_keys(Scale::set(PitchClass::C, c7), true)
+                .unwrap()
+                .len(),
+            24
+        );
+        // A hexachord with no chord or scale name: by degree only.
+        let hexachord = PitchSet::from_semitones(&[0, 1, 2, 3, 4, 5]);
+        let keys = form_keys(Scale::set(PitchClass::C, hexachord), false).unwrap();
+        assert_eq!(keys[1].label, "T1");
+        assert_eq!(keys[1].chord, None);
+        assert_eq!(keys[1].kept, Some(5));
+        // A set of three notes has only its forms; a bigger one stacks
+        // chords too, and the app lets you choose.
+        assert_eq!(
+            group_keys(Scale::set(PitchClass::C, c7), ChordSize::Triads).unwrap()[0].label,
+            "C"
+        );
+    }
+
+    #[test]
+    fn a_micromode_key_has_its_forms_as_keys() {
+        // C minor: home, then the three triads that keep two of its
+        // notes (Ab, C and Eb major), then those that keep one.
+        let minor = Scale::set(PitchClass::C, PitchSet::from_semitones(&[0, 3, 7]));
+        let keys = group_keys(minor, ChordSize::Triads).unwrap();
+        let labels: Vec<&str> = keys.iter().take(4).map(|key| key.label.as_str()).collect();
+        assert_eq!(labels, ["T0", "T3I", "T7I", "T10I"]);
+        let chords: Vec<String> = keys
+            .iter()
+            .take(4)
+            .filter_map(|k| k.chord.clone())
+            .collect();
+        assert_eq!(chords, ["Cm", "Ab", "C", "Eb"]);
+        let kept: Vec<usize> = keys.iter().filter_map(|key| key.kept).collect();
+        assert_eq!(kept[..4], [3, 2, 2, 2]);
+        assert!(kept.iter().all(|&kept| kept > 0), "none shares no note");
+        let names: Vec<String> = keys[1].names.iter().map(|n| n.to_string()).collect();
+        assert_eq!(names, ["Ab", "C", "Eb"]);
+        // All of them: the 24 major and minor triads.
+        assert_eq!(form_keys(minor, true).unwrap().len(), 24);
+        // Menor 3 is not an incomplete C#m(maj7): it has no chord name.
+        let menor_3 = Scale::set(PitchClass::C, PitchSet::from_semitones(&[0, 1, 4]));
+        let keys = group_keys(menor_3, ChordSize::Sevenths).unwrap();
+        assert_eq!(keys[0].label, "T0");
+        assert!(keys.iter().all(|key| key.chord.is_none()));
         assert!(keys.iter().all(|key| key.notes.len() == 3));
-        let played: Vec<u8> = keys[1].play().iter().map(|n| n.midi()).collect();
-        // From C#: C# then F# above it, then C above that.
-        assert_eq!(played, [61, 66, 72]);
+        assert_eq!(keys.len(), 13);
+        let played: Vec<u8> = keys[0].play().iter().map(|n| n.midi()).collect();
+        assert_eq!(played, [60, 61, 64]);
+        // The augmented triad's forms share no note: all four are keys.
+        let augmented = Scale::set(PitchClass::C, PitchSet::from_semitones(&[0, 4, 8]));
+        assert_eq!(group_keys(augmented, ChordSize::Triads).unwrap().len(), 4);
+        // Only a key that is a set has forms, and not all twelve notes.
+        assert_eq!(form_keys(Scale::default(), false), None);
+        let all = Scale::set(PitchClass::C, PitchSet::from_bits(0xFFF));
+        assert_eq!(form_keys(all, false), None);
     }
 }

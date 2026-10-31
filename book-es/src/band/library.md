@@ -12,7 +12,7 @@ meter conocimiento en un programa es escribirlo como datos, en una forma
 que una persona pueda leer y comprobar, y que el código que lo usa sea
 pequeño.
 
-La biblioteca hace eso: 215 estilos armónicos, 139 ritmos y 6 rellenos,
+La biblioteca hace eso: 217 estilos armónicos, 141 ritmos y 7 rellenos,
 cada uno unas pocas líneas en una tabla, más los estilos dodecafónicos y
 de micromodos de los capítulos de teoría y las canciones de [Cómo se
 escribe una demostración](../songs/demos.md). Este capítulo recorre
@@ -974,7 +974,8 @@ más antigua, y el siguiente clic lo sigue cambiando en el mismo lugar.
 
 Los estilos armónicos y los ritmos toman las partes que marcaste (ver
 [Qué partes tomar](#qué-partes-tomar)). Los estilos de series y los de micromodos no tienen esa
-elección: se prueban de la misma manera, y solo se diferencian en las
+elección (solo Progresión de acordes le da a un estilo de serie su
+propia serie en lugar de la de la tonalidad): se prueban de la misma manera, y solo se diferencian en las
 notas que escriben. Así que sus pasos comunes son un único método, y el
 paso distinto es un closure que se le pasa:
 

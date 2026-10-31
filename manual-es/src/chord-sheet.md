@@ -26,7 +26,9 @@ con la hoja delante.
   mayor, Fam es iv, y La7, que lleva a Rem, es V7/ii. Un acorde con otra
   nota en el bajo lleva las cifras que usan los músicos para las
   inversiones: Sol7/Si es V⁶₅, Do/Mi es I⁶. Debajo de un conjunto o un
-  micromodo, sus notas. [Qué hacen los acordes](chord-functions.md)
+  micromodo, sus notas; cuando la tonalidad es un conjunto o un
+  micromodo, su grado y cuántas notas conserva del compás anterior
+  («T1I · 2 comunes»). [Qué hacen los acordes](chord-functions.md)
   explica qué quieren decir los números.
 - **Un compás vacío sigue con el acorde anterior**, escrito en tenue
   para que el compás no parezca vacío.
@@ -78,6 +80,7 @@ Varias armonías caben en un compás, separadas por espacios:
 | Un número romano | un acorde de la tonalidad | `ii7 V7` en Do mayor es Rem7 Sol7 |
 | Un conjunto de clases de alturas | por su nombre, o sus notas entre llaves | `3-11 T2`, `{Re Fa La}`, `{0,1,4}` |
 | Un micromodo | uno de los doce de Kröpfl | `Menor 3`, `Menor 3 T4I` |
+| Una forma de la tonalidad, por su grado | cuando la tonalidad es un conjunto o un micromodo | `T2`, `T5I` |
 | Una forma de la serie | una forma de la serie dodecafónica de la canción | `P0`, `I5`, `R3`, `RI7` |
 | Sin acorde | la banda no toca armonía | `N.C.` |
 | Un pulso sostenido | la armonía anterior sigue un pulso más | `/` |

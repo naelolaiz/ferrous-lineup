@@ -1,15 +1,17 @@
 //! Micromode styles: music in one of Kröpfl's colours, to try from the
 //! library.
 //!
-//! Like a twelve-tone style, a micromode style has no chord progression.
-//! It names one micromode, a [`Walk`] from form to form, and how each
-//! instrument plays the forms (see [`crate::micromodal`]). Every
-//! instrument plays the same walk, so the chords, the bass and the tune
-//! always share their three notes.
+//! A micromode style names one micromode, a [`Walk`] from form to form,
+//! and how each instrument plays the forms (see [`crate::micromodal`]).
+//! Tried on its own, it writes its walk into a pattern, every instrument
+//! playing the same forms, so the chords, the bass and the tune always
+//! share their three notes. In a song the band plays it from the forms on
+//! the chord sheet instead (see [`Project::apply_micromode_style`]).
 //!
 //! The styles were written for Ferrous Lineup. Kröpfl's own music, and his
 //! students', is still under copyright, so none of it is copied here.
 
+use crate::chord_sheet::{ChordMarker, HarmonyName};
 use crate::harmony::{Micromode, PitchSet, Scale};
 use crate::meter::TimeSignature;
 use crate::micromodal::{MicroWriting, Texture, Walk, bass_note, walk, write_forms};
@@ -17,9 +19,8 @@ use crate::pitch::{Note, PitchClass};
 use crate::project::Project;
 use crate::serial::Register;
 
-use super::apply::{BASS, KEYS, LEAD, RhythmChange, chords_channel, find_synth, synth_named};
+use super::apply::{BASS, KEYS, LEAD, chords_channel, find_synth, synth_named};
 use super::rhythm::Rhythm;
-use super::rows::take_over_harmony;
 
 /// How one instrument plays the walk.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -161,6 +162,24 @@ impl MicromodeStyle {
     pub fn forms(&self, first: PitchSet, length: usize) -> Vec<PitchSet> {
         let count = length.div_ceil(self.steps.max(1)).max(1);
         walk(self.micromode(), first, self.walk, count)
+    }
+
+    /// The forms from `first` written on the chord sheet, from step 0 to
+    /// `length`: each a micromode, as long as the style holds it.
+    pub fn sheet(&self, first: PitchSet, length: usize) -> Vec<ChordMarker> {
+        let steps = self.steps.max(1);
+        self.forms(first, length)
+            .into_iter()
+            .enumerate()
+            .map(|(index, form)| {
+                let harmony = match Micromode::of(form) {
+                    Some(_) => HarmonyName::Micromode(form),
+                    None => HarmonyName::Set(form),
+                };
+                ChordMarker::new(index * steps, harmony)
+            })
+            .take_while(|marker| marker.start < length)
+            .collect()
     }
 
     /// The key a piece in this style is in: the micromode itself, as a
@@ -367,34 +386,10 @@ pub fn write_micromode_style(
     write_voices(project, pattern, style, key, start, selected)
 }
 
-/// Plays the whole song in `style`, as [`super::rows::use_row_style`]
-/// does with a row: the style's walk replaces the song's chords and
-/// bass, what it does not play goes quiet, and the melody stays unless
-/// the style has one. The patterns start in turn from the four places of
-/// [`DEMO_SECTIONS`], so the song does not repeat itself. The key becomes
-/// the micromode, on the song's key note.
-pub fn use_micromode_style(project: &mut Project, style: &MicromodeStyle) -> RhythmChange {
-    let key = project.scale.root;
-    let uses = |name: &str| style.voices.iter().any(|voice| voice.channel == name);
-    let change = take_over_harmony(
-        project,
-        &uses,
-        style.rhythm(),
-        |project, pattern, n, keys| {
-            let start = DEMO_SECTIONS[n % DEMO_SECTIONS.len()].0;
-            write_voices(project, pattern, style, key, start, keys);
-        },
-    );
-    if change.harmony > 0 {
-        project.scale = style.scale(key);
-    }
-    change
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::library::apply::heard_chords_channel;
+    use crate::harmony::Degree;
 
     #[test]
     fn every_style_names_a_micromode_and_a_rhythm() {
@@ -455,6 +450,116 @@ mod tests {
         }
     }
 
+    /// Every note of `song` that is not a drum, and the harmony written on
+    /// the sheet where it plays.
+    fn notes_and_forms(song: &Project) -> Vec<(Note, Option<PitchSet>)> {
+        let mut found = Vec::new();
+        for clip in song.playlist().clips() {
+            let pattern = song.pattern(clip.pattern).unwrap();
+            for (channel, _) in song
+                .channels()
+                .iter()
+                .enumerate()
+                .filter(|(_, c)| c.is_pitched())
+            {
+                for note in pattern.notes(channel) {
+                    let harmony = song.chord_at(clip.start + note.start).map(|m| m.harmony);
+                    found.push((note.pitch, harmony.and_then(|h| h.pitch_set())));
+                }
+            }
+        }
+        found
+    }
+
+    /// Menor 1 to 5, the Mayores and the triads, each as a key on C.
+    fn micromode_keys() -> Vec<Scale> {
+        Micromode::all()
+            .iter()
+            .map(|micromode| {
+                let first = micromode.prime.normal_form()[0];
+                let form = micromode
+                    .prime
+                    .transpose(first.semitones_up_to(PitchClass::C));
+                Scale::set(bass_note(form), form)
+            })
+            .collect()
+    }
+
+    #[test]
+    fn a_demo_in_another_micromode_keeps_every_degree() {
+        for style in &MICROMODE_STYLES {
+            let demo = crate::library::demo::micromode_demo(style);
+            let key = demo.scale;
+            // The demo writes its forms on the sheet, each with its degree.
+            let degrees: Vec<(usize, Option<Degree>)> = demo
+                .playlist()
+                .chord_markers()
+                .iter()
+                .map(|marker| (marker.start, marker.harmony.degree(key)))
+                .collect();
+            assert!(!degrees.is_empty(), "{}", style.name);
+            assert!(
+                degrees.iter().all(|(_, degree)| degree.is_some()),
+                "{}",
+                style.name
+            );
+            for (note, form) in notes_and_forms(&demo) {
+                assert!(form.unwrap().contains(note.pitch_class()), "{}", style.name);
+            }
+            for to in micromode_keys() {
+                let mut song = demo.clone();
+                song.change_key(to);
+                // Every bar keeps its degree, now a form of the new key.
+                // (A micromode that is the same upside down, as C C# D
+                // is, names its forms as moved: T4I of it is T2.)
+                let after: Vec<(usize, Option<PitchSet>)> = song
+                    .playlist()
+                    .chord_markers()
+                    .iter()
+                    .map(|marker| (marker.start, marker.harmony.pitch_set()))
+                    .collect();
+                let expected: Vec<(usize, Option<PitchSet>)> = degrees
+                    .iter()
+                    .map(|&(start, degree)| (start, degree.and_then(|d| d.form(to))))
+                    .collect();
+                assert_eq!(after, expected, "{} in {:?}", style.name, to);
+                // And every note is in the form written where it plays.
+                for (note, form) in notes_and_forms(&song) {
+                    let form = form.unwrap();
+                    assert_eq!(Micromode::of(form), Micromode::of(to.pitch_set()));
+                    assert!(
+                        form.contains(note.pitch_class()),
+                        "{} in {:?}: {note} not in {form:?}",
+                        style.name,
+                        to
+                    );
+                }
+                // Back to the old key, the demo is as it was. Not through
+                // a micromode that is the same upside down (C C# D, C D E,
+                // the diminished and augmented triads): its forms upside
+                // down are forms moved, so which way round each was is lost.
+                song.change_key(key);
+                let symmetric = |set: PitchSet| (0..12).any(|up| set.invert().transpose(up) == set);
+                if !symmetric(to.pitch_set()) && !symmetric(key.pitch_set()) {
+                    assert_eq!(
+                        song.patterns(),
+                        demo.patterns(),
+                        "{} via {:?}",
+                        style.name,
+                        to
+                    );
+                    assert_eq!(
+                        song.playlist().chord_markers(),
+                        demo.playlist().chord_markers(),
+                        "{} via {:?}",
+                        style.name,
+                        to
+                    );
+                }
+            }
+        }
+    }
+
     #[test]
     fn the_first_form_starts_on_the_key_note() {
         let style = MicromodeStyle::named("Menor 3 colour").unwrap();
@@ -470,31 +575,5 @@ mod tests {
         // Triads: the key's own chord.
         let triads = MicromodeStyle::named("Triads, two notes kept").unwrap();
         assert_eq!(triads.scale(PitchClass::A).root, PitchClass::A);
-    }
-
-    #[test]
-    fn a_song_takes_a_micromode_style() {
-        let original = Project::demo();
-        let pattern = (0..original.patterns().len())
-            .find(|&p| heard_chords_channel(&original, p).is_some())
-            .unwrap();
-        let chords = heard_chords_channel(&original, pattern).unwrap();
-        let mut project = original.clone();
-        let style = MicromodeStyle::named("Fourths groove").unwrap();
-        let change = use_micromode_style(&mut project, style);
-        assert!(change.harmony > 0 && change.drums > 0, "{change:?}");
-        assert_eq!(
-            Micromode::of(project.scale.pitch_set()),
-            Some(style.micromode())
-        );
-        // Its chords replace the song's, on the same channel.
-        let notes = project.pattern(pattern).unwrap().notes(chords);
-        assert!(!notes.is_empty());
-        let heard: PitchSet = notes
-            .iter()
-            .filter(|n| n.start == 0)
-            .map(|n| n.pitch.pitch_class())
-            .collect();
-        assert_eq!(Micromode::of(heard), Some(style.micromode()));
     }
 }

@@ -33,6 +33,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "3 + 3 + 3 + 3 + 2 + 2 en semicorcheas: los acentos inquietos del tango nuevo de los años cincuenta.",
     ),
     (
+        "A 1930s dance band's foxtrot: the bass drum feathered on every beat, brushes sweeping the snare in eighths with the weight on 2 and 4, and the hi-hat pedal on 2 and 4.",
+        "El foxtrot de una orquesta de baile de los años treinta: el bombo «emplumado», suave en cada pulso, las escobillas barriendo la caja en corcheas con el peso en 2 y 4, y el pedal del charles en 2 y 4.",
+    ),
+    (
         "A 1960s spy theme in 5/4: a minor chord held over the beat, moving to iv as a blues does, then bVI and the V with the leading note bring it home.",
         "Un tema de espías de los años sesenta en 5/4: un acorde menor sostenido sobre el ritmo, que pasa a iv como lo hace un blues, y luego bVI y la V con la sensible lo llevan a casa.",
     ),
@@ -561,6 +565,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Four on the floor, un poco más rápido, hecho para largas subidas y drops.",
     ),
     ("Fourths groove", "Groove de cuartas"),
+    ("Foxtrot", "Foxtrot"),
     ("Freylekhs", "Freylekhs"),
     (
         "From Corrientes: the guitar's bass and chords move in 3/4 while the accordion and the drums play 6/8, so every bar is three against two.",
@@ -788,8 +793,8 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("Mixolydian rock", "Rock mixolidio"),
     ("Modal jazz", "Jazz modal"),
     (
-        "Montevideo's candombe, in the Cuareim toque, laid out over each part of a song. The song opens with the repique playing the 3-2 clave on the drum's wooden shell for four bars; then it plays its base, and closes every phrase with its two-bar call. The chico keeps its ostinato, the three sixteenths after each beat, the hand's accent on the first. The piano's open strokes ring just before beats 2 and 4 among its muffled ones, which it accents on beats 3 and 4, with a variation every fourth bar. Phrases take turns, so no two in a row sound the same: every second one opens with a bar of clave on the wood and varies the piano every second bar, and every second call starts from the repique's busier base. A part of another kind, a refrain after the verse, mixes the repique's busier base into its own and varies the piano every second bar, more often still on its second turn. Before every new part the band stops on the first beat of the last bar, and the repique plays the clave on the wood alone, leading into it.",
-        "El candombe de Montevideo, en el toque Cuareim, repartido sobre cada parte de una canción. La canción abre con el repique tocando la clave 3-2 en la madera del tambor durante cuatro compases; luego toca su base, y cierra cada frase con su llamada de dos compases. El chico mantiene su ostinato, las tres semicorcheas que siguen a cada pulso, con el acento de la mano en la primera. Los golpes abiertos del piano suenan justo antes del 2 y del 4 entre sus golpes tapados, que acentúa en el 3 y en el 4, con una variación cada cuatro compases. Las frases se turnan, para que nunca suenen dos iguales seguidas: una de cada dos abre con un compás de clave en la madera y varía el piano cada dos compases, y una llamada de cada dos arranca desde la base más cargada del repique. Una parte de otra clase, un estribillo después de la estrofa, mezcla la base más cargada del repique con la suya y varía el piano cada dos compases, y más a menudo aún en su segundo turno. Antes de cada parte nueva la banda corta en el primer pulso del último compás, y el repique toca solo la clave en la madera, que lleva a la parte nueva.",
+        "Montevideo's candombe, in the Cuareim toque, laid out over each part of a song. The song opens with the repique playing the 3-2 clave on the drum's wooden shell for four bars; then it plays its base, and closes every phrase with its two-bar call. The chico keeps its ostinato, the three sixteenths after each beat, the hand's accent on the first. The piano's open strokes ring just before beats 2 and 4 among its muffled ones, which it accents on beats 3 and 4, with a variation every fourth bar. Phrases take turns, so no two in a row sound the same: every second one opens with a bar of clave on the wood and varies the piano every second bar, and every second call starts from the repique's busier base. A part of another kind, a refrain after the verse, mixes the repique's busier base into its own and varies the piano every second bar, more often still on its second turn. Before every new part the band stops on the first beat of the last bar, and the repique plays the clave on the wood alone, leading into it. Where the tune leads into the new part with a pickup bar, the band and the drums wait on through it, the clave alone, and come in with the next bar.",
+        "El candombe de Montevideo, en el toque Cuareim, repartido sobre cada parte de una canción. La canción abre con el repique tocando la clave 3-2 en la madera del tambor durante cuatro compases; luego toca su base, y cierra cada frase con su llamada de dos compases. El chico mantiene su ostinato, las tres semicorcheas que siguen a cada pulso, con el acento de la mano en la primera. Los golpes abiertos del piano suenan justo antes del 2 y del 4 entre sus golpes tapados, que acentúa en el 3 y en el 4, con una variación cada cuatro compases. Las frases se turnan, para que nunca suenen dos iguales seguidas: una de cada dos abre con un compás de clave en la madera y varía el piano cada dos compases, y una llamada de cada dos arranca desde la base más cargada del repique. Una parte de otra clase, un estribillo después de la estrofa, mezcla la base más cargada del repique con la suya y varía el piano cada dos compases, y más a menudo aún en su segundo turno. Antes de cada parte nueva la banda corta en el primer pulso del último compás, y el repique toca solo la clave en la madera, que lleva a la parte nueva. Donde la melodía entra en la parte nueva con un compás de anacrusa, la banda y los tambores esperan durante ese compás, con la clave sola, y entran con el compás siguiente.",
     ),
     ("Murga", "Murga"),
     ("Musette", "Musette"),
@@ -1518,6 +1523,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     (
         "The slow Latin love song: soft bongos and maracas, and the rim on 2 and 4.",
         "La canción de amor latina lenta: bongós y maracas suaves, y el aro en 2 y 4.",
+    ),
+    (
+        "The slow foxtrot of the 1930s dance bands, the ballroom's basic step, in a gentle two-beat: the bass on 1 and 3, the piano's chord on 2 and 4, the guitar strumming four to the bar and brushes on the snare, under a song's chords, a sixth chord, the passing diminished seventh and the long turnaround, iii7, VI7, ii7, V7.",
+        "El foxtrot lento de las orquestas de baile de los años treinta, el paso básico del salón, en un suave compás de dos: el bajo en 1 y 3, el acorde del piano en 2 y 4, la guitarra rasgueando cuatro por compás y escobillas en la caja, bajo los acordes de una canción, un acorde de sexta, la séptima disminuida de paso y el turnaround largo, iii7, VI7, ii7, V7.",
     ),
     (
         "The snare on all four beats and a tambourine on 2 and 4.",

@@ -11,11 +11,11 @@
 //! key menu can switch back to them after the key was a scale for a while.
 
 use eframe::egui::{self, Color32, RichText, Ui};
-use lineup_core::harmony::{Micromode, micromodes_in};
+use lineup_core::harmony::{Micromode, MicromodeFamily, micromodes_in};
 use lineup_core::harmony::{
     ROW_PRESETS, RowForm, RowLabel, RowPreset, SetClass, ToneRow, digits, pc_digit,
 };
-use lineup_core::serial::{Chain, Register, RowWriting, write_row};
+use lineup_core::serial::{Chain, Register, RowWriting, read_plan, write_plan, write_row};
 use lineup_core::{
     Chord, ChordStamp, Note, NoteEvent, NoteName, PitchClass, PitchSet, Scale, ScaleKind, Spelling,
 };
@@ -189,10 +189,28 @@ pub fn kind_menu(
     let ctx = ui.ctx().clone();
     let root = tonic.pitch_class();
     let mut picked = None;
+    // A key of three notes is one of the micromodes, named as one.
+    let micromode = match scale.kind {
+        ScaleKind::Set(set) => Micromode::of(set),
+        _ => None,
+    };
+    let selected = match micromode {
+        Some(micromode) => micromode.name.to_string(),
+        None => crate::i18n::tr(scale.kind.name()).to_string(),
+    };
+    // For how many frames the menu has been open: in its first frames,
+    // it scrolls to the key's micromode, at the bottom of the list.
+    let frames_id = egui::Id::unique((salt, "frames open"));
+    let frames = ctx.data(|data| data.get_temp::<u8>(frames_id)).unwrap_or(0);
+    let mut open = false;
     let response = egui::ComboBox::from_id_salt(salt)
         .width(width)
-        .selected_text(RichText::new(crate::i18n::tr(scale.kind.name())).strong())
+        // As tall as there is room for: the scales, the row, the set and
+        // the micromodes.
+        .height(620.0)
+        .selected_text(RichText::new(selected).strong())
         .show_ui(ui, |ui| {
+            open = true;
             for option in ScaleKind::ALL {
                 if ui
                     .selectable_label(scale.kind == option, crate::i18n::tr(option.name()))
@@ -215,7 +233,7 @@ pub fn kind_menu(
             {
                 picked = Some(Scale::row(remembered_row(&ctx).starting_on(root)));
             }
-            let is_set = matches!(scale.kind, ScaleKind::Set(_));
+            let is_set = matches!(scale.kind, ScaleKind::Set(_)) && micromode.is_none();
             if ui
                 .selectable_label(is_set, crate::i18n::tr("pitch-class set"))
                 .on_hover_text(tr(
@@ -229,14 +247,69 @@ pub fn kind_menu(
             {
                 picked = Some(set_key(&ctx, scale, root));
             }
+            ui.separator();
+            ui.weak(tr("Micromodes (Kröpfl)"));
+            // One short row per family, to keep the menu short: Menor 1
+            // to 5, Mayor 1 to 4, and the three triads.
+            for family in MicromodeFamily::ALL {
+                ui.horizontal(|ui| {
+                    ui.add_sized(
+                        [46.0, 18.0],
+                        egui::Label::new(RichText::new(family_word(family)).weak()),
+                    );
+                    for option in Micromode::all().iter().filter(|m| m.family == family) {
+                        let is_key = micromode == Some(option);
+                        let response = micromode_option(ui, option, is_key);
+                        if is_key && frames < 3 {
+                            response.scroll_to_me(Some(egui::Align::Center));
+                        }
+                        if response.clicked() && !is_key {
+                            picked = Some(option.key(root));
+                        }
+                    }
+                });
+            }
         })
         .response;
+    let frames = if open { frames.saturating_add(1) } else { 0 };
+    ctx.data_mut(|data| data.insert_temp(frames_id, frames));
     crate::theme::hint(response, crate::i18n::tr(crate::piano_roll::KEY_HELP));
     // A new root keeps the kind, and with it the row or the set.
     if picked.is_none() && tonic != scale.spell(scale.root) {
         picked = Some(Scale::written(tonic, scale.kind));
     }
     picked.filter(|new| *new != scale)
+}
+
+/// The word a family's micromodes start with: "Menor", "Mayor",
+/// "Acorde", Kröpfl's names in every language.
+fn family_word(family: MicromodeFamily) -> &'static str {
+    match family {
+        MicromodeFamily::Minor => "Menor",
+        MicromodeFamily::Major => "Mayor",
+        MicromodeFamily::Chord => "Acorde",
+    }
+}
+
+/// A micromode's button in the key menu, by its number in its family
+/// (the triads by their chord signs: °, m/M, +), with its whole name
+/// and what picking it does when pointed at.
+fn micromode_option(ui: &mut Ui, option: &Micromode, selected: bool) -> egui::Response {
+    let short = match option.name.rsplit_once(' ') {
+        Some((_, number)) if number.chars().all(|c| c.is_ascii_digit()) => number,
+        _ => match option.number {
+            10 => "°",
+            11 => "m/M",
+            _ => "+",
+        },
+    };
+    ui.selectable_label(selected, short).on_hover_text(trf(
+        "{}: {}. As the key, on the key note. From another set or \
+                         micromode, every form keeps its degree and the notes go with \
+                         it: T2 of Menor 3 becomes T2 of Menor 5. From a key, the notes \
+                         stay as they are.",
+        &[&option.full_name(), &option.intervals()],
+    ))
 }
 
 /// How to write the notes of a set: a [`Scale`] writes them as the key
@@ -357,6 +430,12 @@ pub struct RowWindow {
     text: String,
     error: Option<String>,
     writing: RowWriting,
+    /// Whether "Then" is a plan of forms typed in `plan_text`, rather
+    /// than one of the chains: the forms read from it, or what is wrong
+    /// with it.
+    planned: bool,
+    plan_text: String,
+    plan: Result<Vec<RowLabel>, String>,
     numbers: bool,
     seed: u64,
     /// The key the window last saw, to follow changes made elsewhere.
@@ -376,6 +455,9 @@ impl RowWindow {
                 label: row.label(),
                 ..RowWriting::default()
             },
+            planned: false,
+            plan_text: String::new(),
+            plan: Ok(Vec::new()),
             numbers: false,
             seed: 1,
             seen: None,
@@ -603,6 +685,16 @@ impl RowWindow {
             });
         if let Some(label) = chosen {
             self.writing.label = label;
+            // With a plan, the form clicked goes at its end.
+            if self.planned {
+                let text = self.plan_text.trim_end();
+                self.plan_text = if text.is_empty() {
+                    label.to_string()
+                } else {
+                    format!("{text} {label}")
+                };
+                self.plan = read_plan(&self.plan_text);
+            }
         }
     }
 
@@ -654,13 +746,37 @@ impl RowWindow {
         actions: &mut Vec<RowAction>,
     ) {
         let writing = &mut self.writing;
+        let planned = &mut self.planned;
+        let (plan_text, plan) = (&mut self.plan_text, &mut self.plan);
         ui.horizontal_wrapped(|ui| {
             ui.label(tr("Then"));
+            let then = if *planned {
+                tr("A plan of forms")
+            } else {
+                tr(writing.chain.name())
+            };
             egui::ComboBox::from_id_salt("row-chain")
-                .selected_text(tr(writing.chain.name()))
+                .selected_text(then)
                 .show_ui(ui, |ui| {
                     for chain in Chain::ALL {
-                        ui.selectable_value(&mut writing.chain, chain, tr(chain.name()));
+                        let chosen = !*planned && writing.chain == chain;
+                        if ui.selectable_label(chosen, tr(chain.name())).clicked() {
+                            writing.chain = chain;
+                            *planned = false;
+                        }
+                    }
+                    if ui
+                        .selectable_label(*planned, tr("A plan of forms"))
+                        .on_hover_text(tr(
+                            "Forms you choose, one after another, such as P0 RI5 I7 R0",
+                        ))
+                        .clicked()
+                    {
+                        *planned = true;
+                        if plan_text.trim().is_empty() {
+                            *plan_text = writing.label.to_string();
+                            *plan = read_plan(plan_text);
+                        }
                     }
                 })
                 .response
@@ -692,6 +808,35 @@ impl RowWindow {
                     }
                 });
         });
+        if *planned {
+            ui.horizontal(|ui| {
+                ui.label(tr("Plan"));
+                let edit = ui
+                    .add(
+                        egui::TextEdit::singleline(plan_text)
+                            .desired_width(240.0)
+                            .hint_text("P0 RI5 I7 R0"),
+                    )
+                    .on_hover_text(tr(
+                        "The forms one after another, then again from the first until the \
+                         pattern is full. Type them, or click them around the matrix.",
+                    ));
+                if edit.changed() {
+                    *plan = read_plan(plan_text);
+                }
+            });
+            match &*plan {
+                Err(error) => {
+                    ui.colored_label(Color32::from_rgb(240, 120, 110), error);
+                }
+                Ok(forms) if forms.is_empty() => {
+                    ui.weak(tr(
+                        "Type the forms to play, or click them around the matrix.",
+                    ));
+                }
+                Ok(_) => {}
+            }
+        }
         ui.horizontal_wrapped(|ui| {
             ui.label(tr("Octaves"));
             egui::ComboBox::from_id_salt("row-register")
@@ -734,7 +879,46 @@ impl RowWindow {
                     "One of three octaves for each note, from the numbers of the retrograde",
                 ));
         });
-        let notes = write_row(self.row, writing, length);
+        let partner = self.row.partner(writing.label);
+        ui.horizontal_wrapped(|ui| {
+            let text = match partner {
+                Some(partner) => trf("With its partner, {}", &[&partner]),
+                None => tr("With its partner").to_string(),
+            };
+            ui.add_enabled(
+                partner.is_some(),
+                egui::Checkbox::new(&mut writing.partner, text),
+            )
+            .on_hover_text(tr(
+                "Its combinatorial partner sounds an octave under it, note for note: the \
+                     first six notes of the two make all twelve, and so do the last six",
+            ))
+            .on_disabled_hover_text(tr(
+                "No form of this row has the six notes the first half leaves out as its \
+                     own first half, so it has no partner",
+            ));
+        });
+        let planned = self.planned;
+        let forms: &[RowLabel] = match &self.plan {
+            Ok(forms) if planned => forms,
+            _ => &[],
+        };
+        let notes = if planned {
+            write_plan(self.row, writing, forms, length)
+        } else {
+            write_row(self.row, writing, length)
+        };
+        // What the buttons write: the form, or the plan.
+        let what = if planned {
+            forms
+                .iter()
+                .map(ToString::to_string)
+                .collect::<Vec<_>>()
+                .join(" ")
+        } else {
+            writing.label.to_string()
+        };
+        let nothing = notes.is_empty();
         let heard: PitchSet = notes.iter().map(|note| note.pitch.pitch_class()).collect();
         if heard.len() < 12 {
             ui.weak(trf(
@@ -749,25 +933,36 @@ impl RowWindow {
         ));
         ui.horizontal_wrapped(|ui| {
             if ui
-                .button(trf("Write {} into current pattern", &[&writing.label]))
+                .add_enabled(
+                    !nothing,
+                    egui::Button::new(trf("Write {} into current pattern", &[&what])),
+                )
                 .on_hover_text(
                     tr("Replaces this channel's notes in the pattern. Ctrl+Z puts them back."),
                 )
+                .on_disabled_hover_text(tr("Type a plan of forms first."))
                 .clicked()
             {
                 actions.push(RowAction::Write(notes.clone()));
             }
             if ui
-                .add_enabled(can_create_pattern, egui::Button::new(tr("Save to new pattern")))
+                .add_enabled(
+                    can_create_pattern && !nothing,
+                    egui::Button::new(tr("Save to new pattern")),
+                )
                 .on_hover_text(tr("Create and select a new pattern with these notes, the selected instrument, and the current pattern’s length and time signature. Ctrl+Z undoes it."))
-                .on_disabled_hover_text(trf(
-                    "New patterns are available in the song piano roll, up to {} patterns per project.",
-                    &[&lineup_core::MAX_PATTERNS],
-                ))
+                .on_disabled_hover_text(if nothing {
+                    tr("Type a plan of forms first.").to_string()
+                } else {
+                    trf(
+                        "New patterns are available in the song piano roll, up to {} patterns per project.",
+                        &[&lineup_core::MAX_PATTERNS],
+                    )
+                })
                 .clicked()
             {
                 actions.push(RowAction::NewPattern {
-                    name: trf("Row {}", &[&writing.label]),
+                    name: trf("Row {}", &[&what]),
                     notes,
                 });
             }

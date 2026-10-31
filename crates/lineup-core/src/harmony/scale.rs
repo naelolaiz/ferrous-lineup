@@ -145,12 +145,13 @@ impl ScaleKind {
 
     /// Whether the notes of a song should move when its key changes from
     /// this kind to `other`. Between the scales of tonal music they do,
-    /// as between two transpositions of the same row or two sets. Between
-    /// a key and a row, two different rows, or a key and a set, there is
-    /// nothing to move by: only what the piano roll highlights changes.
+    /// as between two rows (each note keeps its place in its form, see
+    /// [`tools::change_row`](crate::tools::change_row)) or two sets.
+    /// Between a key and a row, or a key and a set, there is nothing to
+    /// move by: only what the piano roll highlights changes.
     pub fn notes_follow(self, other: ScaleKind) -> bool {
         match (self, other) {
-            (ScaleKind::Row(a), ScaleKind::Row(b)) => a == b,
+            (ScaleKind::Row(_), ScaleKind::Row(_)) => true,
             (ScaleKind::Set(_), ScaleKind::Set(_)) => true,
             (a, b) => a.is_tonal() && b.is_tonal(),
         }
@@ -1082,7 +1083,7 @@ mod tests {
         let set = ScaleKind::Set(PitchSet::from_semitones(&[0, 3, 6, 9]));
         assert!(ScaleKind::Major.notes_follow(ScaleKind::Dorian));
         assert!(row.notes_follow(row));
-        assert!(!row.notes_follow(ScaleKind::Row(ToneRow::random(3))));
+        assert!(row.notes_follow(ScaleKind::Row(ToneRow::random(3))));
         assert!(!ScaleKind::Major.notes_follow(row));
         assert!(!set.notes_follow(ScaleKind::Major));
         assert!(set.notes_follow(set));
