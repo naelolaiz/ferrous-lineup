@@ -240,13 +240,15 @@ estilo clásico, no como un juez de toda la música. Donde la tonalidad
 es una serie dodecafónica, la revisión sigue en cambio las reglas de la
 escritura dodecafónica (ver [Las reglas de la escritura
 dodecafónica](twelve-tone.md#las-reglas-de-la-escritura-dodecafónica)),
-y donde es un conjunto de clases de altura, no se revisa nada:
+y donde es un conjunto de clases de alturas o un micromodo, revisa que
+las notas guarden el color del conjunto (ver [Revisar el
+color](micromodes.md#revisar-el-color)):
 
 ```rust
 pub fn of(key: Scale) -> Rules {
     match key.kind {
         ScaleKind::Row(_) => Rules::TwelveTone,
-        ScaleKind::Set(_) => Rules::Neither,
+        ScaleKind::Set(_) => Rules::Colour,
         _ => Rules::Classical,
     }
 }
@@ -294,7 +296,10 @@ Cada celda se arma con celdas ya llenas, así que toda la tabla lleva
 recupera qué opción dio cada costo, y así adónde fue cada nota. La
 [revisión
 dodecafónica](twelve-tone.md#la-mejor-lectura-programación-dinámica)
-usa la misma idea para encontrar qué formas de una serie se tocan.
+usa la misma idea para encontrar qué formas de una serie se tocan, y
+la [revisión del
+color](micromodes.md#leer-las-formas-la-lectura-más-barata) qué
+formas de un conjunto.
 
 ### Comparar dos partes nota contra nota
 

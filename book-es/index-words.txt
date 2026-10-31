@@ -78,6 +78,7 @@ Práctica: band/practice.md
 Preferencias: program/egui.md#guardado-por-nombre-no-por-tipo, sound/soundfonts.md#se-pregunta-hasta-que-se-responde
 Rack de canales: program/editors.md
 Reconocimiento de acordes: véase Oír acordes
+Revisión del color: theory/micromodes.md#revisar-el-color
 Salida MIDI: sound/midi.md#salida-midi-un-instrumento-con-bandeja-de-salida, sound/midi.md#enviar-canales-por-midi
 Sampler: sound/instruments.md#el-sampler
 Sección de vientos: band/band.md#una-sección-de-vientos

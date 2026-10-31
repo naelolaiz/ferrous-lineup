@@ -408,6 +408,13 @@ cada forma, en la hoja y en las notas, como lo hace cambiar el modo de
 una tonalidad (ver [Otro color, los mismos
 grados](micromodes.md#otro-color-los-mismos-grados)).
 
+Con un conjunto como tonalidad, la casilla **Conducción de voces** del
+piano roll revisa el **color** del conjunto: lee qué forma suena dónde,
+muestra las formas por su grado en una línea Formas y marca las notas
+fuera de la forma que se oye a su alrededor. Un micromodo además tiene
+que sonar entero, así que también se marca una forma suya sin terminar
+(ver [Revisar el color](micromodes.md#revisar-el-color)).
+
 ### Qué tan cerca: las notas que conserva una forma
 
 Las formas van de casa a la más lejana según las notas que cada una
