@@ -1077,6 +1077,199 @@ las formas derechas van antes que las dadas vuelta, y por último van por
 grado. `kept` cuenta las notas compartidas con los bits, como el
 recorrido: `PitchSet::from_bits(a.bits() & b.bits()).len()`.
 
+## Otro color, los mismos grados
+
+De Do mayor a Do menor, cada acorde conserva su grado: I pasa a ser i,
+IV pasa a ser iv, y la progresión es la misma en otro modo. Los
+micromodos permiten el mismo cambio. Una pieza en Menor 3 se puede oír
+en Menor 5: cada forma conserva su grado, así que T2 de Menor 3 (Re Re♯
+Fa♯, en Menor 3 sobre Do) pasa a ser T2 de Menor 5 (Re Re♯ Sol♯), y T4I
+sigue siendo T4I. El plan de la pieza, qué forma viene cuándo, se
+queda; cambia su color.
+
+El menú **Tonalidad** lista los doce micromodos después de las
+escalas, en una fila por familia, y pasar de uno a otro hace esto con
+la hoja de acordes y con cada nota (desde una tonalidad, como Do mayor,
+las notas se quedan como están, igual que con **conjunto de clases de
+alturas**). Dos conjuntos cualesquiera funcionan igual, así que **Usar
+como tonalidad** en la ventana Conjuntos también conserva los grados:
+de C7 como conjunto a Cmaj7 como conjunto, C7 Em7b5 A7 pasa a ser Cmaj7
+E♭maj7 Amaj7.
+
+El color no es solo un sonido. El recorrido de Menor 3 conserva dos
+notas de forma en forma, y los mismos grados en Menor 5 no conservan
+ninguna: la hoja de la demostración de Menor 3 pasada a Menor 5 dice
+«T4I · 0 comunes» donde decía «T4I · 2 comunes». Los grados son el
+plan, y cada micromodo decide qué pasos del plan son suaves.
+
+Dos cosas más:
+
+- Una forma tiene un lugar para cada nota, contado desde la nota de la
+  tonalidad: en Menor 3 sobre Do (Do Do♯ Mi) la tercera nota es Mi, y
+  en Menor 5 sobre Do (Do Do♯ Fa♯) es Fa♯, así que la tercera nota de
+  cada forma sube un tono, o baja uno en una forma dada vuelta. Un
+  conjunto con más notas da a las notas viejas sus primeros lugares; uno
+  con menos no tiene lugar para las últimas, que van a la nota más
+  cercana de la forma nueva.
+- Algunos micromodos son iguales dados vuelta: Do Do♯ Re dado vuelta es
+  Si Do Do♯, la misma forma. En ellos, una forma dada vuelta *es* una
+  forma movida, así que una pieza de otro color que pasa a uno de ellos
+  y vuelve pierde cuáles formas estaban dadas vuelta. La prueba que pasa
+  cada demostración a cada micromodo y la devuelve los salta por eso.
+
+### El lugar de cada nota en su forma
+
+`tools::change_key_in` mueve una nota sabiendo de qué forma es parte:
+
+```rust
+pub fn change_key_in(note: Note, form: Option<PitchSet>, from: Scale, to: Scale) -> Note {
+    let old = from_key(from, to);
+    let (ScaleKind::Set(_), ScaleKind::Set(_)) = (old.kind, to.kind) else {
+        return change_key(note, from, to);
+    };
+    let Some((degree, place)) = form.and_then(|form| {
+        let degree = Degree::of(old, form)?;
+        Some((degree, place_in(degree, old, note.pitch_class())?))
+    }) else {
+        return change_key(note, from, to);
+    };
+    // ...
+}
+```
+
+`let … else` coincide con un patrón o sale de la función: aquí una
+tupla de dos tipos, los dos conjuntos. El closure que recibe `and_then`
+usa `?` dos veces, lo que funciona porque devuelve un `Option`: si la
+forma no es una forma de la tonalidad vieja, o la nota no está en ella,
+el closure da `None` y la nota se mueve como antes, con
+[`change_key`](scales.md).
+
+El lugar de una nota sale de cómo se hizo la forma. La nota en el lugar
+`place` de la forma en el grado `degree` es la nota de la tonalidad en
+ese lugar, reflejada si el grado lo dice, y después subida:
+
+```rust
+fn note_at(degree: Degree, key: Scale, place: usize) -> Option<PitchClass> {
+    let interval = i32::from(*key.kind.intervals().get(place)?);
+    let from_key_note = if degree.inverted { -interval } else { interval };
+    Some(key.root.transpose(from_key_note + i32::from(degree.up)))
+}
+```
+
+`get` da `None` después del final, así que una tonalidad de tres notas
+no tiene cuarto lugar. `place_in` busca la nota entre los lugares, y la
+clase de altura nueva es `note_at` con el mismo grado y el mismo lugar
+en la tonalidad nueva. Después la nota se mueve por el camino más
+corto, como mucho un tritono, así que un acorde se queda donde estaba
+en el teclado.
+
+### En qué forma está una nota
+
+Una nota no dice de qué armonía es parte. `form_of`, en `project.rs`,
+pregunta primero a la hoja de acordes, donde el patrón toca la nota por
+primera vez, y solo si la nota está en la forma escrita ahí:
+
+```rust
+let written = start.and_then(|start| {
+    let step = start + note.start;
+    let after = sheet.partition_point(|marker| marker.start <= step);
+    let marker = sheet.get(after.checked_sub(1)?)?;
+    marker
+        .harmony
+        .pitch_set()
+        .filter(|form| form.contains(pitch_class) && is_form(form))
+});
+```
+
+`partition_point` encuentra, entre las marcas ordenadas, la primera
+que empieza después de la nota, así que la anterior es la armonía en la
+nota. Si no hay, se prueban como forma las notas que suenan con ella en
+el patrón, de todos los canales: un acorde dibujado con **Dibujar con
+él** en la ventana Micromodos se mueve entero aunque la hoja esté
+vacía. Una nota que no está en ninguna se mueve como la mueve
+`change_key`, lo que conserva el comportamiento de antes para la música
+que no está hecha de formas.
+
+`Project::change_key` guarda una copia de la hoja de antes de moverla,
+porque la hoja se mueve primero, y el paso donde cada patrón suena por
+primera vez; después mueve las notas patrón por patrón.
+
+### La hoja
+
+`HarmonyName::moved` mueve la hoja de acordes de la misma manera. Una
+armonía que es una forma de la tonalidad vieja (un micromodo, un
+conjunto, o un acorde cuyas notas son una forma, como Em7b5 lo es de C7
+como conjunto) pasa a ser la forma en el mismo grado de la tonalidad
+nueva:
+
+```rust
+fn at_same_degree(self, from: Scale, to: Scale) -> Option<HarmonyName> {
+    let (ScaleKind::Set(_), ScaleKind::Set(_)) = (from.kind, to.kind) else {
+        return None;
+    };
+    let degree = Degree::of(from, self.pitch_set()?)?;
+    if let HarmonyName::Chord(_) | HarmonyName::Polychord(..) = self
+        && let Some(chord) = degree.form(to).and_then(crate::harmony::keys::form_chord)
+    {
+        return Some(HarmonyName::Chord(ChordSymbol::new(
+            to.spell_root(chord),
+            chord.quality,
+        )));
+    }
+    HarmonyName::at_degree(degree, to)
+}
+```
+
+Un acorde sigue siendo un acorde cuando la forma nueva lo es, así que
+una hoja escrita con nombres de acordes los conserva. Las
+demostraciones de micromodos ahora escriben sus formas en la hoja, cada
+pasada del recorrido donde suena su patrón, con
+`MicromodeStyle::sheet`, la misma función que usa la banda cuando un
+estilo escribe su recorrido en la hoja de una canción. Así cada
+demostración muestra sus grados, y cambiar su color pasa por la hoja.
+
+### El menú: filas cortas, y abrir donde está la tonalidad
+
+Doce líneas más harían el menú Tonalidad demasiado largo para verlo de
+una vez, así que los micromodos son tres filas cortas, la palabra de la
+familia y después sus números: Menor 1 2 3 4 5, Mayor 1 2 3 4, y las
+tríadas como °, m/M y +. Al apuntar a uno se ve su nombre completo, sus
+intervalos y qué hace elegirlo.
+
+Están al final de una lista que se desplaza, así que el menú se abre
+desplazado hasta el micromodo de la tonalidad. egui no lleva la cuenta
+de cuándo se abrió un menú, así que el menú cuenta en la memoria del
+contexto los fotogramas que lleva abierto:
+
+```rust
+let frames_id = egui::Id::unique((salt, "frames open"));
+let frames = ctx.data(|data| data.get_temp::<u8>(frames_id)).unwrap_or(0);
+let mut open = false;
+// ... dentro del menú: open = true; y, para el micromodo de la tonalidad,
+// if frames < 3 { response.scroll_to_me(Some(egui::Align::Center)); }
+let frames = if open { frames.saturating_add(1) } else { 0 };
+ctx.data_mut(|data| data.insert_temp(frames_id, frames));
+```
+
+`insert_temp` guarda un valor solo durante esta ejecución, bajo un id.
+El menú se desplaza durante sus tres primeros fotogramas (el primero
+solo mide el menú, así que uno no alcanzaría) y después deja la barra
+de desplazamiento para ti. `saturating_add` se detiene en 255 en vez de
+desbordarse.
+
+### Cambios de tonalidad en cualquier color
+
+Un cambio de tonalidad en la lista de reproducción nombra la tonalidad
+desde un compás, sin mover ninguna nota, y ahora puede ser un
+micromodo, o un conjunto o una serie en que está la canción: una pieza
+puede estar en Menor 3 y pasar a Menor 5 en el compás 9. Las teclas de
+armonía y los grados de la hoja leen la tonalidad de cada compás, así
+que desde el compás 9 ofrecen y cuentan las formas de Menor 5; lo que
+ya está escrito ahí se queda como está, hasta que se escriban formas de
+Menor 5 en su lugar. Una tonalidad de tres notas se nombra por su
+micromodo en todas partes, «Menor 5 sobre Do», porque cada grupo de tres
+notas es uno de los doce.
+
 ## La ventana: un reloj dibujado con el painter de egui
 
 Las doce notas se sientan en un círculo como las horas de un reloj, Do
@@ -1291,7 +1484,10 @@ aumentado sin enlace suave; y los nombres de los movimientos P, L y R.
 `library/micromodes.rs` comprueba que cada estilo toca solo su
 micromodo, en cualquier tonalidad y desde el comienzo de cada sección,
 con la tonalidad convertida en el micromodo; que la primera forma
-empieza en la tónica; y `band/micromode.rs`, que la banda toca solo la
+empieza en la tónica; que cada demostración escribe sus formas en la
+hoja, y que pasarla a cada uno de los doce micromodos conserva el grado
+de cada compás y pone cada nota en la forma escrita donde suena, y de
+vuelta; y `band/micromode.rs`, que la banda toca solo la
 forma escrita en cada compás, con cada estilo; que las formas que ya
 están en la hoja se quedan, en su orden, con la tonalidad, y que
 cambiar un compás cambia lo que toca el estilo; que una canción tonal
@@ -1301,7 +1497,9 @@ a leer. Un estilo guardado sobre un conjunto toca solo las notas del
 conjunto, para cada nota de la octava sobre cada forma de un
 tetracordio. Las pruebas de la aplicación comprueban que un estilo de
 micromodo elegido en una canción con formas en su hoja toca esas
-formas, que los micromodos de acordes se
+formas, que elegir Menor 5 en el menú Tonalidad convierte la
+demostración de Menor 3 en Menor 5 con los mismos grados, que los
+micromodos de acordes se
 escriben como acordes (Do Mi♭ Sol♭), que **▶ Escucharlo** toca las tres
 notas desde el Do central, y que elegir una forma muestra cómo se
 movió.

@@ -1036,6 +1036,189 @@ before the upside-down ones, and finally they go by degree. `kept`
 counts the shared notes with the bits, as the walk does:
 `PitchSet::from_bits(a.bits() & b.bits()).len()`.
 
+## Another colour, the same degrees
+
+From C major to C minor, every chord keeps its degree: I becomes i, IV
+becomes iv, and the progression is the same in another mode. The
+micromodes allow the same move. A piece in Menor 3 can be heard in
+Menor 5: each form keeps its degree, so T2 of Menor 3 (D D♯ F♯, in
+Menor 3 on C) becomes T2 of Menor 5 (D D♯ G♯), and T4I stays T4I. The
+plan of the piece, which form comes when, stays; its colour changes.
+
+The **Key** menu lists the twelve micromodes after the scales, in a
+row for each family, and switching from one to another does this to
+the chord sheet and to every note (from a key, as from C major, the
+notes stay as they are, as they do for **pitch-class set**). Any two
+sets work the same way, so **Use as the key** in the Sets window keeps
+the degrees too: from C7 as a set to Cmaj7 as a set, C7 Em7b5 A7
+becomes Cmaj7 E♭maj7 Amaj7.
+
+The colour is not only a sound. Menor 3's walk keeps two notes from
+form to form, and the same degrees in Menor 5 keep none: the sheet of
+the Menor 3 demo switched to Menor 5 says "T4I · 0 common" where it
+said "T4I · 2 common". The degrees are the plan, and each micromode
+decides which steps of it are smooth.
+
+Two more things to know:
+
+- A form has a place for each note, counted from the key's note: in
+  Menor 3 on C (C C♯ E) the third note is E, and in Menor 5 on C (C C♯
+  F♯) it is F♯, so every form's third note moves up a tone, or down
+  one in a form upside down. A set with more notes gives the old notes
+  its first places; a set with fewer has no place for the last ones,
+  which go to the nearest note of the new form.
+- Some micromodes are the same upside down: C C♯ D turned over is B C
+  C♯, the same shape. In them, a form upside down *is* a form moved,
+  so a piece in another colour switched into one of them and back
+  loses which forms were upside down. The test that switches every
+  demo into every micromode and back skips them for that reason.
+
+### Each note's place in its form
+
+`tools::change_key_in` moves one note, knowing the form it is part of:
+
+```rust
+pub fn change_key_in(note: Note, form: Option<PitchSet>, from: Scale, to: Scale) -> Note {
+    let old = from_key(from, to);
+    let (ScaleKind::Set(_), ScaleKind::Set(_)) = (old.kind, to.kind) else {
+        return change_key(note, from, to);
+    };
+    let Some((degree, place)) = form.and_then(|form| {
+        let degree = Degree::of(old, form)?;
+        Some((degree, place_in(degree, old, note.pitch_class())?))
+    }) else {
+        return change_key(note, from, to);
+    };
+    // ...
+}
+```
+
+`let … else` matches a pattern or leaves the function: here a tuple of
+two kinds, both sets. The closure given to `and_then` uses `?` twice,
+which works because it returns an `Option`: if the form is no form of
+the old key, or the note is not in it, the closure gives `None` and
+the note moves as before, by [`change_key`](scales.md).
+
+The place of a note comes from how the form was made. The note in
+place `place` of the form at `degree` is the key's note-in-that-place,
+mirrored if the degree says so, then moved up:
+
+```rust
+fn note_at(degree: Degree, key: Scale, place: usize) -> Option<PitchClass> {
+    let interval = i32::from(*key.kind.intervals().get(place)?);
+    let from_key_note = if degree.inverted { -interval } else { interval };
+    Some(key.root.transpose(from_key_note + i32::from(degree.up)))
+}
+```
+
+`get` gives `None` past the end, so a key of three notes has no fourth
+place. `place_in` searches the places for the note, and the new pitch
+class is `note_at` with the same degree and place in the new key. The
+note then moves the shortest way to it, at most a tritone, so a chord
+stays where it was on the keyboard.
+
+### Which form a note is in
+
+A note does not say which harmony it belongs to. `form_of`, in
+`project.rs`, asks the chord sheet first, where the pattern first
+plays the note, and only if the note is in the form written there:
+
+```rust
+let written = start.and_then(|start| {
+    let step = start + note.start;
+    let after = sheet.partition_point(|marker| marker.start <= step);
+    let marker = sheet.get(after.checked_sub(1)?)?;
+    marker
+        .harmony
+        .pitch_set()
+        .filter(|form| form.contains(pitch_class) && is_form(form))
+});
+```
+
+`partition_point` finds, in the sorted markers, the first one that
+starts after the note, so the one before it is the harmony at the
+note. Without one, the notes sounding with it in the pattern, from
+every channel, are tried as a form: a chord drawn with **Draw with
+it** in the Micromodes window moves as one even with nothing on the
+sheet. A note in neither moves as `change_key` moves it, which keeps
+the old behaviour for music that is not made of forms.
+
+`Project::change_key` keeps a copy of the sheet from before it moves,
+since the sheet moves first, and the step where each pattern first
+plays; the notes are then moved pattern by pattern.
+
+### The sheet
+
+`HarmonyName::moved` moves the chord sheet the same way. A harmony
+that is a form of the old key (a micromode, a set, or a chord whose
+notes are a form, as Em7b5 is of C7 as a set) becomes the form at the
+same degree of the new key:
+
+```rust
+fn at_same_degree(self, from: Scale, to: Scale) -> Option<HarmonyName> {
+    let (ScaleKind::Set(_), ScaleKind::Set(_)) = (from.kind, to.kind) else {
+        return None;
+    };
+    let degree = Degree::of(from, self.pitch_set()?)?;
+    if let HarmonyName::Chord(_) | HarmonyName::Polychord(..) = self
+        && let Some(chord) = degree.form(to).and_then(crate::harmony::keys::form_chord)
+    {
+        return Some(HarmonyName::Chord(ChordSymbol::new(
+            to.spell_root(chord),
+            chord.quality,
+        )));
+    }
+    HarmonyName::at_degree(degree, to)
+}
+```
+
+A chord stays a chord when the new form is one, so a sheet written in
+chord names keeps them. The micromode demos write their forms on the
+sheet now, each pass of the walk where its pattern plays, with
+`MicromodeStyle::sheet`, the same function the band uses when a style
+writes its walk on a song's sheet. So each demo shows its degrees, and
+switching its colour goes through the sheet.
+
+### The menu: short rows, and opening where the key is
+
+Twelve more lines would make the Key menu too long to see at once, so
+the micromodes are three short rows, the family's word and then its
+numbers: Menor 1 2 3 4 5, Mayor 1 2 3 4, and the triads as °, m/M and
++. Pointing at one gives its whole name, its intervals and what
+picking it does.
+
+They are at the bottom of a list that scrolls, so the menu opens
+scrolled to the key's own micromode. egui keeps no record of when a
+menu opened, so the menu counts the frames it has been open in the
+context's memory:
+
+```rust
+let frames_id = egui::Id::unique((salt, "frames open"));
+let frames = ctx.data(|data| data.get_temp::<u8>(frames_id)).unwrap_or(0);
+let mut open = false;
+// ... inside the menu: open = true; and, for the key's micromode,
+// if frames < 3 { response.scroll_to_me(Some(egui::Align::Center)); }
+let frames = if open { frames.saturating_add(1) } else { 0 };
+ctx.data_mut(|data| data.insert_temp(frames_id, frames));
+```
+
+`insert_temp` keeps a value for this run only, under an id. The menu
+scrolls during its first three frames (the first one only measures the
+menu, so one would not be enough) and then leaves the scroll bar to
+you. `saturating_add` stops at 255 instead of overflowing.
+
+### Key changes in any colour
+
+A key change on the playlist names the key from a bar on, without
+moving a note, and it can now be a micromode, or a set or a row the
+song is in: a piece can be in Menor 3 and turn to Menor 5 at bar 9.
+The harmony keys and the degrees on the sheet read the key at each
+bar, so from bar 9 they offer and count Menor 5's forms; what is
+already written there stays as it is, until Menor 5's forms are
+written in its place. A key of three notes
+is named by its micromode everywhere, "Menor 5 on C", since every
+group of three notes is one of the twelve.
+
 ## The window: a clock drawn with egui's painter
 
 The twelve notes sit round a circle like the hours of a clock, C at the
@@ -1240,6 +1423,9 @@ names of the P, L and R moves.
 `library/micromodes.rs` checks that every style plays only its
 micromode, in any key and from every section's start, with the key
 becoming the micromode; that the first form starts on the key note;
+that every demo writes its forms on the sheet, and that switching it
+into each of the twelve micromodes keeps every bar's degree and puts
+every note in the form written where it plays, and back again;
 and `band/micromode.rs` that the band plays only the form written in
 each bar, with every style; that forms already on the sheet stay, in
 their order, with the key, and that changing a bar changes what the
@@ -1248,7 +1434,9 @@ that a locked Keys of the song keeps playing its part; and that the
 band is saved and read again. A saved style over a set plays only the
 set's notes, for every note of the octave over every form of a
 tetrachord. The app's tests check that a micromode style clicked in a
-song with forms on its sheet plays those forms, that chord
+song with forms on its sheet plays those forms, that picking Menor 5
+in the Key menu turns the Menor 3 demo into Menor 5 with the same
+degrees, that chord
 micromodes are spelled as chords (C E♭ G♭), that **▶ Hear it**
 plays the three notes from middle C, and that picking a form shows how
 it was moved.
