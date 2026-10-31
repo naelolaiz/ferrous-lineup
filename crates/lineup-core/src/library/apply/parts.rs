@@ -56,7 +56,7 @@ pub fn style_instruments(project: &mut Project, style: &Style, selected: Option<
     let keys = find_synth(project, KEYS);
     if keys.is_none()
         && find_synth(project, BASS).is_none()
-        && own_players_instruments(project, band)
+        && own_players_instruments(project, band, &[])
     {
         return;
     }
@@ -71,13 +71,27 @@ pub fn style_instruments(project: &mut Project, style: &Style, selected: Option<
     }
 }
 
+/// Gives the song's own players the sounds of `band` when the band
+/// plays with them, as [`style_instruments`] does without it: the
+/// channels in `skip` are the band's, and a song with a "Keys" or a
+/// "Bass" of its own keeps its sounds, as there.
+pub(crate) fn own_players_sounds(project: &mut Project, band: &BandStyle, skip: &[usize]) {
+    let own_keys_or_bass = (project.channels().iter().enumerate())
+        .filter(|(index, _)| !skip.contains(index))
+        .any(|(_, channel)| plays_notes(channel) && (channel.name == KEYS || channel.name == BASS));
+    if !own_keys_or_bass {
+        own_players_instruments(project, band, skip);
+    }
+}
+
 /// Gives every channel of the song's own players but the melody the
 /// sound `band` has for it: a bass (a double bass too) its bass, a piano
 /// its piano, a guitar its guitar and an organ or an accordion its organ
 /// (or its piano, without one), and bowed strings its strings. Other
-/// instruments, and channels without a General MIDI sound, keep theirs.
-/// Returns whether the song has players like that.
-fn own_players_instruments(project: &mut Project, band: &BandStyle) -> bool {
+/// instruments, and channels without a General MIDI sound, keep theirs,
+/// and so do the channels in `skip`, the band's own. Returns whether the
+/// song has players like that.
+fn own_players_instruments(project: &mut Project, band: &BandStyle, skip: &[usize]) -> bool {
     // The tune: on the channels named for it, as a MIDI file's tracks
     // often are, or else where the lead sheet looks for it.
     let mut tune: Vec<usize> = (project.channels().iter().enumerate())
@@ -90,22 +104,19 @@ fn own_players_instruments(project: &mut Project, band: &BandStyle) -> bool {
     let extras = band.extras();
     let piano = band.piano_program();
     let played: Vec<(usize, u8)> = (project.channels().iter().enumerate())
-        .filter(|&(index, channel)| !tune.contains(&index) && plays_notes(channel))
+        .filter(|&(index, channel)| {
+            !tune.contains(&index) && !skip.contains(&index) && plays_notes(channel)
+        })
         .filter_map(|(index, channel)| {
-            let program = match channel.program? {
-                general_midi::CONTRABASS => band.bass_program(),
-                // Violins to tremolo strings, and the string ensembles.
-                40..=44 | 48..=51 => extras.strings.as_ref()?.program,
-                program => match general_midi::FAMILIES[general_midi::family(program)] {
-                    "Piano" => piano,
-                    "Organ" => extras.organ.as_ref().map_or(piano, |organ| organ.program),
-                    "Guitar" => extras
-                        .guitar
-                        .as_ref()
-                        .map_or(piano, |guitar| guitar.program),
-                    "Bass" => band.bass_program(),
-                    _ => return None,
-                },
+            let program = match role(&channel.name, channel.program)? {
+                Role::Piano => piano,
+                Role::Organ => extras.organ.as_ref().map_or(piano, |organ| organ.program),
+                Role::Guitar => extras
+                    .guitar
+                    .as_ref()
+                    .map_or(piano, |guitar| guitar.program),
+                Role::Bass => band.bass_program(),
+                Role::Strings => extras.strings.as_ref()?.program,
             };
             Some((index, program))
         })
@@ -114,6 +125,71 @@ fn own_players_instruments(project: &mut Project, band: &BandStyle) -> bool {
         project.set_sound(index, None, Some(program));
     }
     !played.is_empty()
+}
+
+/// What a player of the song's own plays, of the parts a band has.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+enum Role {
+    Bass,
+    Piano,
+    Organ,
+    Guitar,
+    Strings,
+}
+
+/// The role of a channel called `name` with the General MIDI sound
+/// `program`: what its name says, as a MIDI file's tracks are often
+/// named for their instrument, or else the family of its sound. The name
+/// comes first because a style may have given the channel a sound of
+/// another family: a guitar plays the piano's part in a band without a
+/// guitar, and is still the guitar when the next band has one.
+fn role(name: &str, program: Option<u8>) -> Option<Role> {
+    let name = name.to_lowercase();
+    let says = |words: &[&str]| words.iter().any(|word| name.contains(word));
+    if says(&["bass", "bajo", "baix", "contrab"]) {
+        return Some(Role::Bass);
+    }
+    if says(&["guitar", "gtr", "banjo", "ukulele", "charango", "cuatro"]) {
+        return Some(Role::Guitar);
+    }
+    if says(&[
+        "organ",
+        "órgano",
+        "accordion",
+        "acordeón",
+        "acordeon",
+        "bandone",
+        "harmonium",
+    ]) {
+        return Some(Role::Organ);
+    }
+    if says(&[
+        "string", "cuerda", "violin", "violín", "viola", "cello", "chelo",
+    ]) {
+        return Some(Role::Strings);
+    }
+    if says(&["piano", "keys", "teclado", "rhodes", "clav"]) {
+        return Some(Role::Piano);
+    }
+    let program = program?;
+    Some(match program {
+        general_midi::CONTRABASS => Role::Bass,
+        // Violins to tremolo strings, and the string ensembles.
+        40..=44 | 48..=51 => Role::Strings,
+        program => match general_midi::FAMILIES[general_midi::family(program)] {
+            "Piano" => Role::Piano,
+            "Organ" => Role::Organ,
+            "Guitar" => Role::Guitar,
+            "Bass" => Role::Bass,
+            _ => return None,
+        },
+    })
+}
+
+/// Whether a channel of the song's own plays the bass, as its name or
+/// its General MIDI sound says, and is not named for the tune.
+pub(crate) fn plays_the_bass(channel: &Channel) -> bool {
+    !plays_the_tune(&channel.name) && role(&channel.name, channel.program) == Some(Role::Bass)
 }
 
 /// Whether a channel called `name` plays the tune, as "Lead", "Melody",

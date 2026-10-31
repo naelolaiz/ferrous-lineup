@@ -2216,7 +2216,10 @@ backwards makes the first one the latest bar.
 cut. A stretch that comes back **note for note** (a repeated verse, a
 da capo) plays the same pattern again instead of a copy, as you would
 build the song by hand. Each pattern is named after its bars, such as
-"Bars 1–16".
+"Bars 1–16". The drums of each piece go in a pattern of their own,
+"Drums, bars 1–16", on a second track called Drums: a band's drums can
+then take their place, because the band mutes the tracks that hold
+only drums (see [The band](../band/band.md)).
 
 ![Mozart's Eine kleine Nachtmusik, imported from a MIDI file, in the piano roll. Above the notes, the Chords lane names each chord: G, D, G, D, G, C, A, D... The key box says G major. Below, the velocity lane shows how hard each note was played.](../images/step-8-midi-mozart.png)
 
