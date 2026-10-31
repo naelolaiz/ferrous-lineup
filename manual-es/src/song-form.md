@@ -119,6 +119,48 @@ nombre, como «Estrofa ×2» cuando se toca dos veces. Haz clic en el
 nombre de una sección en la hoja para seleccionar todos sus compases;
 haz clic derecho para el menú de abajo, para toda la sección.
 
+### Partes que oye la banda
+
+La banda no necesita secciones para seguir las partes de una canción.
+Cuando no hay ninguna marcada, como en un archivo MIDI que abres, las
+busca en las notas: donde vuelve una tanda de compases (una estrofa, un
+estribillo), donde entra algo nuevo, donde cambia la tonalidad o el
+compás, y donde la melodía descansa al final de una frase. Cuenta las
+partes desde el primer compás entero de la melodía, en frases de cuatro
+y de ocho compases, como se construyen la mayoría de las canciones. Una
+canción que da vueltas a un mismo giro corto de principio a fin es una
+sola parte.
+
+Las partes que oye aparecen tenues en la franja **Secciones**,
+nombradas por cómo suenan: **A**, **B** y así, una parte que vuelve con
+la misma letra, y una **Introducción** o una **Coda** en los extremos.
+La primera dice **reconocida**. Haz clic en cualquiera para conservarlas
+todas como secciones propias de la canción, y luego renómbralas,
+muévelas o cámbialas de tamaño como a cualquier otra (**Ctrl+Z** lo
+deshace). La banda siempre toca según las secciones que marcas, así que
+donde oyó una parte en un lugar equivocado, marca tú las correctas.
+
+### Cómo sigue la banda las partes
+
+- Sus patrones en la lista de reproducción empiezan donde empieza cada
+  parte.
+- Un acorde que se sostiene sobre el comienzo de una parte sigue
+  sonando, en lugar de volver a atacarse.
+- La batería termina cada parte con un **relleno**, y toca uno pequeño
+  cada ocho compases dentro de las partes de dieciséis compases o más.
+  El relleno antes del final crece a lo largo de dos compases. Los
+  rellenos se turnan, así que una parte que vuelve no termina igual que
+  antes.
+- La parte que sigue a un relleno empieza con un platillo **crash** en
+  su primer pulso, la señal del baterista de que empieza algo nuevo.
+- Una parte de otra clase que la anterior, una B después de una A o un
+  estribillo después de una estrofa, lleva al baterista del hi-hat al
+  platillo ride.
+- Los ritmos folclóricos hacen sus rellenos en sus propios tambores,
+  como el parche y el aro del bombo. Los ritmos de tango, de orquesta y
+  de ranchera ocupan el lugar de conjuntos sin baterista, así que no
+  hacen rellenos.
+
 ## Variaciones a y b
 
 Una banda no toca igual todas las partes de una canción. La estrofa es

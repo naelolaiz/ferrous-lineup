@@ -33,7 +33,10 @@ Lineup desde tu gestor de archivos. La canción que resulta:
   mayor cuando nadie eligió), recibe la tonalidad a la que mejor se
   ajustan sus notas;
 - recibe en su **hoja de acordes** los acordes que la aplicación oye en
-  él.
+  él;
+- tiene sus **partes** oídas en sus notas: la banda toca según ellas, y
+  aparecen tenues sobre la lista de reproducción hasta que las conservas
+  (ver [Partes que oye la banda](song-form.md#partes-que-oye-la-banda)).
 
 La barra de estado lo resume, como en *canon-in-d: 3 canales, 77
 notas, 9 compases, 4/4, 72 BPM, Re mayor*:
