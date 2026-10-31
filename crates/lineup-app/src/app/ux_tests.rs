@@ -5561,3 +5561,43 @@ fn a_recording_dropped_on_the_window_is_imported_and_a_short_sound_goes_to_the_s
     }
     std::fs::remove_dir_all(recording.parent().unwrap()).ok();
 }
+
+#[test]
+fn a_song_without_sections_shows_the_ones_heard_and_keeps_them_with_a_click() {
+    let mut screen = Screen::new();
+    let song = lineup_core::library::Song::named("Candombe para Gardel").unwrap();
+    let mut project = lineup_core::library::demo::song_demo(song);
+    // As an imported file comes: no sections marked.
+    while !project.playlist().sections().is_empty() {
+        project.remove_section(0);
+    }
+    let heard = project.heard_sections();
+    assert!(heard.len() >= 4, "{heard:?}");
+    screen.app.replace_project(project, None);
+    screen.app.rack_open = false;
+    screen.app.chord_sheet.open = false;
+    screen.draw(Vec::new());
+    let output = screen.draw(Vec::new());
+    // Faint, the first one saying where they come from.
+    let first = format!("{} · recognized", heard[0].name);
+    assert!(text_rect(&output, &first).is_some(), "{first}");
+    assert!(
+        text_rect(
+            &output,
+            "Drag here to mark a section: Intro, Verse, Chorus…"
+        )
+        .is_none()
+    );
+    // One click keeps them all, as one step to undo.
+    screen.click(&first);
+    assert_eq!(screen.app.project.playlist().sections(), heard);
+    assert_eq!(
+        screen.app.history.undo_label(),
+        Some("keep recognized sections")
+    );
+    screen.draw(Vec::new());
+    let output = screen.draw(Vec::new());
+    assert!(text_rect(&output, &first).is_none());
+    screen.app.undo();
+    assert!(screen.app.project.playlist().sections().is_empty());
+}

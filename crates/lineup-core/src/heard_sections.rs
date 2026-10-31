@@ -269,6 +269,52 @@ impl Project {
         self.heard_sections_by(&EAR)
     }
 
+    /// A number that changes whenever something the ear listens to does:
+    /// the clips, the notes of the song's own patterns, the chord sheet,
+    /// the time signatures and the keys. A view that shows the heard
+    /// sections keeps them until it changes, rather than listening again
+    /// every time it is drawn.
+    pub fn hearing_key(&self) -> u64 {
+        use std::hash::{Hash, Hasher};
+        let mut hasher = std::collections::hash_map::DefaultHasher::new();
+        self.channels.len().hash(&mut hasher);
+        self.playlist.clips().hash(&mut hasher);
+        for pattern in &self.patterns {
+            pattern.player.is_some().hash(&mut hasher);
+            pattern.length().hash(&mut hasher);
+            for channel in 0..self.channels.len() {
+                pattern.notes(channel).hash(&mut hasher);
+            }
+        }
+        format!(
+            "{:?}{:?}{:?}{:?}",
+            self.playlist.chord_markers,
+            self.playlist.time_markers(),
+            self.playlist.key_markers(),
+            self.time_signature,
+        )
+        .hash(&mut hasher);
+        hasher.finish()
+    }
+
+    /// Writes the parts heard in the song (see
+    /// [`Project::heard_sections`]) as its sections, when it has none
+    /// written: from then on they are the song's own, to rename, move and
+    /// change. Returns how many it wrote.
+    pub fn keep_heard_sections(&mut self) -> usize {
+        if !self.playlist.sections().is_empty() {
+            return 0;
+        }
+        let heard = self.heard_sections();
+        let mut kept = 0;
+        for section in heard {
+            if self.add_section(section).is_some() {
+                kept += 1;
+            }
+        }
+        kept
+    }
+
     /// The parts `ear` hears in the song.
     pub(crate) fn heard_sections_by(&self, ear: &Ear) -> Vec<Section> {
         let bars = self.heard_bars();
