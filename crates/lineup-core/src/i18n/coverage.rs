@@ -75,6 +75,7 @@ fn texts() -> Vec<&'static str> {
         texts.extend([preset.source, preset.about]);
     }
     texts.extend(RowForm::ALL.map(RowForm::name));
+    texts.extend(crate::harmony::degree::Triadic::ALL.map(crate::harmony::degree::Triadic::name));
     for kind in SLIPS {
         texts.extend([kind.name(), kind.short(), why(kind)]);
     }

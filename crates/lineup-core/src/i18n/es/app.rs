@@ -286,6 +286,16 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ),
     ("Auto ({})", "Automático ({})"),
     ("Back to 100%", "Volver al 100%"),
+    ("Backwards", "Hacia atrás"),
+    (
+        "The notes in the opposite order in time, rhythm and all, as in a crab canon. A form of a row becomes its retrograde: P0 becomes R0.",
+        "Las notas en el orden contrario en el tiempo, con su ritmo también, como en un canon cangrejo. Una forma de una serie se vuelve su retrógrada: P0 se vuelve R0.",
+    ),
+    ("Pitches backwards", "Alturas hacia atrás"),
+    (
+        "The pitches in the opposite order, in the same rhythm: the first note takes the last one's pitch. P0 becomes R0, in the rhythm P0 had.",
+        "Las alturas en el orden contrario, con el mismo ritmo: la primera nota toma la altura de la última. P0 se vuelve R0, con el ritmo que tenía P0.",
+    ),
     ("Band on {}", "Banda en {}"),
     ("Bar", "Compás"),
     (
@@ -509,6 +519,16 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     (
         "Combinatorial: its first six notes and those of {} make all twelve.",
         "Combinatoria: sus seis primeras notas y las de {} forman las doce.",
+    ),
+    ("With its partner, {}", "Con su compañera, {}"),
+    ("With its partner", "Con su compañera"),
+    (
+        "Its combinatorial partner sounds an octave under it, note for note: the first six notes of the two make all twelve, and so do the last six",
+        "Su compañera combinatoria suena una octava más abajo, nota por nota: las seis primeras notas de las dos forman las doce, y también las seis últimas",
+    ),
+    (
+        "No form of this row has the six notes the first half leaves out as its own first half, so it has no partner",
+        "Ninguna forma de esta serie tiene como primera mitad las seis notas que deja fuera la primera mitad, así que no tiene compañera",
     ),
     ("Compressor", "Compresor"),
     ("Concert pitch", "Altura real"),
@@ -939,6 +959,13 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("Intro: {} bars", "Introducción: {} compases"),
     ("Inversions", "Inversiones"),
     ("invert chords", "invertir acordes"),
+    ("play notes backwards", "tocar las notas hacia atrás"),
+    ("turn pitches backwards", "poner las alturas hacia atrás"),
+    ("turn notes upside down", "dar vuelta las notas"),
+    (
+        "turn notes upside down in key",
+        "dar vuelta las notas en la tonalidad",
+    ),
     ("Invert chords down", "Invertir los acordes hacia abajo"),
     ("Invert chords up", "Invertir los acordes hacia arriba"),
     ("Inverted (I)", "Invertido (I)"),
@@ -1964,12 +1991,12 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Los vientos tocan los acordes con la banda",
     ),
     (
-        "The key becomes the micromode, starting on the key note. While the song plays, a click plays the whole song this way.",
-        "La tonalidad se vuelve el micromodo, empezando en la nota de la tonalidad. Si la canción está sonando, un clic toca así toda la canción.",
+        "In a song, the band plays it from the chord sheet: the forms written there when the key is a set, or else its own walk, which it writes on the sheet, and the key becomes the micromode, starting on the key note.",
+        "En una canción, la banda lo toca desde la hoja de acordes: las formas escritas ahí cuando la tonalidad es un conjunto, o si no su propio recorrido, que escribe en la hoja, y la tonalidad se vuelve el micromodo, empezando en la nota de la tonalidad.",
     ),
     (
-        "The key becomes the row, starting on the key note. While the song plays, a click plays the whole song this way.",
-        "La tonalidad se vuelve la serie, empezando en la nota de la tonalidad. Si la canción está sonando, un clic toca así toda la canción.",
+        "It plays the key's row when the key is a row, and else its own, starting on the key note. In a song, the band plays it from the chord sheet: the forms of the row written there (P0, RI5…), or else its own plan, which it writes on the sheet. With Chord progression, its own row and plan.",
+        "Toca la serie de la tonalidad cuando la tonalidad es una serie, y si no la suya, empezando en la nota de la tonalidad. En una canción, la banda lo toca desde la hoja de acordes: las formas de la serie escritas ahí (P0, RI5…), o si no su propio plan, que escribe en la hoja. Con Progresión de acordes, su propia serie y su plan.",
     ),
     (
         "The key of the song. A new key or mode moves the chords, bass and melody into it (the drums stay), so the song plays in the new key. Ctrl+Z puts them back.",
@@ -1992,10 +2019,6 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "primero la nota más grave, subiendo",
     ),
     (
-        "the micromode instead of the chords",
-        "el micromodo en lugar de los acordes",
-    ),
-    (
         "The notes it leaves out form {}{}.",
         "Las notas que deja afuera forman {}{}.",
     ),
@@ -2006,6 +2029,18 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     (
         "The notes stay as they are: this names the key they are in from here.",
         "Las notas se quedan como están: esto nombra la tonalidad en la que están desde aquí.",
+    ),
+    (
+        "A set or a row this song is in, on this note.",
+        "Un conjunto o una serie en que está esta canción, sobre esta nota.",
+    ),
+    (
+        "{}: {}. As the key, on the key note. From another set or micromode, every form keeps \
+         its degree and the notes go with it: T2 of Menor 3 becomes T2 of Menor 5. From a key, \
+         the notes stay as they are.",
+        "{}: {}. Como tonalidad, sobre la tónica. Desde otro conjunto o micromodo, cada forma \
+         conserva su grado y las notas van con ella: T2 de Menor 3 pasa a ser T2 de Menor 5. \
+         Desde una tonalidad, las notas se quedan como están.",
     ),
     (
         "The pattern only has room for {} of the 12 notes. Make it longer, or the steps shorter, to hear the whole row.",
@@ -2161,6 +2196,24 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ),
     ("The {}", "El {}"),
     ("Then", "Después"),
+    ("A plan of forms", "Un plan de formas"),
+    (
+        "Forms you choose, one after another, such as P0 RI5 I7 R0",
+        "Formas que eliges, una tras otra, como P0 RI5 I7 R0",
+    ),
+    ("Plan", "Plan"),
+    (
+        "The forms one after another, then again from the first until the pattern is full. Type them, or click them around the matrix.",
+        "Las formas una tras otra, y otra vez desde la primera hasta llenar el patrón. Escríbelas, o haz clic en ellas alrededor de la matriz.",
+    ),
+    (
+        "Type the forms to play, or click them around the matrix.",
+        "Escribe las formas que se tocan, o haz clic en ellas alrededor de la matriz.",
+    ),
+    (
+        "Type a plan of forms first.",
+        "Escribe primero un plan de formas.",
+    ),
     (
         "There is no folder to keep a SoundFont in",
         "No hay ninguna carpeta donde guardar un SoundFont",
@@ -2297,6 +2350,15 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("Up a note in the key", "Subir una nota de la tonalidad"),
     ("Up a semitone", "Subir un semitono"),
     ("Up an octave", "Subir una octava"),
+    (
+        "Every interval from the first note turned the other way: up a third becomes down a third, a major chord becomes minor, and P0 becomes I0.",
+        "Cada intervalo desde la primera nota, hacia el otro lado: subir una tercera se vuelve bajar una tercera, un acorde mayor se vuelve menor, y P0 se vuelve I0.",
+    ),
+    ("Upside down in the key", "Dado vuelta en la tonalidad"),
+    (
+        "Every note as many notes of the key below the first note as it was above it, so the tune stays in the key: in C major, around C, E becomes A.",
+        "Cada nota tantas notas de la tonalidad por debajo de la primera como estaba por encima, así la melodía sigue en la tonalidad: en {C} mayor, alrededor de {C}, {E} se vuelve {A}.",
+    ),
     (
         "Upside down it is the same set, moved.",
         "Dado vuelta es el mismo conjunto, transportado.",

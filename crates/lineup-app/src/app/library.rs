@@ -675,13 +675,23 @@ impl LineupApp {
         if self.band_plays_parts(action, parts, edited) {
             return;
         }
+        // The band plays a micromode style or a twelve-tone style in a
+        // song with music; an empty one tries it in a pattern.
+        if let LibraryAction::MicromodeStyle(style) = action {
+            self.try_micromode_style(style);
+            return;
+        }
+        if let LibraryAction::RowStyle(style) = action {
+            self.try_row_style(style);
+            return;
+        }
         let (name, tempo, label) = match action {
-            LibraryAction::UserStyle(_) => unreachable!("handled above"),
-            LibraryAction::Style(style) | LibraryAction::StyleInSong(style) => {
-                (style.name, Some(style.tempo), "change the style")
+            LibraryAction::UserStyle(_)
+            | LibraryAction::MicromodeStyle(_)
+            | LibraryAction::RowStyle(_) => {
+                unreachable!("handled above")
             }
-            LibraryAction::RowStyle(style) => (style.name, Some(style.tempo), "change the style"),
-            LibraryAction::MicromodeStyle(style) => {
+            LibraryAction::Style(style) | LibraryAction::StyleInSong(style) => {
                 (style.name, Some(style.tempo), "change the style")
             }
             LibraryAction::Rhythm(rhythm) | LibraryAction::RhythmInSong(rhythm)
@@ -732,9 +742,8 @@ impl LineupApp {
                 LibraryAction::Style(style) | LibraryAction::StyleInSong(style) => {
                     apply::use_style_parts(project, style, parts)
                 }
-                LibraryAction::RowStyle(style) => rows::use_row_style(project, style),
-                LibraryAction::MicromodeStyle(style) => {
-                    micromodes::use_micromode_style(project, style)
+                LibraryAction::RowStyle(_) | LibraryAction::MicromodeStyle(_) => {
+                    unreachable!("handled above")
                 }
                 LibraryAction::Rhythm(rhythm) | LibraryAction::RhythmInSong(rhythm)
                     if FILLS.contains(rhythm) =>
@@ -782,7 +791,6 @@ impl LineupApp {
         if change.harmony > 0 {
             let what = match action {
                 LibraryAction::RowStyle(_) => "the row instead of the chords",
-                LibraryAction::MicromodeStyle(_) => "the micromode instead of the chords",
                 _ => "chords and bass played again",
             };
             descriptions.push(trf("{} in {}", &[&tr(what), &patterns(change.harmony)]));
@@ -810,11 +818,6 @@ impl LineupApp {
                 LibraryAction::RowStyle(style) => Tried {
                     rhythm: style.rhythm().or(song_library.rhythm),
                     row_style: Some(style),
-                    ..Tried::default()
-                },
-                LibraryAction::MicromodeStyle(style) => Tried {
-                    rhythm: style.rhythm().or(song_library.rhythm),
-                    micromode_style: Some(style),
                     ..Tried::default()
                 },
                 LibraryAction::Rhythm(rhythm) | LibraryAction::RhythmInSong(rhythm)
@@ -946,14 +949,16 @@ impl LineupApp {
 
     /// Writes a twelve-tone style into a pattern and plays it, as
     /// [`Self::try_from_library`] does for a harmony style: the same
-    /// pattern is rewritten while it is unchanged. The row starts on the
-    /// project's key note.
+    /// pattern is rewritten while it is unchanged. The row is the key's,
+    /// when the key is a row and the Chord progression box is off, or
+    /// else the style's own, starting on the project's key note.
     fn try_row_style(&mut self, style: &'static RowStyle) {
-        let start = self.project.scale.root;
+        let own = self.playlist.library_parts().progression;
+        let row = style.row_in(self.project.scale, own);
         let selected = self.piano_roll.selected_channel();
         let written =
             self.write_pattern_style(style.name, style.tempo, style.rhythm(), |project, index| {
-                rows::write_row_style(project, index, style, start, selected);
+                rows::write_row_style(project, index, style, row, selected);
             });
         if let Some((pattern, written)) = written {
             let audition = Audition {
@@ -1071,6 +1076,12 @@ impl LineupApp {
         parts: apply::StyleParts,
         edited: PartSet,
     ) -> bool {
+        if let LibraryAction::MicromodeStyle(style) = action {
+            return self.band_plays_micromode(style, parts, edited);
+        }
+        if let LibraryAction::RowStyle(style) = action {
+            return self.band_plays_row(style, parts, edited);
+        }
         // A demo has a written accompaniment but no live band yet. Copying
         // a style's chord and bass parts with its voices brings in the
         // preset lineup on tracks of their own, just as changing an
@@ -1090,12 +1101,7 @@ impl LineupApp {
         };
         // The band needs chords to play: the song's own, or those it hears
         // in the song's notes, which it writes down when it comes in.
-        let has_music = !self.project.playlist().chord_markers().is_empty()
-            || self.project.playlist().clips().iter().any(|clip| {
-                self.project
-                    .pattern(clip.pattern)
-                    .is_some_and(|pattern| !pattern.is_empty())
-            });
+        let has_music = self.has_music();
         // A beat made up in the library has no chord and bass parts of its
         // own: it brings no band, only its drums.
         let made_up = match action {
@@ -1209,6 +1215,127 @@ impl LineupApp {
                 &[&tr_name(harmony.map_or(style.name, |s| s.name))],
             ) + &kept(&self.project),
         );
+        true
+    }
+}
+
+impl LineupApp {
+    /// Whether the song has chords on its sheet or notes on its playlist.
+    fn has_music(&self) -> bool {
+        !self.project.playlist().chord_markers().is_empty()
+            || self.project.playlist().clips().iter().any(|clip| {
+                self.project
+                    .pattern(clip.pattern)
+                    .is_some_and(|pattern| !pattern.is_empty())
+            })
+    }
+
+    /// Has the band play a micromode style from the chord sheet (see
+    /// [`Project::apply_micromode_style`]): the forms written there, if
+    /// the sheet holds forms of the key, or else the style's own walk,
+    /// which it writes there. A song without a band or any music tries
+    /// the style in a pattern instead: this returns `false`.
+    fn band_plays_micromode(
+        &mut self,
+        style: &'static MicromodeStyle,
+        parts: apply::StyleParts,
+        edited: PartSet,
+    ) -> bool {
+        // A micromode style brings its walk where the sheet holds no
+        // forms of the key.
+        let parts = apply::StyleParts {
+            progression: parts.progression || !self.project.sheet_holds_forms(),
+            ..parts
+        };
+        self.band_plays_voices(
+            style.name,
+            style.time,
+            parts.progression,
+            parts,
+            edited,
+            |project, parts| project.apply_micromode_style(style, parts),
+        )
+    }
+
+    /// Has the band play a twelve-tone style from the chord sheet (see
+    /// [`Project::apply_row_style`]): on the key's row, if the key is a
+    /// row, and the forms written there, if the sheet holds forms of the
+    /// row, or else the style's plan, which it writes there. With the
+    /// Chord progression box, the style's own row and plan. A song
+    /// without a band or any music tries the style in a pattern instead:
+    /// this returns `false`.
+    fn band_plays_row(
+        &mut self,
+        style: &'static RowStyle,
+        parts: apply::StyleParts,
+        edited: PartSet,
+    ) -> bool {
+        let writes = parts.progression || !self.project.sheet_holds_row_forms();
+        self.band_plays_voices(
+            style.name,
+            style.time,
+            writes,
+            parts,
+            edited,
+            |project, parts| project.apply_row_style(style, parts),
+        )
+    }
+
+    /// Has the band play a style whose own voices take the place of the
+    /// piano, the bass and the soloist, named `name`, in `time`, with
+    /// `apply`; `writes` says whether it writes its own harmony on the
+    /// chord sheet. A song without a band or any music returns `false`.
+    fn band_plays_voices(
+        &mut self,
+        name: &'static str,
+        time: TimeSignature,
+        writes: bool,
+        parts: apply::StyleParts,
+        edited: PartSet,
+        apply: impl Fn(&mut Project, apply::StyleParts),
+    ) -> bool {
+        if self.project.band().is_none() && !self.has_music() {
+            return false;
+        }
+        // Such a style always brings its voices.
+        let parts = apply::StyleParts {
+            matching_style: true,
+            ..parts
+        };
+        let mut has = vec![
+            SongPart::Drums,
+            SongPart::Patterns,
+            SongPart::Instruments,
+            SongPart::TimeSignature,
+            SongPart::Tempo,
+            SongPart::Swing,
+        ];
+        if writes {
+            has.push(SongPart::Chords);
+        }
+        let before = self.project.clone();
+        let previous = self.tried();
+        let source = Source::new(SourceKind::Style, name);
+        self.edit_song(
+            "change the band",
+            Some(time),
+            parts,
+            false,
+            Some(Bringing {
+                from: &source,
+                has: PartSet::of(&has),
+                edited,
+            }),
+            apply,
+        );
+        if let Some(band) = self.project.band() {
+            self.song_library = Tried::from_band(band);
+        }
+        self.keep_place_in_song(&before);
+        self.remember_song_version(before, previous);
+        self.remember_song_version(self.project.clone(), self.song_library);
+        self.notice =
+            Some(trf("Applied selected parts of {}.", &[&tr_name(name)]) + &kept(&self.project));
         true
     }
 }

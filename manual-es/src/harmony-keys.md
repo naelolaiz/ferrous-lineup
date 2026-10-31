@@ -65,11 +65,18 @@ moverse la armonía de una canción.
   tonalidad está (ver [Tonalidades y
   modos](keys-and-modes.md#buscar-la-tonalidad-experimental)).
 
-Cuando la tonalidad es un conjunto de clases de altura, una serie
-dodecafónica o un micromodo en lugar de una escala mayor o menor, las
-teclas tocan grupos de sus notas, y los botones eligen de cuántas (ver
-[Más allá de las tonalidades: conjuntos, series y
-micromodos](sets-rows-micromodes.md)).
+Cuando la tonalidad es un conjunto de clases de altura o una serie
+dodecafónica en lugar de una escala mayor o menor, las teclas tocan
+grupos de sus notas, y los botones eligen de cuántas (ver [Más allá de
+las tonalidades: conjuntos, series y
+micromodos](sets-rows-micromodes.md)). Cuando la tonalidad es un
+micromodo, las teclas son sus formas, nombradas por su grado (T0, T2,
+T1I…), con **Cercanas** y **Todas las formas** para elegir cuáles (ver
+[Un micromodo como
+tonalidad](sets-rows-micromodes.md#un-micromodo-como-tonalidad)). Para un
+conjunto más grande, **Acordes** y **Formas** eligen entre las dos cosas
+(ver [Un conjunto como
+tonalidad](sets-rows-micromodes.md#un-conjunto-como-tonalidad-sus-formas)).
 
 ## Tocar acordes para la banda
 

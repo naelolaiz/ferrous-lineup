@@ -477,6 +477,9 @@ pub fn change_key(note: Note, from: Scale, to: Scale) -> Note {
     if !from.kind.notes_follow(to.kind) {
         return note;
     }
+    if from.tone_row().is_some() && to.tone_row().is_some() {
+        return change_row(note, None, from, to);
+    }
     let up = from.root.semitones_up_to(to.root) as i32;
     let shift = if up > 6 { up - 12 } else { up };
     let Some(moved) = note.transpose(shift) else {
@@ -541,6 +544,11 @@ Some notes need a rule of their own:
   by, and `notes_follow` says so: only what the piano roll highlights
   changes. A set whose notes are exactly a key, such as C major shown as
   the set 7-35, moves on as that key (`from_key`).
+- Between two **rows**, a note keeps its place in its form, as a note
+  keeps its degree between two modes: `change_row` does it
+  ([Another row for the same
+  piece](twelve-tone.md#another-row-for-the-same-piece)). Called from
+  here, it does not know the form, and takes the key's own.
 
 `let Some(moved) = ... else { return note; };` is a **let-else**: if
 the pattern does not match, the `else` block must leave the function.
@@ -708,7 +716,7 @@ pub fn moved_key(key: Scale, from: Scale, to: Scale) -> Scale {
     }
     let up = from.root.semitones_up_to(to.root);
     let root = key.root.transpose(up as i32);
-    let kind = if key.kind == from.kind && from.kind.is_tonal() && to.kind.is_tonal() {
+    let kind = if key.kind == from.kind {
         to.kind
     } else {
         key.kind
@@ -722,12 +730,16 @@ pub fn moved_key(key: Scale, from: Scale, to: Scale) -> Scale {
 
 The root moves by the same semitones. A key in the song's old mode
 takes the new mode: a song in C major with a passage in G major, moved
-to C Dorian, has that passage in G Dorian. A key in another mode keeps
+to C Dorian, has that passage in G Dorian. The same goes for a row or a
+set: a passage in the song's old row takes the new row. A key in another mode keeps
 its own: in a song in A minor moved up a minor third to C minor, the A
 major march becomes C major and the F♯ minor episode A minor, as a
 transposed score would read. Then `change_key` moves each pattern from
 the key it was played in to the key it is played in now, which is what
 `before` and `after` held above.
+
+A key change can also be a micromode, or a set or a row the song is
+in: see [Micromodes](micromodes.md#key-changes-in-any-colour).
 
 MIDI files store key changes too, as key signature events; see [MIDI:
 messages, devices, recording and files](../sound/midi.md). A marker

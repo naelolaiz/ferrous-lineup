@@ -15,7 +15,7 @@ This part of the manual is a guide to listening to them.
 - **Songs**: more than 340 tunes with their melodies, sorted by genre:
   **Latin American folklore**, **Tango**, **Jazz**, **Classical and
   film**, **Balkan and Turkish**, **Country and folk** and more.
-- **Styles**: each of the Library's 215 harmony styles as a short song,
+- **Styles**: each of the Library's 217 harmony styles as a short song,
   to hear what a style does before you use it (see [Styles and the
   Library](styles.md)).
 - **Twelve-tone**: each row style as a short piece, playing the row

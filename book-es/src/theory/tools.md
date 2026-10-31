@@ -6,8 +6,8 @@ y [`crates/lineup-app/src/piano_roll.rs`](https://github.com/naelolaiz/ferrous-l
 El menú **Herramientas** del piano roll cambia muchas notas a la vez:
 las sube un semitono, una octava o una nota de la tonalidad, las
 adelanta o las atrasa, las pone en la cuadrícula o dentro de la
-tonalidad, invierte acordes y los convierte en arpegios. Cada
-herramienta es una función de `lineup_core::tools` que recibe unas notas
+tonalidad, invierte acordes, los convierte en arpegios y las toca
+hacia atrás o dadas vuelta. Cada herramienta es una función de `lineup_core::tools` que recibe unas notas
 y devuelve otras nuevas. Ninguna sabe nada de ventanas, selecciones ni
 deshacer, y eso es lo que las hace fáciles de leer y de probar. Este
 capítulo las recorre una por una; cómo eligen una herramienta el menú y
@@ -42,6 +42,18 @@ bajo, como explica [Acordes: construirlos, nombrarlos e
 invertirlos](chords.md#inversiones). Un **arpegio** toca las
 notas de un acorde una detrás de otra, como un guitarrista que puntea un
 acorde o un arpa, en lugar de todas a la vez.
+
+Una melodía también se puede tocar **hacia atrás** (su **retrogradación**)
+o **dada vuelta** (su **inversión**: cada intervalo hacia el otro lado,
+que no es la inversión de un acorde). Las dos son tan viejas como el
+contrapunto. La Ofrenda musical de Bach tiene un canon cangrejo, una
+línea tocada contra sí misma hacia atrás, y en las contrafugas de su
+Arte de la fuga el sujeto se responde dado vuelta. Bach lo da vuelta
+**dentro de la tonalidad**: los intervalos conservan su número de notas
+de la escala pero no siempre su tamaño, así que la respuesta sigue en
+la tonalidad. La música dodecafónica se construye sobre las dos: las
+formas R e I de una serie son la serie hacia atrás y dada vuelta
+([Series dodecafónicas y sus reglas](twelve-tone.md)).
 
 ## Notas que entran, notas que salen
 
@@ -471,6 +483,100 @@ sale del bucle. A diferencia de `invert`, esta no rechaza cuando una
 nota no puede subir más: un sello cerca de lo más alto del teclado sigue
 dibujando un acorde, en la última inversión que cabe.
 
+## Hacia atrás y dado vuelta
+
+**Hacia atrás** da vuelta las notas en el tiempo: la última nota va
+primero, cada una tan larga como era, y los silencios entre ellas
+también van al revés. Las notas se quedan en el tramo que ocupaban,
+desde el comienzo de la primera hasta el final de la última, así que el
+nuevo comienzo de cada nota es la suma de los dos extremos de ese tramo
+menos el final de la nota:
+
+```rust
+pub fn backwards(notes: &[NoteEvent]) -> Vec<NoteEvent> {
+    let (Some(first), Some(last)) = (
+        notes.iter().map(|note| note.start).min(),
+        notes.iter().map(NoteEvent::end).max(),
+    ) else {
+        return Vec::new();
+    };
+    notes
+        .iter()
+        .map(|note| NoteEvent {
+            start: first + last - note.end(),
+            nudge: note.trim,
+            trim: note.nudge,
+            ..*note
+        })
+        .collect()
+}
+```
+
+`min` y `max` dan `None` si no hay notas, y el `let ... else` toma los
+dos o no devuelve nada. Una nota tocada un poco después de su paso
+(`nudge`, en ticks) que termina un poco antes de su último paso
+(`trim`) vuelve con los dos cambiados: lo que llegaba tarde al
+principio termina antes cuando el tiempo corre al revés.
+
+**Alturas hacia atrás** conserva el ritmo y da vuelta solo las alturas:
+el lugar de la primera nota toma la altura de la última. Los
+compositores dodecafónicos lo hacen para tocar la retrogradación de una
+serie con un ritmo que les gusta. `zip` empareja cada lugar con el
+grupo del otro extremo, que da `rev`:
+
+```rust
+pub fn pitches_backwards(notes: &[NoteEvent]) -> Vec<NoteEvent> {
+    let groups = chords(notes);
+    groups
+        .iter()
+        .zip(groups.iter().rev())
+        .flat_map(|(place, pitches)| {
+            pitches.iter().enumerate().map(move |(i, note)| NoteEvent {
+                pitch: note.pitch,
+                ..place[i.min(place.len() - 1)]
+            })
+        })
+        .collect()
+}
+```
+
+Los grupos son los de `chords`, así que un acorde se mueve como acorde
+al lugar de la nota o el acorde del otro extremo, y cada una de sus
+notas toma la duración y la intensidad de una nota de ahí
+(`i.min(place.len() - 1)` repite la última cuando el acorde tiene más
+notas que el lugar). El cierre de adentro es `move` porque se queda con
+`place`, un préstamo del de afuera, después de que el de afuera lo
+devolvió.
+
+**Dado vuelta** da vuelta cada intervalo desde la primera nota: una
+nota cuatro semitonos arriba de ella va cuatro abajo. La nueva altura
+es dos veces la de la primera nota menos la propia, que es el `down` de
+aquí:
+
+```rust
+let down = 2 * (i32::from(axis.midi()) - i32::from(note.pitch.midi()));
+Some(NoteEvent {
+    pitch: note.pitch.transpose(down)?,
+    ..*note
+})
+```
+
+Un acorde mayor, Do Mi Sol, queda Do La♭ Fa, Fa menor; el P0 de una
+serie queda I0. `axis` es la primera nota, o la más grave del primer
+acorde.
+
+**Dado vuelta en la tonalidad** cuenta notas de la tonalidad en lugar
+de semitonos. En Do mayor, alrededor de Do, Mi está dos notas de la
+tonalidad arriba, así que va dos abajo, a La; Sol va a Fa. La tercera
+Do-Mi vuelve como la tercera Do-La de abajo: sigue siendo una tercera,
+pero menor donde era mayor, y la línea sigue en la tonalidad. Una nota
+fuera de la tonalidad es una nota de la tonalidad subida: Re♯ es Re
+subido, así que va adonde va Re, a Si, y vuelve bajada, Si♭. La función
+recorre la tonalidad con `step_in_key` desde la primera nota hasta la
+nota de la tonalidad de la nota, contando los pasos, y después da
+otros tantos hacia el otro lado. En una serie todas las notas están en
+la tonalidad, así que es lo mismo que **Dado vuelta**.
+
 ## Arpegios: `cycle`, `step_by` y `zip`
 
 **Arpegiar los acordes** toca las notas de cada acorde una detrás de
@@ -571,7 +677,11 @@ marcha la canción:
 ```rust
 if matches!(
     tool,
-    Tool::Transpose(_) | Tool::InKey(_) | Tool::Invert { .. }
+    Tool::Transpose(_)
+        | Tool::InKey(_)
+        | Tool::Invert { .. }
+        | Tool::UpsideDown
+        | Tool::UpsideDownInKey
 ) && let Some(first) = tools::chords(&new).into_iter().next()
 {
     actions.push(RollAction::Preview {

@@ -914,6 +914,21 @@ pub static RHYTHMS: &[Rhythm] = &[
          only keep time.",
     )
     .swung(100),
+    rhythm(
+        "Foxtrot",
+        Jazz,
+        120.0,
+        &[
+            (Kick, "o... o... o... o..."),
+            (Snare, "o.o. x.o. o.o. x.o."),
+            (HiHat, ".... x... .... x..."),
+        ],
+        "",
+        "A 1930s dance band's foxtrot: the bass drum feathered on every beat, brushes \
+         sweeping the snare in eighths with the weight on 2 and 4, and the hi-hat pedal on 2 \
+         and 4.",
+    )
+    .swung(75),
     // ----- Soul, funk and R&B -----
     rhythm(
         "Motown",
