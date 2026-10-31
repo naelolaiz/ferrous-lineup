@@ -272,7 +272,7 @@ const WITHOUT_DRUMS: [BandStyle; 12] = [
 
 /// The band styles whose bass is the piano's own left hand, for the
 /// piano styles: ragtime, stride and boogie-woogie.
-const LEFT_HAND: [&str; 3] = ["Ragtime", "Stride", "Boogie-woogie"];
+const LEFT_HAND: [&str; 2] = ["Ragtime", "Stride"];
 
 /// The band styles whose bass is a tuba: a ragtime band, the marches and
 /// the pasodoble.
@@ -4019,7 +4019,7 @@ mod tests {
         // The big band's kicks: beat 1 and the "and" of 2.
         assert_eq!(&starts("Swing")[..4], [0, 6, 16, 22]);
         // A march's afterbeats, on 2 and 4.
-        assert_eq!(&starts("March")[..4], [4, 12, 20, 28]);
+        assert_eq!(&starts("March")[..4], [2, 6, 10, 14]);
         // A big band's two-bar riff: 1 and the "and" of 2, then 2, its
         // "and" and 4.
         assert_eq!(&starts("Big band swing")[..5], [0, 6, 20, 22, 28]);

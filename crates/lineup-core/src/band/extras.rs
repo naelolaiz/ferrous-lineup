@@ -305,7 +305,6 @@ const BY_STYLE: &[(&str, Extras)] = &[
     ("Huayno", FOLKLORE),
     ("Peruvian waltz", FOLKLORE),
     ("Festejo", FOLKLORE),
-    ("Bailecito", FOLKLORE),
     ("Rasguido doble", FOLKLORE),
     (
         "Rumba flamenca",

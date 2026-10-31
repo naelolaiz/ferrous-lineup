@@ -884,7 +884,7 @@ mod tests {
         assert_eq!(feel_of("Salsa"), (Comping::Montuno, Bass::Tumbao));
         assert_eq!(feel_of("One drop").1, Bass::Reggae);
         // The march plays as the March style does: oom-pah in cut time.
-        assert_eq!(feel_of("March"), (Comping::Stride, Bass::RootFifth));
+        assert_eq!(feel_of("March"), (Comping::Afterbeat, Bass::Alternating));
         for rhythm in RHYTHMS {
             let (comping, _) = feel(rhythm);
             let three = rhythm.time.steps_per_bar() == 12;

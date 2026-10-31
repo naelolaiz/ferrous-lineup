@@ -99,12 +99,12 @@ const BY_STYLE: [(&str, Comping); 16] = [
     ("Dancehall", Comping::Tresillo),
     ("Reggaeton", Comping::Dembow),
     ("Moombahton", Comping::Dembow),
-    // The afterbeats of a brass band: 2 and 4 in a march, 2 and 3 in a
-    // waltz.
-    ("March", Comping::Aksak),
+    // The afterbeats of a brass band: 2 and 3 in a waltz, 2 in a polka.
     ("Waltz", Comping::Aksak),
     ("Two-four polka", Comping::Aksak),
-    // In 2/4 and 6/8, and in ragtime's 2/4 doubled up, after each beat.
+    // In 2/4 and 6/8, and in a march's or ragtime's 2/4 doubled up, after
+    // each beat.
+    ("March", Comping::Afterbeat),
     ("Cakewalk", Comping::Afterbeat),
     ("Six-eight march", Comping::Afterbeat),
     ("Pasodoble", Comping::Afterbeat),

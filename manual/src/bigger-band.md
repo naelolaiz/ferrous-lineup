@@ -128,8 +128,8 @@ home.
 | House and other electronic styles | syncopated stabs |
 | Reggaeton, moombahton | short chords in the dembow's 3 + 3 + 2 |
 | Ska | short chords between the beats |
-| March, waltz, polka, Balkan dances | afterbeats, the "pah" of a brass band's oom-pah |
-| Ragtime band, Six-eight march, Pasodoble | afterbeats, the "pah" after each beat |
+| Waltz, polka, Balkan dances | afterbeats, the "pah" of a brass band's oom-pah |
+| March, Ragtime band, Six-eight march, Pasodoble | afterbeats, the "pah" after each beat |
 | Tango, folk, classical, reggae, other styles in 3/4 or 6/8, styles without drums | long notes |
 | Other styles in 5/4, 7/8 and other odd meters | a punch on each beat the bar is felt in |
 

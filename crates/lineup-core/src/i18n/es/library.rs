@@ -125,8 +125,8 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Una marcha en 6/8, el compás de The Washington Post de Sousa y del two-step con que se bailaba: dos pulsos por compás, la tuba en cada uno y el contratiempo de los vientos en la última corchea de cada uno, en un vaivén largo-corto.",
     ),
     (
-        "A military march in cut time, two strong beats to the bar: the tuba on 1 and 3, the horns' afterbeats on 2 and 4. II7, the dominant of the dominant, pushes the cadence.",
-        "Una marcha militar en compás partido, dos pulsos fuertes por compás: la tuba en 1 y 3, los contratiempos de los vientos en 2 y 4. II7, la dominante de la dominante, empuja la cadencia.",
+        "A military quick march: the tuba on every step, root and fifth in turn, the horns' \"pah\" between them. II7, the dominant of the dominant, pushes the cadence. A march is written in 2/4 or cut time; each bar here lasts two.",
+        "Una marcha militar rápida: la tuba en cada paso, fundamental y quinta por turnos, el «pa» de los vientos entre medio. II7, la dominante de la dominante, empuja la cadencia. Una marcha se escribe en 2/4 o en compás partido; cada compás aquí dura dos.",
     ),
     (
         "A minor key going round the circle of fifths, as many bossa novas and standards do.",
@@ -277,7 +277,6 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ),
     ("Augmented climb", "Ascenso aumentado"),
     ("Augmented drift", "Deriva aumentada"),
-    ("Bailecito", "Bailecito"),
     ("Baião", "Baião"),
     ("Balkan and Turkish", "Balcánica y turca"),
     (
@@ -484,10 +483,6 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     (
         "Eight bars in 12/8: four slow beats, each split in three. VI7 ii7 V7 is a turnaround borrowed from jazz.",
         "Ocho compases en 12/8: cuatro pulsos lentos, cada uno dividido en tres. VI7 ii7 V7 es un turnaround tomado del jazz.",
-    ),
-    (
-        "Eight to the bar: a plain backbeat and the ride on every eighth, swung, under a boogie-woogie piano whose left hand never stops.",
-        "Ocho por compás: un backbeat sencillo y el ride en cada corchea, con swing, bajo un piano de boogie-woogie cuya mano izquierda nunca para.",
     ),
     ("Electro", "Electro"),
     ("Electronic", "Electrónica"),
@@ -1113,14 +1108,6 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "El backbeat: bombo en 1 y 3, caja en 2 y 4, charles en cada corchea.",
     ),
     (
-        "The bailecito of the Argentine northwest and Bolivia, a lively handkerchief dance in 6/8 that also sways in 3/4, its tune often sung in parallel thirds, over I, IV and V7.",
-        "El bailecito del noroeste argentino y de Bolivia, una animada danza de pañuelos en 6/8 que también se mece en 3/4, su melodía a menudo cantada en terceras paralelas, sobre I, IV y V7.",
-    ),
-    (
-        "The bailecito of the Argentine northwest and Bolivia: a lively 6/8 that also sways in 3/4, for charangos, guitars and the bombo.",
-        "El bailecito del noroeste argentino y de Bolivia: un 6/8 animado que también se mece en 3/4, para charangos, guitarras y bombo.",
-    ),
-    (
         "The baião of Brazil's northeast, Luiz Gonzaga's dance: the accordion and the bass in 3 + 3 + 2 sixteenths, the zabumba drum's long-short on the beat, and a triangle. The baião is in 2/4; each bar here lasts two.",
         "El baião del nordeste de Brasil, la danza de Luiz Gonzaga: el acordeón y el bajo en 3 + 3 + 2 semicorcheas, el largo-corto de la zabumba en el pulso y un triángulo. El baião está en 2/4; cada compás aquí dura dos.",
     ),
@@ -1254,8 +1241,8 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Las cajas de ritmos del electro de principios de los ochenta: un bombo quebrado, semicorcheas en el charles, un cencerro.",
     ),
     (
-        "The drummer of a ragtime band around 1900, when the cakewalk was the dance craze: the bass drum on every beat, the snare between them with the piano's chords, and the rim filling in the cakewalk's short-long-short. Ragtime is written in 2/4; each bar here lasts two.",
-        "El baterista de una banda de ragtime hacia 1900, cuando el cakewalk era el baile de moda: el bombo en cada pulso, la caja entre ellos con los acordes del piano, y el aro rellenando el corto-largo-corto del cakewalk. El ragtime se escribe en 2/4; cada compás aquí dura dos.",
+        "The drummer of a ragtime band around 1900, when the cakewalk was the dance craze: the bass drum on every beat, the rim completing the cakewalk's own figure on the first, short-long-short, and the snare after the second with the piano's chord. Ragtime is written in 2/4; each bar here lasts two.",
+        "El baterista de una banda de ragtime hacia 1900, cuando el cakewalk era el baile de moda: el bombo en cada pulso, el aro completando la figura propia del cakewalk en el primero, corto-largo-corto, y la caja tras el segundo con el acorde del piano. El ragtime se escribe en 2/4; cada compás aquí dura dos.",
     ),
     (
         "The drummer of a swing big band in the 1930s and 1940s: the ride and the hi-hat as in a small group, the bass drum \"feathered\" softly on every beat, the snare kicking the horns' figures, and a crash every four bars where the phrase starts again.",
@@ -1282,8 +1269,8 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "El acorde sobre la séptima bemol del modo mixolidio: la manera favorita del rock clásico de salir de una tonalidad.",
     ),
     (
-        "The form of the blues: twelve bars, three chords, all of them dominant sevenths.",
-        "La forma del blues: doce compases, tres acordes, todos séptimas de dominante.",
+        "The form of the blues: twelve bars, three chords, all of them dominant sevenths, over the boogie-woogie's bass, eight to the bar.",
+        "La forma del blues: doce compases, tres acordes, todos séptimas de dominante, sobre el bajo del boogie-woogie, ocho por compás.",
     ),
     (
         "The four chords behind hundreds of hits: home, the dominant, the sad relative minor, and the subdominant.",
@@ -1415,10 +1402,6 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "El modo frigio con un acorde mayor sobre su tónica, {E} {F} {G} {F}: la guitarra española.",
     ),
     (
-        "The piano blues of 1930s Chicago and Kansas City: the left hand rolls up and down each chord eight to the bar while the right plays the chord in long-short pairs. The twelve bars take the quick change, IV7 in bar 2.",
-        "El blues de piano de Chicago y Kansas City en los años treinta: la mano izquierda sube y baja por cada acorde ocho por compás mientras la derecha toca el acorde en pares largo-corto. Los doce compases toman el cambio rápido, IV7 en el compás 2.",
-    ),
-    (
         "The Polish dance Chopin wrote dozens of: in 3/4, the bass on beat 1 but the weight on beat 3, where the chord is held. A minor key turns to VI, its brightest chord, before iv and V7 bring it home.",
         "La danza polaca de la que Chopin escribió decenas: en 3/4, el bajo en el pulso 1 pero el peso en el pulso 3, donde se sostiene el acorde. Un tono menor se vuelve hacia VI, su acorde más luminoso, antes de que iv y V7 lo traigan a casa.",
     ),
@@ -1495,8 +1478,8 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "El largo-corto-corto del raspador, y congas entre los pulsos.",
     ),
     (
-        "The shuffle of 1950s honky-tonk bars, Hank Williams's country: a shuffling piano, the bass on 1 and 3, and three chords, I7 turning towards IV.",
-        "El shuffle de los bares honky-tonk de los años cincuenta, el country de Hank Williams: un piano en shuffle, el bajo en 1 y 3, y tres acordes, I7 volviéndose hacia IV.",
+        "The Texas shuffle of 1950s honky-tonk bars, the one Ray Price's band set with \"Crazy Arms\": a shuffling piano over a walking bass, and three chords, I7 turning towards IV.",
+        "El shuffle tejano de los bares honky-tonk de los años cincuenta, el que fijó la banda de Ray Price con «Crazy Arms»: un piano en shuffle sobre un walking bass, y tres acordes, I7 volviéndose hacia IV.",
     ),
     (
         "The skank: short chords on every offbeat, while the drums leave beat one empty.",

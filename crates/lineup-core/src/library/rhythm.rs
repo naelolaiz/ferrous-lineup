@@ -623,20 +623,6 @@ pub static RHYTHMS: &[Rhythm] = &[
         "Twelve-eight: four slow beats, each split in three, for the blues ballad.",
     )
     .in_time(TWELVE_EIGHT),
-    rhythm(
-        "Boogie-woogie",
-        Blues,
-        132.0,
-        &[
-            (Kick, "X... .... X... ...."),
-            (Snare, ".... X... .... X..."),
-            (Ride, "x.x. x.x. x.x. x.x."),
-        ],
-        "Snare roll",
-        "Eight to the bar: a plain backbeat and the ride on every eighth, swung, under a \
-         boogie-woogie piano whose left hand never stops.",
-    )
-    .swung(75),
     // ----- Jazz -----
     rhythm(
         "Swing",
@@ -726,14 +712,14 @@ pub static RHYTHMS: &[Rhythm] = &[
         104.0,
         &[
             (Kick, "X... x... X... x..."),
-            (Snare, "..o. ..x. ..o. ..x."),
+            (Snare, ".... ..x. .... ..x."),
             (Rim, ".o.o .... .o.o ...."),
         ],
         "Snare roll",
         "The drummer of a ragtime band around 1900, when the cakewalk was the dance craze: \
-         the bass drum on every beat, the snare between them with the piano's chords, and the \
-         rim filling in the cakewalk's short-long-short. Ragtime is written in 2/4; each bar \
-         here lasts two.",
+         the bass drum on every beat, the rim completing the cakewalk's own figure on the \
+         first, short-long-short, and the snare after the second with the piano's chord. \
+         Ragtime is written in 2/4; each bar here lasts two.",
     ),
     rhythm(
         "Stride",
@@ -1654,20 +1640,6 @@ pub static RHYTHMS: &[Rhythm] = &[
     )
     .in_time(SIX_EIGHT),
     rhythm(
-        "Bailecito",
-        Folklore,
-        120.0,
-        &[
-            (LowTom, "X...x. X....."),
-            (Rim, "..x... ..x.x."),
-            (Shaker, "x.x.x. x.x.x."),
-        ],
-        "",
-        "The bailecito of the Argentine northwest and Bolivia: a lively 6/8 that also sways \
-         in 3/4, for charangos, guitars and the bombo.",
-    )
-    .in_time(SIX_EIGHT),
-    rhythm(
         "Rasguido doble",
         Folklore,
         100.0,
@@ -1682,7 +1654,7 @@ pub static RHYTHMS: &[Rhythm] = &[
         Folklore,
         116.0,
         &[
-            (Kick, "X... ..x. X..x ..x."),
+            (Kick, "X... ..x. X... ..x."),
             (HiHat, "..x. ..x. ..x. ..x."),
             (Snare, "xoxo xoXo xoxo xoXo"),
         ],
