@@ -30,7 +30,7 @@
 use serde::{Deserialize, Serialize};
 
 use super::HarmonyName;
-use crate::harmony::{ChordQuality, ChordSymbol, HeardNote, Micromode, PitchSet, Scale};
+use crate::harmony::{ChordQuality, ChordSymbol, Harmony, HeardNote, Micromode, PitchSet, Scale};
 use crate::pitch::Note;
 use crate::{Chord, Project};
 
@@ -151,6 +151,46 @@ impl Notation {
                 None => HarmonyName::Set(set),
             },
             _ => HarmonyName::Set(set),
+        }
+    }
+}
+
+impl Notation {
+    /// `harmony`, as heard in the notes (see [`crate::harmony::analyze`]),
+    /// named in this notation where the song is in `key`, in groups from
+    /// the lowest up as [`Notation::rename`] gives them: one for a chord
+    /// or a set of notes, the lower chord with the bass and then the upper
+    /// for two chords at once. `None` where the notation is not sets or
+    /// micromodes, and for silence and a single note, which have no set
+    /// to name: those keep their own names, as the chord lane shows them.
+    ///
+    /// `sounding` is the pitch classes that sound: a chord heard without
+    /// its fifth, C E for C, or C D E for Cadd9, is the set of the notes
+    /// it has, not of the chord's every note.
+    pub fn name_heard(
+        self,
+        harmony: &Harmony,
+        sounding: PitchSet,
+        key: Scale,
+    ) -> Option<Vec<HarmonyName>> {
+        if !self.groups() {
+            return None;
+        }
+        let heard = |harmony: Harmony| {
+            let all = harmony.pitch_set();
+            let heard = all.intersection(sounding);
+            self.name_group(if heard.len() >= 2 { heard } else { all }, key)
+        };
+        match *harmony {
+            Harmony::Silence | Harmony::Single(_) => None,
+            Harmony::Polychord { upper, lower, bass } => Some(vec![
+                heard(Harmony::Chord { chord: lower, bass }),
+                heard(Harmony::Chord {
+                    chord: upper,
+                    bass: upper.root,
+                }),
+            ]),
+            other => Some(vec![heard(other)]),
         }
     }
 }
@@ -425,6 +465,27 @@ pub fn stacked_text(names: &[HarmonyName]) -> String {
     texts.join("|")
 }
 
+/// The names of `names` by their classes alone, upper first as
+/// [`stacked_text`] writes them: "Menor 3" for "Menor 3 T8I", "3-11" for
+/// "3-11 T7I", for a place too narrow for the whole name. `None` when
+/// none is a set or a micromode.
+pub fn stacked_classes(names: &[HarmonyName]) -> Option<String> {
+    let class = |name: &HarmonyName| match *name {
+        HarmonyName::Set(set) => set.set_class().name(),
+        HarmonyName::Micromode(set) => {
+            Micromode::of(set).map_or_else(|| name.to_string(), |micromode| micromode.name.into())
+        }
+        other => other.to_string(),
+    };
+    names
+        .iter()
+        .any(|name| matches!(name, HarmonyName::Set(_) | HarmonyName::Micromode(_)))
+        .then(|| {
+            let texts: Vec<String> = names.iter().rev().map(class).collect();
+            texts.join("|")
+        })
+}
+
 /// The spelled notes of each group, upper first, as [`stacked_text`]
 /// writes the names.
 pub fn stacked_notes(groups: &[NoteGroup], key: Scale) -> String {
@@ -540,6 +601,77 @@ mod tests {
             "4-27 T3I|Acorde menor-mayor T11I"
         );
         assert_eq!(renamed(Notation::Chords, "Eb7|Fb"), "Eb7|Fb");
+    }
+
+    #[test]
+    fn the_harmony_heard_is_named_as_the_sheet_names_it() {
+        use crate::harmony::analyze;
+        let notes = |midi: &[u8]| -> Vec<Note> { midi.iter().map(|&m| Note::new(m)).collect() };
+        let heard = |midi: &[u8]| analyze(notes(midi));
+        let sounding =
+            |midi: &[u8]| -> PitchSet { notes(midi).iter().map(|n| n.pitch_class()).collect() };
+        let as_text = |notation: Notation, harmony: &Harmony, midi: &[u8]| {
+            notation
+                .name_heard(harmony, sounding(midi), C_MAJOR)
+                .map(|names| stacked_text(&names))
+        };
+        // C/E has the notes of C: as sets, one and the same.
+        let c = heard(&[48, 64, 67]);
+        let c_over_e = heard(&[52, 60, 67]);
+        assert_ne!(c, c_over_e);
+        assert_eq!(
+            as_text(Notation::Sets, &c, &[48, 64, 67]).as_deref(),
+            Some("3-11 T7I")
+        );
+        assert_eq!(
+            as_text(Notation::Sets, &c_over_e, &[52, 60, 67]),
+            as_text(Notation::Sets, &c, &[48, 64, 67])
+        );
+        assert_eq!(
+            as_text(Notation::Micromodes, &c, &[48, 64, 67]).as_deref(),
+            Some("Acorde menor-mayor T7I")
+        );
+        // As chords, and for one note or none, the harmony keeps its own
+        // name.
+        assert_eq!(
+            Notation::Chords.name_heard(&c, sounding(&[48, 64, 67]), C_MAJOR),
+            None
+        );
+        assert_eq!(as_text(Notation::Sets, &heard(&[60, 72]), &[60, 72]), None);
+        assert_eq!(as_text(Notation::Sets, &Harmony::Silence, &[]), None);
+        // The set is the notes that sound: C D E is heard as Cadd9, whose
+        // G does not sound, and is the micromode Mayor 1.
+        let c_d_e = heard(&[60, 62, 64]);
+        assert_eq!(
+            as_text(Notation::Micromodes, &c_d_e, &[60, 62, 64]).as_deref(),
+            Some("Mayor 1")
+        );
+        assert_eq!(
+            as_text(Notation::Sets, &c_d_e, &[60, 62, 64]).as_deref(),
+            Some("3-6")
+        );
+        // Two chords at once: two sets, the upper first, with their
+        // classes alone for a narrow block.
+        let chord = |text: &str| match name(text) {
+            HarmonyName::Chord(symbol) => symbol.chord(),
+            _ => unreachable!(),
+        };
+        let augurs = Harmony::Polychord {
+            upper: chord("Eb7"),
+            lower: chord("Fb"),
+            bass: chord("Fb").root,
+        };
+        let both = augurs.pitch_set();
+        let names = Notation::Sets.name_heard(&augurs, both, C_MAJOR).unwrap();
+        assert_eq!(stacked_text(&names), "4-27 T3I|3-11 T11I");
+        assert_eq!(stacked_classes(&names).as_deref(), Some("4-27|3-11"));
+        let names = Notation::Micromodes
+            .name_heard(&augurs, both, C_MAJOR)
+            .unwrap();
+        assert_eq!(
+            stacked_classes(&names).as_deref(),
+            Some("4-27|Acorde menor-mayor")
+        );
     }
 
     #[test]

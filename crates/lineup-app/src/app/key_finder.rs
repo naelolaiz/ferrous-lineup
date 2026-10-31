@@ -11,14 +11,23 @@
 //! 2. **The notes** of the song, or of the selected pattern in pattern
 //!    mode: [`Project::heard_keys`].
 //!
+//! Under the key, the colour of the passage: the micromode its notes
+//! fit and the set they make ([`Project::heard_colours`]), read eight
+//! bars at a time between the song's key markers
+//! ([`Project::colour_passage`]) and over the whole of a pattern. Not
+//! while you play: three notes are too few.
+//!
 //! Nothing here changes the project. The work is done in
-//! [`lineup_core::harmony::key_finding`].
+//! [`lineup_core::harmony::key_finding`] and
+//! [`lineup_core::harmony::colour_finding`].
 
+use lineup_core::harmony::colour_finding::{Colours, find_colours};
 use lineup_core::harmony::key_finding::{KeyListener, KeySpan, chromas_of_notes, rank_keys};
-use lineup_core::{Project, Tempo};
+use lineup_core::{NoteEvent, Project, Tempo};
 
 use super::LineupApp;
-use crate::harmony_keys::KeyHeard;
+use crate::harmony_keys::{ColoursHeard, KeyHeard};
+use crate::i18n::{tr, trf};
 
 /// What you play counts for this many bars after you last played.
 const LIVE_BARS: usize = 4;
@@ -29,8 +38,12 @@ pub(super) struct KeyFinder {
     /// The key changes in the song's notes, worked out once and kept
     /// until the project changes.
     heard: Option<Vec<KeySpan>>,
-    /// The ranking of the selected pattern's notes, and which pattern.
-    pattern: Option<(usize, KeySpan)>,
+    /// The ranking of the selected pattern's notes, and which pattern,
+    /// with the colours of its notes.
+    pattern: Option<(usize, KeySpan, Colours)>,
+    /// The colours of the passage last read in the song, and where it
+    /// starts and ends, in timeline steps.
+    passage: Option<((usize, usize), Colours)>,
     /// What you play.
     listener: KeyListener,
     /// How far into the current bar the listener's clock is, in steps.
@@ -44,6 +57,7 @@ impl KeyFinder {
     pub(super) fn project_changed(&mut self) {
         self.heard = None;
         self.pattern = None;
+        self.passage = None;
     }
 
     /// Forgets everything, for another project.
@@ -93,6 +107,7 @@ fn shown(span: &KeySpan, from: &'static str, can_mark: bool) -> Option<KeyHeard>
         alternatives: span.alternatives().to_vec(),
         from,
         can_mark,
+        colours: None,
     })
 }
 
@@ -139,6 +154,7 @@ impl LineupApp {
                 alternatives: finder.listener.alternatives(),
                 from: "in what you play",
                 can_mark: false,
+                colours: None,
             });
         }
         match position {
@@ -149,11 +165,29 @@ impl LineupApp {
                     .iter()
                     .find(|span| (span.start..span.end).contains(&step))
                     .or_else(|| spans.last())?;
-                shown(span, "in the notes here", true)
+                let mut heard = shown(span, "in the notes here", true)?;
+                let project = &self.project;
+                let passage = project.colour_passage(step);
+                if finder.passage.as_ref().is_none_or(|(at, _)| *at != passage) {
+                    let (start, end) = passage;
+                    let colours = project.heard_colours(start, end, Some(heard.best.key));
+                    finder.passage = Some((passage, colours));
+                }
+                let (_, colours) = finder.passage.as_ref()?;
+                let meter = project.meter();
+                let first = meter.position(passage.0).0;
+                let last = meter.position(passage.1.saturating_sub(1)).0;
+                heard.colours = Some(ColoursHeard {
+                    colours: colours.clone(),
+                    from: trf("in bars {} to {}", &[&first, &last]),
+                    passage: Some(passage),
+                    key: project.key_at(passage.0),
+                });
+                Some(heard)
             }
             None => {
                 let index = self.pattern;
-                if finder.pattern.as_ref().is_none_or(|(at, _)| *at != index) {
+                if finder.pattern.as_ref().is_none_or(|(at, ..)| *at != index) {
                     let pattern = self.project.pattern(index)?;
                     let notes = self
                         .project
@@ -166,17 +200,32 @@ impl LineupApp {
                         })
                         .filter(|(_, channel)| !channel.muted)
                         .flat_map(|(channel, _)| pattern.notes(channel))
-                        .map(|note| (note.pitch, note.start, note.length));
-                    let chroma = chromas_of_notes(notes, &[0, pattern.length().max(1)]);
+                        .filter(|note| note.start < pattern.length())
+                        .copied()
+                        .collect::<Vec<NoteEvent>>();
+                    let chroma = chromas_of_notes(
+                        notes
+                            .iter()
+                            .map(|note| (note.pitch, note.start, note.length)),
+                        &[0, pattern.length().max(1)],
+                    );
                     let span = KeySpan {
                         start: 0,
                         end: pattern.length(),
                         guesses: rank_keys(&chroma[0]),
                     };
-                    finder.pattern = Some((index, span));
+                    let found = span.guesses.first().map(|guess| guess.key);
+                    finder.pattern = Some((index, span, find_colours(&notes, found)));
                 }
-                let (_, span) = finder.pattern.as_ref()?;
-                shown(span, "in this pattern", false)
+                let (_, span, colours) = finder.pattern.as_ref()?;
+                let mut heard = shown(span, "in this pattern", false)?;
+                heard.colours = Some(ColoursHeard {
+                    colours: colours.clone(),
+                    from: tr("in this pattern").to_string(),
+                    passage: None,
+                    key: self.project.pattern_key(index),
+                });
+                Some(heard)
             }
         }
     }

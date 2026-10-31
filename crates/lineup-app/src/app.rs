@@ -1026,6 +1026,11 @@ impl LineupApp {
                     project.mark_heard_keys(&spans);
                 });
             }
+            HarmonyAction::UseColour { start, end, key } => {
+                self.edit("use the colour as the key", |project| {
+                    project.set_key_between(start, end, key);
+                });
+            }
         }
     }
 

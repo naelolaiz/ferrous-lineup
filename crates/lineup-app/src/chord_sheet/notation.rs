@@ -8,9 +8,10 @@ use std::rc::Rc;
 
 use eframe::egui::{self, Color32, Ui};
 use lineup_core::chord_sheet::notation::{
-    Grouping, HeardGroups, Notation, heard_groups, spelled_set, stacked_notes, stacked_text,
+    Grouping, HeardGroups, Notation, heard_groups, spelled_set, stacked_classes, stacked_notes,
+    stacked_text,
 };
-use lineup_core::harmony::{HeardNote, Micromode};
+use lineup_core::harmony::HeardNote;
 use lineup_core::lead_sheet::default_melody_channel;
 use lineup_core::{ChordMarker, HarmonyName, KeyMap, Note, Project, Scale};
 use serde::{Deserialize, Serialize};
@@ -432,7 +433,7 @@ impl NotationView {
                 Shown {
                     start: heard.start,
                     text: stacked_text(&names),
-                    short: short_text(&names),
+                    short: stacked_classes(&names),
                     caption: Some(stacked_notes(&heard.groups, key)),
                     tint: None,
                     group: true,
@@ -478,7 +479,7 @@ impl NotationView {
             return Shown {
                 start: marker.start,
                 text: shown.text(),
-                short: short_text(&names).map(marks),
+                short: stacked_classes(&names).map(marks),
                 caption: caption(&shown),
                 tint: tint(&shown),
                 group,
@@ -507,7 +508,7 @@ impl NotationView {
         Shown {
             start: marker.start,
             text: format!("{carets}{}{dots}", stacked_text(&names)),
-            short: short_text(&names).map(|short| format!("{carets}{short}{dots}")),
+            short: stacked_classes(&names).map(|short| format!("{carets}{short}{dots}")),
             caption: Some(words.join(" · ")),
             tint: None,
             group,
@@ -523,24 +524,4 @@ impl NotationView {
             ),
         }
     }
-}
-
-/// The names of `names` by their classes alone, upper first as
-/// [`stacked_text`] writes them: "Menor 3" for "Menor 3 T8I", "3-11" for
-/// "3-11 T7I". `None` when none is a set or a micromode.
-fn short_text(names: &[HarmonyName]) -> Option<String> {
-    let classes = |name: &HarmonyName| match *name {
-        HarmonyName::Set(set) => set.set_class().name(),
-        HarmonyName::Micromode(set) => {
-            Micromode::of(set).map_or_else(|| name.to_string(), |micromode| micromode.name.into())
-        }
-        other => other.to_string(),
-    };
-    names
-        .iter()
-        .any(|name| matches!(name, HarmonyName::Set(_) | HarmonyName::Micromode(_)))
-        .then(|| {
-            let texts: Vec<String> = names.iter().rev().map(classes).collect();
-            texts.join("|")
-        })
 }

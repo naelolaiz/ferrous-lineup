@@ -2952,4 +2952,33 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "P: la misma forma, transportada. I: cada paso hacia el otro lado. R: hacia atrás. RI: dada vuelta y hacia atrás.",
     ),
     ("form|Upside down", "Dada vuelta"),
+    ("use the colour as the key", "usar el color como tonalidad"),
+    ("in bars {} to {}", "en los compases {} a {}"),
+    ("Colour {}:", "Color {}:"),
+    ("(the key)", "(la tonalidad)"),
+    ("made of", "hecho de"),
+    (
+        "Kröpfl's micromode {}: {}% of the notes are in its forms, read as the colour check reads them. Its form heard longest, {}, is its home.",
+        "Micromodo {} de Kröpfl: el {}% de las notas está en sus formas, leídas como las lee la revisión del color. Su forma que más tiempo suena, {}, es su casa.",
+    ),
+    (
+        "Make {} the key {}, with key markers. No note moves; Undo takes it back.",
+        "Hace de {} la tonalidad {}, con marcadores de tonalidad. Ninguna nota se mueve; Deshacer lo quita.",
+    ),
+    (
+        "Fits almost as well ({}% of the notes in its forms).",
+        "Se ajusta casi igual de bien ({}% de las notas en sus formas).",
+    ),
+    (
+        "The notes that sound {}% of the time make this set: {}.",
+        "Las notas que suenan el {}% del tiempo forman este conjunto: {}.",
+    ),
+    (
+        "Chord symbols, with the bass after a slash: C/E. Notes that make no chord the app knows are named by their set class",
+        "Cifrados de acordes, con el bajo después de una barra: {C}/{E}. Las notas que no forman ningún acorde que la aplicación conozca se nombran por su clase de conjunto",
+    ),
+    (
+        "How the chord lane names the harmony. The notes stay as they are: a set or a micromode is another way to write the same chord",
+        "Cómo nombra la armonía la fila de acordes sobre la cuadrícula. Las notas no cambian: un conjunto o un micromodo es otra manera de escribir el mismo acorde",
+    ),
 ];
