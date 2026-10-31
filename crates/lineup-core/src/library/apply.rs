@@ -25,6 +25,7 @@ use crate::remeter::remeter;
 
 use super::chart::accompany;
 use super::comping::{Bass, Comping};
+use super::drum_form;
 use super::listen::hear_chords;
 use super::rhythm::Rhythm;
 use super::style::{STYLES, Style};
@@ -325,6 +326,81 @@ pub fn write_rhythm(project: &mut Project, pattern: usize, rhythm: &Rhythm) -> b
         wrote |= target.set_notes(channel, rhythm.notes_in(drum, time, length));
     }
     wrote
+}
+
+/// Writes `notes`, each with its drum, as the drums of pattern
+/// `pattern`, in place of whatever the built-in drums played there; the
+/// drums they need are added. Returns `false` if the pattern does not
+/// exist, the rack is full or every drum is locked.
+pub(super) fn write_drums(
+    project: &mut Project,
+    pattern: usize,
+    notes: &[(Drum, NoteEvent)],
+) -> bool {
+    let mut rows: Vec<(Drum, usize)> = Vec::new();
+    for &(drum, _) in notes {
+        if rows.iter().any(|&(known, _)| known == drum) {
+            continue;
+        }
+        let Some(channel) = drum_channel(project, drum) else {
+            return false;
+        };
+        rows.push((drum, channel));
+    }
+    let old = drum_channels(project);
+    let Some(mut target) = project.style_pattern(pattern) else {
+        return false;
+    };
+    let mut wrote = false;
+    for channel in old {
+        wrote |= target.set_notes(channel, []);
+    }
+    for (drum, channel) in rows {
+        let row = notes
+            .iter()
+            .filter(|&&(other, _)| other == drum)
+            .map(|&(_, note)| note);
+        wrote |= target.set_notes(channel, row);
+    }
+    wrote
+}
+
+/// The drums of `song`, the rhythm laid out over the whole song's parts
+/// (see [`drum_form::song_drums`]), that pattern `pattern` plays where it
+/// first plays: on the pattern's timeline. `None` for a pattern that
+/// plays nowhere, or that does not start on a bar line there.
+fn drums_where_it_plays(
+    project: &Project,
+    pattern: usize,
+    song: &[(Drum, NoteEvent)],
+    bars: &[crate::meter::Bar],
+) -> Option<Vec<(Drum, NoteEvent)>> {
+    let length = project.pattern(pattern)?.length();
+    let start = project
+        .playlist()
+        .clips()
+        .iter()
+        .filter(|clip| clip.pattern == pattern)
+        .map(|clip| clip.start)
+        .min()?;
+    bars.iter().find(|bar| bar.start == start)?;
+    let end = start + length;
+    Some(
+        song.iter()
+            .filter(|(_, note)| (start..end).contains(&note.start))
+            .map(|&(drum, note)| {
+                let at = note.start - start;
+                (
+                    drum,
+                    NoteEvent {
+                        start: at,
+                        length: note.length.min(length - at),
+                        ..note
+                    },
+                )
+            })
+            .collect(),
+    )
 }
 
 /// Replaces the drums of pattern `pattern` from step `at` on with
@@ -652,6 +728,26 @@ fn play_song(
     };
     let patterns = project.patterns().len();
     let any_drums = (0..patterns).any(|pattern| has_drums(project, pattern));
+    // The rhythm is laid out over the song's parts, written or heard, up
+    // to its ending: each pattern plays the drums of the place it first
+    // plays in.
+    let song_drums = rhythm.filter(|_| parts.rhythm).map(|rhythm| {
+        let end = project
+            .playlist()
+            .clips()
+            .iter()
+            .filter(|clip| is_ending(project, clip.pattern))
+            .map(|clip| clip.start)
+            .min()
+            .unwrap_or_else(|| project.song_length());
+        let bars: Vec<crate::meter::Bar> = project
+            .meter()
+            .bars()
+            .take_while(|bar| bar.start < end)
+            .collect();
+        let form = project.form_sections();
+        (drum_form::song_drums(rhythm, &bars, &form, end), bars)
+    });
     for pattern in 0..patterns {
         let Some(length) = project.pattern(pattern).map(|p| p.length()) else {
             continue;
@@ -678,12 +774,28 @@ fn play_song(
         if let Some(rhythm) = rhythm
             && parts.rhythm
             && (drums || !any_drums)
-            && write_rhythm(project, pattern, rhythm)
         {
-            if fill && let Some(fill) = rhythm.fill() {
-                write_fill(project, pattern, fill, length - bar);
+            let laid = song_drums
+                .as_ref()
+                .and_then(|(notes, bars)| drums_where_it_plays(project, pattern, notes, bars));
+            let wrote = match laid {
+                Some(notes) => write_drums(project, pattern, &notes),
+                // A pattern that plays nowhere plays the rhythm over and
+                // over, ending on its fill where it had one.
+                None => {
+                    let wrote = write_rhythm(project, pattern, rhythm);
+                    if wrote
+                        && fill
+                        && let Some(fill) = rhythm.fill()
+                    {
+                        write_fill(project, pattern, fill, length - bar);
+                    }
+                    wrote
+                }
+            };
+            if wrote {
+                change.drums += 1;
             }
-            change.drums += 1;
         }
     }
     // The song now swings as much as the rhythm it plays.
@@ -831,6 +943,72 @@ mod tests {
         ));
         assert_eq!(chords_channel(&mut project, None), Some(keys));
         assert_eq!(project.pattern(tried).unwrap().notes(keys), before);
+    }
+
+    #[test]
+    fn rhythms_close_every_part_of_the_song() {
+        // Candombe para Gardel's parts are 12, 8, 8, 4, 7 and 12 bars
+        // long. The candombe ends each with the repique's call, one of
+        // its closings, wherever the part ends in the rhythm's cycle, and
+        // opens the song with the clave.
+        let song = super::super::Song::named("Candombe para Gardel").unwrap();
+        let mut project = super::super::demo::song_demo(song);
+        let rhythm = Rhythm::named("Candombe").unwrap();
+        let layout = rhythm.layout.unwrap();
+        use_rhythm(&mut project, rhythm);
+        let time = project.time_signature;
+        let bar = time.steps_per_bar();
+        let played = |pattern: usize, from: usize, drum: Drum| -> Vec<NoteEvent> {
+            let channel = drum_channel(&mut project.clone(), drum).unwrap();
+            let pattern = project.pattern(pattern).unwrap();
+            pattern
+                .notes(channel)
+                .iter()
+                .filter(|note| (from..from + bar).contains(&note.start))
+                .map(|note| NoteEvent {
+                    start: note.start - from,
+                    ..*note
+                })
+                .collect()
+        };
+        let sections = project.playlist().sections().to_vec();
+        assert!(sections.len() >= 6);
+        for section in &sections {
+            let Some(clip) = project
+                .playlist()
+                .clips()
+                .iter()
+                .find(|clip| clip.track == 1 && clip.start == section.start)
+            else {
+                continue;
+            };
+            let length = project.pattern(clip.pattern).unwrap().length();
+            // The phrases take turns with the closings.
+            let closes = (0..layout.closings).any(|turn| {
+                let from = layout.closing_at(turn);
+                rhythm.drums().all(|drum| {
+                    [(2, from), (1, from + 1)].into_iter().all(|(back, line)| {
+                        played(clip.pattern, length - back * bar, drum)
+                            == rhythm.bar_notes(drum, line, time, bar)
+                    })
+                })
+            });
+            assert!(closes, "{}", section.name);
+        }
+        let intro = project
+            .playlist()
+            .clips()
+            .iter()
+            .find(|clip| clip.track == 1 && clip.start == 0)
+            .unwrap()
+            .pattern;
+        for drum in rhythm.drums() {
+            assert_eq!(
+                played(intro, 0, drum),
+                rhythm.bar_notes(drum, 0, time, bar),
+                "{drum:?}"
+            );
+        }
     }
 
     #[test]
