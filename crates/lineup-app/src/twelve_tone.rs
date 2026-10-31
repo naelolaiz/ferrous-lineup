@@ -283,7 +283,7 @@ pub fn kind_menu(
 
 /// The word a family's micromodes start with: "Menor", "Mayor",
 /// "Acorde", Kröpfl's names in every language.
-fn family_word(family: MicromodeFamily) -> &'static str {
+pub(crate) fn family_word(family: MicromodeFamily) -> &'static str {
     match family {
         MicromodeFamily::Minor => "Menor",
         MicromodeFamily::Major => "Mayor",
@@ -291,18 +291,24 @@ fn family_word(family: MicromodeFamily) -> &'static str {
     }
 }
 
-/// A micromode's button in the key menu, by its number in its family
-/// (the triads by their chord signs: °, m/M, +), with its whole name
-/// and what picking it does when pointed at.
-fn micromode_option(ui: &mut Ui, option: &Micromode, selected: bool) -> egui::Response {
-    let short = match option.name.rsplit_once(' ') {
+/// A micromode by its number in its family, "3" for Menor 3, or the
+/// triads by their chord signs: °, m/M, +.
+pub(crate) fn micromode_short(micromode: &Micromode) -> &'static str {
+    match micromode.name.rsplit_once(' ') {
         Some((_, number)) if number.chars().all(|c| c.is_ascii_digit()) => number,
-        _ => match option.number {
+        _ => match micromode.number {
             10 => "°",
             11 => "m/M",
             _ => "+",
         },
-    };
+    }
+}
+
+/// A micromode's button in the key menu, by its number in its family
+/// (the triads by their chord signs: °, m/M, +), with its whole name
+/// and what picking it does when pointed at.
+fn micromode_option(ui: &mut Ui, option: &Micromode, selected: bool) -> egui::Response {
+    let short = micromode_short(option);
     ui.selectable_label(selected, short).on_hover_text(trf(
         "{}: {}. As the key, on the key note. From another set or \
                          micromode, every form keeps its degree and the notes go with \
