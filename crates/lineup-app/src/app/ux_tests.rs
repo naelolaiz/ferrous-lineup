@@ -5929,3 +5929,98 @@ fn voice_leading_in_a_micromode_checks_its_colour() {
     );
     assert!(text_rect(&output, "fuera").is_some(), "{texts:?}");
 }
+
+/// The ear-training exercises beyond keys ask, take an answer and
+/// explain it, in English and in Spanish, with nothing left untranslated.
+#[test]
+fn ear_training_asks_micromodes_forms_and_rows() {
+    use crate::i18n::tr;
+    use lineup_core::i18n::{note_missed, take_missed};
+
+    fn texts(output: &FullOutput) -> Vec<String> {
+        output
+            .shapes
+            .iter()
+            .filter_map(|shape| match &shape.shape {
+                Shape::Text(text) => Some(text.galley.text().to_string()),
+                _ => None,
+            })
+            .collect()
+    }
+
+    let mut screen = Screen::new();
+    screen.app.rack_open = false;
+    screen.app.ear_training.open = true;
+    for spanish in [false, true] {
+        if spanish {
+            crate::i18n::set_language(&screen.ctx, crate::i18n::Language::Spanish);
+            note_missed();
+        }
+        // An answer of each exercise, and words its explanation has.
+        let exercises = [
+            ("Micromodes", "Menor", "Family:"),
+            ("Forms", "Moved", "Both are forms of"),
+            ("Rows", "P", "The row:"),
+        ];
+        for (exercise, answer, explained) in exercises {
+            screen.click(tr(exercise));
+            if exercise == "Micromodes" {
+                screen.click(tr("Its family"));
+            }
+            screen.click(tr("▶  Start"));
+            let output = screen.draw(vec![]);
+            assert!(
+                texts(&output).iter().any(|text| text == tr("▶ Play again")),
+                "{:?}",
+                texts(&output)
+            );
+            let answer = match answer {
+                "Moved" => tr("Moved"),
+                other => other,
+            };
+            screen.click(answer);
+            screen.draw(vec![]);
+            let shown = texts(&screen.draw(vec![]));
+            let explained = match (spanish, explained) {
+                (false, words) => words.to_string(),
+                (true, "Family:") => "Familia:".to_string(),
+                (true, "Both are forms of") => "Las dos son formas de".to_string(),
+                (true, _) => "La serie:".to_string(),
+            };
+            assert!(
+                shown
+                    .iter()
+                    .any(|text| text == tr("✔ Right") || text == tr("✘ Not quite")),
+                "{exercise}: {shown:?}"
+            );
+            assert!(
+                shown.iter().any(|text| text.contains(&explained)),
+                "{exercise}: {shown:?}"
+            );
+            screen.click(tr("Next ▸"));
+        }
+        // The micromodes answered by name, the forms as chords, the rows
+        // at random.
+        screen.click(tr("Micromodes"));
+        screen.click(tr("The micromode"));
+        screen.click(tr("▶  Start"));
+        let shown = texts(&screen.draw(vec![]));
+        assert!(shown.iter().any(|text| text == "Menor 3"), "{shown:?}");
+        assert!(shown.iter().any(|text| text == "m/M"), "{shown:?}");
+        screen.click("Menor 3");
+        screen.click(tr("Forms"));
+        screen.click(tr("As a chord"));
+        screen.click(tr("As a line"));
+        screen.click(tr("▶  Start"));
+        screen.click(crate::i18n::trc("form", "Upside down"));
+        screen.click(tr("Rows"));
+        screen.click(tr("Random"));
+        screen.click(tr("▶  Start"));
+        screen.click("RI");
+        screen.draw(vec![]);
+        if spanish {
+            let missed = take_missed();
+            assert!(missed.is_empty(), "No Spanish for: {missed:?}");
+        }
+    }
+}
