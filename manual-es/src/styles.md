@@ -117,12 +117,19 @@ Las tres opciones de acompañamiento se combinan como quieras:
   estilo. Las pistas llamadas Teclados y Bajo, o la elegida en el rack,
   toman su piano y su bajo. En una canción sin ellas, como un archivo
   MIDI importado, cada pista menos la de la melodía toma el sonido del
-  estilo para su familia: un bajo su bajo, un piano su piano, una
+  estilo para su parte: un bajo su bajo, un piano su piano, una
   guitarra su guitarra, un órgano o un acordeón su órgano (o su piano),
-  y unas cuerdas sus cuerdas.
+  y unas cuerdas sus cuerdas. El nombre de la pista dice cuál es
+  («slapbass», «drive guitar», «organ»), o si no el sonido que tiene.
 
 Así puedes tomar la batería de un estilo y las partes de acordes y bajo
 de otro.
+
+En un archivo MIDI importado con las tres marcadas, el estilo entra
+como la banda: su bajo y su batería ocupan el lugar de los propios del
+archivo, que callan mientras la banda toca, y las demás pistas del
+archivo toman sus sonidos. Cada estilo que pulses después vuelve a
+cambiarlos; la melodía conserva su sonido todo el tiempo.
 
 ## Adónde va un estilo
 
