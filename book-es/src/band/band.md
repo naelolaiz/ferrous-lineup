@@ -718,8 +718,11 @@ demostración ya toca su propio acompañamiento, así que primero la banda:
    acordes](chord-sheet.md#de-dónde-vienen-los-acordes)), y
 2. **silencia** los canales de acordes y de bajo de la propia canción
    (la biblioteca los llama «Keys» y «Bass», que la interfaz en español
-   muestra como Teclados y Bajo) y, cuando también llega la batería
-   del estilo, sus pistas que solo tienen batería,
+   muestra como Teclados y Bajo), un bajo propio de la canción tal como
+   lo trae un archivo MIDI (un canal con nombre de bajo, o con un sonido
+   de bajo de General MIDI: `plays_the_bass`) y, cuando también llega la
+   batería del estilo, sus pistas que solo tienen batería, que un
+   archivo importado deja en una pista propia,
 
 para que las dos no toquen una encima de la otra. La melodía sigue
 sonando, ahora con la banda detrás. Sin la batería del estilo, la

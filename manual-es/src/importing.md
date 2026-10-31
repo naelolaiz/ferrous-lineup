@@ -25,8 +25,8 @@ Lineup desde tu gestor de archivos. La canción que resulta:
 - conserva **cada nota** como se tocó: con qué fuerza, y exactamente
   cuándo, aunque caiga entre dos pasos de la cuadrícula;
 - se corta en las barras de compás en **patrones**, colocados uno tras
-  otro en la lista de reproducción; un pasaje que vuelve nota por nota
-  toca otra vez el mismo patrón;
+  otro en la lista de reproducción, con la batería en una pista propia;
+  un pasaje que vuelve nota por nota toca otra vez el mismo patrón;
 - toma los **cambios de tempo**, los **compases** y las **armaduras**
   del archivo. Un archivo sin tonalidad, o uno que dice Do mayor cuando
   sus notas están claramente en otra (muchos programas escriben Do
