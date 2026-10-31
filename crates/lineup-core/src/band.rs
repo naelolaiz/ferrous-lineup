@@ -2510,6 +2510,12 @@ impl Project {
             let pattern = &self.patterns[clip.pattern];
             print.number(clip.start);
             print.number(clip.repeats);
+            // Only a trimmed clip adds its trims, so the prints of parts
+            // written before clips could be trimmed stay as they were.
+            if clip.is_trimmed() {
+                print.number(clip.skip);
+                print.number(clip.cut);
+            }
             print.number(pattern.length());
             for (channel, note) in pattern.all_notes() {
                 print.number(channel);

@@ -64,18 +64,16 @@ fn raw_notes(project: &Project, channel: usize, end: usize) -> Vec<MelodyNote> {
         let Some(pattern) = project.pattern(clip.pattern) else {
             continue;
         };
-        let length = pattern.length();
-        for repeat in 0..clip.repeats {
-            let from = clip.start + repeat * length;
-            if from >= end {
+        for round in clip.rounds(pattern.length()) {
+            if round.at >= end {
                 break;
             }
-            for note in pattern.notes(channel).iter().filter(|n| n.start < length) {
+            for note in pattern.notes(channel).iter().filter_map(|n| round.place(n)) {
                 // In ticks, then rounded to steps: a note played a little
                 // early or late, as recorded or imported, is written on
                 // the nearest step.
-                let start = (from + note.start) * TICKS_PER_STEP + usize::from(note.nudge);
-                let stop = (start + note.ticks()).min((from + length) * TICKS_PER_STEP);
+                let start = note.start_tick();
+                let stop = note.end_tick();
                 let first = (start + TICKS_PER_STEP / 2) / TICKS_PER_STEP;
                 let last = ((stop + TICKS_PER_STEP / 2) / TICKS_PER_STEP).max(first + 1);
                 if first < end {

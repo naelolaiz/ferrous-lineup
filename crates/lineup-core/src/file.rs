@@ -181,13 +181,18 @@ pub fn is_project(path: &Path) -> bool {
 /// style (see [`Project::apply_row_style`]), which older versions would
 /// play as four chords to each form of the row.
 ///
+/// Format 33 lets a clip leave out the start or the end of its pattern
+/// (see [`Clip::skip`] and [`Clip::cut`]). Older versions would play the
+/// whole pattern, so a song with a trimmed clip needs format 33. Format
+/// 32 is kept for recorded takes.
+///
 /// A file can also say where the parts of the song came from (see
 /// [`crate::sources`]), in any format: older versions skip it, and lose
 /// nothing they could play. In the same way, a key can be written the
 /// other way round, Gb major rather than F# major (see
 /// [`Scale::other_spelling`]): older versions name it the usual way and
 /// play the same notes.
-pub const FORMAT_VERSION: u32 = 31;
+pub const FORMAT_VERSION: u32 = 33;
 
 /// The oldest format that can hold `project`.
 ///
@@ -294,7 +299,14 @@ pub fn format_for(project: &Project) -> u32 {
         .is_some_and(|band| band.drums != crate::band::BandDrums::Style);
     let plays_micromode = project.band().is_some_and(|band| band.micromode.is_some());
     let plays_row = project.band().is_some_and(|band| band.row.is_some());
-    if plays_row {
+    let has_trimmed_clips = project
+        .playlist()
+        .clips()
+        .iter()
+        .any(|clip| clip.is_trimmed());
+    if has_trimmed_clips {
+        33
+    } else if plays_row {
         31
     } else if plays_micromode {
         30
@@ -1377,6 +1389,22 @@ mod tests {
         // A file edited by hand cannot have echoes that never die away.
         let text = text.replace("feedback: 0.35", "feedback: 1.5");
         assert!(matches!(from_text(&text), Err(FileError::Invalid(_))));
+    }
+
+    #[test]
+    fn trimmed_clips_need_format_thirty_three() {
+        let mut project = plain_demo();
+        let text = to_text(&project).unwrap();
+        assert!(!text.contains("skip") && !text.contains("cut:"), "{text}");
+        let clip = project.playlist().clips()[0];
+        let length = project.pattern(clip.pattern).unwrap().length();
+        let trimmed = clip.trimmed_to(clip.end(length) - 3, length).unwrap();
+        assert!(project.trim_clip(0, trimmed));
+        let text = to_text(&project).unwrap();
+        assert!(text.contains("format: 33,"), "{text}");
+        assert!(text.contains("cut: 3"), "{text}");
+        assert!(!text.contains("skip"), "{text}");
+        assert_eq!(from_text(&text).unwrap(), project);
     }
 
     #[test]
