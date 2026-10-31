@@ -59,6 +59,7 @@ Modulation: see Key change
 Note naming: program/languages.md
 Odd meter: sound/tempo.md#beats-of-different-lengths, band/orchestra.md
 Orchestra: band/orchestra.md
+Palindrome (row): band/practice.md#rows-p-i-r-and-ri
 Pattern: program/project.md
 Piano roll: program/editors.md
 Pitch class: theory/pitch.md
