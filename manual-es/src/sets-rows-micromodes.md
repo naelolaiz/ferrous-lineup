@@ -204,6 +204,19 @@ grupo: **Las armonías de la hoja**, **Notas a la vez (vertical)** o
 pista leer. Eso lee las notas de la canción, así que puedes mirar una
 melodía como una cadena de grupos de tres notas.
 
+El **piano roll** también tiene un menú **Mostrar**, arriba junto a
+**Conducción de voces**, para los nombres de los acordes sobre su
+cuadrícula: **Acordes**, **Conjuntos de clases de alturas** o
+**Micromodos**. Nombra las notas que suenan: Do, Re y Mi juntos se oyen
+como Doadd9, pero como conjunto son 3-6, el micromodo Mayor 1, porque
+ningún Sol suena. Un acorde y su inversión tienen las mismas notas, así
+que Do y Do/Mi, dos bloques como acordes, son un solo bloque como 3-11
+T7I. Donde un bloque es demasiado estrecho para el nombre entero,
+muestra la clase sola, **3-11**; apúntalo para leer el nombre completo
+en la línea bajo la barra de herramientas.
+
+![El piano roll de la demostración Bruma de tonos enteros con Mostrar en Conjuntos de clases de alturas: la fila Todo sobre la cuadrícula nombra 2-2, 3-6, 2-2, 2-2 T2, 3-6 T2 y así, un bloque por pulso](images/piano-roll-sets.png)
+
 La tonalidad funciona igual. Elige **conjunto de clases de alturas** en
 el menú **Tonalidad** de una canción en Do mayor, y nada se mueve: la
 tonalidad se llama ahora 7-35, y las teclas de armonía muestran los
@@ -516,3 +529,43 @@ puntero por la línea para leer por qué la música hecha con un conjunto
 lo evita. Las demostraciones de micromodos guardan todas sus notas en su
 color, así que la revisión no marca nada en ellas hasta que agregues
 una nota suelta o saques una de una forma.
+
+### Encontrar el color
+
+**🔍 Buscar la tonalidad**, debajo de las teclas de armonía (ver
+[Buscar la
+tonalidad](keys-and-modes.md#buscar-la-tonalidad-experimental)), dice
+en qué tonalidad mayor o menor parece estar la música. La música hecha
+con un micromodo u otro conjunto no tiene una tonalidad así, de modo
+que debajo una segunda línea dice de qué **color** está hecho el
+pasaje, cuando encuentra uno:
+
+- **El micromodo** cuyas formas contienen las notas, el más fuerte, con
+  los que encajan casi igual de bien después, más tenues: «Color en los
+  compases 1 a 8: Mayor 1 sobre Do». Apúntalo para leer cuántas de las
+  notas están en sus formas, y cuál de las formas es su centro: la que
+  más se oye.
+- **La colección** de notas de la que está hecho el pasaje, como una
+  escala es las notas de las que está hecha una melodía: «hecho de 6-35
+  (escala de tonos enteros)». Una colección que es justo la tonalidad
+  mayor o menor que se muestra no se vuelve a nombrar.
+
+![Buscar la tonalidad en la demostración Bruma de tonos enteros: «Suena en las notas de aquí: Re mayor, o La menor, o Do mayor», y debajo «Color en los compases 1 a 8: Mayor 1 sobre Do (la tonalidad), hecho de 6-35 (escala de tonos enteros)» con un botón Usar como tonalidad](images/find-colour.png)
+
+En una canción lee de ocho en ocho compases: los ocho alrededor del
+cursor de reproducción, contados desde el comienzo de la canción o
+desde la marca de tonalidad anterior. En el modo patrón lee el patrón
+entero.
+
+**Usar como tonalidad** hace de ese micromodo o conjunto la tonalidad
+de esos compases, con marcas de tonalidad en la lista de reproducción,
+así que las teclas de armonía, la hoja de acordes y la revisión del
+color lo siguen. Ninguna nota se mueve, y Deshacer lo revierte. Donde
+ya es la tonalidad, la línea dice **(la tonalidad)**.
+
+Pruébalo en **Archivo > Demostraciones > Micromodos > Bruma de tonos
+enteros**. Sus notas son la escala de tonos enteros, que no encaja en
+ninguna tonalidad mayor o menor, así que la suposición de la primera
+línea, Re mayor, es pobre. La línea del color nombra de qué está hecha
+la música: Mayor 1 (Do Re Mi), transportado por tonos enteros, y la
+escala de tonos enteros sobre Do.

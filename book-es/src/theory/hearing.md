@@ -644,6 +644,11 @@ tenues, y qué hace el acorde que suena en cada una. Es un experimento,
 así que está desactivado hasta que lo actives. El trabajo está en
 `harmony/key_finding.rs`.
 
+La música hecha con un micromodo u otro conjunto no tiene tonalidad
+mayor ni menor. Para ella, una segunda línea nombra el **color** del
+pasaje, el micromodo o la colección de notas de la que está hecho: ver
+[Encontrar el color](micromodes.md#encontrar-el-color).
+
 ### Cómo suena una tonalidad: los perfiles
 
 Carol Krumhansl y Edward Kessler (1982) tocaban a los oyentes una escala

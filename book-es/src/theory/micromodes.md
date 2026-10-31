@@ -1452,6 +1452,189 @@ encuentra, con una búsqueda binaria, el primer grupo que empieza cuando
 la nota ya terminó; cada grupo después de este y antes de ese la oye.
 Un tramo cuenta como oídas las notas sostenidas en su primer grupo.
 
+## Encontrar el color
+
+**🔍 Buscar la tonalidad** nombra la tonalidad mayor o menor en la que
+parece estar un pasaje (ver [Encontrar la
+tonalidad](hearing.md#encontrar-la-tonalidad)). La música hecha con un
+micromodo, o con cualquier otro conjunto, tiene un centro de otra
+clase: un conjunto, transportado y dado vuelta, que se oye una y otra
+vez. Así que debajo de la tonalidad, una segunda línea nombra el
+**color** del pasaje, de dos maneras:
+
+- **El micromodo** al que mejor se ajustan sus notas, fuerte, y los que
+  se ajustan casi igual de bien, más tenues: «Color en los compases 1 a
+  8: Menor 3 sobre Do». Al apuntarlo dice cuántas de las notas están en
+  sus formas, y cuál de las formas es su centro.
+- **La colección** de notas de la que está hecho, como una escala es
+  las notas de las que está hecha una melodía: «hecho de 6-35 (escala
+  de tonos enteros)».
+
+Cada uno tiene un botón **Usar como tonalidad**, que lo hace la
+tonalidad de esos compases con marcas de tonalidad. Ninguna nota se
+mueve, como cuando eliges **conjunto de clases de alturas** en el menú
+Tonalidad; Deshacer lo revierte. Donde el color ya es la tonalidad, la
+línea dice **(la tonalidad)** en su lugar.
+
+![Buscar la tonalidad en la demostración Bruma de tonos enteros: «Suena en las notas de aquí: Re mayor, o La menor, o Do mayor», y debajo «Color en los compases 1 a 8: Mayor 1 sobre Do (la tonalidad), hecho de 6-35 (escala de tonos enteros)» con un botón Usar como tonalidad](../images/step-9-find-colour.png)
+
+En las demostraciones de micromodos nombra el micromodo de cada una,
+con todas las notas en su lugar. Bruma de tonos enteros muestra por qué
+hace falta la segunda línea: sus notas son la escala de tonos enteros,
+que no encaja en ninguna tonalidad mayor o menor, así que la mejor
+suposición de la primera línea, Re mayor, es pobre. La línea del color
+nombra de qué está hecha la música: Mayor 1 (Do Re Mi), transportado
+por tonos enteros, y la escala de tonos enteros que suman esas formas.
+Un pasaje que no encaja en ningún micromodo no muestra ninguno.
+
+El trabajo está en `harmony/colour_finding.rs`.
+
+### Un micromodo: la revisión del color, doce veces
+
+Encontrar el micromodo de un pasaje es preguntar, a cada uno de los
+doce: si este fuera la tonalidad, ¿cómo leería las notas la [revisión
+del color](#revisar-el-color)? La revisión ya encuentra la lectura más
+barata, así que el buscador la ejecuta, con cada micromodo sobre Do como
+tonalidad, y cuenta:
+
+```rust
+let fit = colour::fit(notes, micromode.key(PitchClass::C));
+let share = 1.0 - fit.out as f32 / fit.notes.max(1) as f32;
+if share < MICROMODE_FIT {
+    return None;
+}
+```
+
+`fit.out` cuenta las notas fuera de su forma, y cada nota que le falta
+a una forma sin terminar. Un micromodo se propone cuando el 90% de las
+notas o más están en su lugar (`MICROMODE_FIT`); los otros que se
+muestran están a menos de cinco puntos del mejor, dos como mucho. ¿Qué
+forma es el centro? La que más se oye, sumada sobre cada tramo en que
+la revisión la lee, como la tonalidad de una pieza tonal es el acorde
+al que vuelve. Pasa a ser la forma propia de la tonalidad, T0, así que
+las formas del pasaje toman de ella sus grados.
+
+### Dejar afuera los micromodos que no pueden encajar
+
+Doce lecturas de un pasaje largo llevan tiempo. La mayoría de los
+micromodos se pueden dejar afuera antes de leer nada, con una suma que
+casi no cuesta: la **menor** cantidad de notas que una lectura tiene
+que dejar fuera de lugar. Las notas que empiezan juntas forman un
+grupo, y cada grupo tiene sus notas distintas:
+
+```rust
+fn least_out(groups: &[PitchSet], micromode: &Micromode) -> usize {
+    let forms = micromode.members();
+    groups
+        .iter()
+        .map(|&group| match group.len() {
+            n if n > 3 => n - 3,
+            _ if forms
+                .iter()
+                .any(|form| form.bits() & group.bits() == group.bits()) =>
+            {
+                0
+            }
+            _ => 1,
+        })
+        .sum()
+}
+```
+
+Una forma tiene tres notas, así que un grupo de cinco deja dos afuera
+se lea como se lea. Un grupo de tres o menos no deja ninguna afuera
+solo si alguna forma tiene todas sus notas: `form.bits() & group.bits()
+== group.bits()` pregunta si los doce bits del grupo están todos en los
+de la forma (ver [La teoría de conjuntos en doce
+bits](sets.md#la-teoría-de-conjuntos-en-doce-bits)). Si no, al menos
+una nota queda afuera. La lectura real solo puede dejar afuera más, así
+que un micromodo al que la cota sola ya deja por debajo del 90% se deja
+afuera, y solo se leen los demás. Un pasaje de acordes de cuatro notas
+no encaja en ningún micromodo, y no se lee ninguno.
+
+La cota es una **cota inferior**: nunca dice que un micromodo encaja
+cuando no encaja, solo dice antes que uno no puede. Es la manera
+habitual de hacer rápida una búsqueda exacta: podar con algo barato que
+nunca se equivoque en la dirección que importa.
+
+### Una colección: las notas que más suenan
+
+La colección es más simple. Cada clase de altura se pesa por cuánto
+suena, y se toman las más largas, una por una, hasta que suenan el 97%
+del tiempo (`COLLECTION_TIME`): una nota de paso o dos no cuentan. Su
+conjunto se propone cuando tiene de cuatro a seis notas, o hasta nueve
+cuando es una colección de la que se hace música: una con nombre, como
+la escala octatónica (8-28) o la menor armónica (7-32), o la diatónica
+7-35. Siete u ocho notas sin nombre suelen ser una tonalidad con una o
+dos notas cromáticas, lo que no dice nada nuevo. Una colección que es
+justo la tonalidad mayor o menor que muestra Buscar la tonalidad
+también se deja afuera: la tonalidad ya lo dice.
+
+Un conjunto como tonalidad necesita una fundamental, la nota desde la
+que se cuentan sus formas. La escala de tonos enteros sobre Do y sobre
+Re son las mismas seis notas, pero T2 en una es T0 en la otra. Así que
+la colección toma la fundamental del centro del micromodo, cuando esa
+nota está en ella; si no, la de la tonalidad encontrada; si no, la
+primera nota de su forma normal:
+
+```rust
+fn key_of(set: PitchSet, roots: &[Option<PitchClass>]) -> Scale {
+    let root = roots
+        .iter()
+        .flatten()
+        .copied()
+        .find(|&root| set.contains(root))
+        .or_else(|| set.normal_form().first().copied())
+        .unwrap_or(PitchClass::C);
+    Scale::set(root, set)
+}
+```
+
+`flatten` sobre un iterador de `&Option<PitchClass>` se salta los
+`None` y da los valores dentro de los `Some`: un `Option` es un
+pequeño iterador de cero o un elemento. Bruma de tonos enteros está
+hecha de Mayor 1 sobre Do, así que su colección es la escala de tonos
+enteros sobre Do, aunque la tonalidad encontrada ahí, Re mayor, la
+habría puesto sobre Re.
+
+### De ocho en ocho compases
+
+Un color leído sobre todo un pasaje largo escondería los compases que
+lo cambian, y tardaría en leerse. `Project::colour_passage` toma el
+tramo que dura la tonalidad de la canción, desde la marca de tonalidad
+anterior al cursor de reproducción hasta la siguiente, y lo corta en
+bloques de ocho compases desde su comienzo; un último bloque de menos
+de cuatro compases se une al anterior. (No los tramos que Buscar la
+tonalidad oye en una sola tonalidad mayor o menor: en música hecha con
+un micromodo, esos van y vienen cada pocos compases, porque ninguna
+tonalidad así le encaja bien.)
+
+```rust
+let mut edges: Vec<usize> = bars.iter().step_by(COLOUR_BARS).copied().collect();
+// ...
+let last = bars.len().saturating_sub(1) / COLOUR_BARS * COLOUR_BARS;
+if edges.len() > 1 && bars.len() - last < COLOUR_BARS / 2 {
+    edges.pop();
+}
+edges.push(end);
+```
+
+`step_by(8)` toma una de cada ocho barras de compás, el comienzo de cada
+bloque. `last` es donde empieza el último bloque; si desde ahí quedan
+menos de cuatro compases, su borde se quita, y el bloque anterior llega
+hasta el final. La aplicación lee una vez el bloque del cursor y guarda
+lo que encontró hasta que el cursor pasa a otro bloque o la canción
+cambia. En el modo patrón el patrón entero es un solo pasaje: «Color en
+este patrón».
+
+**Usar como tonalidad** llama a `Project::set_key_between`: una marca
+de tonalidad donde empieza el bloque y, salvo que la canción termine
+ahí o ya haya una marca, otra donde termina, de vuelta a la tonalidad
+que había. Las marcas entre las dos se quitan. Después se ordena el
+mapa de tonalidades, así que una marca que no cambia nada no se guarda,
+y un bloque desde el comienzo de la canción cambia en cambio la
+tonalidad propia de la canción.
+
 ## La ventana: un reloj dibujado con el painter de egui
 
 Las doce notas se sientan en un círculo como las horas de un reloj, Do

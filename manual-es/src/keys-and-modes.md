@@ -165,3 +165,8 @@ se mueve, y Deshacer las quita.
 Acierta en la mayoría de los compases de las canciones de demostración,
 pero a menudo se le escapan las visitas cortas a otra tonalidad, y puede
 confundir una tonalidad con su relativa mayor o menor.
+
+La música hecha con un micromodo u otro conjunto no tiene tonalidad
+mayor ni menor. Para ella, una segunda línea dice de qué está hecho el
+pasaje: ver [Encontrar el
+color](sets-rows-micromodes.md#encontrar-el-color).

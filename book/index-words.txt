@@ -24,6 +24,7 @@ Arpeggio: theory/tools.md#arpeggios-cycle-step_by-and-zip
 Audio thread: program/threads.md, program/sync.md, sound/sequencer.md
 Autosave: program/saving.md#a-copy-of-unsaved-work
 Channel rack: program/editors.md
+Chord lane: program/editors.md#the-chord-lane-chunk_by-then-measure, theory/sets.md#in-the-piano-roll
 Chord names: theory/chords.md
 Chord recognition: see Hearing chords
 Chord sheet: band/chord-sheet.md, theory/sets.md#one-harmony-four-names
@@ -35,6 +36,7 @@ Drum kit: sound/instruments.md#drums-from-a-few-lines-of-math, band/library.md#r
 Ear training: band/practice.md
 Envelope: sound/instruments.md#the-envelope-a-state-machine
 Export: see WAV export, Video export
+Finding the colour: theory/micromodes.md#finding-the-colour
 Finding the key: theory/hearing.md#finding-the-key
 Harmony keys: theory/numerals.md#the-harmony-keys, theory/sets.md#a-key-as-a-set-the-same-notes-another-name
 Hearing chords: theory/hearing.md
