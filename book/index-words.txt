@@ -28,6 +28,7 @@ Chord names: theory/chords.md
 Chord recognition: see Hearing chords
 Chord sheet: band/chord-sheet.md, theory/sets.md#one-harmony-four-names
 Clip: program/project.md, program/editors.md#the-playlist
+Colour check: theory/micromodes.md#checking-the-colour
 Continuous integration: shipping/ci.md
 Demo: songs/demos.md, songs/from-midi-and-scores.md
 Drum kit: sound/instruments.md#drums-from-a-few-lines-of-math, band/library.md#rhythms-one-line-per-drum, sound/mixer.md#score-order-the-drums-together
