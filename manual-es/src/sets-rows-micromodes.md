@@ -223,6 +223,19 @@ vez: **3-3|3-3 T7** como conjuntos. En **Color Menor 3** encuentra las formas es
 en la hoja, compás por compás. En una canción cuya tonalidad no es un
 conjunto no tiene nada que leer, y lo dice.
 
+Para encontrar el micromodo o el conjunto que una canción usa más, mira
+la línea debajo de estos menús. **Más usados** ordena cada clase que
+muestra la hoja, primero la que suena más tiempo, con cuánto de la
+canción ocupa: **Menor 3 72% · 2-3 6% · Menor 2 6% …** para la melodía
+de **Color Menor 3** leída en línea, de a tres. Cuenta los grupos como
+los arma el segundo menú, así que si cambias el agrupamiento o la
+pista, el orden cambia con ellos. Cada armonía cuenta desde donde
+empieza hasta la siguiente. Señala una clase para ver cuántas veces
+aparece y cuáles de sus formas aparecen más; **más** al final muestra
+las demás. La línea aparece solo cuando **Mostrar** nombra la armonía
+como conjuntos o micromodos: los acordes, las formas de la serie y N.C.
+no cuentan.
+
 El **piano roll** también tiene un menú **Mostrar**, arriba junto a
 **Conducción de voces**, para los nombres de los acordes sobre su
 cuadrícula: **Según la tonalidad**, con la que empieza, **Acordes**,
