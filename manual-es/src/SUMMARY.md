@@ -34,8 +34,9 @@
 
 - [El mezclador](mixer.md)
 - [Teclados y sintetizadores MIDI](midi.md)
+- [Tomas: cantar o silbar una parte](takes.md)
 - [Guardar, abrir y recuperar](saving.md)
-- [Abrir archivos MIDI y grabaciones](importing.md)
+- [Abrir archivos MIDI y hojas de acordes](importing.md)
 - [Exportar](exporting.md)
 
 # Parte 5: Aprender armonía

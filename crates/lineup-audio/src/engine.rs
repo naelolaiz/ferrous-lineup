@@ -35,11 +35,17 @@
 //! The mixer's meters read how loud each channel and the master play
 //! from shared atomics, [`Levels`], which the audio thread raises and the
 //! UI takes once a frame (see [`crate::levels`]).
+//!
+//! And while a take is recorded, a [`SongClock`] says, block by block,
+//! when the sound of the block will reach the speakers and where the song
+//! is then, so the microphone's sound can be placed in the song (see
+//! [`crate::input`]).
 
 use std::collections::VecDeque;
 use std::fmt;
 use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
+use std::time::{Duration, Instant};
 
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{FromSample, SampleFormat, SizedSample, StreamConfig};
@@ -92,6 +98,10 @@ const LIVE_QUEUE_SIZE: usize = 256;
 
 /// How many MIDI messages can wait for the thread that sends them.
 const MIDI_OUT_QUEUE_SIZE: usize = 1024;
+
+/// How many blocks' worth of [`Heard`] can wait for the recorder: a few
+/// seconds of them, far more than the recorder lets wait.
+const HEARD_QUEUE_SIZE: usize = 1024;
 
 /// The value of the playhead while stopped.
 pub(crate) const NO_STEP: usize = usize::MAX;
@@ -455,6 +465,45 @@ impl LiveInput {
     }
 }
 
+/// When the sound of one block reaches the speakers, and where the song
+/// is then.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Heard {
+    /// When the block's first sample comes out of the speakers: when the
+    /// audio thread made it, plus how long the sound card says it takes
+    /// to get there.
+    pub at: Instant,
+    /// The position of the song (or of the pattern) at that sample, in
+    /// steps with a fraction (see [`Sequencer::position`]).
+    pub position: f64,
+    /// How many steps go by in a second at the tempo playing.
+    pub steps_per_second: f64,
+}
+
+/// What the song is doing as it is heard, block by block, while asked
+/// (see [`AudioEngine::take_song_clock`]). A take recorded along with the
+/// song is placed in it with this.
+pub struct SongClock {
+    heard: rtrb::Consumer<Heard>,
+    wanted: Arc<AtomicBool>,
+}
+
+impl SongClock {
+    /// Starts or stops writing down what is heard. Stopped, the audio
+    /// thread writes nothing, so nothing waits in the queue.
+    pub fn listen(&mut self, on: bool) {
+        if on {
+            while self.heard.pop().is_ok() {}
+        }
+        self.wanted.store(on, Ordering::Relaxed);
+    }
+
+    /// The oldest block heard that has not been taken yet.
+    pub fn pop(&mut self) -> Option<Heard> {
+        self.heard.pop().ok()
+    }
+}
+
 /// The way out for the messages that MIDI Out channels make, to be moved
 /// to the thread that sends them to a MIDI port.
 pub struct MidiOutput(rtrb::Consumer<MidiMessage>);
@@ -488,6 +537,7 @@ pub struct AudioEngine {
     levels: Arc<Levels>,
     live_input: Option<LiveInput>,
     midi_output: Option<MidiOutput>,
+    song_clock: Option<SongClock>,
     /// The last problem the stream reported, for the UI to show, and
     /// whether it has stopped working.
     problems: Arc<StreamProblems>,
@@ -527,6 +577,7 @@ impl AudioEngine {
         let (trash_producer, trash_consumer) = rtrb::RingBuffer::new(TRASH_QUEUE_SIZE);
         let (live_producer, live_consumer) = rtrb::RingBuffer::new(LIVE_QUEUE_SIZE);
         let (midi_producer, midi_consumer) = rtrb::RingBuffer::new(MIDI_OUT_QUEUE_SIZE);
+        let (heard_producer, heard_consumer) = rtrb::RingBuffer::new(HEARD_QUEUE_SIZE);
         let playhead = Arc::new(AtomicUsize::new(NO_STEP));
         let position = Arc::new(AtomicU64::new(NO_POSITION));
 
@@ -540,6 +591,16 @@ impl AudioEngine {
         );
         audio_thread.live_input = Some(live_consumer);
         audio_thread.midi_out = Some(midi_producer);
+        let wanted = Arc::new(AtomicBool::new(false));
+        audio_thread.heard = Some(HeardOut {
+            queue: heard_producer,
+            wanted: Arc::clone(&wanted),
+            at: None,
+        });
+        let song_clock = SongClock {
+            heard: heard_consumer,
+            wanted,
+        };
         let overlay = Arc::clone(&audio_thread.overlay_playhead);
         let laps = Arc::clone(&audio_thread.laps);
         let levels = Arc::clone(audio_thread.levels());
@@ -585,6 +646,7 @@ impl AudioEngine {
             levels,
             live_input: Some(live_input),
             midi_output: Some(MidiOutput(midi_consumer)),
+            song_clock: Some(song_clock),
             problems,
             info,
         })
@@ -682,6 +744,23 @@ impl AudioEngine {
         self.midi_output.take()
     }
 
+    /// What the song is doing as it is heard, for recording a take. It
+    /// can be taken once at a time: give it back with
+    /// [`AudioEngine::give_back_song_clock`] when the take is over.
+    pub fn take_song_clock(&mut self) -> Option<SongClock> {
+        self.song_clock.take()
+    }
+
+    /// Gives back the song clock taken with
+    /// [`AudioEngine::take_song_clock`]. A clock this engine still holds
+    /// stays: the one given back came from an engine before it.
+    pub fn give_back_song_clock(&mut self, mut clock: SongClock) {
+        clock.listen(false);
+        if self.song_clock.is_none() {
+            self.song_clock = Some(clock);
+        }
+    }
+
     /// Frees the instruments and note lists the audio thread has finished
     /// with. Call this regularly from the UI thread, for example once per frame.
     pub fn collect_garbage(&mut self) {
@@ -723,7 +802,12 @@ where
 {
     // This closure is the audio callback. `move` gives it ownership of
     // `audio_thread`, and cpal runs it on the audio thread.
-    let data_callback = move |output: &mut [T], _: &cpal::OutputCallbackInfo| {
+    let data_callback = move |output: &mut [T], info: &cpal::OutputCallbackInfo| {
+        // How long the sound card says this block takes to reach the
+        // speakers: the time from now until it is played.
+        let stamp = info.timestamp();
+        let delay = stamp.playback.duration_since(stamp.callback);
+        audio_thread.heard_after(delay);
         audio_thread.process(output);
     };
 
@@ -846,6 +930,17 @@ pub(crate) struct AudioThread {
     trace: Option<Box<Tracer>>,
     /// How loud each channel and the master were, for the mixer's meters.
     levels: Arc<Levels>,
+    /// Where what is heard goes while a take is recorded. `None` when no
+    /// one will be listening, as when exporting a WAV file.
+    heard: Option<HeardOut>,
+}
+
+/// The audio thread's end of a [`SongClock`].
+struct HeardOut {
+    queue: rtrb::Producer<Heard>,
+    wanted: Arc<AtomicBool>,
+    /// When the block about to be made will be heard.
+    at: Option<Instant>,
 }
 
 /// A pattern played over the song (see [`Command::SetOverlay`]).
@@ -924,7 +1019,39 @@ impl AudioThread {
             lap_tempos: None,
             trace: None,
             levels: Arc::default(),
+            heard: None,
         }
+    }
+
+    /// Says that the next block will reach the speakers `delay` from now.
+    pub(crate) fn heard_after(&mut self, delay: Duration) {
+        if let Some(heard) = &mut self.heard
+            && heard.wanted.load(Ordering::Relaxed)
+        {
+            heard.at = Some(Instant::now() + delay);
+        }
+    }
+
+    /// Writes down where the song is as the block about to be made is
+    /// heard, if a take is recording and the song is playing (not
+    /// counting in, when the song does not move yet).
+    fn write_heard(&mut self) {
+        let Some(heard) = &mut self.heard else {
+            return;
+        };
+        let Some(at) = heard.at.take() else {
+            return;
+        };
+        if !self.playing || self.counting.is_some() || !heard.wanted.load(Ordering::Relaxed) {
+            return;
+        }
+        let steps_per_second = f64::from(self.sample_rate) / self.sequencer.step_frames().max(1.0);
+        // A full queue means no one is reading: the block is let go.
+        let _ = heard.queue.push(Heard {
+            at,
+            position: self.sequencer.position(),
+            steps_per_second,
+        });
     }
 
     /// Where it keeps how loud each channel and the master have been.
@@ -1792,6 +1919,7 @@ impl AudioThread {
         while let Some(message) = self.live_input.as_mut().and_then(|keys| keys.pop().ok()) {
             self.play_live(message);
         }
+        self.write_heard();
 
         let mut master_peak = [0.0f32; 2];
         for frame in output.chunks_mut(self.output_channels) {
@@ -3354,8 +3482,7 @@ mod tests {
 
     #[test]
     fn a_recording_stops_when_its_track_is_muted() {
-        // A two-second sound started by one step, as an imported
-        // recording is.
+        // A two-second sound started by one step, as a take is.
         let mut h = harness();
         let recording = Sampler::new(Arc::new(SampleData::new(vec![0.5; 2 * 48_000], RATE)));
         send(

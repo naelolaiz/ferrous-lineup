@@ -12,10 +12,14 @@ mayor, y cada una sería un buen proyecto para quien lea este libro:
   el patrón que se repite ([ejercicio 22 de la Parte
   II](../sound/exercises.md#22-grabar-en-modo-canción-los-tres-crates-más-difícil)).
 - **Clips de audio** en las pistas, junto a los patrones, colocados y
-  movidos como cualquier clip. Una grabación importada suena ahora como
-  una sola nota larga del sampler en el primer paso de la canción, que
+  movidos como cualquier clip. La grabación de una toma suena ahora como
+  una sola nota del sampler en su primer paso, en un patrón propio, que
   el motor empieza por la mitad cuando la reproducción empieza más
   tarde ([Empezar por la
   mitad](../sound/instruments.md#empezar-por-la-mitad)).
+- **Pulsos, tonalidades y acordes oídos en una grabación**, para que una
+  banda pueda seguir una grabación rítmica o armónica añadida a la
+  canción, como las tomas siguen una melodía cantada
+  ([Tomas](../theory/listen.md)).
 - **Automatización**: movimientos de mandos grabados o dibujados a lo
   largo del tiempo, sobre las pistas.

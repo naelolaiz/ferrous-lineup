@@ -179,11 +179,8 @@ partitura hay que oírlo.
 ### Encontrar el pulso
 
 El pulso se encuentra como lo encuentra quien escucha, con el método de
-«Beat tracking by dynamic programming» de Dan Ellis (2007), el mismo
-que la aplicación usa con una grabación (ver [Pulsos: arranques,
-autocorrelación y programación
-dinámica](../theory/listen.md#pulsos-arranques-autocorrelación-y-programación-dinámica)):
-cuánto sonido nuevo empieza en cada momento, el período más estable en
+«Beat tracking by dynamic programming» de Dan Ellis (2007): cuánto
+sonido nuevo empieza en cada momento, el período más estable en
 eso, y luego la cadena de pulsos que cae en más arranques sin alejarse
 de ese período. Cada compás recibe entonces el tempo al que se tocó, y
 se escribe una marca de tempo donde el tempo se mueve medio pulso por

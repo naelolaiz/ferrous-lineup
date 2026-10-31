@@ -69,8 +69,8 @@ impl SampleData {
     }
 }
 
-/// Whether the audio file at `path` is a recording to import rather than
-/// a sound for the sampler: a file the sampler cannot play (anything but
+/// Whether the audio file at `path` is a recording, to add to the song
+/// as a take, rather than a sound for the sampler: a file the sampler cannot play (anything but
 /// WAV, such as MP3), or a WAV longer than a sound that rings out (see
 /// [`crate::Instrument::release_all`]), such as a whole song.
 pub fn is_recording(path: &Path) -> bool {
