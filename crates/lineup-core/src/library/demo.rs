@@ -686,10 +686,12 @@ pub fn song_demo(song: &Song) -> Project {
 
     let mut at = 0;
     let mut time_here = song.time;
+    let mut sections: Vec<Section> = Vec::new();
     for (entry, name) in song.form.iter().enumerate() {
         let Some(part) = song.part(name) else {
             continue;
         };
+        let part_start = at;
         // A part in a key of its own is a modulation: the key changes
         // where it starts, and changes back after it.
         let key = song.part_scale(part);
@@ -715,6 +717,17 @@ pub fn song_demo(song: &Song) -> Project {
                 project.add_clip(Clip::new(drums, DRUM_TRACK, at));
             }
             at += piece.length;
+        }
+        if at > part_start {
+            sections.push(Section::new(*name, part_start, at - part_start));
+        }
+    }
+    // The parts are the song's sections, as its score names them: the
+    // band plays by them, and they show over the playlist. Numbered parts
+    // are not the music's, so the song's sections are heard instead.
+    if !song.parts_are_numbered() {
+        for section in sections {
+            project.add_section(section);
         }
     }
     if let Some(end) = end {
