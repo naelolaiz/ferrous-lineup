@@ -1067,6 +1067,52 @@ mod tests {
     }
 
     #[test]
+    fn a_take_moved_with_its_song_still_plays() {
+        // Four seconds of an A, sung into a song with nothing else in it,
+        // kept in the song's takes folder.
+        let rate = 44_100;
+        let samples: Vec<f32> = (0..4 * rate)
+            .map(|frame| (frame as f32 / rate as f32 * 440.0 * std::f32::consts::TAU).sin() * 0.3)
+            .collect();
+        let root = std::env::temp_dir().join(format!("lineup-moved-{}", std::process::id()));
+        std::fs::remove_dir_all(&root).ok();
+        let before = root.join("before");
+        std::fs::create_dir_all(&before).unwrap();
+        let sung = root.join("sung.wav");
+        lineup_listen::wav::write(&samples, rate, &sung).unwrap();
+
+        let mut app = app();
+        app.replace_project(Project::empty(), None);
+        app.voice.folder = Some(before.join("song takes"));
+        std::fs::create_dir_all(before.join("song takes")).unwrap();
+        app.open_recording(sung);
+        while app.hearing_recording() {
+            std::thread::sleep(Duration::from_millis(20));
+            app.check_loading(&egui::Context::default());
+        }
+        app.voice.review.as_mut().unwrap().destination = Destination::Nowhere;
+        app.write_take();
+        lineup_core::file::save(&app.project, &before.join("song.lineup")).unwrap();
+
+        // The song and its takes folder go somewhere else together.
+        let after = root.join("after");
+        std::fs::rename(&before, &after).unwrap();
+        let ctx = egui::Context::default();
+        let mut moved = self::app();
+        moved.open_path(&ctx, after.join("song.lineup"));
+        let heard = loudness(&played_from(&mut moved, 0, rate as usize));
+        assert!(heard > 0.1, "the take plays: {heard}");
+
+        // Without its takes folder, the song is silent.
+        std::fs::remove_dir_all(after.join("song takes")).unwrap();
+        let mut lost = self::app();
+        lost.open_path(&ctx, after.join("song.lineup"));
+        let silent = loudness(&played_from(&mut lost, 0, rate as usize));
+        assert!(silent < 0.001, "nothing to play: {silent}");
+        std::fs::remove_dir_all(&root).ok();
+    }
+
+    #[test]
     fn opening_another_project_stops_hearing_the_recording_added() {
         let mut app = app();
         app.voice.loading = Some(Loading {
