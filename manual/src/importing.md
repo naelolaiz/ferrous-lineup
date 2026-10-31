@@ -25,8 +25,8 @@ from your file manager. The song that comes out:
 - keeps **every note** as it was played: how hard, and exactly when,
   even between two steps of the grid;
 - is cut at bar lines into **patterns**, laid one after another in the
-  playlist; a passage that comes back note for note plays the same
-  pattern again;
+  playlist, the drums on a track of their own; a passage that comes
+  back note for note plays the same pattern again;
 - takes the file's **tempo changes**, **time signatures** and **key
   signatures**. A file with no key, or one that says C major when its
   notes are plainly in another key (many programs write C major when
