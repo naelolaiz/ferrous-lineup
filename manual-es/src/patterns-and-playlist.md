@@ -56,14 +56,24 @@ qué toca ▶:
 Cada bloque de la lista de reproducción es un **clip**: un patrón, en un
 lugar de una pista. La línea de la barra de la lista de reproducción lo
 dice en breve: *Haz clic para colocar «Ritmo». Doble clic en un clip
-para editarlo, arrástralo para moverlo, arrastra su borde derecho para
-repetirlo, clic derecho para ver su menú.*
+para editarlo, arrástralo para moverlo, arrastra sus bordes para
+recortarlo o repetirlo, clic derecho para ver su menú.*
 
 - **Haz clic** en un lugar vacío de una pista para poner ahí un clip del
   patrón seleccionado.
 - **Arrastra** un clip para moverlo, a otro compás o a otra pista.
-- **Arrastra su borde derecho** para repetirlo: el clip crece de a
-  patrones enteros, y toca el patrón esa cantidad de veces seguidas.
+- **Arrastra hacia adentro su borde izquierdo o derecho** para
+  recortarlo, como en la mayoría de los programas de audio: el clip
+  oculta el comienzo o el final de su patrón, y esas notas no suenan.
+  Siguen en el patrón, así que al arrastrar el borde de nuevo hacia
+  afuera vuelven, y cada nota que sigue sonando queda donde estaba en
+  la canción.
+- **Arrastra su borde derecho más allá del final del patrón** para
+  repetirlo: el patrón vuelve a sonar desde su comienzo mientras dure
+  el clip, y el nombre del clip dice cuántas veces empieza, como «×2».
+  Puede terminar a mitad de camino, en cualquier compás, pulso o paso.
+  Arrastrado hacia afuera más allá del comienzo, el borde izquierdo
+  toca una vez más el final del patrón antes de él.
 - **Doble clic** en un clip para editarlo: las melodías y los acordes se
   abren en el piano roll, la batería en el rack de canales.
 - **Clic derecho** en un clip para ver su menú: **Editar su patrón**,
@@ -74,6 +84,11 @@ repetirlo, clic derecho para ver su menú.*
 
 **Ajuste**, en la barra de la lista de reproducción, dice dónde caen los
 clips: en un **Compás**, un **Pulso** o un **Paso** (una semicorchea).
+Un borde arrastrado se ajusta igual, y también a los lugares donde el
+patrón vuelve a empezar, para llegar fácil a un número entero de
+repeticiones. **Ctrl+Z** deshace cada recorte. Una canción con un clip
+recortado necesita esta versión de Ferrous Lineup o una más nueva para
+abrirse.
 
 Para trabajar con varios clips a la vez, haz **Ctrl+clic** en ellos uno
 por uno, o **arrastra con Ctrl** un recuadro a su alrededor sobre una

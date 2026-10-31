@@ -1486,9 +1486,9 @@ if name_response.changed() && name != shown {
 - `Frame::NONE` quita el borde del campo, así que parece una etiqueta
   hasta que haces clic en él.
 
-### Colocar, mover y estirar clips
+### Colocar, mover y recortar clips
 
-Colocar, mover y borrar clips sigue el modelo del piano roll: una
+Colocar, mover y recortar clips sigue el modelo del piano roll: una
 pulsación decide qué es el arrastre, y el arrastre sigue al puntero
 hasta que se suelta el botón.
 
@@ -1496,15 +1496,24 @@ hasta que se suelta el botón.
 struct ClipDrag {
     index: usize,
     grab: usize,
-    stretch: bool,
+    /// The edge dragged, if the drag trims the clip.
+    edge: Option<Edge>,
+}
+
+enum Edge {
+    Left,
+    Right,
 }
 ```
 
 Una pulsación en un espacio vacío coloca un clip del patrón seleccionado
 y empieza a moverlo; una pulsación en un clip empieza a mover ese clip y
-selecciona su patrón; una pulsación en el borde derecho de un clip
-empieza a estirarlo, lo que repite su patrón tantas veces como quepan
-hasta el puntero. La pulsación se atiende donde bajó el botón:
+selecciona su patrón; una pulsación en el borde izquierdo o derecho de
+un clip empieza a recortarlo (ver [Recortar un
+clip](project.md#recortar-un-clip)). Arrastrado hacia adentro, un borde
+oculta el comienzo o el final del patrón; arrastrado hacia afuera más
+allá del final, el borde derecho lo repite. La pulsación se atiende
+donde bajó el botón:
 
 ```rust
 // A press is handled where the button went down. A quick hand can
@@ -1518,7 +1527,7 @@ let pressed_at = press_origin.filter(|pos| {
 if let Some(pos) = pressed_at {
     let (track, step) = layout.cell_at(pos);
     match clip_at(project, layout, pos) {
-        Some(index) => { /* start moving or stretching that clip */ }
+        Some(index) => { /* start moving or trimming that clip */ }
         None => { /* add a clip of the selected pattern, and start moving it */ }
     }
 }
@@ -1545,6 +1554,30 @@ fn floor(self, step: usize, meter: &Meter) -> usize {
     }
 }
 ```
+
+Un borde arrastrado se ajusta igual, y también al lugar más cercano
+donde el patrón del clip vuelve a empezar, para que un número entero de
+repeticiones siga siendo fácil de alcanzar. Gana el que esté más cerca
+del puntero:
+
+```rust
+let mut nearest = vec![self.snap.floor(step, meter), self.snap.next(step, meter)];
+if pattern_length > 0 {
+    let length = pattern_length as f32;
+    let origin = clip.start as f32 - clip.first_step(pattern_length) as f32;
+    let round = origin + ((at - origin) / length).round() * length;
+    if round >= 0.0 {
+        nearest.push(round as usize);
+    }
+}
+```
+
+`at` es el paso del puntero con su fracción, y `origin` el paso de la
+canción donde empieza la primera vuelta del patrón, suene o no. Cada
+borde tiene una franja del tamaño de una mano, pero en un clip más
+angosto que dos franjas el borde izquierdo recibe solo un tercio, así
+que gana el derecho, que siempre se puede arrastrar hacia afuera para
+hacer lugar.
 
 Ctrl o Mayús y un clic añaden un clip a la selección, Ctrl o Mayús y un
 arrastre en un espacio vacío dibujan un recuadro alrededor de clips, y

@@ -98,6 +98,18 @@ wherever you start playback, like any part: the **light** at the left
 of its track mutes it, and **S** plays it alone, to hear only what you
 sang (see [Tracks](patterns-and-playlist.md#tracks)).
 
+The recording is heard only under the clips of its track, as its
+waveform is drawn. Its clip trims like any other (see [Placing and
+moving clips](patterns-and-playlist.md#placing-and-moving-clips)):
+drag its left edge in to start the recording later, partway through
+it, or its right edge in to stop it sooner, and drag the edge back out
+to hear that part again. The waveform stays where it was, so the clip
+shows the part of the recording it still plays. A long take is cut
+into several clips one after the other; where its track has no clip,
+in a gap left between them, the recording is silent, and it goes on
+again under the next one. **Transcribe again…** still listens to the
+whole recording, the parts its clips hide too.
+
 Notes that go to **A new channel**, or to a channel with nothing to
 play there, go on a track of their own right under the recording,
 named after it, as *Take 1 notes*. Mute either track to hear the

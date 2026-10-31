@@ -552,6 +552,15 @@ the list (`Drag::Move { index, .. }`), while a selection remembers the
 notes themselves. What could go wrong with the index if the list were
 kept sorted by start time, and a note was moved while being dragged?
 
+A dragged clip edge sends a new trimmed clip on every frame the pointer
+moves, each worked out from the clip as the last frame left it. Drag a
+16-step clip's left edge 4 steps out past its start and back in again,
+on paper, with `Clip::trimmed_from` (see [Trimming a
+clip](project.md#trimming-a-clip)): what are `start`, `skip` and
+`repeats` after each frame? What does `trimmed_from` keep the same from
+one frame to the next, and why does that make the notes stay where they
+were however long you drag?
+
 ## Two languages
 
 ### 31. Letters and solfège (lineup-core and the app)

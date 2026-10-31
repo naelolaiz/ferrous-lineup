@@ -294,6 +294,7 @@ Tresillo: bigger-band.md#the-horn-section, tango-and-latin-america.md, rhythm-an
 Triad: chords.md#triads
 Triads, sevenths and ninths: harmony-keys.md#the-controls-at-the-left
 Trial pattern: styles.md#where-a-style-goes
+Trimming a clip: patterns-and-playlist.md#placing-and-moving-clips, takes.md#the-take-on-its-track
 Triplet: swing.md#the-swing-control, rhythm-and-meter.md#note-values-and-steps
 Tritone: chord-functions.md#home-away-and-tension
 Tumbao: stops.md#the-music

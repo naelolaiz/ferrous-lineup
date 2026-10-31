@@ -699,8 +699,10 @@ con `self.edit`, así que es **un solo paso de deshacer**.
 Una toma ya escrita se puede volver a oír, para escribir sus notas con
 otras opciones: **Transcribir otra vez…** en el menú de su clip. La
 lista de reproducción encuentra la grabación que muestra un clip con
-`recording_in`: una cuya nota empieza en el clip o, para un clip vacío
-(el resto de una toma larga), la última antes de él en su pista. La
+`recording_in`: una cuya nota empieza en el clip, o en la parte que un
+recorte oculta antes de él, o, para un clip vacío (el resto de una toma
+larga), la última antes de él en su pista. Vuelve a oír la grabación
+entera, también las partes que ocultan sus clips. La
 aplicación lee ese archivo WAV y lo oye como oye cualquier grabación
 añadida, en un hilo, y después lo pone desde el paso donde está su nota
 con `Take::laid`. Un trozo de una toma empieza en un paso entero y
@@ -754,7 +756,13 @@ Una toma larga se corta en varios clips, de a lo sumo el largo de un
 patrón, y solo el primero tiene la nota que la hace sonar. Así que
 `paint_clips` junta primero dónde empieza cada grabación, por pista, y
 dibuja cada una debajo de todos los clips de su pista bajo los que
-suena, no solo debajo del que la empieza.
+suena, no solo debajo del que la empieza. Un clip recortado al comienzo
+oculta la nota que empieza su grabación, así que una grabación empieza
+en el paso donde estaría esa nota, `clip.origin(length) + note.start`,
+y el dibujo se corta al clip: la forma de onda queda donde estaba, y el
+clip muestra la parte que sigue tocando. El hilo de audio sigue la misma
+regla, una grabación que suena solo bajo los clips de su pista (ver
+[Solo bajo sus clips](../sound/instruments.md#solo-bajo-sus-clips)).
 
 La grabación sigue de largo en segundos, mientras que la lista de
 reproducción se ordena en pasos, y el largo de un paso en segundos

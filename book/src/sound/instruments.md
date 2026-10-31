@@ -364,9 +364,9 @@ for note in channel.notes.get(play.pattern) {
     // `step`, counted from the piece's start, which is
     // below zero for a time in the part of the clip the
     // piece skips.
-    let first = play.start as isize - play.skip as isize + note.start as isize;
-    let times = (first..play.end().min(step) as isize).step_by(length);
-    for at in times.filter(|&at| at < step as isize) {
+    let first = play.origin() + note.start as isize;
+    let times = (first..play.end().min(step + 1) as isize).step_by(length);
+    for at in times.filter(|&at| at < before) {
         let origin = Origin {
             pattern: play.pattern,
             pattern_step: note.start,
@@ -387,11 +387,137 @@ for note in channel.notes.get(play.pattern) {
 ```
 
 `first` is where the note falls if the piece started at its own first
-step; it is below zero when the clip leaves out its start (`skip`), and
-`step_by(length)` gives each repeat of the pattern within the piece.
-`frames_between` adds up the frames of the steps from there to the
-playhead at the song's tempo on each step, so a recording under a
-tempo change starts at the right place too.
+step: `play.origin()` is `start - skip`, below the piece's start when
+the piece leaves out the start of its clip, or the clip leaves out the
+start of its pattern, and below zero when that is more than the song
+has before it. `step_by(length)` gives each repeat of the pattern
+within the piece. `before` is `step`, or `step + 1` when playback is
+already partway through `step` (see below), so a note on that very step
+is started too. `frames_between` adds up the frames of the steps from
+there to the playhead at the song's tempo on each step, so a recording
+under a tempo change starts at the right place too.
+
+### Only under its clips
+
+A take is drawn on the playlist as its waveform, in its clip, and you
+can trim that clip like any other: drag its left edge in to start the
+recording later, its right edge in to stop it sooner. A long take is
+cut into several clips one after the other, and only the first holds
+the note that starts the recording; the others are empty, and the
+waveform goes on through them. So the rule is the one the drawing
+shows: **a take's recording is heard only where a clip of its track
+plays**.
+
+The audio thread has the song as `Play`s, and each knows the track of
+its clip, so the rule is a function of the step:
+
+```rust
+fn take_heard(plays: &[Play], notes: &ChannelNotes, step: usize) -> bool {
+    plays.iter().filter(|play| play.covers(step)).any(|play| {
+        plays
+            .iter()
+            .any(|other| other.track == play.track && !notes.get(other.pattern).is_empty())
+    })
+}
+```
+
+Read it as: some piece plays on this step, on a track where some piece
+holds a note of this channel (the note that starts the recording). It
+is checked on every step, for every channel that plays a take, before
+the step's notes start:
+
+```rust
+fn keep_takes_to_their_clips(&mut self, step: usize, straight: bool) {
+    // ...for each channel playing a take, not muted:
+    let heard = |step| take_heard(&self.plays, &channel.notes, step);
+    let (here, before) = (heard(step), step > 0 && heard(step - 1));
+    if !here {
+        if channel.instrument.sounds_long() {
+            self.channels[index].instrument.release_long();
+        }
+        continue;
+    }
+    if !straight {
+        continue;
+    }
+    let came_in = self.start_hidden_takes(step, index);
+    if !came_in && !before && !self.channels[index].instrument.sounds_long() {
+        self.resume_long_sounds_of(step, Some(index), 0.0);
+    }
+}
+```
+
+Where no clip of its track plays, the recording fades out, in the same
+15 ms as at Stop: past a right edge dragged in, or in a gap between two
+clips. Where a gap ends, the recording comes back partway through, by
+the same `resume` that starts it when playback starts.
+
+`straight` says playback came to this step from the step before. When
+it started here, jumped here, or came round the loop, the engine has
+just called `resume_long_sounds` for every channel, so doing it again
+would start the recording twice. The audio thread keeps `last_step`,
+the step it played last, and sets it to `None` wherever the sequencer
+is moved:
+
+```rust
+let straight = !lap && self.last_step.is_some_and(|last| last + 1 == step);
+self.last_step = Some(step);
+```
+
+A clip trimmed at the start hides the note that starts its recording:
+the sequencer starts notes on the steps a piece plays, and that note is
+before them. `start_hidden_takes` looks at the pieces that start on this
+step and leave out the start of their clip, and starts their recordings
+as far in as they would be, had the clip been whole:
+
+```rust
+for play in self.plays.iter().filter(|play| play.start == step) {
+    // ...a piece that leaves nothing out is skipped
+    for note in channel.notes.get(play.pattern) {
+        let first = play.origin() + note.start as isize;
+        if first >= step as isize {
+            continue;
+        }
+        // The same note still sounding from before stops first.
+        channel.instrument.release_unless(|origin| !same(origin));
+        for at in (first..step as isize).step_by(length) {
+            // ...resume it, `frames_between(timing, at, step)` frames in
+        }
+    }
+}
+```
+
+The same happens when a section plays again from partway through a
+clip: the recording starts again where the section does, and the one
+still playing from the first time round stops, so it is not heard twice
+and stays in time with the song.
+
+One more case is the song changing while it plays: an edge dragged back
+out over the playhead, or a take's track turned back on. The audio
+thread then gets a new list of `Play`s; `release_notes_left_out` stops
+what it no longer plays, and `bring_back_takes` starts the recordings
+it plays where the playhead is, if they are not sounding. Playback is
+partway through a step then, so `into` is how many frames of it have
+gone by, and the recording starts that much further in.
+
+A note started partway has its `Origin` on a song step before its
+piece starts, in the part the clip hides. `release_notes_left_out`
+keeps a note whose piece still plays its step, and such a note is in
+no piece's steps, so it also keeps one that its piece leaves out just
+before it starts:
+
+```rust
+fn hidden_in(play: &Play, origin: Origin, length: usize) -> bool {
+    let offset = origin.song_step as isize - play.origin();
+    length > 0
+        && origin.song_step < play.start
+        && offset >= 0
+        && offset as usize % length == origin.pattern_step
+}
+```
+
+Without it, any change to the song while a trimmed take plays (moving
+another clip, say) would stop the recording.
 
 ### Loading a WAV file
 
