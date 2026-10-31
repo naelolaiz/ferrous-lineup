@@ -1946,8 +1946,8 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("Moisés Simons, 1928", "Moisés Simons, 1928"),
     ("Molly Malone", "Molly Malone"),
     (
-        "Montevideo's candombe, across the river from Buenos Aires. The tune moves in 3 + 3 + 2, two dotted eighths and an eighth, the same clave the stick plays on the drum's wooden shell, over three plain chords in C major.",
-        "El candombe de Montevideo, al otro lado del río de Buenos Aires. La melodía se mueve en 3 + 3 + 2, dos corcheas con puntillo y una corchea, la misma clave que toca el palo en la madera del tambor, sobre tres acordes simples en {C} mayor.",
+        "Montevideo's candombe, across the river from Buenos Aires. The tune moves in 3 + 3 + 2, two dotted eighths and an eighth, the tresillo that the milonga and the tango lean on too, over three plain chords in C major.",
+        "El candombe de Montevideo, al otro lado del río de Buenos Aires. La melodía se mueve en 3 + 3 + 2, dos corcheas con puntillo y una corchea, el tresillo en el que también se apoyan la milonga y el tango, sobre tres acordes simples en {C} mayor.",
     ),
     ("Moonlight Sonata", "Sonata Claro de luna"),
     ("Morning Mood", "La mañana"),

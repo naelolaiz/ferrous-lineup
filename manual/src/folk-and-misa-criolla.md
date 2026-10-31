@@ -99,7 +99,7 @@ the dominant's bass and leads to E.
   arpeggio standing in for the harp and the *cuatro*.
 - **Colombia**: *La gata golosa*, a quick **pasillo** in A major.
 - **Uruguay**: the **candombe** of Montevideo. *Candombe del barrio*
-  moves in 3 + 3 + 2, the clave the stick plays on the drum's shell;
+  moves in 3 + 3 + 2, the tresillo the milonga and the tango lean on too;
   Rubén Rada's *Candombe para Gardel* keeps changing mode, from G major
   to G minor and back.
 - **Brazil**: the songs of the gaúchos of Rio Grande do Sul, such as

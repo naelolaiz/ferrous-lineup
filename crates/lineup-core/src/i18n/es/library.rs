@@ -774,8 +774,8 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("Mixolydian rock", "Rock mixolidio"),
     ("Modal jazz", "Jazz modal"),
     (
-        "Montevideo's candombe: the stick on the drum's wooden shell plays the clave, 3 + 3 + 2 twice, under the piano, repique and chico drums.",
-        "El candombe de Montevideo: el palo sobre la madera del tambor toca la clave, 3 + 3 + 2 dos veces, bajo los tambores piano, repique y chico.",
+        "Montevideo's candombe in its Cuareim style: the stick plays the madera on the drum's wooden shell, as the repique does between its phrases; the chico plays the three sixteenths after each beat, the first one loud; and the piano's open strokes ring just before beats 2 and 4, over soft strokes of the hand.",
+        "El candombe de Montevideo en su estilo Cuareim: el palo toca la madera del tambor, como hace el repique entre sus frases; el chico toca las tres semicorcheas que siguen a cada pulso, la primera fuerte; y los golpes abiertos del piano suenan justo antes del 2 y del 4, sobre golpes suaves de la mano.",
     ),
     ("Murga", "Murga"),
     ("Musette", "Musette"),
