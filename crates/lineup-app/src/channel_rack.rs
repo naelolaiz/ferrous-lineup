@@ -738,7 +738,8 @@ fn add_channel_menu(ui: &mut Ui, project: &Project, actions: &mut Vec<RackAction
 }
 
 /// A file dropped on a row loads into that channel; anywhere else, into
-/// a new one. Project files are left for the app to open.
+/// a new one. Project files are left for the app to open, and
+/// recordings for it to add to the song.
 fn load_dropped_files(ui: &Ui, target_row: Option<usize>, actions: &mut Vec<RackAction>) {
     let dropped: Vec<PathBuf> = ui.ctx().input(|input| {
         input
@@ -746,7 +747,7 @@ fn load_dropped_files(ui: &Ui, target_row: Option<usize>, actions: &mut Vec<Rack
             .dropped_files
             .iter()
             .map(|dropped| dropped.path().to_path_buf())
-            .filter(|path| !is_project_file(path))
+            .filter(|path| !is_project_file(path) && !is_recording(path))
             .collect()
     });
     for (i, path) in dropped.into_iter().enumerate() {
@@ -840,11 +841,17 @@ pub fn natural_size(
 }
 
 /// Whether a path opens as a project: a `.lineup` file, or a MIDI
-/// file, a chord sheet saved as text or a recording, which are imported.
-/// Other audio files are sounds for the sampler.
+/// file or a chord sheet saved as text, which are imported.
 pub fn is_project_file(path: &std::path::Path) -> bool {
     file::is_project(path)
         || lineup_core::midi_file::is_midi_file(path)
         || lineup_core::chord_sheet::text::is_text_file(path)
-        || (lineup_listen::is_audio_file(path) && lineup_audio::sample::is_recording(path))
+}
+
+/// Whether a path is a recording, added to the song as a take: an audio
+/// file the sampler cannot play, or one longer than a sound (see
+/// [`lineup_audio::sample::is_recording`]). Other audio files are sounds
+/// for the sampler.
+pub fn is_recording(path: &std::path::Path) -> bool {
+    lineup_listen::is_audio_file(path) && lineup_audio::sample::is_recording(path)
 }

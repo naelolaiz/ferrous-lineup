@@ -42,6 +42,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         ". Practicas al {}% de ese tempo (Ajustes > Reproducción)",
     ),
     ("1 beat", "1 pulso"),
+    ("1 note, in bar {}.", "1 nota, en el compás {}."),
     ("1 pattern", "1 patrón"),
     ("1 step", "1 paso"),
     ("1 to 7", "1 a 7"),
@@ -117,6 +118,8 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "A micromode is a group of three notes",
         "Un micromodo es un grupo de tres notas",
     ),
+    ("A new channel", "Un canal nuevo"),
+    ("A new track", "Una pista nueva"),
     (
         "A random row whose eleven steps are all different sizes",
         "Una serie al azar cuyos once pasos tienen todos tamaños distintos",
@@ -141,6 +144,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Un cambio repentino, como después de una pausa o de una sección nueva",
     ),
     (
+        "A take needs the sound card: audio is not running.",
+        "Una toma necesita la tarjeta de sonido: el audio no está funcionando.",
+    ),
+    (
         "A {} improvises over the chorus: chord tones on the beats, scale and chromatic notes between them. The piano roll says what each of its notes is",
         "El solista ({}) improvisa sobre las vueltas: notas del acorde en los pulsos, notas de la escala y cromáticas entre ellos. El piano roll dice qué es cada una de sus notas",
     ),
@@ -154,6 +161,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("accel. → 140", "accel. → 140"),
     ("Accompaniment", "Acompañamiento"),
     ("Accordion + acoustic bass", "Acordeón + bajo acústico"),
+    ("Add a recording…", "Añadir una grabación…"),
     (
         "Add a track here, or place a clip on this row to add one",
         "Añade una pista aquí, o coloca un clip en esta fila para añadir una",
@@ -263,6 +271,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("Arrows, Tab, Shift+Tab", "Flechas, Tab, Mayús+Tab"),
     ("as here in {A} minor", "como aquí en {A} menor"),
     ("As it came from {}.", "Tal como vino de {}."),
+    ("As sung", "Como se cantó"),
     (
         "As it sounds: piano, guitar, bass, voice, flute, violin, trombone",
         "Como suena: piano, guitarra, bajo, voz, flauta, violín, trombón",
@@ -290,6 +299,11 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     (
         "The notes in the opposite order in time, rhythm and all, as in a crab canon. A form of a row becomes its retrograde: P0 becomes R0.",
         "Las notas en el orden contrario en el tiempo, con su ritmo también, como en un canon cangrejo. Una forma de una serie se vuelve su retrógrada: P0 se vuelve R0.",
+    ),
+    ("Hear every track again", "Oír todas las pistas otra vez"),
+    (
+        "Hear only this track: the others are muted",
+        "Oír solo esta pista: las demás se silencian",
     ),
     ("Pitches backwards", "Alturas hacia atrás"),
     (
@@ -496,8 +510,8 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Haz clic para abrir el piano roll",
     ),
     (
-        "Click to place \"{}\". Double-click a clip to edit it, drag to move it, drag its right edge to repeat it, right-click to delete. Drag along the top strip to mark a section, along the bar numbers to loop.",
-        "Haz clic para colocar «{}». Doble clic en un clip para editarlo, arrástralo para moverlo, arrastra su borde derecho para repetirlo, clic derecho para eliminarlo. Arrastra por la franja de arriba para marcar una sección, por los números de compás para repetir.",
+        "Click to place \"{}\". Double-click a clip to edit it, drag to move it, drag its right edge to repeat it, right-click it for its menu. Drag along the top strip to mark a section, along the bar numbers to loop.",
+        "Haz clic para colocar «{}». Doble clic en un clip para editarlo, arrástralo para moverlo, arrastra su borde derecho para repetirlo, clic derecho para ver su menú. Arrastra por la franja de arriba para marcar una sección, por los números de compás para repetir.",
     ),
     (
         "Click to rename. Right-click to insert, delete or move tracks",
@@ -524,6 +538,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Combinatorial: its first six notes and those of {} make all twelve.",
         "Combinatoria: sus seis primeras notas y las de {} forman las doce.",
     ),
+    ("solo track", "pista en solo"),
     ("With its partner, {}", "Con su compañera, {}"),
     ("With its partner", "Con su compañera"),
     (
@@ -554,18 +569,37 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Copy the preset’s sounds and band players.",
         "Copia los sonidos y los músicos de la banda del preajuste.",
     ),
+    (
+        "Could not add the recording: {}",
+        "No se pudo añadir la grabación: {}",
+    ),
     ("Could not connect: {}", "No se pudo conectar: {}"),
     ("Could not download it: {}", "No se pudo descargar: {}"),
     ("Could not export {}: {}", "No se pudo exportar {}: {}"),
     ("Could not import {}: {}", "No se pudo importar {}: {}"),
-    ("Could not import: {}", "No se pudo importar: {}"),
     (
         "Could not load styles: {}",
         "No se pudieron cargar los estilos: {}",
     ),
     ("could not make {}: {}", "no se pudo crear {}: {}"),
+    (
+        "could not open the microphone: {}",
+        "no se pudo abrir el micrófono: {}",
+    ),
     ("Could not open {}: {}", "No se pudo abrir {}: {}"),
+    (
+        "could not read the microphone's settings: {}",
+        "no se pudo leer la configuración del micrófono: {}",
+    ),
     ("Could not read {}: {}", "No se pudo leer {}: {}"),
+    (
+        "Could not record a take: {}",
+        "No se pudo grabar una toma: {}",
+    ),
+    (
+        "Could not save the take: {}",
+        "No se pudo guardar la toma: {}",
+    ),
     ("Could not save {}: {}", "No se pudo guardar {}: {}"),
     ("Could not save {}: {}.", "No se pudo guardar {}: {}."),
     (
@@ -600,6 +634,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("Delete the channel", "Eliminar el canal"),
     ("Delete this bar", "Eliminar este compás"),
     ("delete track", "eliminar pista"),
+    ("Delete {} clips", "Eliminar {} clips"),
     ("Delete track", "Eliminar la pista"),
     (
         "Deletes its clips too. Undo brings them back",
@@ -638,6 +673,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Drop one project file at a time: none was opened.",
         "Suelta un archivo de proyecto a la vez: no se abrió ninguno.",
     ),
+    (
+        "Drop one recording at a time: none was added.",
+        "Suelta una grabación a la vez: no se añadió ninguna.",
+    ),
     ("Drum", "Tambor"),
     ("duplicate section", "duplicar sección"),
     ("Durations", "Duraciones"),
@@ -653,6 +692,18 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Cada tecla superpone una nota sí y una no del conjunto, desde una de sus notas, como los acordes de una tonalidad superponen una nota sí y una no de la escala. Mantén una (o pulsa {}) para tocarlo.",
     ),
     ("Each note", "Cada nota"),
+    (
+        "Each note on the nearest semitone to what was sung.",
+        "Cada nota en el semitono más cercano a lo que se cantó.",
+    ),
+    (
+        "Each note on the nearest note of the key there, so an out of tune note does not come out as a wrong one.",
+        "Cada nota en la nota de la tonalidad más cercana en ese lugar, para que una nota desafinada no salga como una nota equivocada.",
+    ),
+    (
+        "Each note on the nearest note of the scale the soloist plays over the chord there, in the key: over D7 in C major, F♯ instead of F. Bars with no chord keep to the key.",
+        "Cada nota en la nota más cercana de la escala que el solista toca sobre el acorde de ese lugar, en la tonalidad: sobre D7 en do mayor, fa♯ en lugar de fa. Los compases sin acorde se quedan en la tonalidad.",
+    ),
     (
         "Each note lasts as many steps as the row's number at its place, plus one",
         "Cada nota dura tantos pasos como el número de la serie en su lugar, más uno",
@@ -674,6 +725,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("Edit defaults…", "Editar valores por defecto…"),
     ("Edit in channel rack…", "Editar en el rack de canales…"),
     ("edit style", "editar estilo"),
+    ("Edit its pattern", "Editar su patrón"),
     ("Edit style…", "Editar estilo…"),
     ("edited, was {}", "editado, era {}"),
     ("Editor zoom", "Zoom del editor"),
@@ -734,6 +786,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     (
         "Find a demo by its title, composer, genre, key or time signature, such as \"choclo\", \"bach\", \"tango\", \"D minor\" or \"3/4\". Enter opens the first one; the arrow keys go through the rest",
         "Busca una demostración por su título, compositor, género, tonalidad o compás, como «choclo», «bach», «tango», «re menor» o «3/4». Intro abre la primera; las flechas recorren las demás",
+    ),
+    (
+        "Finish the take first: write it in or throw it away, then add the recording.",
+        "Termina primero la toma: escríbela o descártala, y luego añade la grabación.",
     ),
     (
         "Fits almost as well ({}% of the weight).",
@@ -807,6 +863,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     (
         "Hear only this channel; click again to clear solo",
         "Escuchar solo este canal; haz clic otra vez para quitar el solo",
+    ),
+    (
+        "Hear the notes in this recording again, and write them with other choices: they take the place of the ones written before",
+        "Oír otra vez las notas de esta grabación y escribirlas con otras opciones: ocupan el lugar de las escritas antes",
     ),
     ("Hear the key", "Escuchar la tonalidad"),
     ("Heard: the notes {}", "Se escuchan las notas {}"),
@@ -921,12 +981,11 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("immediate mode", "modo inmediato"),
     ("Imported {}: 1 bar", "Se importó {}: 1 compás"),
     ("Imported {}: {} bars", "Se importó {}: {} compases"),
-    ("Importing failed", "Falló la importación"),
     ("In Sets →", "En Conjuntos →"),
     ("in the notes here", "en las notas de aquí"),
-    ("in the recording here", "en la grabación, aquí"),
     ("in this pattern", "en este patrón"),
     ("in what you play", "en lo que tocas"),
+    ("In the key", "En la tonalidad"),
     ("In {}", "En {}"),
     (
         "In {}: what are the chords after {}?",
@@ -990,7 +1049,12 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Su propio ecualizador, compresor y delay, que dan forma a su sonido antes de que se una a los demás",
     ),
     ("Jazz ballad", "Balada de jazz"),
+    (
+        "It stays on {}, as it is.",
+        "Se queda en {}, tal como está.",
+    ),
     ("Keep editing", "Seguir editando"),
+    ("Keep it", "Conservarla"),
     (
         "Keep the music in view as it plays.",
         "Mantener la música a la vista mientras suena.",
@@ -1003,6 +1067,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Keeps the song’s time signatures and tempo: this preset plays every bar in that bar’s meter.",
         "Conserva los compases y el tempo de la canción: este preajuste toca cada compás en la métrica de ese compás.",
     ),
+    ("Key and chords", "Tonalidad y acordes"),
     ("Key from bar {}: {}", "Tonalidad desde el compás {}: {}"),
     ("Key {}.", "Tecla {}."),
     ("Keys", "Tonalidades"),
@@ -1026,6 +1091,15 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("Lineup Osc (synth)", "Lineup Osc (sintetizador)"),
     ("Lineup row", "Serie de Lineup"),
     ("Lineup style", "Estilo de Lineup"),
+    (
+        "Listening to the recording failed.",
+        "No se pudo escuchar la grabación.",
+    ),
+    (
+        "Listening to the take failed.",
+        "No se pudo escuchar la toma.",
+    ),
+    ("Listening to your take…", "Escuchando tu toma…"),
     ("Listening to {}…", "Escuchando {}…"),
     ("load sample", "cargar muestra"),
     ("Lock", "Bloquear"),
@@ -1078,6 +1152,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Micromodos que contiene, en sus {} grupos de tres:",
     ),
     ("Micromodes…", "Micromodos…"),
+    ("Microphone", "Micrófono"),
     ("Mid", "Medios"),
     ("MIDI channel", "Canal MIDI"),
     ("MIDI file", "Archivo MIDI"),
@@ -1101,6 +1176,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("move notes", "mover notas"),
     ("move notes in key", "mover notas dentro de la tonalidad"),
     ("move selected clips", "mover los clips seleccionados"),
+    ("Move takes later by", "Retrasar las tomas en"),
     (
         "Move the playhead here",
         "Llevar el cursor de reproducción aquí",
@@ -1143,10 +1219,6 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("No band", "Sin banda"),
     ("No band.{}", "Sin banda.{}"),
     (
-        "no beat could be heard in it",
-        "no se pudo oír ningún pulso",
-    ),
-    (
         "No change here yet: a new tempo adds one.",
         "Todavía no hay ningún cambio aquí: un tempo nuevo añade uno.",
     ),
@@ -1159,7 +1231,6 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "No chords to name: the song plays no chords yet. Type them in the bars instead.",
         "No hay acordes que nombrar: la canción todavía no toca acordes. Escríbelos en los compases.",
     ),
-    ("no clear key", "ninguna tonalidad clara"),
     ("No demo matches", "Ninguna demostración coincide"),
     (
         "No drum steps in \"{}\": click a step to add one. Drums are in:",
@@ -1176,10 +1247,15 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "No intro: the band starts with the chorus",
         "Sin introducción: la banda empieza con la primera vuelta",
     ),
+    ("no microphone found", "no se encontró ningún micrófono"),
     ("no notes here", "no hay notas aquí"),
     (
         "No notes here yet: click to draw one",
         "Todavía no hay notas aquí: haz clic para dibujar una",
+    ),
+    (
+        "No notes were heard: only the recording can be kept.",
+        "No se oyeron notas: solo se puede conservar la grabación.",
     ),
     (
         "No other channel plays melodies or chords yet.",
@@ -1213,6 +1289,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("Not now", "Ahora no"),
     ("Note by note", "Nota por nota"),
     ("Notes", "Notas"),
+    ("Notes go to", "Las notas van a"),
     ("Notes here are on:", "Las notas de aquí están en:"),
     (
         "Notes of every track one after another",
@@ -1282,6 +1359,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ),
     ("Now in {}", "Ahora en {}"),
     ("now: {}", "ahora: {}"),
+    (
+        "Nowhere: keep only the recording",
+        "A ninguna parte: conservar solo la grabación",
+    ),
     ("Numbers", "Números"),
     ("Octaves", "Octavas"),
     ("of", "de"),
@@ -1305,6 +1386,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "En Linux, el MIDI necesita el secuenciador ALSA (el módulo del kernel snd-seq, que crea /dev/snd/seq).",
     ),
     ("On the beat", "En el pulso"),
+    ("On the grid of", "En la cuadrícula de"),
     ("on the keys", "en las teclas"),
     (
         "On: every channel plays on the output instead of the speakers, on the MIDI channels File > Export MIDI uses: drums on channel 10 as a General MIDI drum set, the others on 1, 2, 3 and so on. Off: only the channels sent over MIDI play there.",
@@ -1375,6 +1457,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("PATTERN", "PATRÓN"),
     ("Patterns", "Patrones"),
     ("PDF document", "Documento PDF"),
+    ("Pitches", "Alturas"),
     ("Piano + nylon guitar", "Piano + guitarra de nailon"),
     ("Piano + strings", "Piano + cuerdas"),
     (
@@ -1519,6 +1602,14 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Anticipación de una semicorchea (^^)",
     ),
     (
+        "Put an MP3, WAV, FLAC or Ogg file on the song, from the playhead, and write the notes sung or played in it. Or drop the file on a track, where it should start",
+        "Pone un archivo MP3, WAV, FLAC u Ogg en la canción, desde el cursor, y escribe las notas cantadas o tocadas en él. O suelta el archivo sobre una pista, donde debe empezar",
+    ),
+    (
+        "Put an MP3, WAV, FLAC or Ogg file on this track, from the playhead, and write the notes sung or played in it",
+        "Pone un archivo MP3, WAV, FLAC u Ogg en esta pista, desde el cursor, y escribe las notas cantadas o tocadas en él",
+    ),
+    (
         "Put each bar in the chosen meter. Turn off to fit the pattern into the current meter.",
         "Pone cada compás en la métrica elegida. Desactívalo para ajustar el patrón a la métrica actual.",
     ),
@@ -1538,6 +1629,12 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Real instrument sounds come from a SoundFont, a file of recorded instruments. GeneralUser GS, by S. Christian Collins, a free General MIDI SoundFont, is already on this computer, in:",
         "Los sonidos de instrumentos reales vienen de un SoundFont, un archivo de instrumentos grabados. GeneralUser GS, de S. Christian Collins, un SoundFont General MIDI libre, ya está en esta computadora, en:",
     ),
+    ("Record a take", "Grabar una toma"),
+    (
+        "Record a take: sing or whistle along with the song, and your notes are written in. Use headphones, so the microphone hears only you.",
+        "Graba una toma: canta o silba junto con la canción, y tus notas se escriben. Usa auriculares, para que el micrófono te oiga solo a ti.",
+    ),
+    ("record a take", "grabar una toma"),
     ("record notes", "grabar notas"),
     (
         "Record what you play on a MIDI or typing keyboard into the channel the piano roll shows, while the pattern plays. Switches to pattern mode.",
@@ -1548,6 +1645,12 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Reconocidas en las notas de la canción: la banda toca según estas partes. Haz clic para conservarlas como secciones de la canción, y renombrarlas, moverlas o cambiarlas.",
     ),
     ("Recording", "Grabación"),
+    ("Recording the take failed.", "No se pudo grabar la toma."),
+    ("Recording {}", "Grabando {}"),
+    (
+        "Records takes, from your system’s default input device. If your notes land late or early on the grid, move them here.",
+        "Graba las tomas desde el dispositivo de entrada predeterminado del sistema. Si tus notas caen tarde o temprano en la cuadrícula, muévelas aquí.",
+    ),
     ("Recover it", "Recuperarlo"),
     (
         "Recover unsaved work?",
@@ -1844,8 +1947,8 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ),
     ("Stopped exporting {}", "Se detuvo la exportación de {}"),
     (
-        "Stopped importing the recording.",
-        "Se detuvo la importación de la grabación.",
+        "Stopped listening to the recording.",
+        "Se dejó de escuchar la grabación.",
     ),
     ("straight", "sin swing"),
     ("style", "estilo"),
@@ -1886,11 +1989,21 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Suggestions of what comes next are given in major and minor keys.",
         "Las sugerencias de lo que sigue se dan en tonalidades mayores y menores.",
     ),
+    ("Sung notes", "Notas cantadas"),
+    (
+        "Sung {} cents flat: each note goes to the one meant.",
+        "Cantada {} cents baja: cada nota va a la que se quiso cantar.",
+    ),
+    (
+        "Sung {} cents sharp: each note goes to the one meant.",
+        "Cantada {} cents alta: cada nota va a la que se quiso cantar.",
+    ),
     ("Swing", "Swing"),
     (
         "Swing: the second eighth note of every beat comes late, so pairs of eighths are played long-short, as in jazz, blues and shuffles. \"straight\" plays them even, 50% is a light swing and 100% a triplet: two thirds and one third. Each style remembers what you set. Drag up or down, or double-click to type",
         "Swing: la segunda corchea de cada pulso llega tarde, así que los pares de corcheas se tocan largo-corto, como en el jazz, el blues y los shuffles. «derecho» las toca iguales, 50% es un swing ligero y 100% un tresillo: dos tercios y un tercio. Cada estilo recuerda lo que eliges. Arrastra hacia arriba o abajo, o haz doble clic para escribir",
     ),
+    ("Take", "Toma"),
     ("take the horns out", "quitar los vientos"),
     ("take the soloist out", "quitar el solista"),
     (
@@ -1984,6 +2097,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Los acordes de la tonalidad, con el que suena iluminado, y el pequeño piano",
     ),
     (
+        "The computer was too busy to hear all of the take: a moment of it is silent.",
+        "La computadora estuvo demasiado ocupada para oír toda la toma: un momento de ella quedó en silencio.",
+    ),
+    (
         "The current rhythm, chords and timing are kept.",
         "Se conservan el ritmo, los acordes y el tiempo actuales.",
     ),
@@ -2068,6 +2185,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Las notas se quedan como están: esto nombra la tonalidad en la que están desde aquí.",
     ),
     (
+        "The notes take the place of what {} played there. Undo brings it back.",
+        "Las notas reemplazan lo que {} tocaba ahí. Deshacer lo devuelve.",
+    ),
+    (
         "A set or a row this song is in, on this note.",
         "Un conjunto o una serie en que está esta canción, sobre esta nota.",
     ),
@@ -2095,6 +2216,8 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "The piano roll numbers the notes 1 to 12 in this form's order, and the harmony keys play its groups of notes",
         "El piano roll numera las notas del 1 al 12 en el orden de esta forma, y las teclas de armonía tocan sus grupos de notas",
     ),
+    ("The recording", "La grabación"),
+    ("The recording plays as {}.", "La grabación suena como {}."),
     (
         "The row in groups of {}: {}",
         "La serie en grupos de {}: {}",
@@ -2186,6 +2309,14 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     (
         "The style draft has unsaved edits.",
         "El borrador del estilo tiene cambios sin guardar.",
+    ),
+    (
+        "The take was not recorded while the song played: nothing to write in.",
+        "La toma no se grabó mientras sonaba la canción: no hay nada que escribir.",
+    ),
+    (
+        "The take was not sung while the song played.",
+        "La toma no se cantó mientras sonaba la canción.",
     ),
     (
         "The tempo playing now: this song changes tempo (see the tempo strip at the top of the playlist). Stop to change the tempo it starts at; every change moves with it",
@@ -2295,12 +2426,14 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Tres notas: una nota sí y una no de la escala",
     ),
     ("Threshold", "Umbral"),
+    ("Throw it away", "Descartarla"),
     ("Time", "Tiempo"),
     ("Time signature from bar {}", "Compás desde el compás {}"),
     ("Timing", "Tiempo"),
     ("Together", "Juntas"),
     ("Tools", "Herramientas"),
     ("top", "superior"),
+    ("Transcribe again…", "Transcribir otra vez…"),
     ("Trace", "Registro"),
     ("Track", "Pista"),
     ("Track height", "Alto de la pista"),
@@ -2430,6 +2563,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("Voices and players", "Voces y músicos"),
     ("VOL", "VOL"),
     ("Volume {}%", "Volumen {}%"),
+    (
+        "Wait until the recording added is heard.",
+        "Espera a que se termine de escuchar la grabación añadida.",
+    ),
     ("was {}", "era {}"),
     ("WAV audio", "Audio WAV"),
     ("Webern's trichords", "Los tricordios de Webern"),
@@ -2506,6 +2643,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Escribir un registro mientras suena",
     ),
     ("write chords", "escribir acordes"),
+    ("Write it in", "Escribirla"),
     (
         "Write only the chords, over a slash for each beat",
         "Escribir solo los acordes, sobre una barra por pulso",
@@ -2532,11 +2670,13 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Wrote 1 chord on the chord sheet",
         "Se escribió 1 acorde en la hoja de acordes",
     ),
+    ("Wrote 1 note on {}.", "Se escribió 1 nota en {}."),
     (
         "Wrote {} chords on the chord sheet",
         "Se escribieron {} acordes en la hoja de acordes",
     ),
     ("Wrote {} from bar {}", "Se escribió {} desde el compás {}"),
+    ("Wrote {} notes on {}.", "Se escribieron {} notas en {}."),
     (
         "You can also download {} from its page yourself, then choose it here.",
         "También puedes descargar {} tú mismo desde su página, y después elegirlo aquí.",
@@ -2551,6 +2691,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Tuyo: no vino de una demostración ni de un estilo.",
     ),
     ("Your styles", "Tus estilos"),
+    ("Your take", "Tu toma"),
     ("yours", "tuyo"),
     (
         "Z-related to {}: the same intervals, yet a different set.",
@@ -2596,6 +2737,12 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ),
     ("{} is {}", "{} es {}"),
     ("{} notes", "{} notas"),
+    ("name|{} notes", "Notas de {}"),
+    (
+        "{} notes, from bar {} to bar {}.",
+        "{} notas, del compás {} al compás {}.",
+    ),
+    ("{} notes, in bar {}.", "{} notas, en el compás {}."),
     (
         "{} notes, set {}, hold {} groups of three:",
         "{} notas, conjunto {}, contienen {} grupos de tres:",
@@ -2613,6 +2760,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "{} toca el estilo propio de la banda",
     ),
     ("{} plays {}", "{} toca {}"),
+    (
+        "{} plays {} times: your notes play each time.",
+        "{} suena {} veces: tus notas suenan cada vez.",
+    ),
     (
         "{} plays {}, with a fill before it; the instruments stay",
         "{} toca {}, con un relleno antes; los instrumentos se quedan",
@@ -2687,10 +2838,6 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "{}: set {}. Click to hear it.",
         "{}: conjunto {}. Haz clic para escucharlo.",
     ),
-    (
-        "{}: {} BPM, {}/4, {}, chords on {} of {} beats",
-        "{}: {} BPM, {}/4, {}, acordes en {} de {} pulsos",
-    ),
     ("{}: {} in {}.", "{}: {} en {}."),
     (
         "{}: {} of its groups of three are {}. Click to see it in Sets.",
@@ -2723,6 +2870,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("✘ Not quite", "✘ No exactamente"),
     ("➕ Add channel", "➕ Añadir canal"),
     ("➕ New track", "➕ Nueva pista"),
+    ("➕ Recording", "➕ Grabación"),
     ("➕ Section", "➕ Sección"),
     ("➕ Track", "➕ Pista"),
     ("⧉ Duplicate", "⧉ Duplicar"),

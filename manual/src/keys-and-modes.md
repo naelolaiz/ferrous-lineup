@@ -140,8 +140,7 @@ G major.
 It also works while you play on a MIDI keyboard or the computer
 keyboard, from the bars you have played so far. In song mode, **Mark on
 the playlist** writes the key changes it heard as key markers, which is
-how you give an imported MIDI file or recording the key changes it
-really has. No note moves, and Undo takes them back.
+how you give an imported MIDI file the key changes it really has. No note moves, and Undo takes them back.
 
 ![Find the key on a song in E Dorian: A minor is shown brightest, with E minor and A major fainter after it, and what the chord playing is in each](images/find-key.png)
 

@@ -21,7 +21,7 @@ From top to bottom, the window has:
 
 | Menu | What is in it |
 |---|---|
-| **File** | **New** (an empty chord sheet with a band), **New beat** (an empty pattern and a drum kit), **Open…**, **Open recent**, **Demos**, **Import recording…**, **Import MIDI file…**, **Import chord sheet…**, **Save**, **Save as…**, the exports (**Export WAV…**, **Export video…**, the song or the pattern as MIDI, the chord sheet as text) and **Quit** |
+| **File** | **New** (an empty chord sheet with a band), **New beat** (an empty pattern and a drum kit), **Open…**, **Open recent**, **Demos**, **Import MIDI file…**, **Import chord sheet…**, **Save**, **Save as…**, the exports (**Export WAV…**, **Export video…**, the song or the pattern as MIDI, the chord sheet as text) and **Quit** |
 | **Edit** | **Undo** and **Redo**, which name what they undo, and **Settings…** |
 | **View** | each window and the panel, shown or hidden; **Chord sheet in the main window**, the **Lead sheet**, the **Style editor…** and **Ear training** |
 | **MIDI** | **Typing keyboard to piano**, **Accompaniment follows chords**, a keyboard to play with (**Input**) and a synth to play on (**Output**) |
@@ -39,6 +39,7 @@ From left to right:
 | ▶ | plays from the playhead (**Space**). While playing, the same button is ❚❚ **Pause**: it stops there, and ▶ carries on from there. |
 | ⏹ | stops, and goes back to where you last put the playhead (**Space** while playing) |
 | ● | records what you play on a MIDI keyboard or the computer keyboard into the pattern (see [MIDI keyboards and synths](midi.md#recording)) |
+| microphone | records a **take**: sing or whistle along with the song, and your notes are written into a part (see [Takes](takes.md)) |
 | **Follow playhead** | keeps the bar playing in sight in the playlist, the chord sheet and the piano roll. Off, you can scroll freely while the song plays. |
 | **Count-in** | one bar of clicks before the music starts |
 | **Metronome** | a click on every beat |

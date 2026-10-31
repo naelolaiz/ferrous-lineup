@@ -28,7 +28,7 @@
 use std::fmt;
 use std::fs;
 use std::io;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 
@@ -181,13 +181,17 @@ pub fn is_project(path: &Path) -> bool {
 /// style (see [`Project::apply_row_style`]), which older versions would
 /// play as four chords to each form of the row.
 ///
+/// Format 32 added takes, a voice recorded along with the song (see
+/// [`crate::take`] and [`SampleSource::Take`]). Older versions cannot
+/// read them, so a song with a take needs format 32.
+///
 /// A file can also say where the parts of the song came from (see
 /// [`crate::sources`]), in any format: older versions skip it, and lose
 /// nothing they could play. In the same way, a key can be written the
 /// other way round, Gb major rather than F# major (see
 /// [`Scale::other_spelling`]): older versions name it the usual way and
 /// play the same notes.
-pub const FORMAT_VERSION: u32 = 31;
+pub const FORMAT_VERSION: u32 = 32;
 
 /// The oldest format that can hold `project`.
 ///
@@ -292,9 +296,12 @@ pub fn format_for(project: &Project) -> u32 {
     let has_other_drums = project
         .band()
         .is_some_and(|band| band.drums != crate::band::BandDrums::Style);
+    let has_takes = project.channels().iter().any(Channel::is_take);
     let plays_micromode = project.band().is_some_and(|band| band.micromode.is_some());
     let plays_row = project.band().is_some_and(|band| band.row.is_some());
-    if plays_row {
+    if has_takes {
+        32
+    } else if plays_row {
         31
     } else if plays_micromode {
         30
@@ -856,9 +863,47 @@ pub fn save(project: &Project, path: &Path) -> Result<(), FileError> {
 }
 
 /// Loads a project from a file.
+///
+/// A take's recording is read from where the song says it is. When it is
+/// not there, because the song was moved or copied to another computer
+/// with its takes, it is looked for next to the song (see
+/// [`find_moved_take`]).
 pub fn load(path: &Path) -> Result<Project, FileError> {
     let text = fs::read_to_string(path)?;
-    from_text(&text)
+    let mut project = from_text(&text)?;
+    for index in 0..project.channels().len() {
+        let Some(channel) = project.channel_mut(index) else {
+            continue;
+        };
+        if let ChannelKind::Sampler(SampleSource::Take(take)) = &mut channel.kind
+            && let Some(found) = find_moved_take(take, path)
+        {
+            *take = found;
+        }
+    }
+    Ok(project)
+}
+
+/// Where the recording of a take saved at `take` is now, when it is no
+/// longer there and the song was opened from `song`: in a folder of the
+/// same name next to the song (takes are saved in a folder named after
+/// the song, as "my song takes/Take 1.wav"), in the takes folder of the
+/// song's own name, or next to the song. `None` when it is where it was,
+/// or nowhere to be found.
+pub fn find_moved_take(take: &Path, song: &Path) -> Option<PathBuf> {
+    if take.is_file() {
+        return None;
+    }
+    let name = take.file_name()?;
+    let next_to = song.parent()?;
+    let stem = song.file_stem()?.to_string_lossy();
+    let mut places = Vec::new();
+    if let Some(folder) = take.parent().and_then(Path::file_name) {
+        places.push(next_to.join(folder).join(name));
+    }
+    places.push(next_to.join(format!("{stem} takes")).join(name));
+    places.push(next_to.join(name));
+    places.into_iter().find(|place| place.is_file())
 }
 
 #[cfg(test)]
@@ -922,6 +967,61 @@ mod tests {
         let loaded = load(&path);
         std::fs::remove_file(&path).unwrap();
         assert_eq!(loaded.unwrap(), project);
+    }
+
+    #[test]
+    fn a_take_is_found_again_when_the_song_moves_with_its_takes() {
+        let root = std::env::temp_dir().join(format!("lineup-moved-take-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
+        let before = root.join("before");
+        let after = root.join("after");
+        for folder in [&before, &after] {
+            std::fs::create_dir_all(folder.join("song takes")).unwrap();
+        }
+        let wav = |path: &Path| std::fs::write(path, b"RIFF").unwrap();
+        let taken = before.join("song takes").join("Take 1.wav");
+        wav(&taken);
+
+        let mut project = plain_demo();
+        project
+            .add_channel(Channel::take("Take 1", taken.clone()))
+            .unwrap();
+        let take_of = |project: &Project| {
+            project
+                .channels()
+                .iter()
+                .find_map(|channel| match &channel.kind {
+                    ChannelKind::Sampler(SampleSource::Take(path)) => Some(path.clone()),
+                    _ => None,
+                })
+                .unwrap()
+        };
+
+        // Where it was: kept as it is.
+        save(&project, &before.join("song.lineup")).unwrap();
+        assert_eq!(take_of(&load(&before.join("song.lineup")).unwrap()), taken);
+
+        // The song and its takes folder moved, and the old place gone.
+        let moved = after.join("song takes").join("Take 1.wav");
+        wav(&moved);
+        std::fs::remove_dir_all(&before).unwrap();
+        save(&project, &after.join("song.lineup")).unwrap();
+        assert_eq!(take_of(&load(&after.join("song.lineup")).unwrap()), moved);
+
+        // Renamed song: its takes folder kept its old name.
+        std::fs::rename(after.join("song.lineup"), after.join("renamed.lineup")).unwrap();
+        assert_eq!(
+            take_of(&load(&after.join("renamed.lineup")).unwrap()),
+            moved
+        );
+
+        // Nowhere to be found: the song still says where it was.
+        std::fs::remove_file(&moved).unwrap();
+        assert_eq!(
+            take_of(&load(&after.join("renamed.lineup")).unwrap()),
+            taken
+        );
+        std::fs::remove_dir_all(&root).unwrap();
     }
 
     #[test]

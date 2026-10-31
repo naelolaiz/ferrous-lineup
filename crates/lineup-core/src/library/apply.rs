@@ -32,7 +32,7 @@ use super::style::{STYLES, Style};
 use super::voicing::{bass_root, voice};
 
 mod parts;
-pub(crate) use parts::{own_players_sounds, plays_the_bass};
+pub(crate) use parts::{own_players_sounds, plays_the_bass, plays_the_tune};
 pub use parts::{style_instruments, write_rhythm_parts, write_style_parts};
 
 /// The names of the channels the library writes to.
