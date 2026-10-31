@@ -8,13 +8,15 @@
 //! each is moved (`T`, for transposed) and whether it is upside down
 //! (`I`, for inverted).
 //!
-//! So a form's degree is the name it has when the key's own form is
-//! moved to C: in a key of Menor 3 on D (D D# F#), E F G# is `T2`, a
-//! whole tone above home, and the key's own form is `T0`. The names are
-//! the ones the chord sheet already writes after a set ("Menor 3 T2",
-//! "3-11 T7I"), counted from the key instead of from C, and like a
-//! numeral the degree stays the same when the whole piece moves to
-//! another key.
+//! So a form's degree says how it is made from the key's own form: `T0`
+//! is that form, home; `T2` is home moved up two semitones; `T5I` is home
+//! turned upside down around the key's note, then moved up five. In a
+//! key of Menor 3 on D (D D# F#), E F G# is `T2`, and D D# F# upside down
+//! around D is D C# A#, so `T1I` is B D D#. The names look like the ones
+//! the chord sheet writes after a set ("Menor 3 T2", "3-11 T7I"), which
+//! count from C; a degree counts from the key, and like a numeral it
+//! stays the same when the whole piece moves to another key, its note
+//! and the mirror with it.
 //!
 //! Two forms can also share notes. For three notes, keeping two and
 //! moving one is the smoothest link, keeping one note is a pivot, and
@@ -24,47 +26,59 @@
 
 use std::fmt;
 
-use super::PitchSet;
+use super::{PitchSet, Scale};
 use crate::i18n::tr;
 use crate::pitch::PitchClass;
 
-/// The degree of a form: the name it has when the key's own form is
-/// moved to C (see the module documentation).
+/// The degree of a form: how it is made from the key's own form (see the
+/// module documentation).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct Degree {
     /// How many semitones it is moved, from 0 to 11.
     pub up: u8,
-    /// Whether it is upside down from the set's prime form.
+    /// Whether it is turned upside down first, around the key's note.
     pub inverted: bool,
 }
 
 impl Degree {
-    /// The key's own form, when that form is the prime form moved.
+    /// The key's own form.
     pub const HOME: Degree = Degree {
         up: 0,
         inverted: false,
     };
 
-    /// The degree of `form` in a key whose own form is `key`, or `None`
-    /// if the two are not the same set moved (not of one set class).
-    pub fn of(key: PitchSet, form: PitchSet) -> Option<Degree> {
-        let prime = key.prime_form();
-        if key.is_empty() || form.prime_form() != prime {
+    /// The degree of `form` in `key`, or `None` if `form` is not a form
+    /// of the set the key is (not the same set moved, or turned upside
+    /// down and moved). A form that is both, as in a set that is the same
+    /// upside down, is named as moved, the smallest move first.
+    pub fn of(key: Scale, form: PitchSet) -> Option<Degree> {
+        let own = key.pitch_set();
+        if own.is_empty() || own.len() != form.len() {
             return None;
         }
-        let (up, _) = prime.moved_to(key)?;
-        let (up, inverted) = prime.moved_to(form.transpose((12 - up) % 12))?;
-        Some(Degree { up, inverted })
+        let mirrored = mirror(own, key.root);
+        let moved = |shape: PitchSet| (0..12u8).find(|&up| shape.transpose(up) == form);
+        moved(own)
+            .map(|up| Degree {
+                up,
+                inverted: false,
+            })
+            .or_else(|| moved(mirrored).map(|up| Degree { up, inverted: true }))
     }
 
-    /// The form at this degree in a key whose own form is `key`: the
-    /// prime form moved as the degree says, then moved as far as the key
-    /// is.
-    pub fn form(self, key: PitchSet) -> Option<PitchSet> {
-        let prime = key.prime_form();
-        let (up, _) = prime.moved_to(key)?;
-        let shape = if self.inverted { prime.invert() } else { prime };
-        Some(shape.transpose((self.up + up) % 12))
+    /// The form at this degree in `key`: its own form, turned upside down
+    /// around its note if the degree says so, then moved up.
+    pub fn form(self, key: Scale) -> Option<PitchSet> {
+        let own = key.pitch_set();
+        if own.is_empty() {
+            return None;
+        }
+        let shape = if self.inverted {
+            mirror(own, key.root)
+        } else {
+            own
+        };
+        Some(shape.transpose(self.up % 12))
     }
 
     /// Reads a degree as the chord sheet writes it: "T2", "T7I", "t0".
@@ -80,13 +94,12 @@ impl Degree {
         let up = number.parse::<u8>().ok().filter(|&up| up < 12)?;
         Some(Degree { up, inverted })
     }
+}
 
-    /// Whether it is the key's own form. The key's form may itself be
-    /// upside down from the prime form (the major triad, F A C, is the
-    /// minor triad turned over), so this asks the key.
-    pub fn is_home(self, key: PitchSet) -> bool {
-        self.form(key) == Some(key)
-    }
+/// `set` upside down around `note`: each note as far below `note` as it
+/// was above. C C# E around C is C B Ab.
+pub fn mirror(set: PitchSet, note: PitchClass) -> PitchSet {
+    set.invert().transpose((2 * note.semitone()) % 12)
 }
 
 impl fmt::Display for Degree {
@@ -117,31 +130,36 @@ pub fn changed(from: PitchSet, to: PitchSet) -> (Vec<PitchClass>, Vec<PitchClass
     (arriving, leaving)
 }
 
-/// Every form of the set `key` is a form of (the set itself, moved and
-/// turned upside down), each once: the key's own form first, then the
-/// others from the nearest to the farthest. A form is nearer the more
-/// notes it shares with the key's; among forms as near, by degree, the
-/// form the right way up before the one upside down.
-pub fn forms_by_nearness(key: PitchSet) -> Vec<(PitchSet, Degree)> {
-    let prime = key.prime_form();
-    let inverted = prime.invert();
-    let mut forms: Vec<(PitchSet, Degree)> = Vec::new();
-    for up in 0..12 {
-        for shape in [prime, inverted] {
+/// Every form of the set `set` is a form of, each once: the set moved
+/// up 0 to 11 semitones, then turned upside down and moved.
+pub fn all_forms(set: PitchSet) -> Vec<PitchSet> {
+    let mut forms: Vec<PitchSet> = Vec::new();
+    for shape in [set, set.invert()] {
+        for up in 0..12 {
             let form = shape.transpose(up);
-            if forms.iter().any(|(seen, _)| *seen == form) {
-                continue;
-            }
-            if let Some(degree) = Degree::of(key, form) {
-                forms.push((form, degree));
+            if !forms.contains(&form) {
+                forms.push(form);
             }
         }
     }
+    forms
+}
+
+/// Every form of the set `key` is, each once, with its degree: the key's
+/// own form first, then the others from the nearest to the farthest. A
+/// form is nearer the more notes it shares with the key's; among forms
+/// as near, by degree, the form the right way up before the one upside
+/// down.
+pub fn forms_by_nearness(key: Scale) -> Vec<(PitchSet, Degree)> {
+    let own = key.pitch_set();
+    let mut forms: Vec<(PitchSet, Degree)> = all_forms(own)
+        .into_iter()
+        .filter_map(|form| Degree::of(key, form).map(|degree| (form, degree)))
+        .collect();
     forms.sort_by_key(|&(form, degree)| {
-        let home = form == key;
         (
-            !home,
-            std::cmp::Reverse(kept(key, form)),
+            degree != Degree::HOME,
+            std::cmp::Reverse(kept(own, form)),
             degree.inverted,
             degree.up,
         )
@@ -157,11 +175,12 @@ pub fn smooth_links(form: PitchSet) -> Vec<PitchSet> {
     if size < 2 {
         return Vec::new();
     }
-    forms_by_nearness(form)
+    let mut links: Vec<PitchSet> = all_forms(form)
         .into_iter()
-        .map(|(other, _)| other)
         .filter(|&other| other != form && kept(form, other) == size - 1)
-        .collect()
+        .collect();
+    links.sort_by_key(|set| set.bits());
+    links
 }
 
 /// The three moves between major and minor triads that keep two notes,
@@ -268,21 +287,30 @@ mod tests {
         PitchSet::from_semitones(semitones)
     }
 
+    fn on(root: PitchClass, semitones: &[u8]) -> Scale {
+        Scale::set(root, set(semitones))
+    }
+
     #[test]
     fn a_degree_counts_from_the_keys_own_form() {
         // Menor 3 on D: D D# F#. E F G# is a whole tone up.
-        let key = set(&[2, 3, 6]);
-        assert_eq!(Degree::of(key, key), Some(Degree::HOME));
+        let key = on(PitchClass::D, &[2, 3, 6]);
+        assert_eq!(Degree::of(key, key.pitch_set()), Some(Degree::HOME));
         let up = Degree::of(key, set(&[4, 5, 8])).unwrap();
         assert_eq!(up.to_string(), "T2");
         assert_eq!(up.form(key), Some(set(&[4, 5, 8])));
-        // The same as the chord sheet's name for it with the key on C.
-        let on_c = set(&[0, 1, 4]);
-        for form in Micromode::named("Menor 3").unwrap().members() {
-            let degree = Degree::of(key, form).unwrap();
-            let moved_to_c = form.transpose(10);
-            assert_eq!(Degree::of(on_c, moved_to_c), Some(degree));
-            assert_eq!(degree.form(key), Some(form));
+        // Upside down around D, D D# F# is D C# A#; a semitone up, B D D#.
+        let over = Degree::of(key, set(&[11, 2, 3])).unwrap();
+        assert_eq!(over.to_string(), "T1I");
+        // With the key on C, the chord sheet's names for the forms (from C)
+        // are their degrees.
+        let on_c = on(PitchClass::C, &[0, 1, 4]);
+        let menor_3 = Micromode::named("Menor 3").unwrap();
+        for form in menor_3.members() {
+            let degree = Degree::of(on_c, form).unwrap();
+            let (up, inverted) = menor_3.prime.moved_to(form).unwrap();
+            assert_eq!((degree.up, degree.inverted), (up, inverted));
+            assert_eq!(degree.form(on_c), Some(form));
         }
         // Not the same set: no degree.
         assert_eq!(Degree::of(key, set(&[0, 4, 7])), None);
@@ -291,11 +319,14 @@ mod tests {
     #[test]
     fn a_degree_stays_when_the_piece_moves() {
         for micromode in Micromode::all() {
-            let key = micromode.prime.transpose(3);
+            let notes = micromode.prime.transpose(3);
+            let root = notes.normal_form()[0];
+            let key = Scale::set(root, notes);
             for form in micromode.members() {
                 let degree = Degree::of(key, form).unwrap();
                 for up in 1..12 {
-                    let moved = Degree::of(key.transpose(up), form.transpose(up));
+                    let moved_key = Scale::set(root.transpose(i32::from(up)), notes.transpose(up));
+                    let moved = Degree::of(moved_key, form.transpose(up));
                     assert_eq!(moved, Some(degree), "{} {form:?}", micromode.name);
                 }
             }
@@ -303,14 +334,22 @@ mod tests {
     }
 
     #[test]
-    fn a_key_upside_down_is_home_too() {
-        // C minor is the prime form of the triads; F A C is it upside
-        // down, so in a key of F major home is T0I.
-        let f_major = set(&[5, 9, 0]);
-        let home = Degree::of(f_major, f_major).unwrap();
-        assert!(home.inverted);
-        assert!(home.is_home(f_major));
-        assert!(!Degree::HOME.is_home(f_major));
+    fn home_is_t0_whichever_way_up_the_key_is() {
+        // C major and C minor are each other upside down; either one as
+        // the key is T0, and the other is T7I: turned over around C (C E
+        // G gives C Ab F, F minor) and moved up a fifth.
+        let major = on(PitchClass::C, &[0, 4, 7]);
+        let minor = on(PitchClass::C, &[0, 3, 7]);
+        assert_eq!(Degree::of(major, major.pitch_set()), Some(Degree::HOME));
+        assert_eq!(Degree::of(minor, minor.pitch_set()), Some(Degree::HOME));
+        let parallel = Degree::parse("T7I");
+        assert_eq!(Degree::of(major, minor.pitch_set()), parallel);
+        assert_eq!(Degree::of(minor, major.pitch_set()), parallel);
+        // A minor, the relative of C major, is T4I; Eb major, the
+        // relative of C minor, is T10I.
+        assert_eq!(Degree::of(major, set(&[9, 0, 4])), Degree::parse("T4I"));
+        assert_eq!(Degree::of(minor, set(&[3, 7, 10])), Degree::parse("T10I"));
+        assert_eq!(mirror(set(&[0, 1, 4]), PitchClass::C), set(&[0, 11, 8]));
     }
 
     #[test]
@@ -333,7 +372,7 @@ mod tests {
     fn forms_go_from_the_nearest_to_the_farthest() {
         // Menor 3: 24 forms; 3 keep two notes, 9 keep one, 11 none.
         let key = set(&[0, 1, 4]);
-        let forms = forms_by_nearness(key);
+        let forms = forms_by_nearness(Scale::set(PitchClass::C, key));
         assert_eq!(forms.len(), 24);
         assert_eq!(forms[0], (key, Degree::HOME));
         let count = |n| {
@@ -348,7 +387,7 @@ mod tests {
         assert!(kept_in_order.windows(2).all(|w| w[0] >= w[1]));
         // The augmented triad has only four forms, none sharing two notes.
         let augmented = set(&[0, 4, 8]);
-        assert_eq!(forms_by_nearness(augmented).len(), 4);
+        assert_eq!(all_forms(augmented).len(), 4);
         assert!(smooth_links(augmented).is_empty());
         // The smooth links of Menor 3, as the book lists them.
         let links = smooth_links(key);
