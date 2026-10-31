@@ -191,6 +191,16 @@ group: **The sheet's harmonies**, **Notes together (vertical)**, or
 which track to read. That reads the song's own notes, so you can look
 at a tune as a chain of three-note groups.
 
+Music built on one set mixes the two: a form may be two notes struck
+together and a third after them. Where the key is a set or a micromode,
+**Forms of the key (mixed)** writes the forms of the key's set as the
+[colour check](#checking-the-colour) reads them, however their notes
+come. Where a tune and the chords under it are each in a form of their
+own, it writes both, the upper first, as two chords at once:
+**3-3|3-3 T7** as pitch-class sets. On **Menor 3 colour** it finds the forms written on the
+sheet, bar by bar. In a song whose key is not a set it has nothing to
+read, and says so.
+
 The **piano roll** has a **Show** menu too, at the top next to **Voice
 leading**, for the chord names above its grid: **As the key**, which it
 starts with, **Chords**, **Pitch-class sets** or **Micromodes**. It
@@ -473,6 +483,12 @@ leading and part motion](voice-leading.md)).
    notes that play it. Point at a form to read how it is made and its
    notes: "T4I: the key's form upside down around C, moved up 4
    semitones: C Eb E."
+4. Where two tracks, or a piano's top line and its chords, are each in
+   a form of their own at once, the line has a band for each, the
+   highest on top, and pointing at a form says whose it is. The check
+   reads the parts that way only where it puts fewer notes out of
+   place: a form shared out among the instruments, one note each, stays
+   one form.
 
 The check reads which form sounds where by itself: you don't need to
 write the forms on the chord sheet first. What it asks of the notes

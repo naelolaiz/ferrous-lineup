@@ -824,9 +824,16 @@ Rite of Spring, is cut into sets **from its notes**, in two ways:
 - **horizontally**, the notes one after another in a line, as a
   twelve-tone row is cut into groups of three or six.
 
+Music built on one set mixes the two: a form of Menor 3 may be two
+notes struck together and a third after them, or a tune whose notes
+the chords under it hold on. So where the key is a set or a micromode
+there is a third way, the forms of the key's set as the [colour
+check](micromodes.md#checking-the-colour) reads them.
+
 With **Pitch-class sets** or **Micromodes** shown, a second menu picks
 which: **The sheet's harmonies** (renamed, as above), **Notes together
-(vertical)** or **Notes in a line (serial)**. Reading notes, the sheet
+(vertical)**, **Notes in a line (serial)** or **Forms of the key
+(mixed)**. Reading notes, the sheet
 shows the groups it finds, each where it starts, and leaves what is
 written alone: typing in a bar still writes its harmony, and **As
 written** shows it again. Two more choices say how many notes make a
@@ -855,13 +862,11 @@ fn chunks(notes: Vec<Note>, size: Option<usize>) -> Vec<NoteGroup> {
         return Vec::new();
     }
     let Some(size) = size else {
-        return vec![NoteGroup { notes }];
+        return vec![NoteGroup::new(notes)];
     };
     let mut groups: Vec<NoteGroup> = notes
         .chunks(size.max(1))
-        .map(|chunk| NoteGroup {
-            notes: chunk.to_vec(),
-        })
+        .map(|chunk| NoteGroup::new(chunk.to_vec()))
         .collect();
     if groups.len() > 1 && groups.last().is_some_and(|last| last.notes.len() == 1) {
         let left = groups.pop().map(|last| last.notes).unwrap_or_default();
@@ -917,6 +922,43 @@ A group that is the one before it again is written once, where it
 starts, as the sheet writes a chord only where it changes
 (`merge_repeats`).
 
+### Forms of the key, mixed
+
+`mixed` does not cut the notes itself: it asks the colour check, which
+reads every stretch of the song in one key as forms of the key's set,
+however their notes come, together or one after another (see [Reading
+the forms: the cheapest
+reading](micromodes.md#reading-the-forms-the-cheapest-reading)). The
+sheet writes, wherever a form starts, every form heard there. Where two
+tracks, or a top line and the chords under it, are each in a form of
+their own (see [Whose notes make a
+form](micromodes.md#whose-notes-make-a-form)), that is two forms at
+once, written upper first as two chords at once are: a tune in Menor
+3's T0 over chords in its T7 is **3-3|3-3 T7**, its notes **C C♯ E |
+G A♭ B**. The size menu has nothing to choose: a form has as many notes
+as the key's set. Where no key of the song is a set, the menu says so,
+and the bars show nothing.
+
+On the demo **Menor 3 colour**, whose band plays the forms written on
+the sheet, partly as chords and partly as a tune, the forms read from
+the notes are the ones written, bar by bar; a test checks it. A group
+is named by its form, not by the notes heard, since the first and the
+last form of a stretch may not sound whole; that is the one field a
+`NoteGroup` has besides its notes:
+
+```rust
+pub struct NoteGroup {
+    pub notes: Vec<Note>,
+    /// The form of the key's set the notes were read as, for
+    /// [`Grouping::Mixed`]: the group is named by it, though a first or
+    /// a last form may not sound whole.
+    pub form: Option<PitchSet>,
+}
+```
+
+Its notes are those of the part it was read in, one of each pitch class
+of the form, in the order they come.
+
 ### Reading only when something changes
 
 Cutting a whole song into groups and naming them takes milliseconds for
@@ -968,15 +1010,16 @@ and past that as "…"; the hint under the pointer always gives the whole
 name and its notes. How the sheet fits names into bars is in [The chord
 sheet: model, layout and text](../band/chord-sheet.md).
 
-The menus' choices are a small struct kept in egui's memory, which the
-app saves to disk, so they are there the next time it starts:
+The sizes of the groups are a small struct kept in egui's memory,
+which the app saves to disk, so they are there the next time it starts.
+The notation and the grouping are not in it: they are each song's own,
+and every song opens **As the key** with the sheet's harmonies (see
+[One harmony, four names](#one-harmony-four-names)).
 
 ```rust
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 struct Choices {
-    notation: Notation,
-    grouping: Grouping,
     /// How many different notes a group of notes sounding together
     /// holds, or `None` for all of them.
     together: Option<usize>,

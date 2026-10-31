@@ -212,6 +212,17 @@ grupo: **Las armonías de la hoja**, **Notas a la vez (vertical)** o
 pista leer. Eso lee las notas de la canción, así que puedes mirar una
 melodía como una cadena de grupos de tres notas.
 
+La música construida sobre un conjunto mezcla las dos: una forma puede
+ser dos notas tocadas juntas y una tercera después. Donde la tonalidad
+es un conjunto o un micromodo, **Formas de la tonalidad (mixtas)**
+escribe las formas del conjunto de la tonalidad como las lee la
+[revisión del color](#revisar-el-color), vengan como vengan sus notas.
+Donde una melodía y los acordes de debajo están cada uno en una forma
+propia, escribe las dos, la de arriba primero, como dos acordes a la
+vez: **3-3|3-3 T7** como conjuntos. En **Color Menor 3** encuentra las formas escritas
+en la hoja, compás por compás. En una canción cuya tonalidad no es un
+conjunto no tiene nada que leer, y lo dice.
+
 El **piano roll** también tiene un menú **Mostrar**, arriba junto a
 **Conducción de voces**, para los nombres de los acordes sobre su
 cuadrícula: **Según la tonalidad**, con la que empieza, **Acordes**,
@@ -516,6 +527,12 @@ movimiento de las partes](voice-leading.md)).
    para leer cómo está hecha y sus notas: «T4I: la forma de la
    tonalidad dada vuelta alrededor de Do, transportada 4 semitonos hacia
    arriba: Do Mib Mi.»
+4. Donde dos pistas, o la línea de arriba de un piano y sus acordes,
+   están cada una en una forma propia a la vez, la línea tiene una
+   franja para cada una, la más aguda arriba, y apuntar a una forma dice
+   de quién es. La revisión lee así las partes solo donde deja menos
+   notas fuera de lugar: una forma repartida entre los instrumentos, una
+   nota cada uno, sigue siendo una forma.
 
 La revisión lee sola qué forma suena dónde: no hace falta escribir
 antes las formas en la hoja de acordes. Lo que les pide a las notas
