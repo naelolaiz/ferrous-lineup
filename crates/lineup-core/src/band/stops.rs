@@ -105,13 +105,19 @@ impl Breaks {
     /// These breaks, and a shot on the first beat of each of `bars`,
     /// where the band breaks before a new part (see
     /// [`crate::library::drum_form::break_bars`]): it strikes the harmony
-    /// of `harmonies` sounding there and is silent to the bar's end. A
-    /// bar the chord sheet already breaks or pushes in keeps what the
+    /// of `harmonies` sounding there and is silent to the bar's end, and
+    /// on through the next bar when it is one of `pickups`, a pickup into
+    /// the new part (see [`crate::library::drum_form::pickup_bars`]). A
+    /// break the chord sheet already breaks or pushes in keeps what the
     /// sheet says.
-    pub(crate) fn with_shots(&self, bars: &[Bar], harmonies: &[Played]) -> Breaks {
+    pub(crate) fn with_shots(&self, bars: &[Bar], pickups: &[Bar], harmonies: &[Played]) -> Breaks {
         let mut breaks = self.clone();
         for bar in bars {
-            let (start, end) = (bar.start, bar.end());
+            let start = bar.start;
+            let end = pickups
+                .iter()
+                .find(|pickup| pickup.start == bar.end())
+                .map_or(bar.end(), Bar::end);
             let Some(sounding) = harmonies
                 .iter()
                 .find(|harmony| harmony.start <= start && start < harmony.end)

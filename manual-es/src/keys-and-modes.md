@@ -119,6 +119,9 @@ cambio es una **marca de tonalidad** en la lista de reproducción:
   compás N** para cambiar de tonalidad ahí, eligiendo una tónica y una
   escala, o **Quitar este cambio de tonalidad**. El compás 1 es la
   tonalidad propia de la canción, la que cambian los menús Tonalidad.
+  La tonalidad también puede ser un micromodo, o un conjunto o una serie
+  en que está la canción (ver [Más allá de las
+  tonalidades](sets-rows-micromodes.md#un-micromodo-como-tonalidad)).
 - Mientras suena la canción, las teclas de armonía siguen la tonalidad
   del cursor de reproducción. Cuando no es la tonalidad con la que
   empieza la canción, aparece *Ahora en La mayor* bajo los menús

@@ -141,6 +141,19 @@ impl Micromode {
         MICROMODES.iter().find(|m| m.prime == prime)
     }
 
+    /// The micromode as a key on `root`: its prime form moved to start
+    /// on `root`, packed, as the Micromodes window and the styles place
+    /// it. Menor 3 on D is D D# F#.
+    pub fn key(&self, root: PitchClass) -> super::Scale {
+        let first = self
+            .prime
+            .normal_form()
+            .first()
+            .copied()
+            .unwrap_or(PitchClass::C);
+        super::Scale::set(root, self.prime.transpose(first.semitones_up_to(root)))
+    }
+
     /// The micromode with this name, in Spanish or English, any case:
     /// "menor 3", "Minor 3", "acorde aumentado".
     pub fn named(name: &str) -> Option<&'static Micromode> {
@@ -617,6 +630,23 @@ mod tests {
         // Not a chord micromode, or not this micromode.
         assert_eq!(Micromode::number(3).unwrap().chord(set(&[0, 1, 4])), None);
         assert_eq!(dim.chord(set(&[0, 4, 7])), None);
+    }
+
+    #[test]
+    fn a_micromode_as_a_key_starts_on_its_note() {
+        let menor_3 = Micromode::named("Menor 3").unwrap();
+        let key = menor_3.key(PitchClass::D);
+        assert_eq!(key.root, PitchClass::D);
+        assert_eq!(key.pitch_set(), set(&[2, 3, 6]));
+        assert_eq!(crate::i18n::key_name(key), "Menor 3 on D");
+        // Every micromode, on every note, is itself as a key.
+        for micromode in Micromode::all() {
+            for root in PitchClass::ALL {
+                let key = micromode.key(root);
+                assert_eq!(Micromode::of(key.pitch_set()), Some(micromode));
+                assert_eq!(key.root, root);
+            }
+        }
     }
 
     #[test]

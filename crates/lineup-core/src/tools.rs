@@ -9,6 +9,8 @@
 //! `Option`, and `None` means "this would not work, so do nothing": a
 //! chord is never transposed with one of its notes missing.
 
+use crate::harmony::{Degree, PitchSet, RowLabel};
+use crate::pitch::PitchClass;
 use crate::{Note, NoteEvent, Scale, ScaleKind};
 
 /// The notes grouped by the step they start on, each group lowest
@@ -143,7 +145,11 @@ pub fn snap_to_scale(notes: &[NoteEvent], scale: Scale) -> Vec<NoteEvent> {
 ///
 /// Between kinds that have nothing in common, such as a key and a
 /// twelve-tone row, the note stays where it is (see
-/// [`ScaleKind::notes_follow`](crate::ScaleKind::notes_follow)).
+/// [`ScaleKind::notes_follow`](crate::ScaleKind::notes_follow)). From
+/// one row to another, a note takes the same place in the new row that
+/// it had in the old, both counted from the key note, as
+/// [`change_row`] moves it when the form the note is part of is not
+/// known.
 ///
 /// A pitch-class set that is a key's own scale (C major switched to
 /// "pitch-class set" is the set 7-35 on C) moves into a key as that key
@@ -152,6 +158,9 @@ pub fn change_key(note: Note, from: Scale, to: Scale) -> Note {
     let from = from_key(from, to);
     if !from.kind.notes_follow(to.kind) {
         return note;
+    }
+    if from.tone_row().is_some() && to.tone_row().is_some() {
+        return change_row(note, None, from, to);
     }
     let up = from.root.semitones_up_to(to.root) as i32;
     let shift = if up > 6 { up - 12 } else { up };
@@ -178,6 +187,85 @@ pub fn change_key(note: Note, from: Scale, to: Scale) -> Note {
     } else {
         nearest_in_key(moved, to)
     }
+}
+
+/// Where `note` goes when the song changes key from `from` to `to`
+/// while it plays `form`, the harmony it is part of: a form of the old
+/// key, when the key is a set or a micromode.
+///
+/// Changing the set the key is keeps every form's degree, as changing
+/// a key's mode keeps every chord's (see [`Degree`]): from Menor 3 on C
+/// to Menor 5 on C, T2 (D D# F#) becomes T2 of Menor 5 (D D# G#). Each
+/// note takes the same place in the new form that it had in the old,
+/// counted from the key's note the way the form was made: in Menor 3 on
+/// C, C C# E, the third note is E, and in Menor 5 on C, C C# F#, it is
+/// F#, so every form's third note goes up two semitones (down, in a form
+/// upside down). The note moves the shortest way to its new pitch class.
+/// A new set with fewer notes has no place for the last ones, which go
+/// to the nearest note of the new form.
+///
+/// Without a form (no harmony is known, or the note is not part of it,
+/// or the key is not a set), the note moves as [`change_key`] moves it.
+pub fn change_key_in(note: Note, form: Option<PitchSet>, from: Scale, to: Scale) -> Note {
+    let old = from_key(from, to);
+    let (ScaleKind::Set(_), ScaleKind::Set(_)) = (old.kind, to.kind) else {
+        return change_key(note, from, to);
+    };
+    let Some((degree, place)) = form.and_then(|form| {
+        let degree = Degree::of(old, form)?;
+        Some((degree, place_in(degree, old, note.pitch_class())?))
+    }) else {
+        return change_key(note, from, to);
+    };
+    let target = match note_at(degree, to, place) {
+        Some(target) => target,
+        None => {
+            let Some(new_form) = degree.form(to) else {
+                return change_key(note, from, to);
+            };
+            let moved = note
+                .pitch_class()
+                .transpose(nearest_shift(old.root, to.root));
+            nearest_in_set(moved, new_form)
+        }
+    };
+    let shift = nearest_shift(note.pitch_class(), target);
+    note.transpose(shift)
+        .or_else(|| note.transpose(shift - 12 * shift.signum()))
+        .unwrap_or(note)
+}
+
+/// The shortest move from `from` to `to`, in semitones: up to six
+/// down, or up to six up (a tritone goes up).
+fn nearest_shift(from: PitchClass, to: PitchClass) -> i32 {
+    let up = from.semitones_up_to(to) as i32;
+    if up > 6 { up - 12 } else { up }
+}
+
+/// Which note of the form at `degree` in `key` `pitch_class` is,
+/// counting the notes as the key's own form counts them, up from its
+/// note: the form's first note is the key note moved (or mirrored and
+/// moved), and so on. `None` if it is not in the form.
+fn place_in(degree: Degree, key: Scale, pitch_class: PitchClass) -> Option<usize> {
+    (0..key.kind.intervals().len()).find(|&place| note_at(degree, key, place) == Some(pitch_class))
+}
+
+/// The note in place `place` of the form at `degree` in `key` (see
+/// [`place_in`]), or `None` if the key's form has fewer notes.
+fn note_at(degree: Degree, key: Scale, place: usize) -> Option<PitchClass> {
+    let interval = i32::from(*key.kind.intervals().get(place)?);
+    let from_key_note = if degree.inverted { -interval } else { interval };
+    Some(key.root.transpose(from_key_note + i32::from(degree.up)))
+}
+
+/// The note of `set` nearest to `pitch_class`, the lower one when two
+/// are as near; `pitch_class` itself if the set is empty.
+fn nearest_in_set(pitch_class: PitchClass, set: PitchSet) -> PitchClass {
+    (0..=6)
+        .flat_map(|distance| [-distance, distance])
+        .map(|semitones| pitch_class.transpose(semitones))
+        .find(|&candidate| set.contains(candidate))
+        .unwrap_or(pitch_class)
 }
 
 /// The key a change to `to` starts from: `from`, or, going from a
@@ -248,6 +336,157 @@ pub fn invert(notes: &[NoteEvent], up: bool) -> Option<Vec<NoteEvent>> {
         result.extend(chord);
     }
     Some(result)
+}
+
+/// The notes backwards in time, as in a crab canon: the last note comes
+/// first and the first last, each as long as it was, with the rests
+/// between them backwards too. They stay in the stretch they took, from
+/// the first note's start to the last one's end. A note that started a
+/// little late (nudged) ends that much early instead.
+///
+/// A form of a twelve-tone row played backwards is its retrograde, in
+/// its rhythm backwards: P0 becomes R0.
+pub fn backwards(notes: &[NoteEvent]) -> Vec<NoteEvent> {
+    let (Some(first), Some(last)) = (
+        notes.iter().map(|note| note.start).min(),
+        notes.iter().map(NoteEvent::end).max(),
+    ) else {
+        return Vec::new();
+    };
+    notes
+        .iter()
+        .map(|note| NoteEvent {
+            start: first + last - note.end(),
+            nudge: note.trim,
+            trim: note.nudge,
+            ..*note
+        })
+        .collect()
+}
+
+/// The pitches in the opposite order, in the same rhythm: the first
+/// note's place takes the last note's pitch, the second the one before
+/// the last, and so on, while every place keeps its length and its
+/// loudness. A chord moves as a chord, into the place of the chord (or
+/// note) at the other end.
+///
+/// This is how a twelve-tone composer turns a line into its retrograde
+/// and keeps its rhythm: P0 in some rhythm becomes R0 in that rhythm.
+pub fn pitches_backwards(notes: &[NoteEvent]) -> Vec<NoteEvent> {
+    let groups = chords(notes);
+    groups
+        .iter()
+        .zip(groups.iter().rev())
+        .flat_map(|(place, pitches)| {
+            pitches.iter().enumerate().map(move |(i, note)| NoteEvent {
+                pitch: note.pitch,
+                ..place[i.min(place.len() - 1)]
+            })
+        })
+        .collect()
+}
+
+/// The note the notes are turned upside down around: the first one, or
+/// the lowest of the first chord.
+fn first_note(notes: &[NoteEvent]) -> Option<Note> {
+    chords(notes).first().map(|chord| chord[0].pitch)
+}
+
+/// The notes upside down: every interval from the first note turned the
+/// other way, so a line that went up a major third from it goes down a
+/// major third, and a major chord becomes a minor one. The first note
+/// (the lowest, when the notes begin with a chord) stays where it is.
+///
+/// A form of a twelve-tone row upside down is its inversion on the same
+/// first note: P0 becomes I0. `None` if a note would leave the MIDI
+/// range.
+pub fn upside_down(notes: &[NoteEvent]) -> Option<Vec<NoteEvent>> {
+    let Some(axis) = first_note(notes) else {
+        return Some(Vec::new());
+    };
+    notes
+        .iter()
+        .map(|note| {
+            let down = 2 * (i32::from(axis.midi()) - i32::from(note.pitch.midi()));
+            Some(NoteEvent {
+                pitch: note.pitch.transpose(down)?,
+                ..*note
+            })
+        })
+        .collect()
+}
+
+/// The notes upside down in the key, as a fugue can answer its subject
+/// upside down and still in the key: every note as many notes of the
+/// key below the first note as it was above it. In C major, around C,
+/// E (two notes of the key up) becomes A (two down) and G becomes F,
+/// so the intervals keep their number but not always their size: the
+/// major third C-E comes back as the minor third C-A below. A note
+/// outside the key is a note of the key raised, and comes back lowered:
+/// D# becomes Bb. The first note stays where it is; when it is outside
+/// the key, the notes turn around the note of the key nearest it.
+///
+/// In a key where every note is in the key, as a twelve-tone row, this
+/// is the same as [`upside_down`]. `None` if a note would leave the MIDI
+/// range.
+pub fn upside_down_in_key(notes: &[NoteEvent], scale: Scale) -> Option<Vec<NoteEvent>> {
+    let Some(first) = first_note(notes) else {
+        return Some(Vec::new());
+    };
+    let axis = nearest_in_key(first, scale);
+    notes
+        .iter()
+        .map(|note| {
+            // The note of the key at or under it, and how much higher it is.
+            let base = if scale.contains(note.pitch.pitch_class()) {
+                note.pitch
+            } else {
+                step_in_key(note.pitch, scale, false)?
+            };
+            let raised = i32::from(note.pitch.midi()) - i32::from(base.midi());
+            let mut steps = 0i32;
+            let mut walk = axis;
+            while walk != base {
+                walk = step_in_key(walk, scale, base > walk)?;
+                steps += if base > axis { 1 } else { -1 };
+            }
+            let mut mirrored = axis;
+            for _ in 0..steps.unsigned_abs() {
+                mirrored = step_in_key(mirrored, scale, steps < 0)?;
+            }
+            Some(NoteEvent {
+                pitch: mirrored.transpose(-raised)?,
+                ..*note
+            })
+        })
+        .collect()
+}
+
+/// Where `note` goes when the key changes from one twelve-tone row,
+/// `from`, to another, `to`, while it is part of the form `label` of the
+/// old row: to the same place in the same form of the new row. The
+/// fifth note of RI7 becomes the fifth note of RI7, so the plan of forms
+/// and the place of every note in its form stay, and only the row
+/// changes. The forms count from the key note, so a new key note takes
+/// them along: from a row on C to one on D, RI7 becomes RI9. The note
+/// moves the shortest way to its new pitch class.
+///
+/// Without a form, the note is taken as part of the key's own form, the
+/// row from the key note. Between keys that are not both rows, the note
+/// moves as [`change_key`] moves it.
+pub fn change_row(note: Note, label: Option<RowLabel>, from: Scale, to: Scale) -> Note {
+    let (Some(old), Some(new)) = (from.tone_row(), to.tone_row()) else {
+        return change_key(note, from, to);
+    };
+    let label = label.unwrap_or(old.label());
+    let up = from.root.semitones_up_to(to.root);
+    let place = old.form(label).position(note.pitch_class());
+    let moved = RowLabel::new(label.form, label.number + up);
+    let target = new.form(moved).pitch_classes()[place];
+    let shift = nearest_shift(note.pitch_class(), target);
+    note.transpose(shift)
+        .or_else(|| note.transpose(shift - 12 * shift.signum()))
+        .unwrap_or(note)
 }
 
 /// The order an arpeggio plays a chord's notes in.
@@ -456,6 +695,56 @@ mod tests {
     }
 
     #[test]
+    fn a_new_set_keeps_the_degree_of_each_form() {
+        use PitchClass::*;
+        let set = |root, semitones: &[u8]| Scale::set(root, PitchSet::from_semitones(semitones));
+        // Menor 3 on C is C C# E; Menor 5 on C is C C# F#.
+        let (menor_3, menor_5) = (set(C, &[0, 1, 4]), set(C, &[0, 1, 6]));
+        let moved = |midis: &[u8], from: Scale, to: Scale| -> Vec<u8> {
+            let form: PitchSet = midis.iter().map(|&m| Note::new(m).pitch_class()).collect();
+            midis
+                .iter()
+                .map(|&m| change_key_in(Note::new(m), Some(form), from, to).midi())
+                .collect()
+        };
+        // Home, T2 (D D# F#) and T0I (C B Ab, upside down around C):
+        // each third note moves, up or down as the form goes.
+        assert_eq!(moved(&[60, 61, 64], menor_3, menor_5), [60, 61, 66]);
+        assert_eq!(moved(&[62, 63, 66], menor_3, menor_5), [62, 63, 68]);
+        assert_eq!(moved(&[60, 59, 56], menor_3, menor_5), [60, 59, 54]);
+        // And back: the same forms of Menor 3 again.
+        assert_eq!(moved(&[62, 63, 68], menor_5, menor_3), [62, 63, 66]);
+        // Another key note as well: Menor 5 on D is D D# G#, and its T2
+        // is E F A#.
+        assert_eq!(
+            moved(&[62, 63, 66], menor_3, set(D, &[2, 3, 8])),
+            [64, 65, 70]
+        );
+        // To a set of four notes, C E G Bb (C7 as a set): each note takes
+        // the same place, so T2 of Menor 3 becomes T2 of the set, D F# A.
+        assert_eq!(
+            moved(&[62, 63, 66], menor_3, set(C, &[0, 4, 7, 10])),
+            [62, 66, 69]
+        );
+        // From it to Menor 3, the fourth note has no place: Bb goes to the
+        // nearest note of the new form, C.
+        assert_eq!(
+            moved(&[60, 64, 67, 70], set(C, &[0, 4, 7, 10]), menor_3),
+            [60, 61, 64, 72]
+        );
+        // Without a form, or with a note outside it, as `change_key`.
+        assert_eq!(
+            change_key_in(Note::new(62), None, menor_3, menor_5).midi(),
+            62
+        );
+        let home = menor_3.pitch_set();
+        assert_eq!(
+            change_key_in(Note::new(66), Some(home), menor_3, menor_5).midi(),
+            change_key(Note::new(66), menor_3, menor_5).midi()
+        );
+    }
+
+    #[test]
     fn moving_in_key_changes_the_chord() {
         // C major one step up in C major is D minor: D, F, A.
         let c_major = [note(60, 0, 4), note(64, 0, 4), note(67, 0, 4)];
@@ -566,6 +855,133 @@ mod tests {
             arpeggio,
             vec![note(60, 0, 2), note(64, 2, 1), note(72, 3, 1)]
         );
+    }
+
+    #[test]
+    fn backwards_turns_the_notes_round_in_time() {
+        let tune = [note(60, 0, 2), note(64, 2, 1), note(67, 4, 4)];
+        let mut crab = backwards(&tune);
+        crab.sort_by_key(|note| note.start);
+        // G first and for as long, the rest after it, then E, then C.
+        assert_eq!(crab, [note(67, 0, 4), note(64, 5, 1), note(60, 6, 2)]);
+        // A note played a little late ends that much early instead.
+        let late = NoteEvent {
+            nudge: 3,
+            trim: 5,
+            ..note(60, 0, 2)
+        };
+        let turned = backwards(&[late, note(62, 2, 2)]);
+        assert_eq!(
+            (turned[0].start, turned[0].nudge, turned[0].trim),
+            (2, 5, 3)
+        );
+        assert!(backwards(&[]).is_empty());
+    }
+
+    #[test]
+    fn pitches_backwards_keep_the_rhythm() {
+        let tune = [
+            NoteEvent {
+                velocity: 30,
+                ..note(60, 0, 2)
+            },
+            note(64, 2, 1),
+            note(67, 4, 4),
+        ];
+        let turned = pitches_backwards(&tune);
+        assert_eq!(pitches(&turned), [67, 64, 60]);
+        let rhythm: Vec<(usize, usize, u8)> = turned
+            .iter()
+            .map(|note| (note.start, note.length, note.velocity))
+            .collect();
+        assert_eq!(rhythm, [(0, 2, 30), (2, 1, 100), (4, 4, 100)]);
+        // A chord and a note change places; the chord takes the note's.
+        let chord_then_note = [
+            note(60, 0, 4),
+            note(64, 0, 4),
+            note(67, 0, 4),
+            note(62, 4, 2),
+        ];
+        let turned = pitches_backwards(&chord_then_note);
+        assert_eq!(turned[0], note(62, 0, 4));
+        assert_eq!(
+            &turned[1..],
+            [note(60, 4, 2), note(64, 4, 2), note(67, 4, 2)]
+        );
+    }
+
+    #[test]
+    fn upside_down_turns_every_interval_the_other_way() {
+        let tune = [note(60, 0, 1), note(64, 1, 1), note(67, 2, 1)];
+        assert_eq!(pitches(&upside_down(&tune).unwrap()), [60, 56, 53]);
+        // C major upside down is F minor: C, Ab and F.
+        let chord = [note(60, 0, 4), note(64, 0, 4), note(67, 0, 4)];
+        assert_eq!(pitches(&upside_down(&chord).unwrap()), [60, 56, 53]);
+        // P0 of a row upside down is I0.
+        let lineup = crate::harmony::RowPreset::named("Lineup row").unwrap().row;
+        let p0: Vec<NoteEvent> = lineup
+            .semitones()
+            .iter()
+            .enumerate()
+            .map(|(step, &n)| note(60 + n, step, 1))
+            .collect();
+        let turned: Vec<u8> = pitches(&upside_down(&p0).unwrap())
+            .iter()
+            .map(|&midi| midi % 12)
+            .collect();
+        let i0 = lineup.form(RowLabel::new(crate::harmony::RowForm::Inversion, 0));
+        assert_eq!(turned, i0.semitones());
+        assert_eq!(upside_down(&[note(10, 0, 1), note(126, 1, 1)]), None);
+    }
+
+    #[test]
+    fn upside_down_in_the_key_counts_the_notes_of_the_key() {
+        let tune: Vec<NoteEvent> = [60, 64, 67, 63, 59, 72]
+            .iter()
+            .enumerate()
+            .map(|(step, &midi)| note(midi, step, 1))
+            .collect();
+        let turned = upside_down_in_key(&tune, C_MAJOR).unwrap();
+        // E becomes A, G becomes F, D# (D raised) becomes Bb (B lowered),
+        // B becomes D and the C an octave up the C an octave down.
+        assert_eq!(pitches(&turned), [60, 57, 53, 58, 62, 48]);
+        // In a row, every note is in the key: the same as upside down.
+        let row = Scale::row(crate::harmony::ToneRow::CHROMATIC);
+        assert_eq!(upside_down_in_key(&tune, row), upside_down(&tune));
+        assert_eq!(pitches(&upside_down_in_key(&[], C_MAJOR).unwrap()), []);
+    }
+
+    #[test]
+    fn a_new_row_keeps_each_note_in_its_form_and_place() {
+        use crate::harmony::{RowForm, RowPreset};
+        let row = |name: &str| RowPreset::named(name).unwrap().row;
+        let lineup = Scale::row(row("Lineup row"));
+        let berg_on_c = Scale::row(row("Berg's Lyric Suite").starting_on(PitchClass::C));
+        let berg_on_d = Scale::row(row("Berg's Lyric Suite").starting_on(PitchClass::D));
+        let p0 = RowLabel::new(RowForm::Prime, 0);
+        let e4 = Note::new(64);
+        // E is the sixth note of the Lineup row's P0, and A the sixth of
+        // Berg's on C: E goes up a fourth to A.
+        assert_eq!(change_row(e4, Some(p0), lineup, berg_on_c).midi(), 69);
+        // On D, P0 is P2, whose sixth note is B: E goes down to B.
+        assert_eq!(change_row(e4, Some(p0), lineup, berg_on_d).midi(), 59);
+        // In RI5, the note keeps its place in RI5.
+        let ri5 = RowLabel::new(RowForm::RetrogradeInversion, 5);
+        let old = row("Lineup row").form(ri5);
+        let new = row("Berg's Lyric Suite")
+            .starting_on(PitchClass::C)
+            .form(ri5);
+        for (from, to) in old.pitch_classes().into_iter().zip(new.pitch_classes()) {
+            let moved = change_row(
+                Note::new(60 + from.semitone()),
+                Some(ri5),
+                lineup,
+                berg_on_c,
+            );
+            assert_eq!(moved.pitch_class(), to);
+        }
+        // Without a form, a note takes its place in the key's own form.
+        assert_eq!(change_row(e4, None, lineup, berg_on_c).midi(), 69);
     }
 
     #[test]

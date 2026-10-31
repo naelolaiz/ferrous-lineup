@@ -914,6 +914,21 @@ pub static RHYTHMS: &[Rhythm] = &[
          only keep time.",
     )
     .swung(100),
+    rhythm(
+        "Foxtrot",
+        Jazz,
+        120.0,
+        &[
+            (Kick, "o... o... o... o..."),
+            (Snare, "o.o. x.o. o.o. x.o."),
+            (HiHat, ".... x... .... x..."),
+        ],
+        "",
+        "A 1930s dance band's foxtrot: the bass drum feathered on every beat, brushes \
+         sweeping the snare in eighths with the weight on 2 and 4, and the hi-hat pedal on 2 \
+         and 4.",
+    )
+    .swung(75),
     // ----- Soul, funk and R&B -----
     rhythm(
         "Motown",
@@ -1805,7 +1820,9 @@ pub static RHYTHMS: &[Rhythm] = &[
          after the verse, mixes the repique's busier base into its own and varies the \
          piano every second bar, more often still on its second turn. Before every new \
          part the band stops on the first beat of the last bar, and the repique plays the \
-         clave on the wood alone, leading into it.",
+         clave on the wood alone, leading into it. Where the tune leads into the new part \
+         with a pickup bar, the band and the drums wait on through it, the clave alone, and \
+         come in with the next bar.",
     )
     .laid_out(CANDOMBE),
     rhythm(

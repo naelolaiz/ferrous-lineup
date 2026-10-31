@@ -57,10 +57,15 @@ harmony move.
 - **🔍 Find the key**: listens to the song and says which key it is in
   (see [Keys and modes](keys-and-modes.md#finding-the-key-experimental)).
 
-When the key is a pitch-class set, a twelve-tone row or a micromode
-instead of a major or minor scale, the keys play groups of its notes,
-and the buttons choose how many (see [Beyond keys: sets, rows and
-micromodes](sets-rows-micromodes.md)).
+When the key is a pitch-class set or a twelve-tone row instead of a
+major or minor scale, the keys play groups of its notes, and the buttons
+choose how many (see [Beyond keys: sets, rows and
+micromodes](sets-rows-micromodes.md)). When the key is a micromode, the
+keys are its forms, named by their degree (T0, T2, T1I…), with **Near
+home** and **All forms** to choose which (see [A micromode as the
+key](sets-rows-micromodes.md#a-micromode-as-the-key)). For a bigger set,
+**Chords** and **Forms** choose between the two (see [A set as the
+key](sets-rows-micromodes.md#a-set-as-the-key-its-forms)).
 
 ## Playing chords to the band
 

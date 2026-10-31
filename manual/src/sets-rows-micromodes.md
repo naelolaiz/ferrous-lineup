@@ -75,6 +75,77 @@ piano roll, and **Use as the key** makes it the song's key. On the
 chord sheet, a set is typed by its name or its notes: `3-11 T2`,
 `{D F A}` or `{0,1,4}`.
 
+### A set as the key: its forms
+
+When the song's key is a pitch-class set (after **Use as the key**, or
+after picking **pitch-class set** in the Key menu), the harmony keys can
+play two things, chosen at the left:
+
+- **Chords**: chords stacked from the set's notes, three or four at a
+  time.
+- **Forms**: the set's own **forms**, the whole set moved or turned
+  upside down, each named by its **degree** (T0, T2, T2I…), as for a
+  micromode (see [A micromode as the key](#a-micromode-as-the-key)). A
+  set of three notes always shows its forms.
+
+The forms come home first, then by how many notes they keep of home,
+brighter the more they keep. When a form is something tonal music has a
+name for, its key says so. In a key that is C E G B♭ as a set (4-27, the
+notes of a dominant seventh), T2I is E G B♭ D, **Em7b5**, the only form
+that keeps three of its notes. In C major as a set (7-35), T7 is **G
+major**, which keeps six. **Near home** shows the forms that keep at
+least half the notes of home, **All forms** shows them all.
+
+![The harmony keys in a key that is the set C E G B♭, with Forms on, after T2I was played: T0 (C7), T2I (Em7b5), then T3 (E♭7), T6 (F♯7), T9 (A7) and the half-diminished sevenths that keep two notes; T0 is outlined because it keeps three notes of E G B♭ D](images/set-forms-keys.png)
+
+**A progression of forms.** In a set key, the chord sheet's
+**Progression** button offers ways to chain the set's forms, in place
+of the Library's progressions, and writes eight bars of them from the
+bar you chose:
+
+- **Keep all notes but one**: each form keeps every note of the one
+  before but one, the smoothest way on. C major as a set walks round
+  the circle of fifths: F major, B♭ major, E♭ major… For a micromode it
+  is called **Keep two notes, move one**.
+- **Keep as many notes as it can**, for a set whose forms keep all
+  notes but one only in pairs, as the dominant seventh and the
+  half-diminished seventh do: C7, Em7b5, A7, C♯m7b5… It never goes
+  straight back to the chord before.
+- **Keep one note, move two** (micromodes): a pivot, a wider move.
+- **All twelve notes, every *N* forms**: forms that share no note, so
+  that every few of them hold all twelve notes between them: four forms
+  of a micromode, the three diminished seventh chords, or a hexachord
+  and the six notes it leaves out. Then the next round starts from a
+  form that keeps notes of the last. It is there only for the sets that
+  can do it.
+- **Sequence**: every note up a semitone, a whole tone, a minor third,
+  a fourth or a fifth each bar.
+
+Each bar shows its degree and how many notes it keeps of the bar before
+("T2I · 3 common"), and you can type a degree in any bar: `T2`, `T5I`.
+The band plays each form as a chord whose shared notes stay on the same
+keys, over its root when the form is a chord (C under C7) and otherwise
+over the first note of its most compact order.
+
+Switching to another set, with **Use as the key** in the Sets window,
+keeps every form's degree, as switching micromodes does (see [A
+micromode as the key](#a-micromode-as-the-key)): from C7 as a set to
+Cmaj7 as a set, C7 Em7b5 A7 becomes Cmaj7 E♭maj7 Amaj7.
+
+**A micromode style over your forms.** In a song, a style from the
+Library's **Micromodes (Kröpfl)** group plays the forms written on the
+chord sheet, in your order, the way a style plays the chords of a tonal
+song: change a bar and the style plays the new form. It works in any
+set key, not only a micromode: **Viennese points** can play C7, Em7b5,
+A7… in a key that is C E G B♭ as a set. The style's keys, bass and line
+play in place of the band's piano, bass and soloist, and the guitar,
+strings and organ rest. When the sheet holds no forms of the key (a
+song in a major or minor key, or an empty sheet), or when the Library's
+**Chord progression** box is ticked, the style writes its own walk of
+forms on the sheet instead, and the key becomes its micromode, starting
+on the key note. A style of your own, played over a set, plays only the
+set's notes.
+
 ## One harmony, four names
 
 A set is another way to **name** notes, not other notes. C major's
@@ -169,13 +240,23 @@ half.
 
 Then write a form into the pattern: **Together** says how many of its
 notes sound at once, as a chord; **Then** what comes after the form,
-**Once**, **Repeat** or **P, R, I, RI**; the register, **Close** (all in
+**Once**, **Repeat** or **P, R, I, RI**, or **A plan of forms**: the
+forms you type in the **Plan** box, such as P0 RI5 I7 R0, one after
+another, as a chord progression is the plan of a tonal piece. Clicking
+a label around the matrix adds that form at the end of the plan. Then
+the register, **Close** (all in
 one octave), **Smooth** (each note near the one before) or **Wide**
 (leaping over three octaves, as in Webern). **Serialism** goes further,
 as Messiaen, Boulez and Babbitt did around 1950: it lets the row
-choose the **Durations**, **Dynamics** and **Octaves** too. **Write P0
-into current pattern** replaces the channel's notes, and **Save to new
-pattern** puts them in a pattern of their own.
+choose the **Durations**, **Dynamics** and **Octaves** too. When the
+row is combinatorial, **With its partner, I3** (or whichever form it is)
+writes the form's partner with it, an octave lower and note for note in
+the same rhythm, so the first six notes of the two make all twelve, and
+so do the last six: Schoenberg's favourite way of keeping all twelve
+notes going in two voices at once. A row without a partner leaves the
+box grey. **Write P0 into current pattern** (or **Write P0 RI5 I7…**,
+with a plan) replaces the channel's notes, and **Save to new pattern**
+puts them in a pattern of their own.
 
 ### A row as the key
 
@@ -186,6 +267,16 @@ notes 1 to 12 on the keyboard, in the row's order, so you can draw the
 row by following the numbers. The harmony keys play the row's groups
 instead of chords: **3 notes** gives four keys, 1–3, 4–6, 7–9 and
 10–12; **4 notes** three, and **6 notes** two.
+
+Take another row in the Row window and click **Use as the key**, and
+the piece is played on the new row: every
+note keeps its place in its form, so the fifth note of RI5 becomes the
+fifth note of RI5 of the new row. Ferrous Lineup finds which form each
+note is part of the way the voice-leading check does, so the plan of
+forms, the rhythm and the chords stay, and only the row changes. Some
+rows, such as Berg's, give two names to every form, and going back to
+the first row may then pick the other name: **Ctrl+Z** is the sure way
+back.
 
 With **Voice leading** ticked, the piano roll checks the rules of
 twelve-tone writing as Schoenberg's students learnt them: the notes
@@ -199,6 +290,30 @@ in the notes.
 
 The Library's **Twelve-tone rows** group has seven styles, and **File > Demos > Twelve-tone** plays each as a short
 piece.
+
+### A row style plays your row and your plan
+
+When the key is a row, the Library's row styles play that row, yours,
+each in its own way: the Triad chorale as chords over a slow bass, the
+Twelve-tone lo-fi over a beat, and so on. In a key that is not a row,
+or with **Chord progression** ticked, a style brings its own row,
+starting on the key note.
+
+In a song, the chord sheet holds the **plan** of the piece: which form
+of the row plays where. Click a bar and type a form, such as **P0**,
+**RI5**, **I7** or **R0**, and the band plays that form there, for as
+long as it lasts on the sheet, in the style's textures: each of the
+style's voices reads its own form the same way, so where the sheet says
+I5 a bass that plays the row backwards plays RI5. When the sheet has no
+forms of the row yet, the style writes its own plan there, one part
+each: the row as written, backwards, upside down, and both. Change any
+bar and the band plays the new form.
+
+The style's chords, bass and melody take the place of the piano, the
+bass and the soloist; the song's own chords and bass go quiet, and its
+melody keeps playing. The Hexachord pads style plays its melody from
+the partner of each form (see [The Row window](#the-row-window)), so
+every bar holds all twelve notes with any combinatorial row.
 
 ## Micromodes
 
@@ -251,4 +366,59 @@ T4I` for one of its forms.
 The four groups of three in the row of Webern's Concerto, Op. 24, in the
 picture of the Row window, are all Menor 3. The Library's **Micromodes
 (Kröpfl)** group has seven styles, and **File > Demos > Micromodes**
-plays each of them.
+plays each of them. In a song, the band plays them from the chord sheet
+(see [A micromode style over your forms](#a-set-as-the-key-its-forms)).
+
+### A micromode as the key
+
+When the song's key is a micromode (after **Use as the key**, or after
+a micromode style from the Library), its chords are the micromode's
+**forms**: the same three notes moved, or turned upside down and moved.
+They are named by their **degree**, counted from the key the way a
+Roman numeral is:
+
+- **T0** is the key's own form, home. In Menor 3 on C it is C C♯ E.
+- **T2** is home moved up 2 semitones: D D♯ F♯.
+- **T0I** is home turned upside down around the key's note, each note
+  as far below C as it was above: C B A♭.
+- **T1I** is that moved up a semitone: A C C♯.
+
+Move the whole song to D and every form keeps its degree, as ii stays
+ii in any major key. Home is always T0. With the triads, the parallel
+chord is T7I: C minor in C major, and C major in C minor.
+
+![The harmony keys in a key of Menor 3 on C after T1I was played: T0, T1I, T4I and T5I, then the forms that keep one note of home, each with its notes and its name; T0, T8 and T9 are outlined because they keep two notes of A C C♯, and the hint below says so](images/micromode-keys.png)
+
+The **harmony keys** show the key's forms, home first, then the forms
+that keep two of its notes, then the ones that keep one; the more a
+form keeps of home, the brighter its key. **Near home** leaves out the
+forms that keep no note of home, and **All forms** shows them all (24
+for Menor 3). After you play a form, the forms that keep two of *its*
+notes are outlined: they are the smoothest ways on, one note moving.
+Hover a key to read what stays and what moves, such as "keeps A and C;
+C♯ goes to A♭"; for the major and minor triads it also names the move
+(P, L or R).
+
+On the **chord sheet**, each bar shows its degree, and from the second
+bar on how many notes it keeps of the bar before: "T1I · 2 common".
+Type a degree to write that form: `T2`, `T5I`. The micromode demos
+write their forms on the sheet, so you can read the order of each.
+
+**Another colour, the same degrees.** The **Key** menu lists the twelve
+micromodes under the scales, in three short rows: **Menor** 1 to 5,
+**Mayor** 1 to 4, and the triads as **°**, **m/M** and **+** (point at
+one for its whole name). It opens at the key's own micromode. Pick
+another, and the piece keeps its plan in the new colour, as a song in
+C major keeps its chords' degrees when it goes to C minor: every form
+on the chord sheet keeps its degree (T2 of Menor 3 becomes T2 of
+Menor 5) and every written note moves to the same place in its new
+form. A micromode style the band plays follows the new forms. The
+smooth links change with the colour: the Menor 3 demo keeps two notes
+from bar to bar, and in Menor 5 the same degrees keep none, which the
+sheet shows ("T4I · 0 common").
+
+A few micromodes are the same upside down (Menor 1, Mayor 1, and the
+diminished and augmented triads), so in them a form upside down is
+just a form moved; going into one of them and back cannot tell which
+forms were upside down. From a major or minor key to a micromode, the
+notes stay as they are, as with **pitch-class set**.

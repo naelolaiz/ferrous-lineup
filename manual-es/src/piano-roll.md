@@ -109,6 +109,10 @@ notas cuando no hay ninguna seleccionada:
 | **Cuantizar a los pasos**: las notas tocadas un poco fuera de la cuadrícula pasan a ella | |
 | **Ajustar a la tonalidad**: las notas fuera de la tonalidad pasan a la nota más cercana de la tonalidad | |
 | **Invertir los acordes hacia arriba**, **Invertir los acordes hacia abajo**: la nota más grave de cada acorde sube una octava, o la más aguda baja | |
+| **Hacia atrás**: las notas en el orden contrario en el tiempo, con su ritmo también | |
+| **Alturas hacia atrás**: las alturas en el orden contrario, con el mismo ritmo | |
+| **Dado vuelta**: cada intervalo desde la primera nota, hacia el otro lado | |
+| **Dado vuelta en la tonalidad**: lo mismo, contando notas de la tonalidad, así que la melodía sigue en ella | |
 | **Arpegiar los acordes**: cada acorde tocado nota tras nota, **arriba**, **abajo** o **arriba y abajo**, a la velocidad elegida en **Cada nota** | |
 | **Seleccionar todo** | **Ctrl+A** |
 | **Copiar**, **Cortar**, **Pegar**, **Duplicar** | **Ctrl+C**, **Ctrl+X**, **Ctrl+V**, **Ctrl+D** |
@@ -119,6 +123,22 @@ usan los músicos: Do Mi Sol en Do mayor se vuelve Re Fa La, un acorde
 menor, no Re Fa♯ La, porque se queda en la tonalidad. **Subir un
 semitono** mueve todas las notas la misma distancia, fuera de la
 tonalidad.
+
+**Hacia atrás** y **Dado vuelta** son los trucos más viejos del
+contrapunto: una melodía tocada hacia atrás es su **retrogradación**, y
+dada vuelta, de modo que un paso hacia arriba se vuelve un paso hacia
+abajo, su **inversión** (que no hay que confundir con invertir un
+acorde). La Ofrenda musical de Bach toca una línea contra sí misma
+hacia atrás, un canon cangrejo. **Dado vuelta** conserva el tamaño
+exacto de cada intervalo: alrededor de Do, Mi (una tercera mayor
+arriba) se vuelve La♭ (una tercera mayor abajo), y un acorde mayor se
+vuelve menor. **Dado vuelta en la tonalidad** cuenta notas de la
+tonalidad, como da vuelta Bach el sujeto de una fuga: en Do mayor, Mi
+(dos notas arriba de Do) se vuelve La (dos notas abajo), y la melodía
+sigue en Do mayor. **Alturas hacia atrás** deja el ritmo donde estaba y
+solo da vuelta las notas. Sobre una serie dodecafónica dan sus otras
+formas: P0 hacia atrás es R0, y dado vuelta I0 (ver [Series
+dodecafónicas](sets-rows-micromodes.md#series-dodecafónicas)).
 
 Las notas pegadas o duplicadas alargan el patrón cuando necesitan
 lugar. Las notas copiadas en la canción se pueden pegar en el editor de
