@@ -4,7 +4,7 @@
 //! it works in any key), a way of playing the chords ([`Comping`]) and a
 //! bass line ([`Bass`]). Playing "I V vi IV" as held piano chords makes a
 //! ballad; playing it as offbeat stabs over a bass on the offbeats makes
-//! house music. The tables below are the library: 217 styles,
+//! house music. The tables below are the library: 215 styles,
 //! each with a sentence on what makes it sound the way it does.
 
 use crate::harmony::{Chord, Scale, ScaleKind};
@@ -498,7 +498,8 @@ pub static STYLES: &[Style] = &[
         Bass::Boogie,
         100.0,
         "Shuffle",
-        "The form of the blues: twelve bars, three chords, all of them dominant sevenths.",
+        "The form of the blues: twelve bars, three chords, all of them dominant sevenths, over the \
+         boogie-woogie's bass, eight to the bar.",
     ),
     style(
         "Quick-change blues",
@@ -566,19 +567,6 @@ pub static STYLES: &[Style] = &[
         160.0,
         "Swing",
         "The blues as a 1940s swing band played it: sixth chords, and a turnaround through VI7, ii7 and V7.",
-    ),
-    style(
-        "Boogie-woogie",
-        Blues,
-        Mixolydian,
-        "I7 | IV7 | I7 | I7 | IV7 | IV7 | I7 | I7 | V7 | IV7 | I7 | V7",
-        Comping::Shuffle,
-        Bass::Boogie,
-        132.0,
-        "Boogie-woogie",
-        "The piano blues of 1930s Chicago and Kansas City: the left hand rolls up and down \
-         each chord eight to the bar while the right plays the chord in long-short pairs. The \
-         twelve bars take the quick change, IV7 in bar 2.",
     ),
     // ----- Jazz -----
     style(
@@ -1895,19 +1883,6 @@ pub static STYLES: &[Style] = &[
     )
     .in_time(SIX_EIGHT),
     style(
-        "Bailecito",
-        Folklore,
-        Major,
-        "I | IV | I | V7 | I | IV | V7 | I",
-        Comping::Waltz,
-        Bass::Waltz,
-        120.0,
-        "Bailecito",
-        "The bailecito of the Argentine northwest and Bolivia, a lively handkerchief dance in \
-         6/8 that also sways in 3/4, its tune often sung in parallel thirds, over I, IV and V7.",
-    )
-    .in_time(SIX_EIGHT),
-    style(
         "Rasguido doble",
         Folklore,
         Major,
@@ -2486,11 +2461,11 @@ pub static STYLES: &[Style] = &[
         Major,
         "I | I7 | IV | I | I | V7 | V7 | I",
         Comping::Shuffle,
-        Bass::RootFifth,
+        Bass::Walking,
         116.0,
         "Honky-tonk shuffle",
-        "The shuffle of 1950s honky-tonk bars, Hank Williams's country: a shuffling piano, the \
-         bass on 1 and 3, and three chords, I7 turning towards IV.",
+        "The Texas shuffle of 1950s honky-tonk bars, the one Ray Price's band set with \"Crazy \
+         Arms\": a shuffling piano over a walking bass, and three chords, I7 turning towards IV.",
     ),
     style(
         "Travis picking",
@@ -2659,12 +2634,13 @@ pub static STYLES: &[Style] = &[
         Classical,
         Major,
         "I | V7 | I | IV | I | II7 | V7 | I",
-        Comping::Stride,
-        Bass::RootFifth,
+        Comping::Afterbeat,
+        Bass::Alternating,
         116.0,
         "March",
-        "A military march in cut time, two strong beats to the bar: the tuba on 1 and 3, the \
-         horns' afterbeats on 2 and 4. II7, the dominant of the dominant, pushes the cadence.",
+        "A military quick march: the tuba on every step, root and fifth in turn, the horns' \
+         \"pah\" between them. II7, the dominant of the dominant, pushes the cadence. A march is \
+         written in 2/4 or cut time; each bar here lasts two.",
     ),
     style(
         "Six-eight march",

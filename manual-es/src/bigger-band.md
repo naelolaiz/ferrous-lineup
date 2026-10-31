@@ -137,8 +137,8 @@ casa.
 | House y otros estilos electrónicos | ataques sincopados |
 | Reguetón, moombahton | acordes cortos en el 3 + 3 + 2 del dembow |
 | Ska | acordes cortos entre los pulsos |
-| Marcha, vals, polca, danzas balcánicas | contratiempos, el «pa» del «um-pa» de una banda de metales |
-| Banda de ragtime, Marcha en 6/8, Pasodoble | contratiempos, el «pa» después de cada pulso |
+| Vals, polca, danzas balcánicas | contratiempos, el «pa» del «um-pa» de una banda de metales |
+| Marcha, Banda de ragtime, Marcha en 6/8, Pasodoble | contratiempos, el «pa» después de cada pulso |
 | Tango, folclore, clásica, reggae, otros estilos en 3/4 o 6/8, estilos sin batería | notas largas |
 | Otros estilos en 5/4, 7/8 y otras métricas irregulares | un golpe en cada pulso en que se siente el compás |
 
