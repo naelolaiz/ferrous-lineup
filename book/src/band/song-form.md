@@ -765,6 +765,173 @@ yours](band.md#a-part-you-edit-stays-yours)). The lock
 counts in that fingerprint only when something is locked, so a song
 with nothing locked keeps the fingerprint it had.
 
+## Parts heard in the notes
+
+A drummer plays a song by its parts: a phrase's pattern from its first
+bar, a fill on its last, something else for the chorus. A demo names its
+parts, and you can mark sections on the playlist yourself, but a MIDI
+file names none. `heard_sections.rs` listens for them, the way a
+musician hears a recording's form, and `Project::form_sections` is
+where the band and the library ask for the song's parts:
+
+```rust
+pub fn form_sections(&self) -> Vec<Section> {
+    if self.playlist.sections.is_empty() {
+        self.heard_sections()
+    } else {
+        self.playlist.sections.clone()
+    }
+}
+```
+
+Written sections always win. The heard ones are only for a song that
+names none.
+
+### Trying it
+
+Open a MIDI file (**File > Import MIDI file…**), or open the demo
+*Candombe para Gardel* and delete its sections. The **Sections** strip
+shows faint ones, named A, B, Intro, Coda, the first saying
+"recognized". Click one: they become the song's own sections, one step
+to undo.
+
+### Three kinds of evidence
+
+Each bar is described once (`Heard`): which pitch classes sound in it,
+or the chord sheet's chord where there is one; where its tune notes
+start and which ones; how many channels play. `likenesses` compares
+every bar with every other, a square table of numbers from 0 to 1. From
+it and the bars, `reasons` gives each bar line a score for a part
+starting there:
+
+- **What comes back.** A run of bars that sounds like a run later on
+  (a diagonal of the table) is a part: the bar where the run starts and
+  the bar where its return starts score, the more the longer the run,
+  up to eight bars; the bars where they end score less.
+- **What changes.** Bars before the line alike, bars after it alike,
+  the two unlike each other: something new starts. A new key or time
+  signature at the line counts too, and so does a tune that rests just
+  before it, the end of a phrase.
+- **Phrases.** Most parts are four or eight bars long, counted from the
+  tune's first full bar. A first bar the tune comes into after its
+  first beat is a **pickup** and is not counted.
+
+How much each kind counts is a number in `Ear`, and the numbers were
+tuned against the written parts of the non-classical demos: the ignored
+tests `score_against_the_demos` and `tune_the_ear` print the score, and
+try each number up and down. Two tests that always run keep it from
+getting worse: eight demos heard exactly as written, and a floor under
+the score over all of them.
+
+### The best cut, by dynamic programming
+
+Given the reasons, which bars start parts? Trying every way to cut a
+100-bar song is out of the question (there are 2⁹⁹), but the best cut
+has a shape that makes it easy: the best way to cut the first `end`
+bars is the best way to cut the first `start` bars, for the best
+`start`, plus one part from `start` to `end`. `best_cut` fills a table
+`best[end]` from left to right:
+
+```rust
+for end in anchor + 1..=n {
+    for start in end.saturating_sub(LONGEST).max(anchor)..end {
+        // ...
+        let opens = if start == anchor {
+            0.0
+        } else {
+            reasons[start] + phrase(start) - ear.part_cost
+        };
+        let shape = if last { 0.0 } else { length_cost(length, ear) };
+        let score = best[start] + opens - shape;
+        if score > best[end] {
+            best[end] = score;
+            from[end] = start;
+        }
+    }
+}
+```
+
+`phrase` adds a bonus for a start on an eight-bar line and a smaller
+one on a four-bar line, `part_cost` keeps it from cutting everywhere,
+and `length_cost` frowns on odd lengths. `from[end]` remembers which
+`start` won, so walking back from the last bar gives the cut. That is
+dynamic programming: each answer is built from smaller answers already
+in the table, so the whole thing takes `n × LONGEST` steps instead of
+2ⁿ.
+
+Before all that, `cut` checks for a **vamp**: a song that goes round a
+loop of up to four bars all the way through, as a groove over C, Am, F,
+G does, has no parts, and nothing in it is cut.
+
+Last, `name` gives the parts letters: a part that sounds like an
+earlier one gets its letter, a new one the next letter. A first part
+that never comes back, before others that do, is the **Intro** when it
+is short or has no tune; a last one that never comes back, eight bars
+or fewer, the **Coda**.
+
+### Shown faint, heard only when the song changes
+
+The playlist draws the heard parts when no sections are marked
+(`playlist/sections.rs`). Hearing a long song takes time, up to a few
+tens of milliseconds in a release build and a few hundred in a debug
+build, too long to do every frame. So the strip keeps what it heard with a number
+that says what it heard it from, `Project::hearing_key`: a hash of the
+clips, the notes of the song's own patterns, the chord sheet, the time
+signatures and the keys. Every frame it computes that number again,
+which is quick, and listens again only when it differs. While it keeps
+changing, as while notes are dragged, it listens at most every 400 ms.
+
+A click on a faint part sends `PlaylistAction::KeepHeardSections`, and
+`Project::keep_heard_sections` adds them as sections, one undo step.
+
+## Drums by part
+
+`library/drum_form.rs` decides what the drums play over each part.
+`form_parts` cuts the song's bars at the parts of `form_sections`, and
+each part becomes a `DrumPart`:
+
+```rust
+pub struct DrumPart<'a> {
+    pub bars: &'a [Bar],
+    pub opens: bool,
+    pub groove: usize,
+    pub contrast: bool,
+    pub then: Then,
+    pub lead_in: bool,
+    pub crash: bool,
+    pub turn: usize,
+}
+```
+
+- **Phrases.** `phrases` cuts a part into phrases of eight bars; a part
+  shorter than eight is one phrase, and what is left over is a phrase
+  of its own when it is four bars or more.
+- **Fills.** `fill_places` puts a fill in a part's last bar, a small one
+  (the last beat or two, from `small_from`) at the end of each eight
+  bars inside parts of sixteen or more, and two bars that build into
+  the ending (`Then::Ending`). The fills take turns between the
+  rhythm's own and its genre's usual ones (`fills_of`), counted over the
+  whole song, so the same song always plays the same fills. A rhythm
+  for a band without a kit, a zamba's bombo, fills on its own drums
+  (`own_fill`); a tango has none.
+- **Crashes.** The part after one that `ends_with_fill` gets `crash`,
+  and starts with the crash cymbal, unless the rhythm crashes there
+  already.
+- **Grooves.** `groove` is the part's kind: the same number for
+  sections of the same name, by `section_kinds`, so "Verse 2" plays
+  like "Verse". An odd kind plays `contrasting` drums, the hi-hat moved
+  to the ride, unless the song's own variations say what plays where.
+- **Turns.** `turn` counts the phrases of that kind the song has played
+  (`Turns`), for rhythms laid out with grooves and closings that take
+  turns, such as the candombe's (see [Laid out over a song's
+  parts](library.md#laid-out-over-a-songs-parts)).
+
+The band's patterns follow the same parts: `chunks` starts a pattern
+where a part starts. Such an edge is **soft**: when a player holds a
+note over it, as the strings hold a chord into the next part,
+`write_part` joins the two stretches into one pattern, so the chord is
+not struck again where the part starts.
+
 ## In the file
 
 All four are saved with the band, and each is left out of the file
@@ -796,8 +963,9 @@ Each module tests its own part:
   band's parts are not frozen; `an_intro_is_a_turnaround_into_the_first_chord`
   checks turnarounds into major and minor chords, the spellings into
   Ebm and Gb, and a blues; `the_ending_holds_the_tonic` checks the last bar is
-  one chord held 16 steps, with one crash; `the_form_is_saved` checks
-  the file reads back the same.
+  one chord held 16 steps, with a crash, and a crash on the ending's
+  first beat after the fill; `the_form_is_saved` checks the file reads
+  back the same.
 - `variation.rs`: `markers_keep_only_changes`,
   `the_drummer_moves_to_the_ride`, `the_drums_fill_into_a_change`,
   `variation_b_is_louder`, `players_switch_to_their_busier_way`,
@@ -814,8 +982,22 @@ Each module tests its own part:
   `band/locks.rs` checks each rule of the band, and that
   `no_band_leaves_the_locked_parts_to_the_song`.
 
+- `heard_sections.rs`: `the_ear_hears_these_demos_as_written` and
+  `the_ear_hears_most_parts_of_the_demos`, with and without the chord
+  sheets.
+- `drum_form.rs`: `parts_are_cut_in_phrases_of_eight`,
+  `a_part_ends_with_a_fill_and_long_parts_fill_inside`,
+  `the_fills_take_turns`, `a_b_part_moves_the_hi_hat_to_the_ride`,
+  `folklore_fills_on_its_own_drums_and_the_tango_not_at_all`,
+  `the_part_after_a_fill_lands_with_a_crash` and
+  `the_candombe_phrases_take_turns`.
+- `band.rs`: `the_band_starts_its_patterns_where_the_parts_start` and
+  `a_chord_held_over_a_section_start_is_not_struck_again`.
+
 In the app, `ux_tests.rs` clicks the rack's lock and undoes it
 (`the_rack_locks_a_channel_and_undo_unlocks_it`), tries Doo-wop and
 then Bossa nova in a pattern around a locked Keys, and checks the
 notices and the chord sheet say what is kept
-(`the_library_and_the_band_say_what_is_kept`).
+(`the_library_and_the_band_say_what_is_kept`), and keeps the parts
+heard in a song with one click
+(`a_song_without_sections_shows_the_ones_heard_and_keeps_them_with_a_click`).
