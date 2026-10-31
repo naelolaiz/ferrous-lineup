@@ -21,6 +21,8 @@
 #     Función: no program/sync.md
 
 Ajustar a la escala: theory/scales.md#ajustar-a-la-escala
+Algoritmo de Viterbi: theory/hearing.md#dónde-cambia-la-tonalidad, theory/listen.md#viterbi-un-solo-camino-por-toda-la-toma
+Altura de la voz: theory/listen.md#oír-la-altura
 Archivo de proyecto: program/saving.md, reference/project-format.md
 Archivo MIDI: sound/midi.md#escribir-un-archivo-midi, sound/midi.md#leer-un-archivo-midi, songs/from-midi-and-scores.md
 Arpegio: theory/tools.md#arpegios-cycle-step_by-y-zip
@@ -54,13 +56,14 @@ Guardado automático: program/saving.md#una-copia-del-trabajo-sin-guardar
 Hilo de audio: program/threads.md, program/sync.md, sound/sequencer.md
 Hoja de acordes: band/chord-sheet.md, theory/sets.md#una-armonía-cuatro-nombres
 Idioma: program/languages.md
-Importar una grabación: theory/listen.md
 Integración continua: shipping/ci.md
+Latencia: theory/listen.md#cuándo-se-cantó-dos-relojes
 Lineup Osc: sound/instruments.md#el-lineup-osc
 Lista de reproducción: program/project.md, program/editors.md#la-lista-de-reproducción
 Marca de tonalidad: theory/scales.md#cambios-de-tonalidad-a-mitad-de-camino-marcas-de-tonalidad
 Métrica: véase Compás
 Mezclador: sound/mixer.md
+Micrófono: theory/listen.md#cuándo-se-cantó-dos-relojes, theory/listen.md#en-la-aplicación
 Modulación: véase Cambio de tonalidad
 Música latinoamericana: songs/demos.md, songs/from-midi-and-scores.md
 Nombres de acordes: theory/chords.md
@@ -76,6 +79,7 @@ Pista bloqueada: band/song-form.md#bloquear-una-pista-los-estilos-tocan-a-su-alr
 Pista: program/editors.md#la-lista-de-reproducción
 Práctica: band/practice.md
 Preferencias: program/egui.md#guardado-por-nombre-no-por-tipo, sound/soundfonts.md#se-pregunta-hasta-que-se-responde
+pYIN: theory/listen.md#pyin-cada-valle-un-candidato
 Rack de canales: program/editors.md
 Reconocimiento de acordes: véase Oír acordes
 Revisión del color: theory/micromodes.md#revisar-el-color
@@ -89,6 +93,7 @@ Tango: songs/demos.md, songs/from-midi-and-scores.md
 Teclado MIDI: sound/midi.md#el-camino-de-entrada-de-una-tecla
 Teclas de armonía: theory/numerals.md#las-teclas-de-armonía, theory/sets.md#una-tonalidad-como-conjunto-las-mismas-notas-otro-nombre
 Tempo: sound/tempo.md
+Toma: theory/listen.md
 Traducción: véase Idioma
 Transporte: sound/sequencer.md#saltar-y-cambiar-de-modo, sound/tempo.md#no-perder-el-sitio
 Traza de reproducción: sound/trace.md
@@ -96,6 +101,7 @@ Variaciones: band/song-form.md#variaciones-a-y-b-la-banda-aprieta
 Velocidad: program/editors.md#el-carril-de-velocidad, songs/demos.md#tocar-como-una-persona
 Ventana Acerca de: program/egui.md#ayuda-el-manual-y-acerca-de
 Versión: shipping/releases.md, program/egui.md#ayuda-el-manual-y-acerca-de
+YIN: theory/listen.md#yin-un-sonido-comparado-consigo-mismo
 Zoom: program/egui.md#zoom
 
 Función: no program/sync.md

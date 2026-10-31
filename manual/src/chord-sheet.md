@@ -114,8 +114,8 @@ a chord on any beat you like.
 ## Writing what the song plays
 
 A song opens with its chords on the sheet already. A demo writes the
-chart it was made from; any other song, such as a MIDI file you opened
-or a recording you imported, gets the chords the app hears in it.
+chart it was made from; any other song, such as a MIDI file you opened,
+gets the chords the app hears in it.
 
 **Write the chords the song plays**, at the top of the sheet, writes
 them again from what the song plays now, in place of what the sheet

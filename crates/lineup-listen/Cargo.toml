@@ -1,6 +1,6 @@
 [package]
 name = "lineup-listen"
-description = "Listening to recordings for Ferrous Lineup: decoding audio files and finding their tempo, beats, key and chords"
+description = "Listening to recordings for Ferrous Lineup: decoding audio files and hearing the notes sung or whistled in them"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -11,8 +11,4 @@ rust-version.workspace = true
 lineup-core.workspace = true
 symphonia.workspace = true
 realfft.workspace = true
-bpm-key.workspace = true
 hound.workspace = true
-
-[dev-dependencies]
-lineup-audio.workspace = true
