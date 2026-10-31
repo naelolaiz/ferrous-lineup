@@ -135,6 +135,7 @@ Exportar WAV: exporting.md#un-archivo-de-sonido
 Figuras: rhythm-and-meter.md#figuras-y-pasos
 Filtros (Biblioteca): styles.md#buscar-un-estilo
 Final: first-song.md#6-dale-una-forma, song-form.md#el-final-a-casa-y-sostenido
+Forma de onda: takes.md#la-toma-en-su-pista
 Forma prima: sets-rows-micromodes.md#conjuntos-de-clases-de-alturas
 Formación de instrumentos: bigger-band.md#el-menú-banda
 Función: chord-functions.md#casa-alejarse-y-tensión
@@ -267,7 +268,7 @@ Síncopa: stops.md#la-música, rhythm-and-meter.md#pulsos-fuertes-pulsos-débile
 Sintetizador: midi.md#enviar-a-un-sintetizador
 Solfeo: notes-and-scales.md#solfeo-o-letras
 Solista: soloist.md
-Solo: mixer.md#las-líneas
+Solo: mixer.md#las-líneas, patterns-and-playlist.md#las-pistas
 Soltar archivos: saving.md#abrir-archivos-de-otras-maneras
 Soltura: swing.md#tiempo-suelto
 Son cubano: tango-and-latin-america.md#cuba-y-méxico

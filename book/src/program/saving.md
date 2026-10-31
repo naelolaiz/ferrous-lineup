@@ -770,7 +770,7 @@ panic on a file name that is not valid UTF-8, which Linux allows.
 A `.lineup` file dropped on the window is opened too, after the same
 "Save changes?" question, a MIDI file or a chord sheet is imported, and
 a recording is added to the song as a take. Other dropped WAV files go
-to the channel rack (see [Takes](../theory/listen.md#from-the-menu-the-command-line-or-a-drop)
+to the channel rack (see [Takes](../theory/listen.md#from-the-playlist-the-command-line-or-a-drop)
 for which WAV is which).
 
 ## File > Open recent

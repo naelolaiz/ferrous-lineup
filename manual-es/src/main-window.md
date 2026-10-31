@@ -22,7 +22,7 @@ De arriba abajo, la ventana tiene:
 
 | Menú | Qué contiene |
 |---|---|
-| **Archivo** | **Nuevo** (una hoja de acordes vacía con una banda), **Nuevo ritmo** (un patrón vacío y una batería), **Abrir…**, **Abrir recientes**, **Demostraciones**, **Añadir una grabación…** (una grabación hecha antes, puesta sobre la canción como una [toma](takes.md#añadir-una-grabación-hecha-antes)), **Importar archivo MIDI…**, **Importar hoja de acordes…**, **Guardar**, **Guardar como…**, las exportaciones (**Exportar WAV…**, **Exportar video…**, la canción o el patrón como MIDI, la hoja de acordes como texto) y **Salir** |
+| **Archivo** | **Nuevo** (una hoja de acordes vacía con una banda), **Nuevo ritmo** (un patrón vacío y una batería), **Abrir…**, **Abrir recientes**, **Demostraciones**, **Importar archivo MIDI…**, **Importar hoja de acordes…**, **Guardar**, **Guardar como…**, las exportaciones (**Exportar WAV…**, **Exportar video…**, la canción o el patrón como MIDI, la hoja de acordes como texto) y **Salir** |
 | **Edición** | **Deshacer** y **Rehacer**, que nombran lo que deshacen, y **Ajustes…** |
 | **Ver** | cada ventana y el panel, mostrados u ocultos; **Hoja de acordes en la ventana principal**, la **Partitura guía**, el **Editor de estilos…** y el **Entrenamiento auditivo** |
 | **MIDI** | **Teclado del equipo como piano**, **El acompañamiento sigue los acordes**, un teclado con el que tocar (**Entrada**) y un sintetizador en el que tocar (**Salida**) |

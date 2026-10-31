@@ -7,18 +7,20 @@ y [`crates/lineup-app/src/app/voice.rs`](https://github.com/naelolaiz/ferrous-li
 
 Una **toma** es una melodía cantada o silbada junto con la canción. El
 botón del micrófono, junto a Rec, graba una mientras suena la canción;
-**Archivo > Añadir una grabación…** pone sobre la canción una grabación
-hecha antes, desde el cursor de reproducción. En los dos casos la
+**➕ Grabación**, en la lista de reproducción, o un archivo soltado
+sobre una pista, pone sobre la canción una grabación hecha antes. En
+los dos casos la
 aplicación oye sus notas, con su altura, su momento y la fuerza con que
 se cantó cada una, y la ventana **Tu toma** pregunta adónde van: en
 lugar de lo que tocaba la Melodía en ese lugar, a otro canal, a uno
 nuevo o a ninguna parte. La grabación misma se queda en una pista de la
-lista de reproducción, donde suena con la canción como referencia. Cómo
+lista de reproducción, dibujada como su forma de onda, donde suena con
+la canción como referencia. Cómo
 usarlo está en
 [Tomas](https://naelolaiz.github.io/ferrous-lineup/es/manual/takes.html),
 en el manual.
 
-![La ventana Tu toma sobre la lista de reproducción: las notas oídas y los compases donde se cantaron, las primeras con su nombre, Las notas van a Melodía, la cuadrícula en semicorcheas, y la grabación conservada en una pista propia](../images/take-review.png)
+![La ventana Tu toma sobre la lista de reproducción: las notas oídas y los compases donde se cantaron, las primeras con su nombre, Las notas van a Melodía, la cuadrícula en semicorcheas, las alturas como se cantó, y la grabación conservada en una pista propia](../images/take-review.png)
 
 Para eso hay que responder tres preguntas, y cada una se responde en un
 crate distinto:
@@ -509,7 +511,10 @@ primer paso entero dentro de ella.
 - se redondean a la cuadrícula pedida: semicorcheas, corcheas o negras;
 - su altura, menos la afinación de la toma, se redondea a un semitono;
   una altura justo entre dos (de 0,35 a 0,65 del camino) va a la que
-  está en la tonalidad de ese lugar;
+  está en la tonalidad de ese lugar; o va a una nota de la tonalidad, o
+  de la escala del acorde, según pida la ventana (mira [Alturas: como
+  se cantó, en la tonalidad o con los
+  acordes](#alturas-como-se-cantó-en-la-tonalidad-o-con-los-acordes));
 - la fuerza con que se cantó fija su **velocidad**: una nota tan fuerte
   como la del medio de la toma suena a 100, las más fuertes con más
   fuerza, las más suaves más suave.
@@ -535,6 +540,66 @@ nota termina donde empieza la siguiente, y un hueco de un paso o dos
 (una respiración, una consonante) se cierra en lugar de escribirse
 como silencio.
 
+### Alturas: como se cantó, en la tonalidad o con los acordes
+
+Alguien que canta un poco desafinado, o un silbido que se desliza,
+puede caer más cerca de un semitono equivocado que del correcto.
+`take::transcribe_with` recibe un `Pitches` que dice cuán estricto
+ser:
+
+```rust
+pub enum Pitches {
+    #[default]
+    AsSung,
+    InKey,
+    WithChords,
+}
+```
+
+**Como se cantó** es el redondeo de arriba. **En la tonalidad** escribe
+la nota de la tonalidad más cercana en ese lugar: en re mayor, un re♯
+cantado un cuarto de semitono alto es un mi, porque re♯ no está en la
+tonalidad. **Tonalidad y acordes** escribe la nota más cercana de la
+escala que un solista toca sobre el acorde de la hoja de acordes en ese
+lugar, en la tonalidad: la **escala de acorde** que `chord_scale` elige
+para el [solista](../band/soloist.md#elegir-una-escala-de-acorde). Sobre
+D7 en do mayor, el V7 de sol, es sol mayor, do re mi fa♯ sol la si, así
+que un fa cantado se escribe fa♯, mientras que sol, la nota adonde
+lleva D7, se queda. Sobre Fm, prestado de do menor, es fa sol la♭ si♭ do
+re mi♭. Los compases sin acorde se quedan en la tonalidad; un micromodo
+en la hoja de acordes es la escala de ese lugar.
+
+`allowed_at` da dos [conjuntos de clases de
+altura](pitch.md#un-conjunto-de-clases-de-altura-en-doce-bits) para un
+paso: las notas como las que se puede escribir una altura, y las
+preferidas justo entre dos, las del acorde:
+
+```rust
+let allowed = match harmony {
+    Some(HarmonyName::Chord(symbol)) => {
+        let mut allowed = chord_scale(symbol.chord(), scale);
+        allowed.insert(symbol.bass_pitch_class());
+        allowed
+    }
+    // A micromode is the scale there.
+    Some(HarmonyName::Micromode(set)) => set,
+    // A set, or two chords at once: the key with their notes.
+    _ => PitchSet::from_bits(key.bits() | chord.bits()),
+};
+```
+
+Se añade el bajo de un acorde con barra, porque G/F♯ tiene debajo un
+fa♯ que la escala del acorde de G puede no tener.
+`PitchSet::from_bits(a.bits() | b.bits())` es una unión: cada conjunto
+son doce bits, uno por clase de altura, así que el «o» bit a bit de los
+dos tiene todas las notas de cualquiera de ellos.
+
+Luego `nearest_in` mira todas las notas a menos de una octava de la
+altura cantada, se queda con las permitidas y toma la más cercana; a la
+misma distancia, gana una del conjunto preferido. La ventana vuelve a
+transcribir la toma cada vez que cambia la elección, así que las notas
+que lista muestran la diferencia enseguida.
+
 ## Escribirla
 
 `Project::add_take` escribe una transcripción en la canción, donde dice
@@ -553,8 +618,13 @@ notas de ese canal** donde se cantaron, en lugar de las notas que había:
 corriges la melodía una vez, y queda corregida en todos los lugares
 donde suena su patrón. `Added::shared` lista esos patrones que suenan
 más de una vez, para que la aplicación pueda decirlo. Las notas
-cantadas donde ningún patrón tiene notas del canal van a los clips
-propios de la toma. En el modo patrón van al patrón.
+cantadas donde ningún patrón tiene notas del canal, y todas las notas
+para un canal nuevo, van a clips propios, en una pista **justo debajo
+de la de la grabación**, con el nombre de `Keep::notes`, como *Notas
+de Toma 1*: la grabación y sus notas quedan una al lado de la otra, y
+cada una se puede silenciar por su cuenta. Sin una grabación
+conservada, esos clips van a la pista que eligió la ventana. En el modo
+patrón las notas van al patrón.
 
 La grabación se guarda como un archivo WAV por trozo
 (`lineup_listen::wav`, en coma flotante de 32 bits, para no perder nada
@@ -617,9 +687,9 @@ oye igual; ese hilo toma primero el idioma de la ventana, para que un
 error se escriba en él (mira [Ajustes que viven en un
 hilo](../sound/export.md#ajustes-que-viven-en-un-hilo)).
 
-La ventana no cambia nada hasta **Escribirla**. Elegir otra cuadrícula
-vuelve a transcribir la toma, cosa rápida, porque las notas ya se
-oyeron. **Escribirla** transcribe una vez más, por si la canción cambió
+La ventana no cambia nada hasta **Escribirla**. Elegir otra cuadrícula,
+u otra manera de escribir las alturas, vuelve a transcribir la toma,
+cosa rápida, porque las notas ya se oyeron. **Escribirla** transcribe una vez más, por si la canción cambió
 mientras la ventana estaba abierta, guarda los trozos y escribe la toma
 con `self.edit`, así que es **un solo paso de deshacer**.
 **Descartarla**, o cerrar la ventana, no conserva nada.
@@ -629,13 +699,87 @@ antes de que el sistema la deje escuchar, así que
 `packaging/macos/Info.plist` tiene un `NSMicrophoneUsageDescription`,
 que macOS muestra la primera vez.
 
-### Desde el menú, la línea de comandos o soltada
+### Dibujar una toma: su forma de onda
 
-Una grabación llega a la aplicación desde **Archivo > Añadir una
-grabación…**, desde la línea de comandos o soltada sobre la ventana.
-**Archivo > Añadir una grabación…** y soltarla la ponen sobre la
-canción desde el cursor de reproducción (desde el compás 1 en el modo
-patrón, que pasa al modo canción). Un archivo nombrado en la línea de
+Los clips de una toma tienen una sola nota, en el primer paso del
+trozo, así que dibujados como notas mostrarían un punto. La lista de
+reproducción dibuja en cambio su **forma de onda**: una línea vertical
+por cada columna de píxeles, tan alta como la muestra más fuerte del
+tramo de la grabación que queda debajo.
+
+Leer una grabación larga lleva un momento, demasiado para frenar un
+cuadro, así que `Waves` lee cada archivo una sola vez en un hilo propio
+y guarda el `JoinHandle` en un `HashMap` con la ruta del archivo como
+clave. Hasta que el hilo `is_finished()`, el clip se dibuja vacío y la
+lista de reproducción pide otro cuadro en 100 ms; entonces hace `join`,
+y guarda el resultado detrás de un `Arc`, para que el dibujo pueda
+tenerlo mientras el mapa se vuelve a pedir prestado. `Wave::read`
+decodifica el archivo con `lineup_listen::decode_file` y se queda con la
+muestra más fuerte de cada 1/400 s. Después las divide todas por la más
+fuerte de toda la toma, con un piso de 0,01 para que el casi silencio
+siga siendo casi silencio: una toma cantada suave llena su clip igual
+que una cantada fuerte.
+
+Una toma larga se corta en varios clips, de a lo sumo el largo de un
+patrón, y solo el primero tiene la nota que la hace sonar. Así que
+`paint_clips` junta primero dónde empieza cada grabación, por pista, y
+dibuja cada una debajo de todos los clips de su pista bajo los que
+suena, no solo debajo del que la empieza.
+
+La grabación sigue de largo en segundos, mientras que la lista de
+reproducción se ordena en pasos, y el largo de un paso en segundos
+cambia con el tempo. `paint_wave` recorre los pasos desde el principio
+del trozo, sumando el largo de cada uno, `seconds_per_beat() / 4.0` al
+tempo de ese lugar, así que la forma de onda se queda debajo de los
+compases con los que se oye a través de cada cambio de tempo.
+
+### Oír una toma sola
+
+Cada pista tiene una **S** junto a su luz de silencio. Silencia todas
+las demás pistas, y un segundo clic les devuelve el sonido a todas. Una
+sola regla hace las dos cosas: una pista está sola cuando es la única
+que suena, y el clic alterna entre eso y que suenen todas:
+
+```rust
+let alone = tracks
+    .iter()
+    .enumerate()
+    .all(|(other, t)| (other == track) != t.muted);
+for other in 0..tracks.len() {
+    if let Some(t) = project.track_mut(other) {
+        t.muted = !alone && other != track;
+    }
+}
+```
+
+`(other == track) != t.muted` es verdadero cuando esta pista suena y
+todas las demás están en silencio: `!=` entre dos `bool` es «exactamente
+uno de los dos». La S se ilumina mientras su pista está sola. Es una
+sola edición, así que **Ctrl+Z** deja los silencios como estaban, y los
+silencios se guardan con la canción, como siempre se guardaron los de
+la luz.
+
+### Desde la lista de reproducción, la línea de comandos o soltada
+
+Una grabación llega a la aplicación desde **➕ Grabación**, en la barra
+de la lista de reproducción, desde **Añadir una grabación…** en el menú
+de una pista, desde la línea de comandos o soltada sobre la ventana. El
+botón la pone sobre la canción desde el cursor de reproducción (desde
+el compás 1 en el modo patrón, que pasa al modo canción); el menú de la
+pista también, en esa pista. Soltada sobre la lista de reproducción,
+empieza donde se soltó, en el compás, el pulso o el paso que dice
+**Ajuste**, en la pista que está bajo el puntero; soltada en cualquier
+otro lugar, empieza en el cursor de reproducción.
+
+Los archivos soltados llegan a la aplicación antes de que la lista de
+reproducción se vuelva a dibujar, así que la lista guarda un
+`DropGrid`, la cuadrícula tal como se dibujó en el último cuadro: dónde
+está en la pantalla, en qué capa, y dónde empieza cada pista.
+`recording_drop` le pregunta sobre qué paso y qué pista está el
+puntero, y solo si ninguna ventana tapa ese lugar (`ctx.layer_id_at`
+nombra la capa de más arriba ahí). Mientras se arrastra un archivo
+sobre la lista de reproducción, la misma cuadrícula ilumina el lugar
+donde empezaría. Un archivo nombrado en la línea de
 comandos, o abierto desde un gestor de archivos, pasa por `open_now`,
 que también abre proyectos, y que pregunta primero a
 `lineup_listen::is_audio_file`: una extensión de `AUDIO_EXTENSIONS`,

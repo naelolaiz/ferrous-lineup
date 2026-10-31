@@ -63,6 +63,7 @@ sheet](chord-sheet.md#chord-sheets-as-text).
 ## Recordings
 
 A sound file (MP3, WAV, FLAC or Ogg) is not opened as a song of its
-own: **File > Add a recording…** lays it on the song you have open, and
-writes the notes sung or played in it, as a take (see
+own: **➕ Recording**, in the playlist's toolbar, lays it on the song you
+have open, and writes the notes sung or played in it, as a take; so
+does dropping it on a track (see
 [Takes](takes.md#adding-a-recording-made-before)).

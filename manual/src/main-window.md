@@ -21,7 +21,7 @@ From top to bottom, the window has:
 
 | Menu | What is in it |
 |---|---|
-| **File** | **New** (an empty chord sheet with a band), **New beat** (an empty pattern and a drum kit), **Open…**, **Open recent**, **Demos**, **Add a recording…** (a recording made before, laid on the song as a [take](takes.md#adding-a-recording-made-before)), **Import MIDI file…**, **Import chord sheet…**, **Save**, **Save as…**, the exports (**Export WAV…**, **Export video…**, the song or the pattern as MIDI, the chord sheet as text) and **Quit** |
+| **File** | **New** (an empty chord sheet with a band), **New beat** (an empty pattern and a drum kit), **Open…**, **Open recent**, **Demos**, **Import MIDI file…**, **Import chord sheet…**, **Save**, **Save as…**, the exports (**Export WAV…**, **Export video…**, the song or the pattern as MIDI, the chord sheet as text) and **Quit** |
 | **Edit** | **Undo** and **Redo**, which name what they undo, and **Settings…** |
 | **View** | each window and the panel, shown or hidden; **Chord sheet in the main window**, the **Lead sheet**, the **Style editor…** and **Ear training** |
 | **MIDI** | **Typing keyboard to piano**, **Accompaniment follows chords**, a keyboard to play with (**Input**) and a synth to play on (**Output**) |

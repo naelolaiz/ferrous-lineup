@@ -248,7 +248,7 @@ Slash chord: chords.md#slash-chords-and-inversions
 Snap: patterns-and-playlist.md#placing-and-moving-clips
 Snap to scale: piano-roll.md#writing-notes
 Solfège: notes-and-scales.md#letters-or-solfège
-Solo: mixer.md#the-lines
+Solo: mixer.md#the-lines, patterns-and-playlist.md#tracks
 Soloist: soloist.md
 Son: tango-and-latin-america.md#cuba-and-mexico
 Song mode: patterns-and-playlist.md#pattern-mode-and-song-mode
@@ -306,6 +306,7 @@ Video: exporting.md#a-video
 Voice leading: piano-roll.md#seeing-the-other-parts, voice-leading.md
 WAV: channel-rack.md#your-own-sounds, exporting.md#a-sound-file
 Wet / dry: mixer.md#the-reverb
+Waveform: takes.md#the-take-on-its-track
 What often comes next: chord-functions.md#what-often-comes-next
 Whistling a part: see Take
 Windows: settings.md#windows

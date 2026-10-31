@@ -51,12 +51,13 @@ compases, y las primeras por su nombre. Si cantaste un poco alto o
 bajo todo el tiempo, lo dice; las notas se escriben como las quisiste
 cantar.
 
-![La ventana Tu toma: 19 notas, del compás 1 al compás 6, Fa#5 Fa#5 Sol5 La5 La5 Sol5 Fa#5 Mi5 Re5 Re5 Mi5 Fa#5; Las notas van a Melodía; En la cuadrícula de semicorcheas; La grabación: Conservarla, en Una pista nueva; Escribirla y Descartarla](images/take-review.png)
+![La ventana Tu toma: 19 notas, del compás 1 al compás 6, Fa#5 Fa#5 Sol5 La5 La5 Sol5 Fa#5 Mi5 Re5 Re5 Mi5 Fa#5; Las notas van a Melodía; En la cuadrícula de semicorcheas; Alturas como se cantó; La grabación: Conservarla, en Una pista nueva; Escribirla y Descartarla](images/take-review.png)
 
 | Opción | Qué hace |
 |---|---|
 | **Las notas van a** | Primero se elige el canal que toca la melodía, la **Melodía**. Las notas reemplazan lo que ese canal tocaba donde cantaste, y solo ahí. También puedes elegir cualquier otro canal, **Un canal nuevo** (llamado «Notas cantadas», tocado por una flauta), o **A ninguna parte: conservar solo la grabación**. |
 | **En la cuadrícula de** | Adónde se ajustan los comienzos y los finales de las notas: **semicorcheas**, **corcheas** o **negras**. Una cuadrícula más gruesa ordena un ritmo suelto. |
+| **Alturas** | Como qué notas se escriben las alturas que cantaste. **Como se cantó**: el semitono más cercano. **En la tonalidad**: la nota de la tonalidad más cercana, para que una nota desafinada no salga como una nota equivocada. **Tonalidad y acordes**: la nota de la tonalidad más cercana tal como la colorea el acorde de la hoja de acordes en ese lugar; sobre D7 en do mayor se escribe fa♯ en lugar de fa. Los compases sin acorde se quedan en la tonalidad. Las notas de arriba cambian a medida que eliges. |
 | **La grabación** | **Conservarla** guarda lo que cantaste, en una pista: **Una pista nueva** abajo, o una que elijas. Desmárcalo para quedarte solo con las notas. |
 
 **Escribirla** lo hace, como un solo paso: **Ctrl+Z** quita toda la
@@ -68,13 +69,15 @@ cantaste suena más de una vez en la canción, también lo dice: tus notas
 suenan cada vez que suena el patrón, así que una melodía corregida una
 vez queda corregida en todos los lugares donde se repite.
 
-![La lista de reproducción después de escribir la toma: una pista nueva «Toma 1» con un clip rosa del compás 1 al 6, debajo de las pistas Canción y Batería, y la barra de estado que dice «Se escribieron 19 notas en Melodía. La grabación suena como Toma 1. Tema suena 3 veces: tus notas suenan cada vez.»](images/take-written.png)
+![La lista de reproducción después de escribir la toma: una pista nueva «Toma 1» con la forma de onda de la grabación en un clip rosa del compás 1 al 6, debajo de las pistas Canción y Batería, y la barra de estado que dice «Se escribieron 19 notas en Melodía. La grabación suena como Toma 1. Tema suena 3 veces: tus notas suenan cada vez.»](images/take-written.png)
 
 ## Cómo se oye lo que cantas
 
 - **Altura**: cada nota se redondea al semitono más cercano, después de
   quitar cuánto más alta o más baja se cantó toda la toma. Una nota
-  cantada justo entre dos va a la que está en la tonalidad.
+  cantada justo entre dos va a la que está en la tonalidad. **Alturas**,
+  en la ventana Tu toma, puede llevar las notas a la tonalidad, o a la
+  tonalidad y los acordes.
 - **Ritmo**: dónde empieza y dónde termina cada nota, en la cuadrícula
   que elegiste. Una respiración o una consonante entre dos notas no se
   escribe como un silencio.
@@ -95,9 +98,19 @@ Algunos consejos:
 
 ## La toma en su pista
 
-La grabación conservada suena con la canción, desde donde empieces la
-reproducción, como cualquier parte: silencia su pista para oír la
-canción sin ella. Su sonido se guarda como un archivo WAV en una
+La grabación conservada se dibuja en su pista como su forma de onda:
+alta donde cantaste fuerte, plana donde hubo silencio. Suena con la
+canción, desde donde empieces la reproducción, como cualquier parte: la
+**luz** a la izquierda de su pista la silencia, y **S** la deja sonar
+sola, para oír solo lo que cantaste (ver [Las
+pistas](patterns-and-playlist.md#las-pistas)).
+
+Las notas que van a **Un canal nuevo**, o a un canal que no tiene nada
+que tocar ahí, van a una pista propia justo debajo de la grabación, con
+su nombre, como *Notas de Toma 1*. Silencia una de las dos pistas para
+oír la grabación sin sus notas, o las notas sin la grabación.
+
+Su sonido se guarda como un archivo WAV en una
 carpeta junto a la canción, con su nombre, como *mi canción takes*
 (para una canción todavía sin guardar, en la carpeta propia de Ferrous
 Lineup). Deja esa carpeta junto a la canción: si las mueves o las
@@ -110,11 +123,23 @@ una más nueva, para abrirse.
 
 ## Añadir una grabación hecha antes
 
-**Archivo > Añadir una grabación…** pone un archivo MP3, WAV, FLAC u
-Ogg sobre la canción, desde el cursor de reproducción (desde el
-compás 1 en modo patrón, que pasa a modo canción), y oye sus notas como
-en una toma. También puedes soltar el archivo sobre la ventana. La
-misma ventana **Tu toma** pregunta adónde van las notas.
+Un archivo MP3, WAV, FLAC u Ogg puede ir sobre la canción como una
+toma, y sus notas se oyen como en una que cantaste. Hay tres maneras:
+
+- **➕ Grabación**, en la barra de la lista de reproducción, lo pone
+  sobre la canción desde el cursor de reproducción (desde el compás 1
+  en modo patrón, que pasa a modo canción).
+- **Añadir una grabación…**, en el menú que aparece con un clic derecho
+  en el nombre de una pista, lo pone en esa pista, desde el cursor de
+  reproducción.
+- **Suelta el archivo sobre una pista**: mientras lo arrastras sobre la
+  lista de reproducción, se ilumina el lugar donde va a empezar, en el
+  compás, el pulso o el paso que dice **Ajuste**, y empieza ahí, en esa
+  pista. Soltado en la fila más tenue debajo de la última pista, va a
+  una pista sin nada; soltado en cualquier otro lugar de la ventana,
+  empieza en el cursor de reproducción.
+
+La misma ventana **Tu toma** pregunta adónde van las notas.
 
 - La grabación sigue de largo al tempo de la canción, así que coincide
   cuando se grabó a ese tempo, por ejemplo junto con la canción.

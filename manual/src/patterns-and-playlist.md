@@ -89,12 +89,15 @@ fainter row: place a clip on it, or click its **➕ New track**, and it
 becomes a track. **➕ Track** in the playlist's toolbar adds one too.
 
 - The **light** at the left of a track mutes it and unmutes it.
+- **S**, at its right, plays that track alone: every other track is
+  muted. Click it again to hear them all.
 - **Click its name** to rename it.
 - **Drag its lower edge** to make it taller or shorter;
   **double-click** the edge to give it back its usual height.
 - **Right-click its name** for **Track height**, **Reset track height**,
-  **Insert track above**, **Insert track below**, **Move up**, **Move
-  down** and **Delete track**, which deletes its clips too.
+  **Insert track above**, **Insert track below**, **Add a recording…**
+  (see [Takes](takes.md#adding-a-recording-made-before)), **Move up**,
+  **Move down** and **Delete track**, which deletes its clips too.
 
 ## The strips above the tracks
 
