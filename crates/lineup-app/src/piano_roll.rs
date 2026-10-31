@@ -1101,7 +1101,7 @@ impl PianoRoll {
         let tool = if self.for_video {
             None
         } else {
-            self.toolbar(ui, project.scale, scale, others.is_empty(), actions)
+            self.toolbar(ui, project, scale, others.is_empty(), actions)
         };
         // In a short window the grid comes first: the hint and set lines
         // move into the tooltip of the line naming the chord, so a small
@@ -1591,11 +1591,12 @@ impl PianoRoll {
     fn toolbar(
         &mut self,
         ui: &mut Ui,
-        song: Scale,
+        project: &Project,
         scale: Scale,
         alone: bool,
         actions: &mut Vec<RollAction>,
     ) -> Option<Tool> {
+        let song = project.scale;
         let mut picked = None;
         ui.horizontal_wrapped(|ui| {
             // Each label stays whole and moves to the next line when it
@@ -1604,11 +1605,17 @@ impl PianoRoll {
             ui.label(tr("Key"));
             let name = egui::RichText::new(song.spell(song.root).to_string());
             let tonic = twelve_tone::root_menu(ui, "scale-root", song, 64.0, name);
-            if let Some(new) = twelve_tone::kind_menu(ui, "scale-kind", song, tonic, 120.0) {
-                // Picking a row or a set opens the window to change it.
+            if let Some(new) = twelve_tone::kind_menu(ui, "scale-kind", song, tonic, 120.0, project)
+            {
+                // Picking a row or "pitch-class set" opens the window to
+                // change it; a set picked from the menu's list of sets is
+                // the one wanted, and opens nothing.
+                let same_notes = new.pitch_set() == song.pitch_set();
                 match new.kind {
                     ScaleKind::Row(_) if song.kind.is_tonal() => self.row_window.open = true,
-                    ScaleKind::Set(_) if song.kind.is_tonal() => self.set_window.open = true,
+                    ScaleKind::Set(_) if song.kind.is_tonal() && same_notes => {
+                        self.set_window.open = true
+                    }
                     _ => {}
                 }
                 actions.push(RollAction::SetScale(new));
