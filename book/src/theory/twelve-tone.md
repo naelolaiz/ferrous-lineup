@@ -672,7 +672,14 @@ another row plays the same piece on it ([next section](#another-row-for-the-same
 to **pitch-class set** keeps the row's first three notes as the set,
 which are what the harmony keys were playing (see [A key as a set: the
 same notes, another
-name](sets.md#a-key-as-a-set-the-same-notes-another-name)).
+name](sets.md#a-key-as-a-set-the-same-notes-another-name)). Webern's
+Concerto row on C gives C B E♭, named as a set, 3-3; **Menor 3** in the
+menu's micromodes names the same three notes as the micromode they also
+are (see [Three notes: a set or a
+micromode](sets.md#three-notes-a-set-or-a-micromode)). Picking
+**twelve-tone row** again brings the song's own row back, every note in
+place: the key menus remember the last row the key was, each time they
+are drawn, and only a song that never had a row gets the Lineup row.
 
 ### Another row for the same piece
 

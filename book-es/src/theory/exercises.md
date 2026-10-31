@@ -541,8 +541,10 @@ regla.
    tonalidad, las teclas de armonía tocan sus cuatro grupos de tres,
    cada uno con la etiqueta 3-3. Ahora cambia el menú de la tonalidad
    de **serie dodecafónica** a **conjunto de clases de alturas**: la
-   tonalidad pasa a ser el primer grupo de tres de la serie, y las
-   teclas de armonía tocan sus formas.
+   tonalidad pasa a ser el primer grupo de tres de la serie, el
+   conjunto 3-3 sobre Do, y las teclas de armonía tocan sus formas, 3-3
+   T11 y las demás. Elige **3** en la fila Menor del mismo menú: las
+   mismas notas son ahora Menor 3, y nada de la canción se mueve.
 6. De vuelta en la canción inicial, mientras suena, haz clic en
    **Groove de cuartas** en la Biblioteca: la canción sigue en acordes
    sus.
