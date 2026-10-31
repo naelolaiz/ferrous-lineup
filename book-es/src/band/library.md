@@ -12,7 +12,7 @@ meter conocimiento en un programa es escribirlo como datos, en una forma
 que una persona pueda leer y comprobar, y que el código que lo usa sea
 pequeño.
 
-La biblioteca hace eso: 215 estilos armónicos, 139 ritmos y 6 rellenos,
+La biblioteca hace eso: 217 estilos armónicos, 141 ritmos y 7 rellenos,
 cada uno unas pocas líneas en una tabla, más los estilos dodecafónicos y
 de micromodos de los capítulos de teoría y las canciones de [Cómo se
 escribe una demostración](../songs/demos.md). Este capítulo recorre
