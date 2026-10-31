@@ -15,9 +15,11 @@
 //! `lineup_core::take`).
 //!
 //! A recording made before, in an audio file, becomes a take the same
-//! way: File > Add a recording, or dropping it on the window, lays it on
-//! the playlist from the playhead (see [`Take::laid`]). Opening one
-//! starts a new song with it.
+//! way, laid on the playlist (see [`Take::laid`]): dropped on the
+//! playlist, from the bar and on the track it was dropped on; from the
+//! playlist's "Add a recording" button, or a track's menu, from the
+//! playhead; dropped anywhere else on the window, from the playhead.
+//! Opening one starts a new song with it.
 
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -100,6 +102,9 @@ struct Loading {
     worker: JoinHandle<Loaded>,
     step: usize,
     name: String,
+    /// The track the recording goes on, when it was dropped on one or
+    /// added from its menu: else the review offers a free one.
+    track: Option<usize>,
 }
 
 /// Where a take's notes go, as the review window offers it.
@@ -122,7 +127,7 @@ struct Review {
 }
 
 impl Review {
-    fn new(project: &Project, heard: Heard) -> Self {
+    fn new(project: &Project, heard: Heard, track: Option<usize>) -> Self {
         let take = Take {
             sample_rate: heard.recording.sample_rate,
             frames: heard.recording.samples.len(),
@@ -132,7 +137,10 @@ impl Review {
         let grid = 1;
         let transcription = transcribe(project, &take, &heard.notes, grid, heard.tuning);
         let destination = tune_channel(project).map_or(Destination::New, Destination::Channel);
-        let track = free_track(project, transcription.recorded().unwrap_or(0..0));
+        let tracks = project.playlist().tracks().len();
+        let track = track
+            .filter(|&track| track < tracks)
+            .unwrap_or_else(|| free_track(project, transcription.recorded().unwrap_or(0..0)));
         Review {
             heard,
             take,
@@ -392,22 +400,29 @@ impl LineupApp {
         self.voice.loading.take().is_some()
     }
 
-    /// File > Add a recording: asks for an audio file, and adds it to the
-    /// song as a take, from the playhead.
-    pub(super) fn add_recording(&mut self) {
+    /// The playlist's "Add a recording" (its button, or a track's menu):
+    /// asks for an audio file, and adds it to the song as a take, from the
+    /// playhead, on `track` if given.
+    pub(super) fn add_recording(&mut self, track: Option<usize>) {
         if let Some(path) = rfd::FileDialog::new()
             .add_filter(tr("Audio"), &lineup_listen::AUDIO_EXTENSIONS)
             .pick_file()
         {
-            self.add_recording_path(path);
+            self.add_recording_path(path, None, track);
         }
     }
 
-    /// Adds the recording at `path` to the song as a take, from the
-    /// playhead (from the start in pattern mode, which switches to song
-    /// mode): reads it and hears its notes in the background, then asks
-    /// where they go, as for a take recorded here.
-    pub(super) fn add_recording_path(&mut self, path: PathBuf) {
+    /// Adds the recording at `path` to the song as a take, from step `at`
+    /// of the playlist where it was dropped, else from the playhead (from
+    /// the start in pattern mode, which switches to song mode), on `track`
+    /// if given: reads it and hears its notes in the background, then
+    /// asks where they go, as for a take recorded here.
+    pub(super) fn add_recording_path(
+        &mut self,
+        path: PathBuf,
+        at: Option<usize>,
+        track: Option<usize>,
+    ) {
         let busy = self.voice.recording.is_some()
             || self.voice.hearing.is_some()
             || self.voice.loading.is_some();
@@ -418,17 +433,23 @@ impl LineupApp {
             );
             return;
         }
-        let step = match self.mode {
-            PlayMode::Song => {
+        let step = match (self.mode, at) {
+            (PlayMode::Song, None) => {
                 let here = self.playhead().unwrap_or(self.cursor);
                 self.project
                     .playback_arrangement()
                     .timeline_step(here)
                     .unwrap_or(0)
             }
-            PlayMode::Pattern => {
+            (PlayMode::Pattern, None) => {
                 self.set_mode(PlayMode::Song);
                 0
+            }
+            (mode, Some(step)) => {
+                if mode == PlayMode::Pattern {
+                    self.set_mode(PlayMode::Song);
+                }
+                step
             }
         };
         let name = path.file_stem().map_or_else(
@@ -450,6 +471,7 @@ impl LineupApp {
             }),
             step,
             name,
+            track,
         });
     }
 
@@ -464,7 +486,7 @@ impl LineupApp {
         self.replace_project(Project::empty(), None);
         self.file.name_imported(&title);
         self.set_mode(PlayMode::Song);
-        self.add_recording_path(path);
+        self.add_recording_path(path, None, None);
     }
 
     /// Once a frame: stops a take that stopped by itself (the longest
@@ -489,7 +511,7 @@ impl LineupApp {
         if let Some(hearing) = self.voice.hearing.take() {
             self.notice = None;
             match hearing.join() {
-                Ok(heard) => self.voice.review = Some(Review::new(&self.project, heard)),
+                Ok(heard) => self.voice.review = Some(Review::new(&self.project, heard, None)),
                 Err(_) => self.message = Some(tr("Listening to the take failed.").to_string()),
             }
         }
@@ -529,7 +551,7 @@ impl LineupApp {
                     tuning,
                     name: Some(loading.name),
                 };
-                self.voice.review = Some(Review::new(&self.project, heard));
+                self.voice.review = Some(Review::new(&self.project, heard, loading.track));
             }
             Ok(Err(err)) => {
                 self.message = Some(trf("Could not add the recording: {}", &[&err]));
@@ -959,7 +981,7 @@ impl LineupApp {
             name: None,
         };
         self.voice.folder = Some(folder);
-        self.voice.review = Some(Review::new(&self.project, heard));
+        self.voice.review = Some(Review::new(&self.project, heard, None));
     }
 }
 
@@ -974,6 +996,13 @@ impl LineupApp {
     /// For the tests: whether a take waits in the review window.
     pub(super) fn take_waiting(&self) -> bool {
         self.voice.review.is_some()
+    }
+
+    /// For the tests: the step the waiting take's recording starts on,
+    /// and the track the review offers to keep it on.
+    pub(super) fn take_place(&self) -> Option<(usize, usize)> {
+        let review = self.voice.review.as_ref()?;
+        Some((review.transcription.recorded()?.start, review.track))
     }
 }
 
@@ -1119,6 +1148,7 @@ mod tests {
             worker: thread::spawn(|| Err(String::new())),
             step: 0,
             name: String::new(),
+            track: None,
         });
 
         let opened = Project::template();

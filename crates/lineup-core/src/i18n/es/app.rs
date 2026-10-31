@@ -161,6 +161,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("accel. → 140", "accel. → 140"),
     ("Accompaniment", "Acompañamiento"),
     ("Accordion + acoustic bass", "Acordeón + bajo acústico"),
+    ("Add a recording…", "Añadir una grabación…"),
     (
         "Add a track here, or place a clip on this row to add one",
         "Añade una pista aquí, o coloca un clip en esta fila para añadir una",
@@ -1532,6 +1533,14 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Anticipación de una semicorchea (^^)",
     ),
     (
+        "Put an MP3, WAV, FLAC or Ogg file on the song, from the playhead, and write the notes sung or played in it. Or drop the file on a track, where it should start",
+        "Pone un archivo MP3, WAV, FLAC u Ogg en la canción, desde el cursor, y escribe las notas cantadas o tocadas en él. O suelta el archivo sobre una pista, donde debe empezar",
+    ),
+    (
+        "Put an MP3, WAV, FLAC or Ogg file on this track, from the playhead, and write the notes sung or played in it",
+        "Pone un archivo MP3, WAV, FLAC u Ogg en esta pista, desde el cursor, y escribe las notas cantadas o tocadas en él",
+    ),
+    (
         "Put each bar in the chosen meter. Turn off to fit the pattern into the current meter.",
         "Pone cada compás en la métrica elegida. Desactívalo para ajustar el patrón a la métrica actual.",
     ),
@@ -2790,6 +2799,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("✘ Not quite", "✘ No exactamente"),
     ("➕ Add channel", "➕ Añadir canal"),
     ("➕ New track", "➕ Nueva pista"),
+    ("➕ Recording", "➕ Grabación"),
     ("➕ Section", "➕ Sección"),
     ("➕ Track", "➕ Pista"),
     ("⧉ Duplicate", "⧉ Duplicar"),

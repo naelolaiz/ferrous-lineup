@@ -268,17 +268,6 @@ impl LineupApp {
             self.recent_menu(ui);
             self.demos_menu(ui);
             if ui
-                .button(crate::i18n::tr("Add a recording…"))
-                .on_hover_text(crate::i18n::tr(
-                    "Put an MP3, WAV, FLAC or Ogg file on a track of the song, from the playhead, \
-                     and write the notes sung or played in it",
-                ))
-                .clicked()
-            {
-                self.add_recording();
-                ui.close();
-            }
-            if ui
                 .button(crate::i18n::tr("Import MIDI file…"))
                 .on_hover_text(crate::i18n::tr(
                     "Open a .mid file: its notes, tempo, time signatures and key",
@@ -600,8 +589,10 @@ impl LineupApp {
 
     /// A project file dropped on the window is opened, and a MIDI file
     /// or a chord sheet imported (see [`is_project_file`]). A recording
-    /// is added to the song as a take, from the playhead (see
-    /// `lineup_audio::sample::is_recording`). While the channel rack is
+    /// is added to the song as a take (see
+    /// `lineup_audio::sample::is_recording`): dropped on the playlist,
+    /// from the bar and on the track under the pointer; anywhere else,
+    /// from the playhead. While the channel rack is
     /// closed, dropped sounds become new sampler channels (when it is
     /// open, the rack handles them, so they can land on a row).
     pub(super) fn handle_dropped_files(&mut self, ctx: &egui::Context) {
@@ -637,7 +628,9 @@ impl LineupApp {
                 self.message =
                     Some(tr("Drop one recording at a time: none was added.").to_string());
             } else {
-                self.add_recording_path(path);
+                let place = self.playlist.recording_drop(ctx, &self.project);
+                let (at, track) = place.map_or((None, None), |(step, track)| (Some(step), track));
+                self.add_recording_path(path, at, track);
             }
         }
         if !self.rack_open {

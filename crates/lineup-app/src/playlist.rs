@@ -73,6 +73,10 @@ pub enum PlaylistAction {
         height: u16,
     },
     AddTrack,
+    /// Ask for an audio file, and lay it on the song as a take from the
+    /// playhead: on this track, or (with `None`) on one the take window
+    /// offers.
+    AddRecording(Option<usize>),
     /// Insert a new, empty track at this row.
     InsertTrack(usize),
     /// Delete a track and its clips.
@@ -337,6 +341,35 @@ pub struct PlaylistView {
     /// Where on screen the playlist was drawn last frame, beside the
     /// Patterns and Library panel: where the zoom keys zoom the playlist.
     area: Rect,
+    /// Where the grid was last frame: where a recording dropped on the
+    /// window lands (see [`PlaylistView::recording_drop`]).
+    drop_grid: Option<DropGrid>,
+}
+
+/// The grid as drawn last frame, for files dropped on it: drops reach the
+/// app before the playlist is drawn again.
+struct DropGrid {
+    /// The part of the grid in view, not under the names or the ruler.
+    cells: Rect,
+    /// The layer the grid is on: a window over it hides it.
+    layer: egui::LayerId,
+    origin: Pos2,
+    step_width: f32,
+    track_tops: Vec<f32>,
+    tracks: usize,
+    spare: bool,
+}
+
+impl DropGrid {
+    fn layout(&self) -> Layout<'_> {
+        Layout {
+            origin: self.origin,
+            step_width: self.step_width,
+            track_tops: &self.track_tops,
+            tracks: self.tracks,
+            spare: self.spare,
+        }
+    }
 }
 
 impl PlaylistView {
@@ -360,6 +393,7 @@ impl PlaylistView {
             scroll_to: None,
             reveal: None,
             area: Rect::NOTHING,
+            drop_grid: None,
         }
     }
 
@@ -508,6 +542,17 @@ impl PlaylistView {
             {
                 actions.push(PlaylistAction::AddSection(next_section(project)));
             }
+            if ui
+                .button(tr("➕ Recording"))
+                .on_hover_text(tr(
+                    "Put an MP3, WAV, FLAC or Ogg file on the song, from the playhead, and write \
+                     the notes sung or played in it. Or drop the file on a track, where it should \
+                     start",
+                ))
+                .clicked()
+            {
+                actions.push(PlaylistAction::AddRecording(None));
+            }
             ui.separator();
             if let Some(swing) = swing_control(ui, project) {
                 actions.push(PlaylistAction::SetSwing(swing));
@@ -625,6 +670,36 @@ impl PlaylistView {
         self.selection_box = None;
     }
 
+    /// Where a recording dropped on the window now lands, when the
+    /// pointer is over the playlist's grid: the step it starts on (the
+    /// bar, beat or step under the pointer, as Snap says) and the track
+    /// (`None` on the spare row below the last one, for a new track).
+    pub fn recording_drop(
+        &self,
+        ctx: &egui::Context,
+        project: &Project,
+    ) -> Option<(usize, Option<usize>)> {
+        let grid = self.drop_grid.as_ref()?;
+        let pos = ctx.input(|input| input.pointer.hover_pos())?;
+        if !grid.cells.contains(pos) || ctx.layer_id_at(pos) != Some(grid.layer) {
+            return None;
+        }
+        let (track, step) = grid.layout().cell_at(pos);
+        let step = self.snap.floor(step, &project.meter());
+        Some((step, (track < grid.tracks).then_some(track)))
+    }
+
+    /// For the tests: where on screen the middle of `step` on `track`
+    /// was drawn last frame.
+    #[cfg(test)]
+    pub fn cell_center(&self, track: usize, step: usize) -> Option<Pos2> {
+        let layout = self.drop_grid.as_ref()?.layout();
+        Some(pos2(
+            layout.x(step) + layout.step_width / 2.0,
+            (layout.track_top(track) + layout.track_top(track + 1)) / 2.0,
+        ))
+    }
+
     /// The tracks, the bar ruler and the clips.
     fn grid(
         &mut self,
@@ -682,6 +757,15 @@ impl PlaylistView {
         );
 
         self.handle_input(ui, &response, layout, cells, project, current, actions);
+        self.drop_grid = Some(DropGrid {
+            cells,
+            layer: ui.layer_id(),
+            origin: layout.origin,
+            step_width,
+            track_tops: track_tops.clone(),
+            tracks: tracks.len(),
+            spare,
+        });
 
         if let Some(step) = self.reveal.take() {
             // Include the fixed track headers, so step zero is fully visible.
@@ -727,6 +811,34 @@ impl PlaylistView {
                 0.0,
                 Stroke::new(1.0, theme::ACCENT),
                 StrokeKind::Inside,
+            );
+        }
+        // Where an audio file dragged over the grid would start.
+        let audio_hovering = ui.ctx().input(|input| {
+            input.raw.hovered_files.iter().any(|file| {
+                file.path
+                    .as_deref()
+                    .is_some_and(lineup_listen::is_audio_file)
+            })
+        });
+        if audio_hovering
+            && let Some(pos) = ui.ctx().input(|input| input.pointer.hover_pos())
+            && cells.contains(pos)
+        {
+            let (track, step) = layout.cell_at(pos);
+            let start = self.snap.floor(step, &meter);
+            let target = Rect::from_min_max(
+                pos2(layout.x(start), layout.track_top(track)),
+                pos2(
+                    layout.x(self.snap.next(start, &meter)),
+                    layout.track_top(track + 1),
+                ),
+            );
+            painter.rect_filled(target, 2.0, theme::ACCENT.gamma_multiply(0.25));
+            painter.vline(
+                target.left(),
+                cells.top()..=cells.bottom(),
+                Stroke::new(1.5, theme::ACCENT),
             );
         }
         // Lines from the ruler down to the last track.
@@ -877,6 +989,16 @@ impl PlaylistView {
                 }
                 if ui.button(tr("Insert track below")).clicked() {
                     actions.push(PlaylistAction::InsertTrack(index + 1));
+                }
+                if ui
+                    .button(tr("Add a recording…"))
+                    .on_hover_text(tr(
+                        "Put an MP3, WAV, FLAC or Ogg file on this track, from the playhead, and \
+                         write the notes sung or played in it",
+                    ))
+                    .clicked()
+                {
+                    actions.push(PlaylistAction::AddRecording(Some(index)));
                 }
                 ui.separator();
                 if ui

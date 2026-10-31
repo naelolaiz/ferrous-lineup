@@ -1333,6 +1333,7 @@ impl LineupApp {
             PlaylistAction::AddTrack => {
                 self.edit("add track", |project| project.add_track());
             }
+            PlaylistAction::AddRecording(track) => self.add_recording(track),
             PlaylistAction::InsertTrack(index) => {
                 self.edit("insert track", |project| project.insert_track(index));
             }
