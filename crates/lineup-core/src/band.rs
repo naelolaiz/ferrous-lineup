@@ -28,17 +28,19 @@ use serde::{Deserialize, Serialize};
 
 use crate::chord_sheet::{ChordMarker, HarmonyName, read_bar};
 use crate::general_midi;
-use crate::harmony::{Chord, PitchSet, Scale, ScaleKind};
+use crate::harmony::{Chord, Degree, Micromode, PitchSet, Scale, ScaleKind};
 use crate::i18n::{tr, trf};
 use crate::library::apply::{self, BASS, KEYS};
 use crate::library::comping::{Bass, BassPart, Comping, Played};
+use crate::library::drum_form::{self, DrumPart, PartKind, Then};
 use crate::library::interpret::{self, Role};
 use crate::library::voicing::bass_line;
-use crate::library::{Genre, RHYTHMS, Rhythm, Style};
+use crate::library::{Genre, MicromodeStyle, RHYTHMS, Rhythm, Style};
 use crate::meter::{Bar, TimeSignature};
+use crate::micromodal::{self, Walk};
 use crate::pattern::{MAX_STEPS, NoteEvent};
 use crate::pitch::{Note, PitchClass};
-use crate::playlist::{Clip, MAX_SONG_STEPS, Track};
+use crate::playlist::{Clip, MAX_SONG_STEPS, Section, Track};
 use crate::project::{Channel, ChannelKind, Drum, Project, SampleSource};
 use crate::tempo::Tempo;
 
@@ -48,6 +50,7 @@ mod form;
 mod guitar;
 pub mod horns;
 pub mod locks;
+mod micromode;
 pub mod sections;
 pub mod solo;
 pub(crate) mod stops;
@@ -544,6 +547,10 @@ pub struct Band {
     pub(crate) solo: Option<u64>,
     /// Whether the horn section plays.
     pub(crate) horns: bool,
+    /// The micromode style the band plays the forms on the chord sheet
+    /// in, if it plays one: its voices take the place of the piano, the
+    /// bass and the soloist (see [`Project::apply_micromode_style`]).
+    pub micromode: Option<&'static MicromodeStyle>,
 }
 
 impl Band {
@@ -567,6 +574,7 @@ impl Band {
             styles: Vec::new(),
             solo: None,
             horns: style.brings_horns(),
+            micromode: None,
         }
     }
 
@@ -627,6 +635,9 @@ impl Band {
     /// Who plays: the style's players, and the soloist and the horns
     /// when they are there.
     pub fn players(&self) -> Vec<Player> {
+        if let Some(style) = self.micromode {
+            return self.micromode_players(style);
+        }
         if let Some(style) = &self.custom_rhythm {
             let mut players = self
                 .custom_instruments
@@ -726,6 +737,9 @@ impl Band {
     }
 
     pub fn name(&self) -> &str {
+        if let Some(style) = self.micromode {
+            return style.name;
+        }
         if let Some(style) = &self.custom_rhythm {
             return &style.name;
         }
@@ -734,6 +748,9 @@ impl Band {
     }
 
     pub fn instrument_name(&self) -> &str {
+        if let Some(style) = self.micromode {
+            return style.name;
+        }
         self.custom_instruments
             .as_ref()
             .map_or(self.instrument_style.name, |style| &style.name)
@@ -858,6 +875,9 @@ pub(crate) struct BandFile {
     pub variations: Vec<VariationMarker>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub styles: Vec<StyleMarkerFile>,
+    /// The micromode style it plays the chord sheet in, by name.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub micromode: Option<String>,
 }
 
 /// Whose drums a band plays, as it is saved, when not its style's.
@@ -911,6 +931,7 @@ impl From<&Band> for BandFile {
             form: band.form,
             variations: band.variations.clone(),
             styles: band.styles.iter().map(StyleMarkerFile::from).collect(),
+            micromode: band.micromode.map(|style| style.name.to_string()),
         }
     }
 }
@@ -968,6 +989,18 @@ impl BandFile {
         {
             style.validate()?;
         }
+        let micromode = self
+            .micromode
+            .as_deref()
+            .map(|name| {
+                MicromodeStyle::named(name).ok_or_else(|| {
+                    trf(
+                        "its band plays \"{}\", a micromode style this version does not know",
+                        &[&name],
+                    )
+                })
+            })
+            .transpose()?;
         Ok(Band {
             custom_rhythm: self.custom_rhythm,
             custom_instruments: self.custom_instruments,
@@ -1023,6 +1056,7 @@ impl BandFile {
             },
             solo: self.solo,
             horns: self.with_horns,
+            micromode,
         })
     }
 }
@@ -1066,10 +1100,6 @@ fn player_volume(player: Player) -> f32 {
 /// How far above the piano's voicing the strings play: an octave.
 const STRINGS_OCTAVE: i32 = 12;
 
-/// How often the drums play a fill when nothing else says where: in the
-/// last bar of every eight, as most songs are built.
-const PHRASE_BARS: usize = 8;
-
 /// What the drums play in the last bar of an ending: the fill of the
 /// library that is one hit of the kick and the crash cymbal.
 const LAST_HIT: &str = "Crash ending";
@@ -1082,6 +1112,10 @@ struct Chunk {
     start: usize,
     length: usize,
     time: TimeSignature,
+    /// Whether it starts only because a section does: a player holding
+    /// a note over its start plays on in one pattern, so the note is not
+    /// struck again (see [`Project::write_part`]).
+    soft: bool,
 }
 
 impl Chunk {
@@ -1102,12 +1136,13 @@ struct Content {
     rows: Vec<(usize, Vec<NoteEvent>)>,
 }
 
-/// The pitch class a group of notes is played over: the first of its
-/// normal form, its most compact arrangement. A set has no root, so this
-/// is a choice, but a fixed one: the same set always gets the same bass.
+/// The note a group of notes is played over: the root of the chord it
+/// is (a triad, C7, Em7b5), or else the first note of its normal form,
+/// its most compact arrangement (see [`micromodal::bass_note`]). A set
+/// has no root, so this is a choice, but a fixed one: the same set
+/// always gets the same bass.
 fn group_bass(set: PitchSet) -> Note {
-    let first = set.normal_form().first().copied().unwrap_or(PitchClass::C);
-    Note::new(36 + first.semitone())
+    Note::new(36 + micromodal::bass_note(set).semitone())
 }
 
 /// The notes of a group, from middle C up, each above the last.
@@ -1201,6 +1236,9 @@ fn runs(
 struct Score {
     bars: Vec<Bar>,
     chunks: Vec<Chunk>,
+    /// The song's sections, written or heard (see
+    /// [`Project::form_sections`]).
+    form: Vec<Section>,
     /// The end of the chorus.
     end: usize,
     /// The last bar of an ending, struck and held.
@@ -1389,6 +1427,7 @@ impl Project {
                 && band.drums == BandDrums::Style
                 && band.custom_rhythm.is_none()
                 && band.custom_instruments.is_none()
+                && band.micromode.is_none()
         }) {
             return;
         }
@@ -1414,6 +1453,7 @@ impl Project {
             band.harmony_style = None;
             band.accents_only = false;
             band.drums = BandDrums::Style;
+            band.micromode = None;
         }
         let empty = self.playlist.chord_markers.is_empty() && self.song_length() == 0;
         let other_meter =
@@ -1485,6 +1525,7 @@ impl Project {
             band.style = style;
             band.harmony_style = harmony;
             band.accents_only = false;
+            band.micromode = None;
         }
         let mut drums_come = false;
         if parts.rhythm {
@@ -1620,6 +1661,7 @@ impl Project {
                 band.custom_rhythm = Some(Box::new(style.clone()));
                 band.accents_only = false;
                 band.harmony_style = None;
+                band.micromode = None;
             }
             if parts.rhythm {
                 drums_come = band.drums == BandDrums::Song;
@@ -1968,6 +2010,60 @@ impl Project {
         written
     }
 
+    /// Writes a progression of the forms of the set the key is on the
+    /// chord sheet, from bar `from` on, one form a bar, each following
+    /// the one before as `walk` says (see [`micromodal::walk_forms`]),
+    /// and returns how many bars were written: eight, or two rounds of
+    /// all twelve notes for [`Walk::AllTwelve`]. It starts from the form
+    /// sounding at bar `from` if that is a form of the key's set, and
+    /// otherwise from home. In a key that is not a set it writes nothing.
+    pub fn write_form_progression(&mut self, from: usize, walk: Walk) -> usize {
+        let meter = self.meter();
+        let keys = self.key_map();
+        let first_bar = meter.bar(from);
+        let key = keys.key_at(first_bar.start);
+        let ScaleKind::Set(_) = key.kind else {
+            return 0;
+        };
+        let home = key.pitch_set();
+        let start = self
+            .chord_at(first_bar.start)
+            .and_then(|marker| match marker.harmony {
+                HarmonyName::Set(set) | HarmonyName::Micromode(set)
+                    if Degree::of(key, set).is_some() =>
+                {
+                    Some(set)
+                }
+                _ => None,
+            })
+            .unwrap_or(home);
+        let count = match walk {
+            Walk::AllTwelve if !micromodal::aggregates(home).is_empty() => 2 * (12 / home.len()),
+            _ => 8,
+        };
+        let mut written = 0;
+        for (index, form) in micromodal::walk_forms(start, walk, count)
+            .into_iter()
+            .enumerate()
+        {
+            let bar = meter.bar(from + index);
+            if bar.end() > MAX_SONG_STEPS {
+                break;
+            }
+            let harmony = match Micromode::of(form) {
+                Some(_) => HarmonyName::Micromode(form),
+                None => HarmonyName::Set(form),
+            };
+            self.set_chords(
+                bar.start,
+                bar.end(),
+                &[ChordMarker::new(bar.start, harmony)],
+            );
+            written += 1;
+        }
+        written
+    }
+
     // ----- Writing the parts -----
 
     /// Puts the mix back as it starts: the master level, the reverb and no
@@ -2011,6 +2107,15 @@ impl Project {
         let mut channels = band.channels;
         for player in Player::ALL {
             let sound = match player {
+                // A micromode style's voices play in place of the piano,
+                // the bass and the soloist, and no one else does.
+                _ if band
+                    .micromode
+                    .is_some_and(|style| micromode::takes_over(style, player)) =>
+                {
+                    band.micromode
+                        .and_then(|style| micromode::sound(style, player))
+                }
                 Player::Piano => Some((KEYS, style.piano_program())),
                 Player::Bass => Some((BASS, style.bass_program())),
                 Player::Drums => None,
@@ -2261,6 +2366,11 @@ impl Project {
             if band.horns {
                 print.bytes(b"horns");
             }
+            // The same for a micromode style.
+            if let Some(style) = band.micromode {
+                print.bytes(b"micromode");
+                print.bytes(style.name.as_bytes());
+            }
             // Only bands whose drums come from elsewhere count them.
             if band.drums != BandDrums::Style {
                 print.bytes(b"drums");
@@ -2414,7 +2524,11 @@ impl Project {
             .bars()
             .take_while(|bar| bar.start < parts_end)
             .collect();
-        let chunks = self.chunks(&bars);
+        // The band plays by the song's sections, heard where none are
+        // written: its patterns start where they do, and the drums lay
+        // the rhythm out over them.
+        let form = self.form_sections();
+        let chunks = self.chunks(&bars, &form);
         let mut markers: Vec<ChordMarker> = self
             .playlist
             .chord_markers
@@ -2435,6 +2549,7 @@ impl Project {
         let score = Score {
             bars,
             chunks,
+            form,
             end,
             held,
             breaks,
@@ -2545,6 +2660,11 @@ impl Project {
         player: Player,
         score: &Score,
     ) -> Vec<(usize, NoteEvent)> {
+        if let Some(style) = band.micromode
+            && micromode::takes_over(style, player)
+        {
+            return self.micromode_notes(band, style, player, score);
+        }
         let extras = band.extras();
         let seed = |player: Player| interpret::seed("band", band.style.name, player.name());
         // The variation the last bar of an ending is played in.
@@ -2727,14 +2847,7 @@ impl Project {
         } else {
             match (player, band.channel(player)) {
                 (Player::Drums, _) => match band.drums_style() {
-                    Some(style) => self.drum_part(
-                        style,
-                        &score.bars,
-                        &score.chunks,
-                        score.end,
-                        score.held,
-                        &score.breaks,
-                    ),
+                    Some(style) => self.drum_part(style, score),
                     None => Vec::new(),
                 },
                 (_, Some(channel)) => {
@@ -2753,16 +2866,19 @@ impl Project {
     }
 
     /// The stretches of the song one pattern of each player covers: the
-    /// bars cut where a section, the chorus, the ending or a variation
-    /// starts or the time signature changes, and wherever a pattern would
-    /// grow too long.
-    fn chunks(&self, bars: &[Bar]) -> Vec<Chunk> {
-        let mut edges: Vec<usize> = self
+    /// bars cut where a section of `form` (written or heard, see
+    /// [`Project::form_sections`]), the chorus, the ending, a variation or
+    /// a section style starts or the time signature changes, and wherever
+    /// a pattern would grow too long.
+    fn chunks(&self, bars: &[Bar], form: &[Section]) -> Vec<Chunk> {
+        let sections: Vec<usize> = self
             .playlist
             .sections
             .iter()
+            .chain(form)
             .flat_map(|section| [section.start, section.end()])
             .collect();
+        let mut edges: Vec<usize> = Vec::new();
         if let Some((start, end)) = self.chorus() {
             edges.extend([start, end]);
         }
@@ -2770,17 +2886,19 @@ impl Project {
         edges.extend(self.section_styles().iter().map(|marker| marker.start));
         let mut chunks: Vec<Chunk> = Vec::new();
         for bar in bars {
-            let joins = chunks.last().is_some_and(|chunk| {
-                chunk.time == bar.time
-                    && chunk.length + bar.length <= MAX_STEPS
-                    && !edges.contains(&bar.start)
+            let fits = chunks.last().is_some_and(|chunk| {
+                chunk.time == bar.time && chunk.length + bar.length <= MAX_STEPS
             });
+            let section = sections.contains(&bar.start);
             match chunks.last_mut() {
-                Some(chunk) if joins => chunk.length += bar.length,
+                Some(chunk) if fits && !section && !edges.contains(&bar.start) => {
+                    chunk.length += bar.length;
+                }
                 _ => chunks.push(Chunk {
                     start: bar.start,
                     length: bar.length,
                     time: bar.time,
+                    soft: fits && section && !edges.contains(&bar.start),
                 }),
             }
         }
@@ -2793,8 +2911,13 @@ impl Project {
     ///
     /// Chords are voiced each from the one before, as the band comps
     /// (see [`Comping::voicings`]), over the line their bass notes make
-    /// (see [`bass_line`]). A pitch-class set or a micromode is played from
-    /// middle C in its normal form, over its first note. A row form is a
+    /// (see [`bass_line`]). A pitch-class set or a micromode is voiced
+    /// from the harmony before as a micromode style voices its forms:
+    /// the notes they share stay where they are, and the others move to
+    /// the nearest notes left (see [`micromodal::voice`]); the first, in
+    /// close position from the G below middle C. Its bass is the root of
+    /// the chord it is, if it is one, or else the first note of its normal
+    /// form. A row form is a
     /// line of twelve notes, not a chord: its four groups of three notes,
     /// in the row's order, are played one after another, each over its
     /// first note. No chord plays nothing.
@@ -2850,9 +2973,13 @@ impl Project {
                 HarmonyName::NoChord => None,
             }
         };
-        let mut played = Vec::new();
+        let mut played: Vec<Played> = Vec::new();
         let mut chord_index = 0;
         for (index, &(start, stop, harmony)) in spans.iter().enumerate() {
+            let before = played
+                .last()
+                .map(|last| last.voicing.clone())
+                .unwrap_or_default();
             match harmony {
                 HarmonyName::Chord(_) => {
                     let (chord, ..) = chords[chord_index];
@@ -2881,7 +3008,7 @@ impl Project {
                 HarmonyName::Set(set) | HarmonyName::Micromode(set) => played.push(Played {
                     start,
                     end: stop,
-                    voicing: group_voicing(set.normal_form()),
+                    voicing: micromodal::voice(set, &before, Note::new(55)),
                     bass: BassPart::Pedal(group_bass(set)),
                 }),
                 HarmonyName::Row(label) => {
@@ -2912,27 +3039,41 @@ impl Project {
         played
     }
 
-    /// The drums: the style's rhythm in every bar, started again at each
-    /// stretch, with its fill in the last bar of every eight, the last
-    /// bar before a section or a change of variation or style, and the
-    /// last bar of the intro and of the chorus, which ends at `end`. A
-    /// change of variation or style starts with a crash, and variation b plays some drums on
-    /// others, louder. With an ending, its `held` bar is one last hit of
-    /// the kick and the crash cymbal, as are the shots, holds and pushes
-    /// of the chord sheet, its `breaks`.
-    fn drum_part(
-        &mut self,
-        style: &BandStyle,
+    /// The parts of the song the drums play (see
+    /// [`drum_form::form_parts`]): the stretches between the song's
+    /// sections, written or heard, the chorus after the band's intro, and
+    /// the changes of variation and style in `changes`.
+    fn drum_parts(
+        &self,
         bars: &[Bar],
-        chunks: &[Chunk],
+        form: &[Section],
         end: usize,
-        held: Option<Bar>,
-        breaks: &stops::Breaks,
-    ) -> Vec<(usize, NoteEvent)> {
+        changes: &[usize],
+    ) -> Vec<(std::ops::Range<usize>, PartKind)> {
+        let chorus = self.chorus();
+        let cuts: Vec<usize> = chorus
+            .into_iter()
+            .flat_map(|(start, end)| [start, end])
+            .chain(changes.iter().copied())
+            .collect();
+        let intro_end = chorus.map_or(0, |(start, _)| start);
+        drum_form::form_parts(bars, form, end, &cuts, intro_end)
+    }
+
+    /// The drums: the style's rhythm laid out over each part of the song
+    /// (see [`crate::library::drum_form`]): a fill at the end of each
+    /// part, a groove of another kind in parts of another kind, and up
+    /// to the end of the chorus. A change of variation or style starts
+    /// with a crash, and variation b plays some drums on others, louder
+    /// (a song with variations of its own plays them, not the contrasting
+    /// grooves). With an ending, its held bar is one last hit of the kick
+    /// and the crash cymbal, as are the shots, holds and pushes of the
+    /// chord sheet, its breaks.
+    fn drum_part(&mut self, style: &BandStyle, score: &Score) -> Vec<(usize, NoteEvent)> {
         let Some(rhythm) = style.rhythm else {
             return Vec::new();
         };
-        let fill = rhythm.fill();
+        let (bars, end, held, breaks) = (&score.bars, score.end, score.held, &score.breaks);
         let last_hit = held.and_then(|_| Rhythm::named(LAST_HIT));
         // A change of variation: the drums crash into it, and variation b
         // plays some of the rhythm's drums on others (see
@@ -2952,15 +3093,17 @@ impl Project {
         let in_b = markers
             .iter()
             .any(|marker| marker.variation == Variation::B);
-        let swapped = rhythm
-            .drums()
-            .map(|drum| style.drum_in(drum, Variation::B))
-            .filter(|_| in_b);
+        let used = drum_form::drums_used(rhythm);
+        let swapped: Vec<Drum> = used
+            .iter()
+            .map(|&drum| style.drum_in(drum, Variation::B))
+            .filter(|_| in_b)
+            .collect();
         let mut drums = Vec::new();
-        for drum in rhythm
-            .drums()
+        for drum in used
+            .iter()
+            .copied()
             .chain(swapped)
-            .chain(fill.into_iter().flat_map(|fill| fill.drums()))
             .chain(last_hit.into_iter().flat_map(|hit| hit.drums()))
             .chain(crash.map(|_| Drum::Crash))
             .chain(
@@ -2982,68 +3125,57 @@ impl Project {
                 .find(|(known, _)| *known == drum)
                 .map(|&(_, channel)| channel)
         };
-        // Where a part of the song starts: a section, the chorus after
-        // the intro, or a change of variation. Phrases of eight bars are
-        // counted from there.
-        let mut starts: Vec<usize> = self
-            .playlist
-            .sections
-            .iter()
-            .map(|section| section.start)
-            .collect();
-        starts.extend(self.chorus().map(|(start, _)| start));
-        starts.extend(&changes);
-        starts.retain(|&start| start > 0);
-        let phrase_start = |bar: &Bar| {
-            starts
-                .iter()
-                .filter(|&&start| start <= bar.start)
-                .max()
-                .map_or(0, |&start| self.meter().bar_at(start).number)
-        };
-        let fills: Vec<&Bar> = bars
-            .iter()
-            .filter(|bar| {
-                let phrase = bar.number - phrase_start(bar) + 1;
-                fill.is_some()
-                    && bars.len() >= 4
-                    && bar.start < end
-                    && (phrase.is_multiple_of(PHRASE_BARS)
-                        || starts.contains(&bar.end())
-                        || bar.end() >= end)
-            })
-            .collect();
-        let in_a_fill = |at: usize| {
-            fills
-                .iter()
-                .copied()
-                .chain(held.as_ref())
-                .any(|bar| (bar.start..bar.end()).contains(&at))
-        };
+        let in_held = |at: usize| held.is_some_and(|bar| (bar.start..bar.end()).contains(&at));
+        let mut parts = self.drum_parts(bars, &score.form, end, &changes);
+        let last = parts.len().saturating_sub(1);
+        // An ending's first bars go on in the groove of the last part, up
+        // to its held bar.
+        let to_end = bars.partition_point(|bar| bar.start < end);
+        let held_from = held.map_or(bars.len(), |held| {
+            bars.partition_point(|bar| bar.start < held.start)
+        });
+        if to_end < held_from {
+            let groove = parts.last().map_or(0, |(_, kind)| kind.groove);
+            parts.push((
+                to_end..held_from,
+                PartKind {
+                    groove,
+                    opens: false,
+                    lead_in: false,
+                },
+            ));
+        }
+        // A chorus played more than once plays its patterns again: its
+        // last part goes on into the next time round, not into the end.
+        let repeats = self.repeated_chorus().is_some();
+        let mut fills = 0;
         let mut notes = Vec::new();
-        for chunk in chunks {
-            let variation = variation::variation_in(&markers, chunk.start);
-            for &(drum, _) in &drums {
+        for (index, (range, kind)) in parts.iter().enumerate() {
+            let part = DrumPart {
+                bars: &bars[range.clone()],
+                opens: kind.opens,
+                groove: kind.groove,
+                contrast: markers.is_empty(),
+                then: if index == last && !repeats {
+                    Then::Ending
+                } else {
+                    Then::Part
+                },
+                lead_in: kind.lead_in,
+            };
+            for (drum, note) in drum_form::part_drums(rhythm, &part, &mut fills) {
+                if in_held(note.start) {
+                    continue;
+                }
+                let variation = variation::variation_in(&markers, note.start);
                 let Some(channel) = channel_of(style.drum_in(drum, variation)) else {
                     continue;
                 };
-                for note in rhythm.notes_in(drum, chunk.time, chunk.length) {
-                    let at = chunk.start + note.start;
-                    if !in_a_fill(at) {
-                        let velocity = match variation {
-                            Variation::A => note.velocity,
-                            Variation::B => variation::louder(note.velocity),
-                        };
-                        notes.push((
-                            channel,
-                            NoteEvent {
-                                start: at,
-                                velocity,
-                                ..note
-                            },
-                        ));
-                    }
-                }
+                let velocity = match variation {
+                    Variation::A => note.velocity,
+                    Variation::B => variation::louder(note.velocity),
+                };
+                notes.push((channel, NoteEvent { velocity, ..note }));
             }
         }
         // The crash on the first beat of each change.
@@ -3063,13 +3195,10 @@ impl Project {
                 }
             }
         }
-        let fills = fill
-            .into_iter()
-            .flat_map(|fill| fills.iter().map(move |&bar| (fill, bar)));
-        for (played, bar) in fills.chain(last_hit.zip(held.as_ref())) {
+        if let (Some(hit), Some(bar)) = (last_hit, held) {
             for &(drum, channel) in &drums {
                 let steps = bar.time.steps_per_bar();
-                for note in played.notes(drum, steps, bar.length) {
+                for note in hit.notes(drum, steps, bar.length) {
                     notes.push((
                         channel,
                         NoteEvent {
@@ -3091,9 +3220,27 @@ impl Project {
     /// A note that lasts past the end of its chunk goes on at the start
     /// of the next.
     fn write_part(&mut self, player: Player, chunks: &[Chunk], notes: Vec<(usize, NoteEvent)>) {
+        // A note held over the start of a section plays on: the pattern
+        // before it goes on into the section, where it can.
+        let mut joined: Vec<Chunk> = Vec::new();
+        for &chunk in chunks {
+            let held_over = || {
+                notes.iter().any(|(_, note)| {
+                    note.start < chunk.start && note.start + note.length > chunk.start
+                })
+            };
+            match joined.last_mut() {
+                Some(last)
+                    if chunk.soft && last.length + chunk.length <= MAX_STEPS && held_over() =>
+                {
+                    last.length += chunk.length;
+                }
+                _ => joined.push(chunk),
+            }
+        }
         let mut contents: Vec<Content> = Vec::new();
         let mut placed: Vec<(usize, usize)> = Vec::new();
-        for chunk in chunks {
+        for chunk in &joined {
             let mut rows: Vec<(usize, Vec<NoteEvent>)> = Vec::new();
             for &(channel, note) in &notes {
                 let (start, end) = (note.start, note.start + note.length);
@@ -3478,6 +3625,95 @@ mod tests {
         assert_eq!(pitch_classes_at(&project, Player::Piano, 0), [0, 1, 2]);
         assert_eq!(pitch_classes_at(&project, Player::Piano, 4), [3, 4, 5]);
         assert_eq!(pitch_classes_at(&project, Player::Bass, 12), [9]);
+    }
+
+    #[test]
+    fn the_band_keeps_the_notes_two_forms_share() {
+        let mut project = Project::with_band();
+        // Menor 3 on C: C C#, E; then A C C# (T1I), then E F G# (T4).
+        project.scale = Scale::set(PitchClass::C, PitchSet::from_semitones(&[0, 1, 4]));
+        write(&mut project, &["T0", "T1I", "T4"]);
+        let keys_at = |step: usize| -> Vec<u8> {
+            let mut keys: Vec<u8> = part(&project, Player::Piano)
+                .into_iter()
+                .filter(|&(at, ..)| at == step)
+                .map(|(.., midi)| midi)
+                .collect();
+            keys.sort_unstable();
+            keys.dedup();
+            keys
+        };
+        let bar = project.meter().bar(1).start;
+        let first = keys_at(0);
+        let second = keys_at(bar);
+        assert_eq!(first.iter().map(|m| m % 12).collect::<Vec<_>>().len(), 3);
+        // C and C# stay on the very same keys; E moves to the nearest A.
+        for kept in [0, 1] {
+            let note = first.iter().find(|&&m| m % 12 == kept).unwrap();
+            assert!(second.contains(note), "{first:?} {second:?}");
+        }
+        let e = first.iter().find(|&&m| m % 12 == 4).unwrap();
+        let a = second.iter().find(|&&m| m % 12 == 9).unwrap();
+        assert!(e.abs_diff(*a) <= 6, "{first:?} {second:?}");
+        // The bass of a triad form is its root: C E G over C, and A C E
+        // (T4I, C E G upside down around C and moved up a major third)
+        // over A.
+        let mut project = Project::with_band();
+        project.scale = Scale::set(PitchClass::C, PitchSet::from_semitones(&[0, 4, 7]));
+        write(&mut project, &["T0", "T4I"]);
+        assert_eq!(pitch_classes_at(&project, Player::Bass, 0), [0]);
+        assert_eq!(pitch_classes_at(&project, Player::Bass, bar), [9]);
+    }
+
+    #[test]
+    fn a_progression_of_forms_goes_on_the_sheet() {
+        let mut project = Project::with_band();
+        let menor_3 = PitchSet::from_semitones(&[0, 1, 4]);
+        project.scale = Scale::set(PitchClass::C, menor_3);
+        assert_eq!(project.write_form_progression(0, Walk::AllTwelve), 8);
+        let forms: Vec<PitchSet> = project
+            .playlist()
+            .chord_markers()
+            .iter()
+            .map(|marker| match marker.harmony {
+                HarmonyName::Micromode(set) => set,
+                other => panic!("{other}"),
+            })
+            .collect();
+        assert_eq!(forms.len(), 8);
+        assert_eq!(forms[0], menor_3);
+        for group in forms.chunks(4) {
+            assert_eq!(group.iter().fold(0, |bits, f| bits | f.bits()), 0xFFF);
+        }
+        // From a form already on the sheet: bar 3 starts from what is
+        // there, keeping two notes each time.
+        let third = forms[2];
+        assert_eq!(project.write_form_progression(2, Walk::CommonTones), 8);
+        let after: Vec<HarmonyName> = project
+            .playlist()
+            .chord_markers()
+            .iter()
+            .map(|marker| marker.harmony)
+            .collect();
+        assert_eq!(after[2], HarmonyName::Micromode(third));
+        for pair in after[2..].windows(2) {
+            let (HarmonyName::Micromode(a), HarmonyName::Micromode(b)) = (pair[0], pair[1]) else {
+                panic!();
+            };
+            assert_eq!(crate::harmony::degree::kept(a, b), 2);
+        }
+        // Any set: C major as a set, by fifths, written as sets.
+        let mut project = Project::with_band();
+        let c_major = PitchSet::from_semitones(&[0, 2, 4, 5, 7, 9, 11]);
+        project.scale = Scale::set(PitchClass::C, c_major);
+        assert_eq!(project.write_form_progression(0, Walk::Transpose(7)), 8);
+        assert_eq!(
+            project.playlist().chord_markers()[1].harmony,
+            HarmonyName::Set(c_major.transpose(7))
+        );
+        // A tonal key has no forms to write.
+        let mut project = Project::with_band();
+        assert_eq!(project.write_form_progression(0, Walk::CommonTones), 0);
     }
 
     #[test]
@@ -4600,6 +4836,68 @@ mod tests {
     }
 
     /// Where `player` starts notes, and how hard, from step `from` to `to`.
+    #[test]
+    fn the_band_starts_its_patterns_where_the_parts_start() {
+        // Candombe para Gardel's parts are 12, 8, 8, 4, 7 and 12 bars
+        // long: the band's patterns start with them, not every 16 bars.
+        let song = SONGS
+            .iter()
+            .find(|song| song.name == "Candombe para Gardel")
+            .unwrap();
+        let mut project = song_demo(song);
+        let starts: Vec<usize> = project
+            .playlist()
+            .sections()
+            .iter()
+            .map(|section| section.start)
+            .collect();
+        let song_starts: Vec<usize> = project
+            .playlist()
+            .clips()
+            .iter()
+            .filter(|clip| clip.track == 0)
+            .map(|clip| clip.start)
+            .collect();
+        assert_eq!(starts, song_starts);
+        let style = Style::named("Candombe").unwrap();
+        let band = BandStyle::of_style(style).unwrap();
+        project.apply_band_parts(band, Some(style), apply::StyleParts::default());
+        for player in [Player::Piano, Player::Bass, Player::Drums] {
+            let mut clips: Vec<usize> = project
+                .playlist()
+                .clips()
+                .iter()
+                .filter(|clip| project.pattern(clip.pattern).unwrap().player == Some(player))
+                .map(|clip| clip.start)
+                .collect();
+            clips.sort_unstable();
+            assert_eq!(clips, starts, "{player:?}");
+        }
+    }
+
+    #[test]
+    fn a_chord_held_over_a_section_start_is_not_struck_again() {
+        let mut project = band("Pop ballad", &["C", "Am", "", "", "G", "C"]);
+        // F from bar 3 to the end of bar 4, and a section from bar 4.
+        let meter = project.meter();
+        let (three, four) = (meter.bar(2), meter.bar(3));
+        let f = ChordMarker::new(three.start, HarmonyName::parse("F").unwrap());
+        assert!(project.set_chords(three.start, four.end(), &[f]));
+        assert!(
+            project
+                .add_section(Section::new("B", four.start, 3 * four.length))
+                .is_some()
+        );
+        project.follow_chord_sheet();
+        // The strings hold the chord on: nothing strikes it again where
+        // the section starts.
+        assert!(!struck(&project, Player::Strings, three.start, four.start).is_empty());
+        assert_eq!(
+            struck(&project, Player::Strings, four.start, four.start + 1),
+            []
+        );
+    }
+
     fn struck(project: &Project, player: Player, from: usize, to: usize) -> Vec<(usize, u8)> {
         let mut notes = Vec::new();
         for clip in project.playlist().clips() {

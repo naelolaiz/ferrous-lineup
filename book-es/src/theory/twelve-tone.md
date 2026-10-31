@@ -753,9 +753,36 @@ Para saber si un patrón cambió de verdad, guarda una copia de antes
 (`cloned()` convierte el `Option<&Pattern>` en un `Option<Pattern>`) y
 compara al final. `as_ref()` vuelve a convertir la copia en un
 `Option<&Pattern>`, para que los dos lados de `!=` tengan el mismo
-tipo. Esta función, `take_over_harmony`, recibe la escritura como un
-closure, así que los [estilos de micromodos](micromodes.md)
-la usan también.
+tipo. Esta función, `take_over_harmony`, recibe lo que hay que escribir
+como un closure:
+
+```rust
+pub(super) fn take_over_harmony(
+    project: &mut Project,
+    uses: &dyn Fn(&str) -> bool,
+    rhythm: Option<&Rhythm>,
+    mut write: impl FnMut(&mut Project, usize, usize, Option<usize>),
+) -> RhythmChange {
+```
+
+Los dos closures se pasan de dos maneras distintas, a propósito:
+
+- `uses` solo responde una pregunta («¿el estilo toca este canal?»),
+  así que es un `&dyn Fn`: un **trait object**, una referencia a algún
+  closure cuyo tipo se decide al ejecutar. Una sola copia compilada de
+  la función sirve para todos los closures.
+- `write` se llama una vez por patrón con `&mut Project`, y hace la
+  escritura. Es un `impl FnMut`: el compilador hace una copia de la
+  función para cada tipo de closure que se le pasa, lo que es un poco
+  más rápido y deja que el closure cambie lo que capturó. `FnMut` es la
+  cota más laxa que todavía se puede llamar muchas veces.
+
+El closure recibe `project` como argumento en vez de capturarlo:
+`take_over_harmony` ya tiene `&mut Project`, y Rust solo permite un
+préstamo mutable a la vez, así que el proyecto se le presta al closure
+en cada llamada. Un [estilo de micromodo](micromodes.md) en una canción
+funciona de otra manera: la banda lo toca desde las formas de la hoja
+de acordes.
 
 ## Una ventana que se abre delante
 

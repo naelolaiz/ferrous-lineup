@@ -45,9 +45,13 @@ tempo and length in bars, and its drums.
 Under the styles are three groups you can open:
 
 - **Twelve-tone rows** and **Micromodes (Kröpfl)**: styles that play a
-  twelve-tone row or a micromode instead of chords. The key becomes the
-  row or the micromode, starting on the key note; see [Beyond keys:
-  sets, rows and micromodes](sets-rows-micromodes.md).
+  twelve-tone row or a micromode instead of chords. A row style makes
+  the key its row, starting on the key note. In a song, the band plays a
+  micromode style from the chord sheet: the forms written there when
+  the key is a set, or else the style's own walk, which it writes on the
+  sheet, and the key becomes the micromode, starting on the key note.
+  See [Beyond keys: sets, rows and
+  micromodes](sets-rows-micromodes.md).
 - **Fills**: one bar of drums each: Snare roll, Tom fill, House build,
   Latin fill, Hip hop fill and Crash ending. While the song plays, a
   click puts the fill in the last bar of the song's drum patterns.
@@ -153,7 +157,9 @@ selected bar on, in the song's key, without changing the band's style.
 The selection moves past them, so the next progression you pick goes on
 after it. It is a quick way to start a song: **Progression**, then
 **Four chords**, gives you I V vi IV, the progression of a thousand pop
-songs.
+songs. When the song's key is a pitch-class set or a micromode, the
+button offers ways to chain the set's forms instead (see [A set as the
+key](sets-rows-micromodes.md#a-set-as-the-key-its-forms)).
 
 ## The Library settings
 

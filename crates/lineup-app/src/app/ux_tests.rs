@@ -5009,6 +5009,170 @@ fn the_chord_sheet_shows_its_chords_as_sets_and_micromodes_and_reads_the_notes()
     assert_eq!(screen.app.project, before);
 }
 
+/// In a key that is a micromode, the harmony keys are its forms, called
+/// by their degrees, and the chord sheet writes each form's degree under
+/// it, with the notes it keeps from the harmony before; a degree can be
+/// typed in a bar, as a numeral can in a key.
+#[test]
+fn a_micromode_key_names_its_forms_by_their_degrees() {
+    let mut screen = Screen::new();
+    let mut project = Project::with_band();
+    // Menor 3 on C: C C# E.
+    project.scale = Scale::set(
+        lineup_core::PitchClass::C,
+        lineup_core::PitchSet::from_semitones(&[0, 1, 4]),
+    );
+    for (number, text) in ["T0", "T1I", "T4"].iter().enumerate() {
+        let bar = project.meter().bar(number);
+        let markers = lineup_core::chord_sheet::read_bar(text, &bar, project.scale).unwrap();
+        assert!(project.set_chords(bar.start, bar.end(), &markers));
+    }
+    let names: Vec<String> = project
+        .playlist()
+        .chord_markers()
+        .iter()
+        .map(|marker| marker.harmony.to_string())
+        .collect();
+    assert_eq!(names, ["Menor 3", "Menor 3 T1I", "Menor 3 T4"]);
+    project.follow_chord_sheet();
+    screen.app.replace_project(project, None);
+    screen.app.rack_open = false;
+    screen.app.chord_sheet.open = true;
+    screen.app.harmony_keys.open = true;
+    let shows = |screen: &mut Screen, text: &str| {
+        screen.draw(Vec::new());
+        let output = screen.draw(Vec::new());
+        text_rect(&output, text).is_some()
+    };
+    // Under each bar its degree; from the second on, the notes it keeps
+    // of the bar before: A C C# keeps C and C# of C C# E, and E F G#
+    // keeps none of A C C#.
+    assert!(shows(&mut screen, "Menor 3 T1I"));
+    assert!(shows(&mut screen, "T1I · 2 common"));
+    assert!(shows(&mut screen, "T4 · 0 common"));
+    // The harmony keys: home first, then the forms near it.
+    assert!(shows(&mut screen, "T0"));
+    assert!(shows(&mut screen, "Near home"));
+    assert!(!shows(&mut screen, "C#m(maj7)"));
+    assert!(shows(&mut screen, "Menor 3 T1I"));
+    screen.click("All forms");
+    // Forms that keep no note of home are there too: T6 is F# G A#.
+    assert!(shows(&mut screen, "T6"));
+    screen.click("Near home");
+    assert!(!shows(&mut screen, "T6"));
+}
+
+/// A key that is any pitch-class set offers its forms too, and the chord
+/// sheet's Progression menu chains them.
+#[test]
+fn any_set_key_has_forms_and_a_progression_of_them() {
+    let mut screen = Screen::new();
+    let mut project = Project::with_band();
+    // The dominant seventh as a set, 4-27 on C: C E G Bb.
+    project.scale = Scale::set(
+        lineup_core::PitchClass::C,
+        lineup_core::PitchSet::from_semitones(&[0, 4, 7, 10]),
+    );
+    project.follow_chord_sheet();
+    screen.app.replace_project(project, None);
+    screen.app.rack_open = false;
+    screen.app.harmony_keys.open = true;
+    let shows = |screen: &mut Screen, text: &str| {
+        screen.draw(Vec::new());
+        let output = screen.draw(Vec::new());
+        text_rect(&output, text).is_some()
+    };
+    // Chords stacked from the set first, as before.
+    assert!(shows(&mut screen, "Chords"));
+    assert!(!shows(&mut screen, "T2I"));
+    screen.click("Forms");
+    // Home, then Em7b5, which keeps three of its notes.
+    assert!(shows(&mut screen, "T2I"));
+    assert!(shows(&mut screen, "Em7b5"));
+    assert!(shows(&mut screen, "Near home"));
+    // The Progression menu writes eight bars. C7 keeps three notes only
+    // of Em7b5, so the walk goes there and on, keeping as many notes as
+    // it can without going straight back.
+    screen.app.chord_sheet.open = true;
+    screen.click("Progression");
+    screen.click("Keep as many notes as it can");
+    let markers = screen.app.project.playlist().chord_markers().to_vec();
+    assert_eq!(markers.len(), 8);
+    let sets: Vec<lineup_core::PitchSet> = markers
+        .iter()
+        .map(|marker| match marker.harmony {
+            lineup_core::HarmonyName::Set(set) => set,
+            other => panic!("{other}"),
+        })
+        .collect();
+    assert_eq!(sets[0].len(), 4);
+    assert_eq!(
+        sets[1],
+        lineup_core::PitchSet::from_semitones(&[2, 4, 7, 10])
+    );
+    for pair in sets.windows(2) {
+        assert!(lineup_core::harmony::degree::kept(pair[0], pair[1]) >= 2);
+    }
+    for three in sets.windows(3) {
+        assert_ne!(three[0], three[2]);
+    }
+}
+
+#[test]
+fn a_micromode_style_plays_the_forms_written_on_the_sheet() {
+    use crate::library_browser::LibraryAction;
+    use lineup_core::library::MicromodeStyle;
+    use lineup_core::{PitchSet, Player};
+    let mut screen = Screen::new();
+    let mut project = Project::with_band();
+    // C7 as a set key, and a walk of its forms on the sheet.
+    project.scale = Scale::set(
+        lineup_core::PitchClass::C,
+        PitchSet::from_semitones(&[0, 4, 7, 10]),
+    );
+    project.write_form_progression(0, lineup_core::micromodal::Walk::CommonTones);
+    project.follow_chord_sheet();
+    screen.app.replace_project(project, None);
+    screen.app.set_mode(PlayMode::Song);
+    let sheet = screen.app.project.playlist().chord_markers().to_vec();
+    let style = MicromodeStyle::named("Viennese points").unwrap();
+    screen
+        .app
+        .try_from_library(LibraryAction::MicromodeStyle(style));
+    let project = &screen.app.project;
+    let band = project.band().unwrap();
+    assert_eq!(band.micromode, Some(style));
+    assert!(screen.app.tried().micromode_style == Some(style));
+    // The forms stay as they were written, and so does the key.
+    assert_eq!(project.playlist().chord_markers(), sheet.as_slice());
+    assert_eq!(project.scale.pitch_set().len(), 4);
+    // The points play the notes of the form written in each bar.
+    let meter = project.meter();
+    for (index, marker) in sheet.iter().enumerate() {
+        let form = marker.harmony.pitch_set().unwrap();
+        let bar = meter.bar(index);
+        let played: PitchSet = project
+            .playlist()
+            .clips()
+            .iter()
+            .filter(|clip| project.pattern(clip.pattern).unwrap().player == Some(Player::Soloist))
+            .flat_map(|clip| {
+                let pattern = project.pattern(clip.pattern).unwrap();
+                pattern
+                    .all_notes()
+                    .filter(|(_, note)| (bar.start..bar.end()).contains(&(clip.start + note.start)))
+                    .map(|(_, note)| note.pitch.pitch_class())
+                    .collect::<Vec<_>>()
+            })
+            .collect();
+        assert!(!played.is_empty(), "bar {index}");
+        assert!(played.is_subset_of(form), "bar {index}");
+    }
+    // One step to undo.
+    screen.app.undo();
+    assert!(screen.app.project.band().unwrap().micromode.is_none());
+}
+
 mod chord_sheet_layout {
     use super::*;
 

@@ -174,9 +174,14 @@ pub fn is_project(path: &Path) -> bool {
 /// [`crate::band::BandDrums`]): older versions would play the wrong
 /// drums.
 ///
-/// Format 30 added takes, a voice recorded along with the song (see
+/// Format 30 lets the band play the chord sheet in a micromode style
+/// (see [`Project::apply_micromode_style`]). Older versions would play
+/// it as chords and a bass line, so a song whose band plays one needs
+/// format 30.
+///
+/// Format 31 added takes, a voice recorded along with the song (see
 /// [`crate::take`] and [`SampleSource::Take`]). Older versions cannot
-/// read them, so a song with a take needs format 30.
+/// read them, so a song with a take needs format 31.
 ///
 /// A file can also say where the parts of the song came from (see
 /// [`crate::sources`]), in any format: older versions skip it, and lose
@@ -184,7 +189,7 @@ pub fn is_project(path: &Path) -> bool {
 /// other way round, Gb major rather than F# major (see
 /// [`Scale::other_spelling`]): older versions name it the usual way and
 /// play the same notes.
-pub const FORMAT_VERSION: u32 = 30;
+pub const FORMAT_VERSION: u32 = 31;
 
 /// The oldest format that can hold `project`.
 ///
@@ -290,7 +295,10 @@ pub fn format_for(project: &Project) -> u32 {
         .band()
         .is_some_and(|band| band.drums != crate::band::BandDrums::Style);
     let has_takes = project.channels().iter().any(Channel::is_take);
+    let plays_micromode = project.band().is_some_and(|band| band.micromode.is_some());
     if has_takes {
+        31
+    } else if plays_micromode {
         30
     } else if has_other_drums {
         29

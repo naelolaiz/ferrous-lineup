@@ -23,6 +23,7 @@ pub mod effects;
 pub mod file;
 pub mod general_midi;
 pub mod harmony;
+pub mod heard_sections;
 pub mod history;
 pub mod i18n;
 pub mod key_map;
