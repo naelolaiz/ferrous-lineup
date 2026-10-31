@@ -1344,6 +1344,11 @@ impl LineupApp {
             PlaylistAction::AddSection(section) => {
                 self.edit("add section", |project| project.add_section(section));
             }
+            PlaylistAction::KeepHeardSections => {
+                self.edit("keep recognized sections", |project| {
+                    project.keep_heard_sections()
+                });
+            }
             PlaylistAction::SetSection { index, section } => {
                 self.edit("change section", |project| {
                     project.set_section(index, section)

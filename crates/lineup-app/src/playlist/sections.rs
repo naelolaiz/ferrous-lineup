@@ -21,10 +21,18 @@
 //! form row), repeat signs along the bottom of the section strip show
 //! where the song jumps back to.
 //!
+//! A song with no sections marked shows the parts heard in its notes
+//! instead (see [`Project::heard_sections`]), faint, as the band plays
+//! by them. A click on one keeps them all as the song's own sections.
+//! They are heard again only when the notes or the chord sheet change
+//! (see [`Project::hearing_key`]).
+//!
 //! While a section or a loop is being dragged, only an outline of where
 //! it will land is drawn. The project changes once, when the button comes
 //! up, so a section dragged past another one cannot change places with
 //! it halfway through.
+
+use std::time::{Duration, Instant};
 
 use eframe::egui::{
     self, Align2, Color32, CursorIcon, FontId, Painter, PopupCloseBehavior, Rect, Response, Sense,
@@ -101,12 +109,39 @@ pub(super) struct Strips {
     drag: Option<Drag>,
     /// The bar whose time signature menu is open, by its first step.
     time_menu: usize,
+    /// The sections heard in the song, the hearing key they were heard
+    /// at, and when.
+    heard: Option<(u64, Vec<Section>, Instant)>,
 }
+
+/// How long after hearing the song the strip waits before hearing it
+/// again while it keeps changing, as while notes are dragged: a long
+/// song takes a moment to hear.
+const HEAR_AGAIN: Duration = Duration::from_millis(400);
 
 impl Strips {
     pub(super) fn cancel_drag(&mut self) {
         self.drag = None;
     }
+
+    /// The sections heard in `project`'s notes, heard again only when
+    /// they may have changed, and not more often than [`HEAR_AGAIN`].
+    fn heard(&mut self, ctx: &egui::Context, project: &Project) -> Vec<Section> {
+        let key = project.hearing_key();
+        match &self.heard {
+            Some((heard_at, sections, _)) if *heard_at == key => sections.clone(),
+            Some((_, sections, when)) if when.elapsed() < HEAR_AGAIN => {
+                ctx.request_repaint_after(HEAR_AGAIN.saturating_sub(when.elapsed()));
+                sections.clone()
+            }
+            _ => {
+                let sections = project.heard_sections();
+                self.heard = Some((key, sections.clone(), Instant::now()));
+                sections
+            }
+        }
+    }
+
     /// The section strip: draws the sections and reads the mouse over it.
     /// `pass` is what the song is playing now, to show "2 of 3" on a
     /// section that repeats.
@@ -137,7 +172,43 @@ impl Strips {
         // The empty strip, under the sections: dragging on it marks a new one.
         let background = ui.interact(strip, ui.scope_id().with("section-strip"), Sense::drag());
         let repeats = paint_chorus(&painter, layout, strip, project, pass);
-        if sections.is_empty() && !repeats && self.drag.is_none() {
+        // With no sections marked, the parts heard in the notes, faint.
+        let heard = if sections.is_empty() && self.drag.is_none() {
+            self.heard(ui.ctx(), project)
+        } else {
+            Vec::new()
+        };
+        for (index, section) in heard.iter().enumerate() {
+            let rect = Rect::from_min_max(
+                pos2(layout.x(section.start), strip.top() + 2.0),
+                pos2(layout.x(section.end()), strip.bottom() - 2.0),
+            );
+            if !rect.intersects(strip) {
+                continue;
+            }
+            paint_heard(&painter, rect, section, index == 0);
+            let response = ui.interact(
+                rect,
+                ui.scope_id().with(("heard", index)),
+                Sense::click_and_drag(),
+            );
+            // A drag on it marks a new section, as on the empty strip.
+            if response.drag_started()
+                && !dismissing
+                && let Some(pos) = press_origin(ui)
+            {
+                let from = snap.floor(layout.step_at(pos.x), &meter);
+                self.drag = Some(Drag::New { from });
+            }
+            if response.clicked() && !dismissing {
+                actions.push(PlaylistAction::KeepHeardSections);
+            }
+            response.on_hover_text(tr(
+                "Recognized in the song's notes: the band plays by these parts. \
+                 Click to keep them as the song's sections, to rename, move or change them.",
+            ));
+        }
+        if sections.is_empty() && heard.is_empty() && !repeats && self.drag.is_none() {
             painter.text(
                 pos2(strip.left() + 8.0, strip.center().y),
                 Align2::LEFT_CENTER,
@@ -596,6 +667,30 @@ fn paint_section(painter: &Painter, rect: Rect, section: &Section, playing: Opti
         label,
         FontId::proportional(11.5),
         SECTION_TEXT,
+    );
+}
+
+/// A section heard in the song's notes: faint, with its name, and on the
+/// `first` one the word "recognized".
+fn paint_heard(painter: &Painter, rect: Rect, section: &Section, first: bool) {
+    let color = section_color(&section.name);
+    painter.rect_filled(rect, 3.0, color.gamma_multiply(0.18));
+    painter.rect_stroke(
+        rect,
+        3.0,
+        Stroke::new(1.0, color.gamma_multiply(0.5)),
+        StrokeKind::Inside,
+    );
+    let mut label = tr_name(&section.name).into_owned();
+    if first {
+        label = trf("{} · recognized", &[&label]);
+    }
+    painter.with_clip_rect(rect.shrink2(vec2(2.0, 0.0))).text(
+        rect.left_center() + vec2(5.0, 0.0),
+        Align2::LEFT_CENTER,
+        label,
+        FontId::proportional(11.5),
+        color.gamma_multiply(0.85),
     );
 }
 
