@@ -35,7 +35,7 @@ use crate::library::comping::{Bass, BassPart, Comping, Played};
 use crate::library::drum_form::{self, DrumPart, PartKind, Then};
 use crate::library::interpret::{self, Role};
 use crate::library::voicing::bass_line;
-use crate::library::{Genre, RHYTHMS, Rhythm, Style};
+use crate::library::{Genre, MicromodeStyle, RHYTHMS, Rhythm, Style};
 use crate::meter::{Bar, TimeSignature};
 use crate::micromodal::{self, Walk};
 use crate::pattern::{MAX_STEPS, NoteEvent};
@@ -50,6 +50,7 @@ mod form;
 mod guitar;
 pub mod horns;
 pub mod locks;
+mod micromode;
 pub mod sections;
 pub mod solo;
 pub(crate) mod stops;
@@ -546,6 +547,10 @@ pub struct Band {
     pub(crate) solo: Option<u64>,
     /// Whether the horn section plays.
     pub(crate) horns: bool,
+    /// The micromode style the band plays the forms on the chord sheet
+    /// in, if it plays one: its voices take the place of the piano, the
+    /// bass and the soloist (see [`Project::apply_micromode_style`]).
+    pub micromode: Option<&'static MicromodeStyle>,
 }
 
 impl Band {
@@ -569,6 +574,7 @@ impl Band {
             styles: Vec::new(),
             solo: None,
             horns: style.brings_horns(),
+            micromode: None,
         }
     }
 
@@ -629,6 +635,9 @@ impl Band {
     /// Who plays: the style's players, and the soloist and the horns
     /// when they are there.
     pub fn players(&self) -> Vec<Player> {
+        if let Some(style) = self.micromode {
+            return self.micromode_players(style);
+        }
         if let Some(style) = &self.custom_rhythm {
             let mut players = self
                 .custom_instruments
@@ -728,6 +737,9 @@ impl Band {
     }
 
     pub fn name(&self) -> &str {
+        if let Some(style) = self.micromode {
+            return style.name;
+        }
         if let Some(style) = &self.custom_rhythm {
             return &style.name;
         }
@@ -736,6 +748,9 @@ impl Band {
     }
 
     pub fn instrument_name(&self) -> &str {
+        if let Some(style) = self.micromode {
+            return style.name;
+        }
         self.custom_instruments
             .as_ref()
             .map_or(self.instrument_style.name, |style| &style.name)
@@ -860,6 +875,9 @@ pub(crate) struct BandFile {
     pub variations: Vec<VariationMarker>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub styles: Vec<StyleMarkerFile>,
+    /// The micromode style it plays the chord sheet in, by name.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub micromode: Option<String>,
 }
 
 /// Whose drums a band plays, as it is saved, when not its style's.
@@ -913,6 +931,7 @@ impl From<&Band> for BandFile {
             form: band.form,
             variations: band.variations.clone(),
             styles: band.styles.iter().map(StyleMarkerFile::from).collect(),
+            micromode: band.micromode.map(|style| style.name.to_string()),
         }
     }
 }
@@ -970,6 +989,18 @@ impl BandFile {
         {
             style.validate()?;
         }
+        let micromode = self
+            .micromode
+            .as_deref()
+            .map(|name| {
+                MicromodeStyle::named(name).ok_or_else(|| {
+                    trf(
+                        "its band plays \"{}\", a micromode style this version does not know",
+                        &[&name],
+                    )
+                })
+            })
+            .transpose()?;
         Ok(Band {
             custom_rhythm: self.custom_rhythm,
             custom_instruments: self.custom_instruments,
@@ -1025,6 +1056,7 @@ impl BandFile {
             },
             solo: self.solo,
             horns: self.with_horns,
+            micromode,
         })
     }
 }
@@ -1395,6 +1427,7 @@ impl Project {
                 && band.drums == BandDrums::Style
                 && band.custom_rhythm.is_none()
                 && band.custom_instruments.is_none()
+                && band.micromode.is_none()
         }) {
             return;
         }
@@ -1420,6 +1453,7 @@ impl Project {
             band.harmony_style = None;
             band.accents_only = false;
             band.drums = BandDrums::Style;
+            band.micromode = None;
         }
         let empty = self.playlist.chord_markers.is_empty() && self.song_length() == 0;
         let other_meter =
@@ -1491,6 +1525,7 @@ impl Project {
             band.style = style;
             band.harmony_style = harmony;
             band.accents_only = false;
+            band.micromode = None;
         }
         let mut drums_come = false;
         if parts.rhythm {
@@ -1632,6 +1667,7 @@ impl Project {
                 band.custom_rhythm = Some(Box::new(style.clone()));
                 band.accents_only = false;
                 band.harmony_style = None;
+                band.micromode = None;
             }
             if parts.rhythm {
                 drums_come = band.drums == BandDrums::Song;
@@ -2077,6 +2113,15 @@ impl Project {
         let mut channels = band.channels;
         for player in Player::ALL {
             let sound = match player {
+                // A micromode style's voices play in place of the piano,
+                // the bass and the soloist, and no one else does.
+                _ if band
+                    .micromode
+                    .is_some_and(|style| micromode::takes_over(style, player)) =>
+                {
+                    band.micromode
+                        .and_then(|style| micromode::sound(style, player))
+                }
                 Player::Piano => Some((KEYS, style.piano_program())),
                 Player::Bass => Some((BASS, style.bass_program())),
                 Player::Drums => None,
@@ -2355,6 +2400,11 @@ impl Project {
             // there were horns plays as it was written.
             if band.horns {
                 print.bytes(b"horns");
+            }
+            // The same for a micromode style.
+            if let Some(style) = band.micromode {
+                print.bytes(b"micromode");
+                print.bytes(style.name.as_bytes());
             }
             // Only bands whose drums come from elsewhere count them.
             if band.drums != BandDrums::Style {
@@ -2645,6 +2695,11 @@ impl Project {
         player: Player,
         score: &Score,
     ) -> Vec<(usize, NoteEvent)> {
+        if let Some(style) = band.micromode
+            && micromode::takes_over(style, player)
+        {
+            return self.micromode_notes(band, style, player, score);
+        }
         let extras = band.extras();
         let seed = |player: Player| interpret::seed("band", band.style.name, player.name());
         // The variation the last bar of an ending is played in.

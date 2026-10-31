@@ -368,9 +368,8 @@ mod tests {
                 rows::use_row_style(&mut project, row);
                 assert_kept(&before, &project, None, &what(row.name));
 
-                let mut project = before.clone();
-                micromodes::use_micromode_style(&mut project, micromode);
-                assert_kept(&before, &project, None, &what(micromode.name));
+                // A micromode style in a song is the band's: see
+                // `band::micromode` for how it keeps locked parts.
 
                 // Tried in a pattern of the song, with the locked channel
                 // selected, and in a new one.
