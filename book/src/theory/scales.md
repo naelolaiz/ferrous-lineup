@@ -729,6 +729,9 @@ transposed score would read. Then `change_key` moves each pattern from
 the key it was played in to the key it is played in now, which is what
 `before` and `after` held above.
 
+A key change can also be a micromode, or a set or a row the song is
+in: see [Micromodes](micromodes.md#key-changes-in-any-colour).
+
 MIDI files store key changes too, as key signature events; see [MIDI:
 messages, devices, recording and files](../sound/midi.md). A marker
 can also be written by the app itself, from the keys it hears in the notes
