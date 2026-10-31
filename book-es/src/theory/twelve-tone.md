@@ -539,12 +539,51 @@ pub struct RowWriting {
     pub dynamics: bool,
     /// Whether the octaves follow the row's retrograde.
     pub octaves: bool,
+    /// Whether each form sounds with its combinatorial partner (see
+    /// [`ToneRow::partner`]) an octave under it, note for note in the
+    /// same rhythm, so that every half of the two holds all twelve
+    /// notes. A form without a partner sounds alone.
+    pub partner: bool,
 }
 ```
 
 **Después** (`chain`) dice qué viene tras la forma hasta llenar el
 patrón: nada (**Una vez**), la misma forma otra vez (**Repetir**), o
-las cuatro formas por turno con el mismo número (**P, R, I, RI**).
+las cuatro formas por turno con el mismo número (**P, R, I, RI**). La
+cuarta opción, **Un plan de formas**, es un plan de la pieza, como una
+progresión es el plan de una pieza tonal: las formas escritas en un
+campo, `P0 RI5 I7 R0`, o elegidas con un clic alrededor de la matriz,
+cada una agregada al final. `read_plan` lee el campo:
+
+```rust
+pub fn read_plan(text: &str) -> Result<Vec<RowLabel>, String> {
+    text.split(|c: char| c.is_whitespace() || matches!(c, ',' | '|' | ';'))
+        .filter(|word| !word.is_empty())
+        .map(|word| {
+            RowLabel::parse(&word.to_ascii_uppercase()).ok_or_else(|| {
+                trf(
+                    "\"{}\" is not a form of the row: write forms as P0, I5, R11 or RI3.",
+                    &[&word],
+                )
+            })
+        })
+        .collect()
+}
+```
+
+`split` recibe un cierre que dice qué caracteres cortan el texto, así
+que los espacios, las comas y las barras de la hoja de acordes separan
+formas, y `filter` descarta las palabras vacías que dejan dos
+separadores seguidos. Cada palabra se vuelve un `Result`, y recolectar
+`Result`s en `Result<Vec<_>, _>` se detiene en el primer error, como
+recolectar `Option`s ([Herramientas de edición como funciones
+simples](tools.md#cuando-una-herramienta-no-puede-recolectar-options)):
+la ventana muestra ese error debajo del campo. `RowLabel::parse` es el
+mismo lector que usa la hoja de acordes para una forma escrita en un
+compás; el plan pasa antes cada palabra a mayúsculas, cosa que la hoja
+no puede hacer, porque ahí una `i7` minúscula es un número romano.
+Después `write_plan` escribe las formas una tras otra, y otra vez desde
+la primera, hasta llenar el patrón.
 **Juntas** es `together`, y **Cada** es `step`. Los tres **registros**
 (el menú **Octavas**) deciden las octavas cuando la serie no lo hace:
 
@@ -662,12 +701,87 @@ ScaleKind::Row(_) => {
 
 Cambiar la tonalidad de Do mayor a una serie no mueve ninguna nota,
 porque no hay un lugar sensato al que pueda ir Mi en una serie; cambiar
-a la misma serie sobre otra nota las mueve todas, que es transportar.
-Pasar de una serie a **conjunto de clases de alturas** se queda con las
+a la misma serie sobre otra nota las mueve todas, que es transportar,
+y cambiar a otra serie toca la misma pieza sobre ella ([sección
+siguiente](#otra-serie-para-la-misma-pieza)). Pasar de una serie a **conjunto de clases de alturas** se queda con las
 tres primeras notas de la serie como conjunto, que son las que tocaban
 las teclas de armonía (ver [Una tonalidad como conjunto: las mismas
 notas, otro
 nombre](sets.md#una-tonalidad-como-conjunto-las-mismas-notas-otro-nombre)).
+
+### Otra serie para la misma pieza
+
+En una tonalidad, un modo nuevo deja cada nota en su grado: de Do mayor
+a Do menor bajan Mi, La y Si y el resto se queda ([Escalas, modos y
+tonalidades](scales.md#cambiar-de-tonalidad-mover-la-canción)). Los
+grados de una serie son sus lugares en cada forma. Por eso, cambiar la
+tonalidad de una serie a otra deja cada nota en la forma de la que es
+parte, en el mismo lugar: la quinta nota de RI5 pasa a ser la quinta
+nota de RI5 de la serie nueva. El plan de formas, el ritmo, los acordes
+y el registro se quedan; solo cambia la serie, así que la pieza suena
+como habría sonado si el compositor hubiera elegido la otra serie.
+
+```rust
+pub fn change_row(note: Note, label: Option<RowLabel>, from: Scale, to: Scale) -> Note {
+    let (Some(old), Some(new)) = (from.tone_row(), to.tone_row()) else {
+        return change_key(note, from, to);
+    };
+    let label = label.unwrap_or(old.label());
+    let up = from.root.semitones_up_to(to.root);
+    let place = old.form(label).position(note.pitch_class());
+    let moved = RowLabel::new(label.form, label.number + up);
+    let target = new.form(moved).pitch_classes()[place];
+    let shift = nearest_shift(note.pitch_class(), target);
+    note.transpose(shift)
+        .or_else(|| note.transpose(shift - 12 * shift.signum()))
+        .unwrap_or(note)
+}
+```
+
+Cada forma tiene cada clase de altura una vez, así que `position`
+encuentra el lugar de la nota en su forma. Las formas se cuentan desde
+la nota de la tonalidad: si esa nota pasa de Do a Mi, cada forma sube
+cuatro semitonos con ella, y RI5 pasa a ser RI9 (`RowLabel::new` da la
+vuelta pasado el 11). Después la nota va por el camino más corto a su
+nueva clase de altura, hasta un tritono, así que la línea conserva su
+forma en el teclado; solo en el borde del registro MIDI va hacia el
+otro lado.
+
+De qué forma es parte una nota no está escrito en ningún lado de un
+patrón, pero la [revisión dodecafónica](#leer-la-serie-como-lo-haría-un-analista)
+lo lee, como lo haría un analista: `Project::change_key` se lo pregunta
+para cada patrón antes de cambiar la tonalidad, y cada nota toma la
+forma que toca su pista ahí, o la que comparten todas las pistas. Donde
+la revisión no encontró nada, se usa la forma escrita ahí en la hoja de
+acordes, después una forma que toca otra pista ahí (una línea doblada
+en octavas se lee una sola vez, para una de las dos), y al final la
+forma propia de la tonalidad, que es `label` cuando es `None`.
+
+Algunas series les dan dos nombres a cada forma. La de Berg es una: su
+segunda mitad es la primera hacia atrás, un tritono más arriba, así que
+cada forma R es también una forma P. La revisión lee esa forma por uno
+de sus nombres, que no tiene por qué ser el que tenía al escribirla, y
+volver a la primera serie usa entonces ese nombre. La pieza sigue hecha
+de formas de la serie, pero no siempre de las mismas que antes;
+**Ctrl+Z** es la forma de volver a las notas exactamente como estaban.
+
+Los cambios de tonalidad más adelante en la canción siguen a la
+tonalidad de la canción como en una canción tonal: una sección en la
+serie vieja toma la nueva, movida con la nota de la tonalidad, y una
+sección en una serie propia la conserva.
+
+### Hacia atrás y dado vuelta en el piano roll
+
+El menú **Herramientas** del piano roll hace las otras formas a partir
+de notas que dibujaste ([Herramientas de edición como funciones
+simples](tools.md#hacia-atrás-y-dado-vuelta)): **Hacia atrás** las toca
+hacia atrás en el tiempo, con su ritmo también, así que P0 queda R0;
+**Alturas hacia atrás** conserva el ritmo y da vuelta solo las alturas,
+como escriben los compositores dodecafónicos una retrogradación con un
+ritmo propio; y **Dado vuelta** da vuelta cada intervalo desde la
+primera nota, así que P0 queda I0. **Dado vuelta en la tonalidad**
+cuenta notas de la tonalidad, y en una serie, donde todas las notas
+están en la tonalidad, da lo mismo.
 
 ## Estilos y demostraciones dodecafónicos
 

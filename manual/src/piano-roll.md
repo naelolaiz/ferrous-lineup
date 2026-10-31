@@ -102,6 +102,10 @@ is selected:
 | **Quantize to the steps**: notes played a little off the grid move onto it | |
 | **Snap to the key**: notes outside the key move to the nearest note of the key | |
 | **Invert chords up**, **Invert chords down**: the lowest note of each chord goes up an octave, or the highest down | |
+| **Backwards**: the notes in the opposite order in time, rhythm and all | |
+| **Pitches backwards**: the pitches in the opposite order, in the same rhythm | |
+| **Upside down**: every interval from the first note turned the other way | |
+| **Upside down in the key**: the same, counted in notes of the key, so the tune stays in it | |
 | **Arpeggiate chords**: each chord played one note after another, **up**, **down** or **up and down**, at the speed chosen under **Each note** | |
 | **Select all** | **Ctrl+A** |
 | **Copy**, **Cut**, **Paste**, **Duplicate** | **Ctrl+C**, **Ctrl+X**, **Ctrl+V**, **Ctrl+D** |
@@ -111,6 +115,21 @@ is selected:
 in C major becomes D F A, a minor chord, not D F♯ A, because it stays
 in the key. **Up a semitone** moves every note by the same distance,
 out of the key.
+
+**Backwards** and **Upside down** are the oldest tricks of
+counterpoint: a tune played backwards is its **retrograde**, and turned
+upside down, so that a step up becomes a step down, its
+**inversion** (not to be confused with inverting a chord). Bach's
+Musical Offering plays a line against itself backwards, a crab canon.
+**Upside down** keeps every interval's exact size: around C, E (a major
+third up) becomes A♭ (a major third down), and a major chord becomes
+minor. **Upside down in the key** counts notes of the key instead, the
+way Bach turns a fugue subject upside down: in C major, E (two notes up
+from C) becomes A (two notes down), and the tune stays in C major.
+**Pitches backwards** keeps the rhythm where it was and only turns the
+notes round. On a twelve-tone row these give its other forms: P0
+backwards is R0, and upside down I0 (see [Twelve-tone
+rows](sets-rows-micromodes.md#twelve-tone-rows)).
 
 Pasted or duplicated notes make the pattern longer when they need the
 room. Notes copied in the song can be pasted in the style editor, and
