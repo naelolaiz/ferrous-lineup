@@ -4,7 +4,7 @@
 //! it works in any key), a way of playing the chords ([`Comping`]) and a
 //! bass line ([`Bass`]). Playing "I V vi IV" as held piano chords makes a
 //! ballad; playing it as offbeat stabs over a bass on the offbeats makes
-//! house music. The tables below are the library: 215 styles,
+//! house music. The tables below are the library: 217 styles,
 //! each with a sentence on what makes it sound the way it does.
 
 use crate::harmony::{Chord, Scale, ScaleKind};
@@ -834,6 +834,20 @@ pub static STYLES: &[Style] = &[
         "A slow number for a big band: the saxophones hold the chords under the melody, and \
          two diminished sevenths fill in the bass's steps by semitones, C sharp between C and \
          D on the way up, E flat between E and D on the way down.",
+    ),
+    style(
+        "Foxtrot",
+        Jazz,
+        Major,
+        "I6 | #i°7 | ii7 | V7 | iii7 | VI7 | ii7 | V7",
+        Comping::Stride,
+        Bass::RootFifth,
+        120.0,
+        "Foxtrot",
+        "The slow foxtrot of the 1930s dance bands, the ballroom's basic step, in a gentle \
+         two-beat: the bass on 1 and 3, the piano's chord on 2 and 4, the guitar strumming four \
+         to the bar and brushes on the snare, under a song's chords, a sixth chord, the passing \
+         diminished seventh and the long turnaround, iii7, VI7, ii7, V7.",
     ),
     // ----- Soul, funk and R&B -----
     style(
