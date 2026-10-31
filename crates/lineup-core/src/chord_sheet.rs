@@ -22,7 +22,10 @@
 //! `Tn` moves a set or a micromode up `n` semitones from its prime form,
 //! and `TnI` turns it upside down first, as in the Sets and Micromodes
 //! windows. In a key of seven notes, Roman numerals can be typed too:
-//! "ii7 V7 I" in C major is written down as Dm7, G7 and C.
+//! "ii7 V7 I" in C major is written down as Dm7, G7 and C. In a key that
+//! is a set, such as a micromode, `T2` or `T5I` alone is a degree (see
+//! [`Degree`]): the form of the key's set that far from the key's own
+//! form, written down by its name, as a numeral is.
 //!
 //! Marks around a harmony tell the band to leave its style there, the
 //! way arrangers mark a chart: dots after it make a [`Stop`] (`C.` a
@@ -35,7 +38,7 @@ use std::str::FromStr;
 use serde::{Deserialize, Serialize};
 
 use crate::harmony::{
-    Chord, ChordQuality, ChordSymbol, Micromode, MinorNumerals, PitchSet, RowLabel, Scale,
+    Chord, ChordQuality, ChordSymbol, Degree, Micromode, MinorNumerals, PitchSet, RowLabel, Scale,
     ScaleKind, SetClass, describe_chord, pc_digit,
 };
 use crate::i18n::{key_name, tr, trf};
@@ -417,6 +420,16 @@ impl HarmonyName {
         key: Scale,
         numerals: MinorNumerals,
     ) -> Result<HarmonyName, String> {
+        if let ScaleKind::Set(_) = key.kind
+            && let Some(degree) = Degree::parse(text)
+        {
+            return HarmonyName::at_degree(degree, key).ok_or_else(|| {
+                trf(
+                    "\"{}\" is a degree, but {} has no forms to count.",
+                    &[&text.trim(), &key_name(key)],
+                )
+            });
+        }
         let row_key = matches!(key.kind, ScaleKind::Row(_));
         if !row_key
             && key.is_heptatonic()
@@ -425,6 +438,33 @@ impl HarmonyName {
             return Ok(HarmonyName::Chord(numeral.symbol_in(key)));
         }
         HarmonyName::parse(text)
+    }
+
+    /// The form at `degree` in `key`, a key that is a set: a micromode
+    /// when the key is one, a pitch-class set otherwise. `None` in any
+    /// other key.
+    pub fn at_degree(degree: Degree, key: Scale) -> Option<HarmonyName> {
+        let ScaleKind::Set(_) = key.kind else {
+            return None;
+        };
+        let form = degree.form(key)?;
+        Some(match Micromode::of(form) {
+            Some(_) => HarmonyName::Micromode(form),
+            None => HarmonyName::Set(form),
+        })
+    }
+
+    /// Its degree in `key`: for a set or a micromode, where it sits in a
+    /// key that is a form of the same set (see [`Degree`]). `None` for
+    /// any other harmony or key.
+    pub fn degree(self, key: Scale) -> Option<Degree> {
+        let ScaleKind::Set(_) = key.kind else {
+            return None;
+        };
+        match self {
+            HarmonyName::Set(set) | HarmonyName::Micromode(set) => Degree::of(key, set),
+            _ => None,
+        }
     }
 
     /// The notes it names, as pitch classes: the chord's notes with its
@@ -497,7 +537,10 @@ impl HarmonyName {
                 let lower = numeral_with_figures(lower, key)?;
                 Some(trf("{} over {}", &[&upper, &lower]))
             }
-            HarmonyName::Set(set) | HarmonyName::Micromode(set) => Some(spell_set(set, key)),
+            HarmonyName::Set(set) | HarmonyName::Micromode(set) => match self.degree(key) {
+                Some(degree) => Some(degree.to_string()),
+                None => Some(spell_set(set, key)),
+            },
             HarmonyName::Row(label) => match key.kind {
                 ScaleKind::Row(row) => {
                     let notes: Vec<String> = row
@@ -567,22 +610,26 @@ impl HarmonyName {
             HarmonyName::NoChord => tr("No chord: nothing plays the harmony here.").to_string(),
             HarmonyName::Set(set) => {
                 let class = set.set_class();
-                trf(
+                let text = trf(
                     "{}: {}. Set class {}.",
                     &[&self, &spell_set(set, key), &class.describe()],
-                )
+                );
+                text + &self.degree_sentence(key)
             }
             HarmonyName::Micromode(set) => match Micromode::of(set) {
-                Some(micromode) => trf(
-                    "{}: {}. Micromode {}, Forte's {}; {}.",
-                    &[
-                        &self,
-                        &spell_set(set, key),
-                        &micromode.full_name(),
-                        &micromode.set_class().name(),
-                        &tr(micromode.about),
-                    ],
-                ),
+                Some(micromode) => {
+                    let text = trf(
+                        "{}: {}. Micromode {}, Forte's {}; {}.",
+                        &[
+                            &self,
+                            &spell_set(set, key),
+                            &micromode.full_name(),
+                            &micromode.set_class().name(),
+                            &tr(micromode.about).trim_end_matches('.'),
+                        ],
+                    );
+                    text + &self.degree_sentence(key)
+                }
                 None => format!("{self}: {}.", spell_set(set, key)),
             },
             HarmonyName::Row(label) => match key.kind {
@@ -602,6 +649,35 @@ impl HarmonyName {
                 ),
             },
         }
+    }
+}
+
+impl HarmonyName {
+    /// " In Menor 3 on C it is T2: the key's form moved up 2 semitones.",
+    /// or nothing outside a key of the same set.
+    fn degree_sentence(self, key: Scale) -> String {
+        let Some(degree) = self.degree(key) else {
+            return String::new();
+        };
+        let note = key.spell(key.root);
+        let what = match (degree.inverted, degree.up) {
+            (false, 0) => tr("the key's own form").to_string(),
+            (false, 1) => tr("the key's form moved up a semitone").to_string(),
+            (false, up) => trf("the key's form moved up {} semitones", &[&up]),
+            (true, 0) => trf("the key's form upside down around {}", &[&note]),
+            (true, 1) => trf(
+                "the key's form upside down around {}, moved up a semitone",
+                &[&note],
+            ),
+            (true, up) => trf(
+                "the key's form upside down around {}, moved up {} semitones",
+                &[&note, &up],
+            ),
+        };
+        format!(
+            " {}",
+            trf("In {} it is {}: {}.", &[&key_name(key), &degree, &what])
+        )
     }
 }
 
@@ -1121,6 +1197,43 @@ mod tests {
             HarmonyName::parse_in("I6", row),
             Ok(HarmonyName::Row(RowLabel::new(RowForm::Inversion, 6)))
         );
+    }
+
+    #[test]
+    fn degrees_are_forms_in_a_key_that_is_a_set() {
+        // Menor 3 on D: D D# F#. T2 is a whole tone up, E F G#.
+        let key = Scale::set(PitchClass::D, PitchSet::from_semitones(&[2, 3, 6]));
+        let t2 = HarmonyName::parse_in("T2", key).unwrap();
+        assert_eq!(
+            t2,
+            HarmonyName::Micromode(PitchSet::from_semitones(&[4, 5, 8]))
+        );
+        assert_eq!(t2.to_string(), "Menor 3 T4");
+        assert_eq!(t2.caption(key).as_deref(), Some("T2"));
+        assert!(
+            t2.describe(key)
+                .contains("T2: the key's form moved up 2 semitones")
+        );
+        let home = HarmonyName::parse_in("t0", key).unwrap();
+        assert_eq!(home.caption(key).as_deref(), Some("T0"));
+        assert!(home.describe(key).contains("the key's own form"));
+        // Upside down.
+        let flipped = HarmonyName::parse_in("T5I", key).unwrap();
+        assert_eq!(flipped.degree(key).unwrap().to_string(), "T5I");
+        assert!(flipped.describe(key).contains("upside down"));
+        // A set of another class has no degree: its notes are written.
+        let triad = HarmonyName::parse("3-11").unwrap();
+        assert_eq!(triad.caption(key).as_deref(), Some("C Eb G"));
+        // In a key that is a bigger set, the forms are sets.
+        let octatonic = Scale::set(
+            PitchClass::C,
+            PitchSet::from_semitones(&[0, 1, 3, 4, 6, 7, 9, 10]),
+        );
+        let moved = HarmonyName::parse_in("T1", octatonic).unwrap();
+        assert!(matches!(moved, HarmonyName::Set(_)), "{moved:?}");
+        // Outside a set key, T2 is not a harmony.
+        assert!(HarmonyName::parse_in("T2", C_MAJOR).is_err());
+        assert_eq!(t2.caption(C_MAJOR).as_deref(), Some("E F Ab"));
     }
 
     #[test]

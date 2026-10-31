@@ -5009,6 +5009,59 @@ fn the_chord_sheet_shows_its_chords_as_sets_and_micromodes_and_reads_the_notes()
     assert_eq!(screen.app.project, before);
 }
 
+/// In a key that is a micromode, the harmony keys are its forms, called
+/// by their degrees, and the chord sheet writes each form's degree under
+/// it, with the notes it keeps from the harmony before; a degree can be
+/// typed in a bar, as a numeral can in a key.
+#[test]
+fn a_micromode_key_names_its_forms_by_their_degrees() {
+    let mut screen = Screen::new();
+    let mut project = Project::with_band();
+    // Menor 3 on C: C C# E.
+    project.scale = Scale::set(
+        lineup_core::PitchClass::C,
+        lineup_core::PitchSet::from_semitones(&[0, 1, 4]),
+    );
+    for (number, text) in ["T0", "T1I", "T4"].iter().enumerate() {
+        let bar = project.meter().bar(number);
+        let markers = lineup_core::chord_sheet::read_bar(text, &bar, project.scale).unwrap();
+        assert!(project.set_chords(bar.start, bar.end(), &markers));
+    }
+    let names: Vec<String> = project
+        .playlist()
+        .chord_markers()
+        .iter()
+        .map(|marker| marker.harmony.to_string())
+        .collect();
+    assert_eq!(names, ["Menor 3", "Menor 3 T1I", "Menor 3 T4"]);
+    project.follow_chord_sheet();
+    screen.app.replace_project(project, None);
+    screen.app.rack_open = false;
+    screen.app.chord_sheet.open = true;
+    screen.app.harmony_keys.open = true;
+    let shows = |screen: &mut Screen, text: &str| {
+        screen.draw(Vec::new());
+        let output = screen.draw(Vec::new());
+        text_rect(&output, text).is_some()
+    };
+    // Under each bar its degree; from the second on, the notes it keeps
+    // of the bar before: A C C# keeps C and C# of C C# E, and E F G#
+    // keeps none of A C C#.
+    assert!(shows(&mut screen, "Menor 3 T1I"));
+    assert!(shows(&mut screen, "T1I · 2 common"));
+    assert!(shows(&mut screen, "T4 · 0 common"));
+    // The harmony keys: home first, then the forms near it.
+    assert!(shows(&mut screen, "T0"));
+    assert!(shows(&mut screen, "Near home"));
+    assert!(!shows(&mut screen, "C#m(maj7)"));
+    assert!(shows(&mut screen, "Menor 3 T1I"));
+    screen.click("All forms");
+    // Forms that keep no note of home are there too: T6 is F# G A#.
+    assert!(shows(&mut screen, "T6"));
+    screen.click("Near home");
+    assert!(!shows(&mut screen, "T6"));
+}
+
 mod chord_sheet_layout {
     use super::*;
 
