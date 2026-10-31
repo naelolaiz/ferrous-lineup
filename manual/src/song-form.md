@@ -108,6 +108,44 @@ On the chord sheet, each section starts a new line under its name, as
 select all its bars; right-click it for the menu below, for the whole
 section.
 
+### Parts the band hears
+
+A song needs no sections for the band to follow its parts. When none
+are marked, as in a MIDI file you open, the band listens for them in
+the notes: where a run of bars comes back (a verse, a refrain), where
+something new comes in, where the key or the time signature changes,
+and where the tune rests at the end of a phrase. It counts the parts
+from the tune's first full bar, in phrases of four and eight bars, as
+most songs are built. A song that goes round one short loop all the way
+through is one part.
+
+The parts it hears show faint on the **Sections** strip, named by what
+they sound like: **A**, **B** and so on, a part that comes back with the
+same letter, and an **Intro** or a **Coda** at the ends. The first one
+says **recognized**. Click any of them to keep them all as the song's
+own sections, and then rename, move or resize them like any other
+(**Ctrl+Z** takes it back). The band always plays by the sections you
+mark, so where it heard a part in the wrong place, mark the right ones
+yourself.
+
+### How the band follows the parts
+
+- Its patterns on the playlist start where each part starts.
+- A chord held over the start of a part rings on, instead of being
+  struck again.
+- The drums end each part with a **fill**, and play a small one every
+  eight bars inside parts of sixteen bars or more. The fill before the
+  ending builds over two bars. The fills take turns, so a part that
+  comes back doesn't end the same way as before.
+- The part after a fill starts with a **crash** cymbal on its first
+  beat, the drummer's signal that something new begins.
+- A part of another kind than the one before, a B after an A or a
+  refrain after a verse, moves the drummer from the hi-hat to the ride
+  cymbal.
+- Folk rhythms fill on their own drums, such as the bombo's head and
+  rim. The tango, orchestra and ranchera rhythms stand in for bands
+  without a drummer, so they don't fill.
+
 ## Variations a and b
 
 A band doesn't play every part of a song the same way. The verse is

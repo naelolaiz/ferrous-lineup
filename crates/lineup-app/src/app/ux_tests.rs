@@ -3603,6 +3603,95 @@ fn opening_a_song_forgets_the_clips_selected_in_the_last_one() {
 }
 
 #[test]
+fn the_tools_menu_turns_notes_backwards_and_upside_down() {
+    let mut screen = shortcut_screen();
+    // C4 on step 4 and G4 on step 12, a beat each, and E4 between them.
+    screen
+        .app
+        .project
+        .pattern_mut(0)
+        .unwrap()
+        .add_note(0, lineup_core::NoteEvent::new(Note::new(64), 8, 2));
+    screen.app.piano_roll.open_for(0);
+    let before = screen.app.project.clone();
+    let notes = |screen: &Screen| -> Vec<(u8, usize, usize)> {
+        let mut notes = screen.app.project.pattern(0).unwrap().notes(0).to_vec();
+        notes.sort_by_key(|note| note.start);
+        notes
+            .iter()
+            .map(|note| (note.pitch.midi(), note.start, note.length))
+            .collect()
+    };
+    // Where the menu opens, to scroll it: it opens scrolled as it was
+    // left, after the first time.
+    screen.click("Tools");
+    let menu = text_rect(&screen.draw(vec![]), "Up a semitone")
+        .unwrap()
+        .center();
+    screen.key(Key::Escape);
+    let use_tool = |screen: &mut Screen, tool: &str| {
+        screen.click("Tools");
+        screen.scroll_to_at(tool, menu);
+        screen.click(tool);
+    };
+    for (tool, expected) in [
+        // Every note in the other's place, the rest after the E too.
+        ("Backwards", [(67, 4, 4), (64, 10, 2), (60, 12, 4)]),
+        // The rhythm stays; the pitches come the other way round.
+        ("Pitches backwards", [(67, 4, 4), (64, 8, 2), (60, 12, 4)]),
+        // Up a major third and a fifth from C becomes down them: Ab, F.
+        ("Upside down", [(60, 4, 4), (56, 8, 2), (53, 12, 4)]),
+        // In C major, two and four notes of the key down: A and F.
+        (
+            "Upside down in the key",
+            [(60, 4, 4), (57, 8, 2), (53, 12, 4)],
+        ),
+    ] {
+        use_tool(&mut screen, tool);
+        assert_eq!(notes(&screen), expected, "{tool}");
+        screen.app.undo();
+        assert_eq!(screen.app.project, before, "{tool} is undone");
+    }
+}
+
+#[test]
+fn row_window_writes_a_plan_of_forms() {
+    use lineup_core::harmony::{RowForm, RowLabel, RowPreset};
+    use lineup_core::serial::{RowWriting, write_plan};
+    let mut screen = Screen::new();
+    let channel = first_synth(&screen.app.project);
+    let before = screen.app.project.clone();
+    let length = before.pattern(screen.app.pattern).unwrap().length();
+    screen.app.rack_open = false;
+    screen.app.piano_roll.open_for(channel);
+    screen.click("Row…");
+    let window = egui::pos2(450.0, 500.0);
+    screen.scroll_to_at("Save to new pattern", window);
+    screen.click("Repeat");
+    screen.click("A plan of forms");
+    // The plan starts with the form chosen, and the forms clicked
+    // around the matrix go after it.
+    screen.scroll_back_to_at("RI5", window);
+    screen.click("RI5");
+    screen.click("I7");
+    screen.scroll_to_at("Save to new pattern", window);
+    screen.click("Write P0 RI5 I7 into current pattern");
+    let row = RowPreset::named("Lineup row").unwrap().row;
+    let plan = [
+        RowLabel::new(RowForm::Prime, 0),
+        RowLabel::new(RowForm::RetrogradeInversion, 5),
+        RowLabel::new(RowForm::Inversion, 7),
+    ];
+    let notes = lineup_core::tidy_notes(write_plan(row, &RowWriting::default(), &plan, length));
+    let mut written = before.clone();
+    written
+        .pattern_mut(screen.app.pattern)
+        .unwrap()
+        .set_notes(channel, notes);
+    assert_eq!(screen.app.project, written);
+}
+
+#[test]
 fn the_tools_menu_pastes_what_another_roll_copied() {
     use lineup_core::NoteEvent;
     let mut screen = shortcut_screen();
@@ -5173,6 +5262,94 @@ fn a_micromode_style_plays_the_forms_written_on_the_sheet() {
     assert!(screen.app.project.band().unwrap().micromode.is_none());
 }
 
+/// A twelve-tone style in a song whose key is your row plays your row,
+/// and the plan of forms written on the chord sheet, in its order.
+#[test]
+fn a_row_style_plays_your_row_and_the_forms_on_the_sheet() {
+    use crate::library_browser::LibraryAction;
+    use lineup_core::harmony::{ROW_PRESETS, RowForm, RowLabel};
+    use lineup_core::library::RowStyle;
+    use lineup_core::{ChordMarker, HarmonyName, PitchSet, Player};
+    let mut screen = Screen::new();
+    let mut project = Project::with_band();
+    let row = ROW_PRESETS[1].row.starting_on(lineup_core::PitchClass::D);
+    project.scale = Scale::row(row);
+    let meter = project.meter();
+    let plan = [
+        RowLabel::new(RowForm::Prime, 2),
+        RowLabel::new(RowForm::RetrogradeInversion, 7),
+        RowLabel::new(RowForm::Inversion, 5),
+        RowLabel::new(RowForm::Retrograde, 2),
+    ];
+    for (index, label) in plan.iter().enumerate() {
+        let (start, end) = (meter.bar(index).start, meter.bar(index).end());
+        let marker = ChordMarker::new(start, HarmonyName::Row(*label));
+        project.set_chords(start, end, &[marker]);
+    }
+    project.follow_chord_sheet();
+    screen.app.replace_project(project, None);
+    screen.app.set_mode(PlayMode::Song);
+    let sheet = screen.app.project.playlist().chord_markers().to_vec();
+    let style = RowStyle::named("Triad chorale").unwrap();
+    screen.app.try_from_library(LibraryAction::RowStyle(style));
+    let project = &screen.app.project;
+    assert_eq!(project.band().unwrap().row, Some(style));
+    assert!(screen.app.tried().row_style == Some(style));
+    // The plan and the row stay as they were written.
+    assert_eq!(project.playlist().chord_markers(), sheet.as_slice());
+    assert_eq!(project.scale.tone_row(), Some(row));
+    // Each bar opens with the first three notes of its form, as a chord.
+    for (index, label) in plan.iter().enumerate() {
+        let start = meter.bar(index).start;
+        let chord: PitchSet = project
+            .playlist()
+            .clips()
+            .iter()
+            .filter(|clip| project.pattern(clip.pattern).unwrap().player == Some(Player::Piano))
+            .flat_map(|clip| {
+                let pattern = project.pattern(clip.pattern).unwrap();
+                pattern
+                    .all_notes()
+                    .filter(|(_, note)| clip.start + note.start == start)
+                    .map(|(_, note)| note.pitch.pitch_class())
+                    .collect::<Vec<_>>()
+            })
+            .collect();
+        let three: PitchSet = row.form(*label).pitch_classes()[..3]
+            .iter()
+            .copied()
+            .collect();
+        assert_eq!(chord, three, "{label}");
+    }
+    // One step to undo.
+    screen.app.undo();
+    assert!(screen.app.project.band().unwrap().row.is_none());
+}
+
+/// Tried in a pattern while the key is a row, a twelve-tone style plays
+/// that row; with Chord progression, its own.
+#[test]
+fn a_row_style_tried_in_a_pattern_keeps_the_key_row() {
+    use crate::library_browser::LibraryAction;
+    use lineup_core::harmony::ROW_PRESETS;
+    use lineup_core::library::RowStyle;
+    let mut screen = Screen::new();
+    let mut project = Project::empty();
+    let row = ROW_PRESETS[2].row.starting_on(lineup_core::PitchClass::G);
+    project.scale = Scale::row(row);
+    screen.app.replace_project(project, None);
+    let style = RowStyle::named("Row melody").unwrap();
+    screen.app.try_from_library(LibraryAction::RowStyle(style));
+    assert_eq!(screen.app.project.scale.tone_row(), Some(row));
+    screen.app.undo();
+    screen.app.playlist.library_parts_mut().progression = true;
+    screen.app.try_from_library(LibraryAction::RowStyle(style));
+    assert_eq!(
+        screen.app.project.scale.tone_row(),
+        Some(style.row().starting_on(lineup_core::PitchClass::G))
+    );
+}
+
 /// Picking another micromode in the harmony keys' key menu changes the
 /// colour of the whole piece and keeps every form's degree: the Menor 3
 /// demo in Menor 5 plays T2 of Menor 5 where it played T2 of Menor 3.
@@ -5810,4 +5987,44 @@ mod takes {
         assert!(text_rect(&screen.draw(vec![]), tr("Your take")).is_none());
         std::fs::remove_dir_all(folder).unwrap();
     }
+}
+
+#[test]
+fn a_song_without_sections_shows_the_ones_heard_and_keeps_them_with_a_click() {
+    let mut screen = Screen::new();
+    let song = lineup_core::library::Song::named("Candombe para Gardel").unwrap();
+    let mut project = lineup_core::library::demo::song_demo(song);
+    // As an imported file comes: no sections marked.
+    while !project.playlist().sections().is_empty() {
+        project.remove_section(0);
+    }
+    let heard = project.heard_sections();
+    assert!(heard.len() >= 4, "{heard:?}");
+    screen.app.replace_project(project, None);
+    screen.app.rack_open = false;
+    screen.app.chord_sheet.open = false;
+    screen.draw(Vec::new());
+    let output = screen.draw(Vec::new());
+    // Faint, the first one saying where they come from.
+    let first = format!("{} · recognized", heard[0].name);
+    assert!(text_rect(&output, &first).is_some(), "{first}");
+    assert!(
+        text_rect(
+            &output,
+            "Drag here to mark a section: Intro, Verse, Chorus…"
+        )
+        .is_none()
+    );
+    // One click keeps them all, as one step to undo.
+    screen.click(&first);
+    assert_eq!(screen.app.project.playlist().sections(), heard);
+    assert_eq!(
+        screen.app.history.undo_label(),
+        Some("keep recognized sections")
+    );
+    screen.draw(Vec::new());
+    let output = screen.draw(Vec::new());
+    assert!(text_rect(&output, &first).is_none());
+    screen.app.undo();
+    assert!(screen.app.project.playlist().sections().is_empty());
 }

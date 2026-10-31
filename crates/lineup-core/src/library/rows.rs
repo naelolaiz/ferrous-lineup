@@ -16,10 +16,7 @@ use crate::pitch::{Note, PitchClass};
 use crate::project::Project;
 use crate::serial::{Chain, Register, RowWriting, write_row};
 
-use super::apply::{
-    self, BASS, KEYS, LEAD, RhythmChange, chords_channel, drums_in, find_synth,
-    heard_chords_channel, is_ending, synth_named,
-};
+use super::apply::{BASS, KEYS, LEAD, chords_channel, find_synth, synth_named};
 use super::rhythm::Rhythm;
 
 /// How one instrument plays the row.
@@ -42,6 +39,10 @@ pub struct RowVoice {
     pub durations: bool,
     pub dynamics: bool,
     pub octaves: bool,
+    /// Whether it plays the combinatorial partner of the form the
+    /// section is read as (see [`ToneRow::partner`]), when the row has
+    /// one, in place of its own form: the other six notes of each half.
+    pub partner: bool,
 }
 
 /// A voice playing `form` as a melody in eighth notes from middle C.
@@ -58,6 +59,7 @@ const fn voice(channel: &'static str, form: RowForm) -> RowVoice {
         durations: false,
         dynamics: false,
         octaves: false,
+        partner: false,
     }
 }
 
@@ -93,11 +95,34 @@ impl RowVoice {
             ..self
         }
     }
+    const fn partner(self) -> Self {
+        RowVoice {
+            partner: true,
+            ..self
+        }
+    }
+
+    /// How to write this voice of a piece on `row` in a section read as
+    /// the form `section` (P0 for the piece as written on a row starting
+    /// on C, R0 for it backwards, and so on): the voice's form is read
+    /// the same way, so a voice playing I plays P in a section read as
+    /// I. A voice that plays the partner plays that of `section`, if the
+    /// row has one.
+    pub fn writing(&self, row: ToneRow, section: RowLabel) -> RowWriting {
+        if self.partner
+            && let Some(partner) = row.partner(section)
+        {
+            return RowWriting {
+                label: partner,
+                ..self.writing_from(PitchClass::from_semitone(section.number), section.form)
+            };
+        }
+        self.writing_from(PitchClass::from_semitone(section.number), section.form)
+    }
 
     /// How to write this voice when the row starts on `start`, inside a
-    /// section that reads the whole piece as `section` (P for the piece
-    /// as written, R for it backwards, and so on).
-    pub fn writing(&self, start: PitchClass, section: RowForm) -> RowWriting {
+    /// section that reads the whole piece as `section`.
+    fn writing_from(&self, start: PitchClass, section: RowForm) -> RowWriting {
         let form = combine(section, self.form);
         let inverted = matches!(section, RowForm::Inversion | RowForm::RetrogradeInversion);
         // Inverting around the row's first note turns "3 above it" into
@@ -117,6 +142,7 @@ impl RowVoice {
             durations: self.durations,
             dynamics: self.dynamics,
             octaves: self.octaves,
+            partner: false,
         }
     }
 }
@@ -225,6 +251,7 @@ pub static ROW_STYLES: [RowStyle; 7] = [
                 .from(Register::Close, 48),
             voice(LEAD, RowForm::Inversion)
                 .offset(3)
+                .partner()
                 .from(Register::Nearest, 67),
         ],
         rhythm: "",
@@ -307,20 +334,19 @@ pub static ROW_STYLES: [RowStyle; 7] = [
     },
 ];
 
-/// Writes the voices of `style` into pattern `pattern`, `length` steps
-/// long, with the row starting on `start` and the piece read as
-/// `section`. Chords go to the `selected` channel if it can play them
-/// (see [`chords_channel`]). Returns `false` if the pattern does not
-/// exist or the rack is full.
+/// Writes the voices of `style` into pattern `pattern`, as long as the
+/// pattern, on `row` with the piece read as the form `section`. Chords
+/// go to the `selected` channel if it can play them (see
+/// [`chords_channel`]). Returns `false` if the pattern does not exist or
+/// the rack is full.
 fn write_voices(
     project: &mut Project,
     pattern: usize,
     style: &RowStyle,
-    start: PitchClass,
-    section: RowForm,
+    row: ToneRow,
+    section: RowLabel,
     selected: Option<usize>,
 ) -> bool {
-    let row = style.row();
     let Some(length) = project.pattern(pattern).map(|p| p.length()) else {
         return false;
     };
@@ -333,7 +359,7 @@ fn write_voices(
         let Some(channel) = channel else {
             return false;
         };
-        let notes = write_row(row, &voice.writing(start, section), length);
+        let notes = write_row(row, &voice.writing(row, section), length);
         writes.push((channel, notes));
     }
     let Some(mut target) = project.style_pattern(pattern) else {
@@ -345,37 +371,49 @@ fn write_voices(
     true
 }
 
-/// Writes `style` into pattern `pattern`, with the row starting on
-/// `start`: its voices, its length and its time signature, and the
-/// project's key becomes the row. Lead, Keys and Bass channels the style
-/// does not use go quiet in the pattern, so a style tried after another
-/// is heard alone. Returns `false` if the pattern does not exist or the
-/// rack is full.
+impl RowStyle {
+    /// The row it plays in a song in `key`: the key's own row, when the
+    /// key is a row and `own` is false, or else its own row, starting on
+    /// the key note.
+    pub fn row_in(&self, key: Scale, own: bool) -> ToneRow {
+        match key.tone_row() {
+            Some(row) if !own => row,
+            _ => self.row().starting_on(key.root),
+        }
+    }
+}
+
+/// Writes `style` into pattern `pattern`, on `row`: its voices, its
+/// length and its time signature, and the project's key becomes the
+/// row. Lead, Keys and Bass channels the style does not use go quiet in
+/// the pattern, so a style tried after another is heard alone. Returns
+/// `false` if the pattern does not exist or the rack is full.
 pub fn write_row_style(
     project: &mut Project,
     pattern: usize,
     style: &RowStyle,
-    start: PitchClass,
+    row: ToneRow,
     selected: Option<usize>,
 ) -> bool {
-    write_row_style_as(project, pattern, style, start, selected, RowForm::Prime)
+    write_row_style_as(project, pattern, style, row.label(), selected, row)
 }
 
-/// [`write_row_style`], with the piece read as `section`.
+/// [`write_row_style`], with the piece read as the form `section` of
+/// `row`.
 fn write_row_style_as(
     project: &mut Project,
     pattern: usize,
     style: &RowStyle,
-    start: PitchClass,
+    section: RowLabel,
     selected: Option<usize>,
-    section: RowForm,
+    row: ToneRow,
 ) -> bool {
     let Some(mut target) = project.style_pattern(pattern) else {
         return false;
     };
     target.set_length(style.length());
     project.time_signature = style.time;
-    project.scale = Scale::row(style.row().starting_on(start));
+    project.scale = Scale::row(row);
     let unused: Vec<usize> = [KEYS, BASS, LEAD]
         .into_iter()
         .filter(|name| !style.voices.iter().any(|voice| voice.channel == *name))
@@ -386,108 +424,17 @@ fn write_row_style_as(
             target.set_notes(channel, []);
         }
     }
-    write_voices(project, pattern, style, start, section, selected)
+    write_voices(project, pattern, style, row, section, selected)
 }
 
-/// Plays the whole song the way `style` plays its row. In every pattern
-/// with chords, a bass line or a melody, the style takes over the
-/// harmony: its chords replace the song's (on the channel that plays
-/// them), its bass line the song's, and what the style does not play
-/// goes quiet, since tonal chords or a tonal bass under a row only clash.
-/// The melody stays, unless the style has a melody of its own. The
-/// patterns are read in turn as P, R, I and RI so the song does not
-/// repeat itself, and the drums take the style's rhythm if it has one.
-/// The time signature and the endings stay as they are. The key becomes
-/// the row, starting on the song's key note.
-pub fn use_row_style(project: &mut Project, style: &RowStyle) -> RhythmChange {
-    const SECTIONS: [RowForm; 4] = [
-        RowForm::Prime,
-        RowForm::Retrograde,
-        RowForm::Inversion,
-        RowForm::RetrogradeInversion,
-    ];
-    let start = project.scale.root;
-    let uses = |name: &str| style.voices.iter().any(|voice| voice.channel == name);
-    let change = take_over_harmony(
-        project,
-        &uses,
-        style.rhythm(),
-        |project, pattern, n, keys| {
-            write_voices(project, pattern, style, start, SECTIONS[n % 4], keys);
-        },
-    );
-    if change.harmony > 0 {
-        project.scale = Scale::row(style.row().starting_on(start));
-    }
-    change
-}
-
-/// What [`use_row_style`] does, for any style that writes the harmony
-/// without chords: in every pattern with chords, a bass line or a
-/// melody, the song's chords and bass go quiet unless the style `uses`
-/// that channel, then `write` writes the style into the pattern, with
-/// the number of patterns written so far (to vary them) and the channel
-/// for its chords: the one that played the song's chords, or a Keys
-/// channel. The drums take `rhythm`, if there is one, where there were
-/// drums. Endings stay as they are.
-pub(super) fn take_over_harmony(
-    project: &mut Project,
-    uses: &dyn Fn(&str) -> bool,
-    rhythm: Option<&Rhythm>,
-    mut write: impl FnMut(&mut Project, usize, usize, Option<usize>),
-) -> RhythmChange {
-    let mut change = RhythmChange::default();
-    let mut written = 0;
-    for pattern in 0..project.patterns().len() {
-        if is_ending(project, pattern) {
-            continue;
-        }
-        let length = project.pattern(pattern).map_or(0, |p| p.length());
-        let plays = |project: &Project, channel: Option<usize>| {
-            channel.is_some_and(|channel| {
-                project
-                    .pattern(pattern)
-                    .is_some_and(|p| !p.notes(channel).is_empty())
-            })
-        };
-        let chords = heard_chords_channel(project, pattern);
-        let bass = find_synth(project, BASS);
-        let melody = plays(project, find_synth(project, LEAD));
-        let has_drums = !drums_in(project, pattern, 0, length).is_empty();
-        if chords.is_some() || plays(project, bass) || melody {
-            let before = project.pattern(pattern).cloned();
-            let quiet: Vec<usize> = [(KEYS, chords), (BASS, bass)]
-                .into_iter()
-                .filter(|(name, _)| !uses(name))
-                .filter_map(|(_, channel)| channel)
-                .collect();
-            if let Some(mut target) = project.style_pattern(pattern) {
-                for channel in quiet {
-                    target.set_notes(channel, []);
-                }
-            }
-            // Without chords to replace, the style's chords go to a
-            // Keys channel, never over a melody on another synth.
-            let keys = match chords {
-                Some(channel) => Some(channel),
-                None if uses(KEYS) => synth_named(project, KEYS),
-                None => None,
-            };
-            write(project, pattern, written, keys);
-            if project.pattern(pattern) != before.as_ref() {
-                written += 1;
-                change.harmony += 1;
-            }
-        }
-        if let Some(rhythm) = rhythm
-            && has_drums
-            && apply::write_rhythm(project, pattern, rhythm)
-        {
-            change.drums += 1;
-        }
-    }
-    change
-}
+/// The forms a row piece is read as in turn, part after part: as
+/// written, backwards, upside down, and both.
+pub const SECTIONS: [RowForm; 4] = [
+    RowForm::Prime,
+    RowForm::Retrograde,
+    RowForm::Inversion,
+    RowForm::RetrogradeInversion,
+];
 
 /// The four sections of a row demo, and the names they are given.
 pub const DEMO_SECTIONS: [(RowForm, &str); 4] = [
@@ -505,7 +452,9 @@ pub(super) fn write_section(
     style: &RowStyle,
     section: RowForm,
 ) {
-    write_row_style_as(project, pattern, style, PitchClass::C, None, section);
+    let row = style.row();
+    let label = RowLabel::new(section, row.first().semitone());
+    write_row_style_as(project, pattern, style, label, None, row);
 }
 
 #[cfg(test)]
@@ -540,7 +489,7 @@ mod tests {
     fn hexachord_pads_fill_every_bar_with_all_twelve() {
         let style = RowStyle::named("Hexachord pads").unwrap();
         let mut project = Project::empty();
-        assert!(write_row_style(&mut project, 0, style, PitchClass::C, None));
+        assert!(write_row_style(&mut project, 0, style, style.row(), None));
         assert_eq!(project.time_signature, THREE_FOUR);
         assert!(!project.scale.kind.is_tonal());
         let pattern = project.pattern(0).unwrap();
@@ -562,7 +511,7 @@ mod tests {
             for start in [PitchClass::C, PitchClass::FSharp] {
                 let mut project = Project::empty();
                 assert!(
-                    write_row_style(&mut project, 0, style, start, None),
+                    write_row_style(&mut project, 0, style, style.row().starting_on(start), None),
                     "{}",
                     style.name
                 );
@@ -578,6 +527,30 @@ mod tests {
         }
     }
 
+    /// Tried in a pattern while the key is a row, a style plays that row;
+    /// its own row only when asked for, starting on the key note.
+    #[test]
+    fn a_style_tried_in_a_row_key_plays_that_row() {
+        let mine = RowPreset::named("Berg's Lyric Suite").unwrap().row;
+        let key = Scale::row(mine.starting_on(PitchClass::A));
+        for style in &ROW_STYLES {
+            assert_eq!(style.row_in(key, false), mine.starting_on(PitchClass::A));
+            assert_eq!(
+                style.row_in(key, true),
+                style.row().starting_on(PitchClass::A)
+            );
+            assert_eq!(style.row_in(Scale::default(), false), style.row());
+            let mut project = Project::empty();
+            project.scale = key;
+            let row = style.row_in(project.scale, false);
+            assert!(write_row_style(&mut project, 0, style, row, None));
+            assert_eq!(project.scale, key, "{}", style.name);
+            let channels: Vec<usize> = (0..project.channels().len()).collect();
+            let check = project.voice_leading(0, &channels);
+            assert!(!check.rows.is_empty(), "{}", style.name);
+        }
+    }
+
     /// The voice-leading check reads every style as forms of its row,
     /// with no note out of order: the styles and the check follow the
     /// same rules.
@@ -587,7 +560,13 @@ mod tests {
         for style in &ROW_STYLES {
             for start in [PitchClass::C, PitchClass::FSharp] {
                 let mut project = Project::empty();
-                assert!(write_row_style(&mut project, 0, style, start, None));
+                assert!(write_row_style(
+                    &mut project,
+                    0,
+                    style,
+                    style.row().starting_on(start),
+                    None
+                ));
                 let channels: Vec<usize> = (0..project.channels().len()).collect();
                 let check = project.voice_leading(0, &channels);
                 assert!(!check.rows.is_empty(), "{}", style.name);
@@ -606,41 +585,5 @@ mod tests {
                 );
             }
         }
-    }
-
-    #[test]
-    fn a_song_takes_a_row_style() {
-        let mut project = Project::demo();
-        let style = RowStyle::named("Twelve-tone lo-fi").unwrap();
-        let change = use_row_style(&mut project, style);
-        assert!(change.harmony > 0 && change.drums > 0, "{change:?}");
-        assert_eq!(project.scale.tone_row().unwrap().first(), PitchClass::C);
-    }
-
-    /// The style's chords replace the song's on the channel that plays
-    /// them, rather than playing over them on a channel of their own.
-    #[test]
-    fn a_row_style_replaces_the_chords_of_a_song() {
-        let original = Project::demo();
-        let pattern = (0..original.patterns().len())
-            .find(|&p| heard_chords_channel(&original, p).is_some())
-            .unwrap();
-        let chords = heard_chords_channel(&original, pattern).unwrap();
-
-        let mut project = original.clone();
-        use_row_style(&mut project, RowStyle::named("Triad chorale").unwrap());
-        assert_eq!(find_synth(&project, KEYS), None);
-        let notes = project.pattern(pattern).unwrap().notes(chords);
-        assert!(!notes.is_empty());
-        assert_ne!(notes, original.pattern(pattern).unwrap().notes(chords));
-
-        // A style that is only a melody leaves no tonal chords under it.
-        let mut project = original.clone();
-        let change = use_row_style(&mut project, RowStyle::named("Row melody").unwrap());
-        assert!(change.harmony > 0);
-        let target = project.pattern(pattern).unwrap();
-        assert!(target.notes(chords).is_empty());
-        let lead = find_synth(&project, LEAD).unwrap();
-        assert!(!target.notes(lead).is_empty());
     }
 }
