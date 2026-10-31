@@ -771,6 +771,10 @@ partitura transportada. Después `change_key` mueve cada patrón de la
 tonalidad en que se tocaba a la tonalidad en que se toca ahora, que es
 lo que guardaban `before` y `after` más arriba.
 
+Un cambio de tonalidad también puede ser un micromodo, o un conjunto o
+una serie en que está la canción: ver
+[Micromodos](micromodes.md#cambios-de-tonalidad-en-cualquier-color).
+
 Los archivos MIDI también guardan los cambios de tonalidad, como eventos
 de armadura; ver [MIDI: mensajes, dispositivos, grabación y
 archivos](../sound/midi.md). Una marca también la puede escribir la

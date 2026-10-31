@@ -127,6 +127,11 @@ The band plays each form as a chord whose shared notes stay on the same
 keys, over its root when the form is a chord (C under C7) and otherwise
 over the first note of its most compact order.
 
+Switching to another set, with **Use as the key** in the Sets window,
+keeps every form's degree, as switching micromodes does (see [A
+micromode as the key](#a-micromode-as-the-key)): from C7 as a set to
+Cmaj7 as a set, C7 Em7b5 A7 becomes Cmaj7 E♭maj7 Amaj7.
+
 **A micromode style over your forms.** In a song, a style from the
 Library's **Micromodes (Kröpfl)** group plays the forms written on the
 chord sheet, in your order, the way a style plays the chords of a tonal
@@ -352,4 +357,24 @@ C♯ goes to A♭"; for the major and minor triads it also names the move
 
 On the **chord sheet**, each bar shows its degree, and from the second
 bar on how many notes it keeps of the bar before: "T1I · 2 common".
-Type a degree to write that form: `T2`, `T5I`.
+Type a degree to write that form: `T2`, `T5I`. The micromode demos
+write their forms on the sheet, so you can read the order of each.
+
+**Another colour, the same degrees.** The **Key** menu lists the twelve
+micromodes under the scales, in three short rows: **Menor** 1 to 5,
+**Mayor** 1 to 4, and the triads as **°**, **m/M** and **+** (point at
+one for its whole name). It opens at the key's own micromode. Pick
+another, and the piece keeps its plan in the new colour, as a song in
+C major keeps its chords' degrees when it goes to C minor: every form
+on the chord sheet keeps its degree (T2 of Menor 3 becomes T2 of
+Menor 5) and every written note moves to the same place in its new
+form. A micromode style the band plays follows the new forms. The
+smooth links change with the colour: the Menor 3 demo keeps two notes
+from bar to bar, and in Menor 5 the same degrees keep none, which the
+sheet shows ("T4I · 0 common").
+
+A few micromodes are the same upside down (Menor 1, Mayor 1, and the
+diminished and augmented triads), so in them a form upside down is
+just a form moved; going into one of them and back cannot tell which
+forms were upside down. From a major or minor key to a micromode, the
+notes stay as they are, as with **pitch-class set**.
