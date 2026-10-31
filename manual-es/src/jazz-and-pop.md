@@ -24,6 +24,12 @@ D D, con la tercera sección, el **trío**, en la tonalidad de IV.
   el comienzo de *Tristán e Isolda* de Wagner, marcado «con gran
   emoción», y los acordes del cakewalk le contestan cada vez.
 
+Para tocar tus propios acordes así, elige **Ragtime** en el grupo Jazz
+de la Biblioteca: la mano izquierda del pianista sola, una nota grave en
+cada pulso y el acorde después. **Banda de ragtime** suma batería, banjo
+y tuba, y **Piano stride** es el piano de Harlem, más rápido, que nació
+del ragtime.
+
 ## Nueva Orleans y los años veinte
 
 - *When the Saints Go Marching In*: el clásico de las brass bands, la
@@ -69,7 +75,11 @@ compases. Después escucha cómo jugaron con él los compositores:
 Las demostraciones de big band tienen una sección de vientos detrás de
 la melodía del saxo, una sección de metales que golpea los acordes con
 el ritmo del Charleston (ver [Una banda más grande y los
-vientos](bigger-band.md#la-sección-de-vientos)).
+vientos](bigger-band.md#la-sección-de-vientos)). Para tus propios
+acordes, el estilo **Big band** de la Biblioteca trae la banda entera:
+un walking bass, la guitarra a cuatro por compás y los vientos haciendo
+riffs juntos sobre un blues de jazz. **Balada de big band** sostiene los
+acordes en los saxofones.
 
 ## El blues
 

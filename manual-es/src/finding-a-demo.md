@@ -16,7 +16,7 @@ banda que la toca. Esta parte del manual es una guía para escucharlas.
 - **Canciones**: más de 340 temas con su melodía, ordenados por género:
   **Folclore latinoamericano**, **Tango**, **Jazz**, **Clásica y de
   cine**, **Balcánica y turca**, **Country y folk** y más.
-- **Estilos**: cada uno de los 177 estilos de armonía de la Biblioteca
+- **Estilos**: cada uno de los 215 estilos de armonía de la Biblioteca
   como una canción corta, para oír lo que hace un estilo antes de usarlo
   (ver [Los estilos y la Biblioteca](styles.md)).
 - **Dodecafónico**: cada estilo de serie como una pieza corta, que toca

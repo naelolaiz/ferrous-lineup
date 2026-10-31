@@ -70,7 +70,7 @@ const HIT_STEPS: usize = 2;
 
 /// The styles whose horns hold long notes, whatever their genre: the
 /// ballads and the slow, spacious grooves.
-const HELD: [&str; 12] = [
+const HELD: [&str; 13] = [
     "Pop ballad",
     "Jazz ballad",
     "Slow blues",
@@ -83,10 +83,11 @@ const HELD: [&str; 12] = [
     "Bolero",
     "Half-time rock",
     "Epic toms",
+    "Big band ballad",
 ];
 
 /// The styles whose horns play another rhythm than their genre's.
-const BY_STYLE: [(&str, Comping); 10] = [
+const BY_STYLE: [(&str, Comping); 16] = [
     // Funk horns play tight sixteenth-note stabs.
     ("Funk", Comping::Funk),
     // A New Orleans brass band.
@@ -98,18 +99,30 @@ const BY_STYLE: [(&str, Comping); 10] = [
     ("Dancehall", Comping::Tresillo),
     ("Reggaeton", Comping::Dembow),
     ("Moombahton", Comping::Dembow),
-    // The afterbeats of a brass band: 2 and 4 in a march, 2 and 3 in a
-    // waltz.
-    ("March", Comping::Aksak),
+    // The afterbeats of a brass band: 2 and 3 in a waltz, 2 in a polka.
     ("Waltz", Comping::Aksak),
     ("Two-four polka", Comping::Aksak),
+    // In 2/4 and 6/8, and in a march's or ragtime's 2/4 doubled up, after
+    // each beat.
+    ("March", Comping::Afterbeat),
+    ("Cakewalk", Comping::Afterbeat),
+    ("Six-eight march", Comping::Afterbeat),
+    ("Pasodoble", Comping::Afterbeat),
+    // Klezmer horns lean on the bulgar's 3 + 3 + 2.
+    ("Freylekhs", Comping::Tresillo),
+    // Mambo brass punches in the clave's rhythm.
+    ("Mambo", Comping::Tresillo),
+    // A big band riffs as in its shout chorus.
+    ("Big band swing", Comping::Shout),
 ];
 
 impl Horns {
     /// The horn section of `style`: French horns in classical music,
-    /// synth brass in electronic music, a brass section elsewhere.
+    /// synth brass in electronic music, the saxophones of a big band's
+    /// ballad, a brass section elsewhere.
     pub fn of(style: &BandStyle) -> Horns {
         let program = match style.genre {
+            _ if style.name == "Big band ballad" => gm::ALTO_SAX,
             Genre::Classical => gm::FRENCH_HORN,
             Genre::Electronic => gm::SYNTH_BRASS,
             _ => gm::BRASS_SECTION,
@@ -228,6 +241,8 @@ impl HornPart {
             HornPart::Hits(Comping::Stabs) => "syncopated stabs, as in house music",
             HornPart::Hits(Comping::Dembow) => "short chords in the dembow's 3 + 3 + 2",
             HornPart::Hits(Comping::Offbeat) => "short chords between the beats",
+            HornPart::Hits(Comping::Afterbeat) => "afterbeats, the \"pah\" after each beat",
+            HornPart::Hits(Comping::Shout) => "two-bar riffs, as in a big band's shout chorus",
             HornPart::Hits(Comping::Aksak) => "afterbeats, the \"pah\" of a brass band's oom-pah",
             HornPart::Hits(Comping::Accents) => "a punch on each beat the bar is felt in",
             HornPart::Hits(_) => "short chords",
@@ -469,10 +484,13 @@ mod tests {
         assert_eq!(part("Five-four rock"), HornPart::Hits(Comping::Accents));
         assert_eq!(part("Zamba"), HornPart::Pads);
         assert_eq!(part("Chorale"), HornPart::Pads);
+        assert_eq!(part("Big band swing"), HornPart::Hits(Comping::Shout));
+        assert_eq!(part("Big band ballad"), HornPart::Pads);
         let program = |name: &str| Horns::of(BandStyle::named(name).unwrap()).program;
         assert_eq!(program("Chorale"), gm::FRENCH_HORN);
         assert_eq!(program("Techno"), gm::SYNTH_BRASS);
         assert_eq!(program("Funk"), gm::BRASS_SECTION);
+        assert_eq!(program("Big band ballad"), gm::ALTO_SAX);
         for name in BY_STYLE.iter().map(|(name, _)| *name).chain(HELD) {
             assert!(BandStyle::named(name).is_some(), "{name}");
         }

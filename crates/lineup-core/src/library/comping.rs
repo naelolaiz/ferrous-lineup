@@ -130,6 +130,37 @@ pub enum Comping {
     Aksak,
     /// One chord on each felt beat, with the first accent strongest.
     Accents,
+    /// The chord after each beat, an eighth note long: on the "and" of
+    /// every beat in 2/4 and 4/4, on the third eighth of each beat in
+    /// 6/8. The "pah" of a ragtime pianist's left hand and of a march's
+    /// horns. Play it with [`Bass::Alternating`].
+    Afterbeat,
+    /// The chord on beats 2 and 4, an eighth note long, after the bass
+    /// on 1 and 3: the stride pianist's left hand, and a march in cut
+    /// time.
+    Stride,
+    /// For 3/4: a chord on every beat, the first longer and stronger,
+    /// as the three even steps of the minuet go.
+    Minuet,
+    /// For 3/4: chords on beats 2 and 3, the third leaned on: the
+    /// mazurka puts its weight after the first beat.
+    Mazurka,
+    /// For 3/4: the polonaise's rhythm, an eighth and two sixteenths,
+    /// then four eighths.
+    Polonaise,
+    /// For 6/8: long, short, short in every beat, a dotted eighth, a
+    /// sixteenth and an eighth: the rocking siciliano.
+    Siciliano,
+    /// Single notes of the chord between the beats, and a pinch of the
+    /// chord on 1 and 3 with the thumb: a guitarist's fingers over its
+    /// alternating bass
+    /// ([`Bass::Alternating`]), as in Travis picking.
+    Travis,
+    /// Two bars of a big band's horns riffing together: a long chord on
+    /// 1 and a kick on the "and" of 2, then short chords on 2, its
+    /// "and" and a punch on 4, as in the last chorus of a swing chart,
+    /// the *shout chorus*.
+    Shout,
 }
 
 impl Comping {
@@ -164,6 +195,30 @@ impl Comping {
                     })
                     .collect();
                 (time.steps_per_bar(), Cow::Owned(hits))
+            }
+            Comping::Afterbeat => {
+                // In compound time a beat is three eighths, and the chord
+                // takes the last of them; in simple time, the second half
+                // of the beat.
+                let unit = time.unit_steps();
+                let bar = time.steps_per_bar();
+                let starts = time.beat_starts();
+                let hits = starts
+                    .iter()
+                    .enumerate()
+                    .map(|(index, &start)| {
+                        let end = starts.get(index + 1).copied().unwrap_or(bar);
+                        let beat = end - start;
+                        let (at, length) = if beat > unit {
+                            (end - unit, unit)
+                        } else {
+                            (start + beat / 2, (beat / 2).max(1))
+                        };
+                        let velocity = if index % 2 == 0 { 76 } else { 84 };
+                        hit!(at, length, Voices::All, velocity)
+                    })
+                    .collect();
+                (bar, Cow::Owned(hits))
             }
             Comping::Aksak => {
                 let unit = time.unit_steps();
@@ -402,6 +457,57 @@ impl Comping {
                     hit!(4, 2, Upper, 72),
                 ],
             ),
+            Comping::Stride => (8, &[hit!(4, 2, All, 84)]),
+            Comping::Minuet => (
+                12,
+                &[
+                    hit!(0, 4, All, 90),
+                    hit!(4, 3, All, 72),
+                    hit!(8, 3, All, 76),
+                ],
+            ),
+            Comping::Mazurka => (12, &[hit!(4, 3, All, 74), hit!(8, 4, All, 92)]),
+            Comping::Polonaise => (
+                12,
+                &[
+                    hit!(0, 2, All, 100),
+                    hit!(2, 1, All, 78),
+                    hit!(3, 1, All, 82),
+                    hit!(4, 2, All, 90),
+                    hit!(6, 2, All, 80),
+                    hit!(8, 2, All, 86),
+                    hit!(10, 2, All, 80),
+                ],
+            ),
+            Comping::Siciliano => (
+                6,
+                &[
+                    hit!(0, 3, All, 86),
+                    hit!(3, 1, All, 66),
+                    hit!(4, 2, All, 74),
+                ],
+            ),
+            Comping::Travis => (
+                16,
+                &[
+                    hit!(0, 2, All, 80),
+                    hit!(2, 2, Nth(1), 70),
+                    hit!(6, 2, Nth(2), 76),
+                    hit!(8, 2, Upper, 74),
+                    hit!(10, 2, Nth(0), 70),
+                    hit!(14, 2, Nth(2), 76),
+                ],
+            ),
+            Comping::Shout => (
+                32,
+                &[
+                    hit!(0, 3, All, 104),
+                    hit!(6, 2, All, 92),
+                    hit!(20, 1, All, 88),
+                    hit!(22, 2, All, 96),
+                    hit!(28, 2, All, 110),
+                ],
+            ),
             Comping::Arp3 => (
                 12,
                 &[
@@ -414,7 +520,7 @@ impl Comping {
                 ],
             ),
             // Worked out from the bar in `hits`.
-            Comping::Aksak | Comping::Accents => (16, &[]),
+            Comping::Aksak | Comping::Accents | Comping::Afterbeat => (16, &[]),
         }
     }
 
@@ -612,6 +718,15 @@ pub enum Bass {
     Aksak,
     /// The root on each felt beat, without borrowing a style's bass line.
     Accents,
+    /// The root and the fifth below it by turns, one on every beat, each
+    /// half a beat long: the "oom" of a ragtime pianist's left hand, of
+    /// a march's tuba in 2/4 or 6/8, and the thumb of a fingerpicking
+    /// guitarist. Play it with [`Comping::Afterbeat`].
+    Alternating,
+    /// The baião's 3 + 5 in each half bar of 4/4 (each bar of its 2/4):
+    /// the root for three sixteenths, then the fifth below, held over
+    /// the second beat, as the zabumba drum strikes it.
+    Baiao,
 }
 
 impl Bass {
@@ -650,6 +765,29 @@ impl Bass {
                 }
                 (time.steps_per_bar(), Cow::Owned(hits))
             }
+            Bass::Alternating => {
+                let unit = time.unit_steps();
+                let bar = time.steps_per_bar();
+                let starts = time.beat_starts();
+                let hits = starts
+                    .iter()
+                    .enumerate()
+                    .map(|(index, &start)| {
+                        let end = starts.get(index + 1).copied().unwrap_or(bar);
+                        // An eighth note in simple time, and in compound
+                        // time a quarter, the first two eighths of three.
+                        let beat = end - start;
+                        let length = if beat > unit { beat - unit } else { beat / 2 };
+                        let (tone, velocity) = if index % 2 == 0 {
+                            (Tone::Root, 104)
+                        } else {
+                            (Tone::LowFifth, 94)
+                        };
+                        hit!(start, length.max(1), tone, velocity)
+                    })
+                    .collect();
+                (bar, Cow::Owned(hits))
+            }
             _ => {
                 let (period, hits) = self.pattern();
                 (period, Cow::Borrowed(hits))
@@ -662,7 +800,12 @@ impl Bass {
     fn pattern(self) -> (usize, &'static [Hit<Tone>]) {
         use Tone::*;
         match self {
-            Bass::None | Bass::Held | Bass::Walking | Bass::Aksak | Bass::Accents => (16, &[]),
+            Bass::None
+            | Bass::Held
+            | Bass::Walking
+            | Bass::Aksak
+            | Bass::Accents
+            | Bass::Alternating => (16, &[]),
             Bass::Pulse => (4, &[hit!(0, 2, Root, 100), hit!(2, 2, Root, 84)]),
             Bass::Quarters => (4, &[hit!(0, 2, Root, 104)]),
             Bass::RootFifth => (16, &[hit!(0, 4, Root, 104), hit!(8, 4, LowFifth, 96)]),
@@ -749,6 +892,7 @@ impl Bass {
             ),
             Bass::Waltz => (24, &[hit!(0, 4, Root, 100), hit!(12, 4, LowFifth, 90)]),
             Bass::LongShort => (6, &[hit!(0, 4, Root, 104), hit!(4, 2, Root, 78)]),
+            Bass::Baiao => (8, &[hit!(0, 3, Root, 104), hit!(3, 5, LowFifth, 92)]),
             Bass::Habanera => (
                 8,
                 &[
@@ -890,7 +1034,7 @@ impl Bass {
                 notes
             }
             _ => {
-                let (period, hits) = self.pattern();
+                let (period, hits) = self.hits(time);
                 let mut notes = Vec::new();
                 for offset in (0..span).step_by(period) {
                     // The next chord is only anticipated in the last period
@@ -906,7 +1050,7 @@ impl Bass {
                         .and_then(|hit| span.checked_sub(period - hit.at))
                         .filter(|_| last);
                     let approaches = last && hits.iter().any(|hit| hit.what == Tone::Approach);
-                    for hit in hits {
+                    for hit in hits.iter() {
                         let at = match (hit.what, early) {
                             (Tone::Next, Some(early)) => early,
                             _ => offset + hit.at,
@@ -1232,7 +1376,12 @@ impl Bass {
         // starts again with every bar, whatever the bar's length. So does
         // the line of an odd meter, which is a bar long.
         let period = match self {
-            Bass::None | Bass::Held | Bass::Walking | Bass::Aksak | Bass::Accents => 0,
+            Bass::None
+            | Bass::Held
+            | Bass::Walking
+            | Bass::Aksak
+            | Bass::Accents
+            | Bass::Alternating => 0,
             _ => period,
         };
         let mut notes = Vec::new();
