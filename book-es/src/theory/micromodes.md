@@ -314,7 +314,12 @@ estos números.
 
 Varias formas comparten dos notas con la actual (para Menor 3 sobre Do
 Do♯ Mi hay tres: La Do Do♯, Do Re♯ Mi y Do♯ Mi Fa), así que el
-recorrido necesita una regla para elegir una. En orden:
+recorrido necesita una regla para elegir una. Primero, la forma
+inmediatamente anterior queda fuera mientras haya otro lugar adonde ir;
+para un micromodo las reglas de abajo nunca la eligen de todos modos,
+pero algunos conjuntos más grandes conservan la mayor cantidad de notas
+solo de a pares y se mecerían entre dos formas (ver [Progresiones de
+formas](sets.md#progresiones-de-formas)). Después, en orden:
 
 1. la forma cuya **nota nueva** lleva más tiempo sin oírse, para que la
    música recorra todas las notas a las que puede llegar,
@@ -600,10 +605,10 @@ usada hace más tiempo, después el menor movimiento», es un solo
 `min_by_key` con una tupla de cuatro:
 
 ```rust
-members
+options
     .iter()
     .copied()
-    .filter(|&set| set != current && shared(set) == most)
+    .filter(|&set| shared(set) == most)
     .min_by_key(|&set| {
         let new = PitchSet::from_bits(set.bits() & !current.bits());
         // The new note heard most recently decides; never heard is best.
@@ -622,10 +627,22 @@ members
     .unwrap_or(current)
 ```
 
+`options` son todas las formas del conjunto (24, 12 o 4 para un
+micromodo) menos la actual y la anterior, que se busca sin pánico cuando
+no hay ninguna:
+
+```rust
+let back = before.len().checked_sub(2).map(|index| before[index]);
+```
+
+`before.len() - 2` se desbordaría en un `usize` cuando todavía no
+sonaron dos formas, y entraría en pánico en una compilación de
+depuración; `checked_sub` da `None` en ese caso, y `map` solo busca la
+forma cuando la hay.
+
 Algunas cosas para notar:
 
-- `members` son todas las formas del micromodo (24, 12 o 4).
-  `shared(set)` cuenta las notas que una forma tiene en común con la
+- `shared(set)` cuenta las notas que una forma tiene en común con la
   actual, con los bits: `set.bits() & current.bits()` se queda con las
   notas que están en las dos. `set.bits() & !current.bits()` se queda
   con las notas de `set` que *no* están en `current`: la nota nueva.
@@ -803,6 +820,16 @@ En la hoja de acordes, cada compás de una tonalidad que es un micromodo
 muestra su grado y, desde el segundo compás, cuántas notas conserva del
 compás anterior: «T1I · 2 comunes». Los grados también se pueden
 escribir: `T2` y `T5I` son esas formas de la tonalidad.
+
+El botón **Progresión** de la hoja, en una tonalidad que es un
+micromodo, escribe ocho compases de las formas de la tonalidad con uno
+de los recorridos de [Música con un solo
+micromodo](#música-con-un-solo-micromodo): conservar dos notas y mover
+una, conservar una y mover dos, las doce notas cada cuatro formas, o una
+secuencia. La banda las toca como lo haría un estilo de micromodo, con
+las notas comunes sostenidas en las mismas teclas. Cualquier conjunto de
+clases de altura puede hacer lo mismo: ver [Un conjunto como
+tonalidad: sus formas](sets.md#un-conjunto-como-tonalidad-sus-formas).
 
 ### Los grados en Rust: un struct `Copy` pequeño
 

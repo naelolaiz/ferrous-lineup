@@ -160,7 +160,9 @@ selected bar on, in the song's key, without changing the band's style.
 The selection moves past them, so the next progression you pick goes on
 after it. It is a quick way to start a song: **Progression**, then
 **Four chords**, gives you I V vi IV, the progression of a thousand pop
-songs.
+songs. When the song's key is a pitch-class set or a micromode, the
+button offers ways to chain the set's forms instead (see [A set as the
+key](sets-rows-micromodes.md#a-set-as-the-key-its-forms)).
 
 ## The Library settings
 

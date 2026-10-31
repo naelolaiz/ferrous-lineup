@@ -23,8 +23,8 @@ new song from **File > New** open with the sheet in front.
   is iv, and A7, which leads to Dm, is V7/ii. A chord with another note
   in the bass gets the figures musicians use for inversions: G7/B is
   V⁶₅, C/E is I⁶. Under a set or a micromode, its notes; when the key
-  is a micromode, its degree and how many notes it keeps of the bar
-  before ("T1I · 2 common").
+  is a set or a micromode, its degree and how many notes it keeps of
+  the bar before ("T1I · 2 common").
   [What chords do](chord-functions.md) explains what the numerals mean.
 - **A bar with nothing in it goes on with the chord before**, written
   faintly so the bar does not look empty.
@@ -74,7 +74,7 @@ Several harmonies go in one bar, separated by spaces:
 | A Roman numeral | a chord of the key | `ii7 V7` in C major becomes Dm7 G7 |
 | A pitch-class set | by its name, or its notes in braces | `3-11 T2`, `{D F A}`, `{0,1,4}` |
 | A micromode | one of Kröpfl's twelve | `Menor 3`, `Menor 3 T4I` |
-| A form of the key, by its degree | when the key is a micromode | `T2`, `T5I` |
+| A form of the key, by its degree | when the key is a set or a micromode | `T2`, `T5I` |
 | A row form | a form of the song's twelve-tone row | `P0`, `I5`, `R3`, `RI7` |
 | No chord | the band plays no harmony | `N.C.` |
 | A held beat | the harmony before goes on one more beat | `/` |
