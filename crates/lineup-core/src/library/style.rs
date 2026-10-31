@@ -1818,6 +1818,18 @@ pub static STYLES: &[Style] = &[
          the milonga grew up with, under three plain chords.",
     ),
     style(
+        "Candombe Ansina",
+        Folklore,
+        Major,
+        "I | IV | V7 | I",
+        Comping::Offbeat,
+        Bass::Tresillo,
+        110.0,
+        "Candombe Ansina",
+        "The candombe as the drums of Montevideo's Palermo neighbourhood play it, the Ansina \
+         toque, under the same three plain chords.",
+    ),
+    style(
         "Polca",
         Folklore,
         Major,
