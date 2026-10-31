@@ -660,6 +660,34 @@ changed while the window was open, saves the pieces, and writes the
 take with `self.edit`, so it is **one step of undo**. **Throw it away**,
 or closing the window, keeps nothing.
 
+### Transcribing a take again
+
+A take already written in can be heard again, to write its notes with
+other choices: **Transcribe again…** on its clip's menu. The playlist
+finds the recording a clip shows with `recording_in`: one whose note
+starts in the clip or, for an empty clip (the rest of a long take), the
+last one before it on its track. The app reads that WAV file and hears
+it as it hears any recording added, on a thread, then lays it from the
+step its note is on with `Take::laid`. A piece of a take starts on a
+whole step and plays straight on at the song's tempo, so laying it there
+gives the timing it was written with.
+
+The review remembers what it is in an `Again`: the recording's track and
+the take's name. **The recording** row only says it stays as it is, and
+nothing is saved or added: `Keep::recordings` is empty. The notes go
+where they went before: `Review::again` looks at the track right under
+the recording, and if it is the take's notes track, picks the channel
+whose notes are on it; else the tune channel, as for a new take. Then
+`add_take` does the rest, as for any take: the notes go into the
+patterns that hold that channel's notes where the take was sung, in
+place of the ones there, which are the notes written the first time.
+
+Notes with no home there go on a track of their own, right under the
+recording, as the first time. `Keep::under` names the recording's track
+for that, since no recording clips are made this time, and
+`notes_track_under` uses the notes track already there when it has
+room, or adds one.
+
 On macOS an app has to say why it wants the microphone before the
 system lets it listen, so `packaging/macos/Info.plist` has an
 `NSMicrophoneUsageDescription`, which macOS shows the first time.

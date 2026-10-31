@@ -121,6 +121,17 @@ canción](saving.md#compartir-una-canción)).
 Una canción con una toma necesita esta versión de Ferrous Lineup, o
 una más nueva, para abrirse.
 
+## Transcribir otra vez una toma
+
+Para escribir otra vez las notas de una toma con otras opciones, como
+otra cuadrícula o **En la tonalidad**, haz clic derecho en su grabación
+en la lista de reproducción y elige **Transcribir otra vez…**. La
+aplicación la vuelve a escuchar, y **Tu toma** se abre con las notas
+yendo adonde fueron antes. La fila **La grabación** dice que la
+grabación se queda en su pista tal como está: no se guarda ni se añade
+una segunda vez. **Escribirla** pone las notas nuevas en lugar de las
+escritas antes, como un solo paso: **Ctrl+Z** devuelve las anteriores.
+
 ## Añadir una grabación hecha antes
 
 Un archivo MP3, WAV, FLAC u Ogg puede ir sobre la canción como una

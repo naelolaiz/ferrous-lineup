@@ -694,6 +694,36 @@ mientras la ventana estaba abierta, guarda los trozos y escribe la toma
 con `self.edit`, así que es **un solo paso de deshacer**.
 **Descartarla**, o cerrar la ventana, no conserva nada.
 
+### Transcribir otra vez una toma
+
+Una toma ya escrita se puede volver a oír, para escribir sus notas con
+otras opciones: **Transcribir otra vez…** en el menú de su clip. La
+lista de reproducción encuentra la grabación que muestra un clip con
+`recording_in`: una cuya nota empieza en el clip o, para un clip vacío
+(el resto de una toma larga), la última antes de él en su pista. La
+aplicación lee ese archivo WAV y lo oye como oye cualquier grabación
+añadida, en un hilo, y después lo pone desde el paso donde está su nota
+con `Take::laid`. Un trozo de una toma empieza en un paso entero y
+sigue de largo al tempo de la canción, así que ponerlo ahí da el ritmo
+con el que se escribió.
+
+La revisión recuerda qué es en un `Again`: la pista de la grabación y
+el nombre de la toma. La fila **La grabación** solo dice que se queda
+tal como está, y no se guarda ni se añade nada: `Keep::recordings` está
+vacío. Las notas van adonde fueron antes: `Review::again` mira la pista
+justo debajo de la grabación y, si es la pista de notas de la toma,
+elige el canal cuyas notas están en ella; si no, el canal de la
+melodía, como para una toma nueva. Después `add_take` hace el resto,
+como para cualquier toma: las notas van a los patrones que tienen las
+notas de ese canal donde se cantó la toma, en lugar de las que había,
+que son las notas escritas la primera vez.
+
+Las notas sin un lugar ahí van a una pista propia, justo debajo de la
+grabación, como la primera vez. `Keep::under` nombra la pista de la
+grabación para eso, ya que esta vez no se hacen clips de grabación, y
+`notes_track_under` usa la pista de notas que ya está ahí cuando tiene
+lugar, o añade una.
+
 En macOS una aplicación tiene que decir para qué quiere el micrófono
 antes de que el sistema la deje escuchar, así que
 `packaging/macos/Info.plist` tiene un `NSMicrophoneUsageDescription`,

@@ -111,6 +111,16 @@ its takes again (see [Sharing a song](saving.md#sharing-a-song)).
 A song with a take needs this version of Ferrous Lineup or a newer one
 to open.
 
+## Transcribing a take again
+
+To write a take's notes again with other choices, such as another grid
+or **In the key**, right-click its recording on the playlist and pick
+**Transcribe again…**. The app listens to it again, and **Your take**
+opens with the notes going where they went before. **The recording**
+row says the recording stays on its track as it is: it is not saved or
+added a second time. **Write it in** puts the new notes in place of the
+ones written before, as one step: **Ctrl+Z** brings the old ones back.
+
 ## Adding a recording made before
 
 An MP3, WAV, FLAC or Ogg file can go on the song as a take, and the

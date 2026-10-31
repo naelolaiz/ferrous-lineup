@@ -50,7 +50,7 @@ and playing your part](locks.md)).
 Each block on the playlist is a **clip**: one pattern, at one place on
 one track. The playlist's toolbar line says it in short: "Click to
 place "Beat". Double-click a clip to edit it, drag to move it, drag its
-right edge to repeat it, right-click to delete."
+right edge to repeat it, right-click it for its menu."
 
 - **Click** an empty place on a track to put a clip of the selected
   pattern there.
@@ -59,7 +59,10 @@ right edge to repeat it, right-click to delete."
   patterns, and plays the pattern that many times in a row.
 - **Double-click** a clip to edit it: melodies and chords open in the
   piano roll, drums in the channel rack.
-- **Right-click** a clip to delete it.
+- **Right-click** a clip for its menu: **Edit its pattern**, as a
+  double-click does, and **Delete**, which deletes every selected clip
+  when the clip is one of them. On a recording, **Transcribe again…**
+  takes the place of Edit (see [Takes](takes.md#transcribing-a-take-again)).
 
 **Snap**, in the playlist's toolbar, says where clips land: on a
 **Bar**, a **Beat** or a **Step** (a sixteenth note).
