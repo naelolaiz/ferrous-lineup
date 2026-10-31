@@ -282,6 +282,7 @@ Tonicization: outside-the-key.md#secondary-dominants
 Toolbar: main-window.md#the-toolbar
 Tools: piano-roll.md#tools
 Trace: settings.md#playback
+Transcribe again: takes.md#transcribing-a-take-again, patterns-and-playlist.md#placing-and-moving-clips
 Tracks: patterns-and-playlist.md#tracks
 Transposing: piano-roll.md#tools
 Transposing instrument: lead-sheets.md#for-b-e-and-f-instruments

@@ -293,6 +293,7 @@ Tonalidad: keys-and-modes.md#la-tonalidad-de-una-canción, first-song.md#5-el-te
 Tonalidades con dos nombres: keys-and-modes.md#tonalidades-con-dos-nombres
 Tónica: harmony-keys.md#las-teclas, chord-functions.md#casa-alejarse-y-tensión
 Tonicalización: outside-the-key.md#dominantes-secundarias
+Transcribir otra vez: takes.md#transcribir-otra-vez-una-toma, patterns-and-playlist.md#colocar-y-mover-clips
 Transportar: piano-roll.md#herramientas
 Tresillo: swing.md#el-control-swing, bigger-band.md#la-sección-de-vientos, rhythm-and-meter.md#figuras-y-pasos, tango-and-latin-america.md, rhythm-and-meter.md#pulsos-fuertes-pulsos-débiles-y-síncopa
 Tríada: chords.md#tríadas

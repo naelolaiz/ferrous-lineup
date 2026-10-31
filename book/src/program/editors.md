@@ -1517,6 +1517,45 @@ several places.
 ![Double-clicking a "Beat" clip opens the channel rack on "Beat", sized
 to fit its rows.](../images/step-8-rack-double-click.png)
 
+### A right-click opens the clip's menu
+
+A right-click on a clip used to delete it, and a right-drag deleted
+every clip it crossed. That is quick, but a right-click opens a menu
+everywhere else in the app (a track's name, a section, the bar
+numbers), so deleting there surprised people. Now it opens the clip's
+menu: **Transcribe again…** for a take's recording, or **Edit its
+pattern**, and **Delete**.
+
+`egui::Popup::context_menu(response)` opens a menu where the response
+was right-clicked. The grid is one big response, though, and a
+right-click on an empty cell should open nothing. So the playlist
+remembers which clip was right-clicked, and where, and tells the popup
+itself whether to open:
+
+```rust
+let mut open = None;
+if response.secondary_clicked() {
+    self.clip_menu = response
+        .interact_pointer_pos()
+        .filter(|pos| cells.contains(*pos))
+        .and_then(|pos| {
+            clip_at(project, layout, pos).map(|index| (index, layout.step_at(pos.x)))
+        });
+    open = Some(egui::SetOpenCommand::Bool(self.clip_menu.is_some()));
+} else if response.clicked() {
+    open = Some(egui::SetOpenCommand::Bool(false));
+}
+```
+
+`open_memory(open)` replaces the command `context_menu` would give,
+which opens on any right-click. `None` leaves the menu as it was, open
+or closed. The clip is remembered as its index, which stays right while
+the menu is open: the menu is a popup, so a click on it does not reach
+the grid, and nothing else edits the clips meanwhile.
+
+**Delete** deletes the clip, or every selected clip when it is one of
+them, the same `RemoveClips` the Delete key sends.
+
 ### Drawing a clip's notes: `Box<dyn Fn>`
 
 Each clip shows a sketch of its pattern. Drum patterns look best as a
