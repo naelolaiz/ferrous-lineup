@@ -245,6 +245,13 @@ pub fn spanish_name(name: &str) -> Option<String> {
         text.starts_with(|c: char| c.is_ascii_digit())
             && text.chars().all(|c| c.is_ascii_digit() || c == '–')
     };
+    // The notes of a take, sung where their channel had no clip.
+    if let Some(take) = name.strip_suffix(" notes")
+        && let Some(template) = in_spanish("name|{} notes")
+    {
+        let take = spanish_name(take).unwrap_or_else(|| take.to_string());
+        return Some(template.replacen("{}", &take, 1));
+    }
     let in_spanish = |template: &'static str, part: &str| {
         Language::Spanish.with(|| spanish_name(part).map(|part| trf(template, &[&part])))
     };

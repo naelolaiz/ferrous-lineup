@@ -761,8 +761,8 @@ the new one. In the Habanera from *Carmen* it lands on bar 10, where
 Bizet's D minor turns to D major.
 
 `Project::heard_keys` does this for the whole song: synths and MIDI Out
-channels that are not muted count, drums and samplers (such as an
-imported recording) do not, and each note counts for as long as it
+channels that are not muted count, drums and samplers (such as a take's
+recording) do not, and each note counts for as long as it
 sounds in each bar. It returns `KeySpan`s, each with a start, an end and
 every key ranked. **Mark on the playlist**, next to the key heard, turns
 them into key markers (see [Scales, modes and
@@ -801,11 +801,9 @@ C major, clear.
 
 The app shows the key from the most immediate source it has (see
 `key_finder.rs`): what you play, if you played in the last four bars;
-otherwise the keys heard in an imported recording, or in the song's
-notes at the playhead; in pattern mode, the selected pattern's notes.
-The line says which: "Sounds in what you play:", "in the notes here",
-"in this pattern". How a recording's keys are heard is in [Importing a
-recording (experimental)](listen.md).
+otherwise the keys heard in the song's notes at the playhead; in
+pattern mode, the selected pattern's notes. The line says which:
+"Sounds in what you play:", "in the notes here", "in this pattern".
 
 ### What a chord is in each key
 

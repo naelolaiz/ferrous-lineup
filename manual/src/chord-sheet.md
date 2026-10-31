@@ -114,8 +114,8 @@ a chord on any beat you like.
 ## Writing what the song plays
 
 A song opens with its chords on the sheet already. A demo writes the
-chart it was made from; any other song, such as a MIDI file you opened
-or a recording you imported, gets the chords the app hears in it.
+chart it was made from; any other song, such as a MIDI file you opened,
+gets the chords the app hears in it.
 
 **Write the chords the song plays**, at the top of the sheet, writes
 them again from what the song plays now, in place of what the sheet
@@ -159,7 +159,8 @@ At the top of the sheet:
   micromode), **As written**, as **Chords**, as **Pitch-class sets** or
   as **Micromodes**. Another choice holds until you open another song.
   [Beyond keys](sets-rows-micromodes.md#one-harmony-four-names) tells
-  what each says.
+  what each says. For sets and micromodes, a line under it, **Most
+  used**, ranks the classes the sheet shows by how long each sounds.
 - **Bars per line**: **Fit the names** puts as many bars on a line as
   show every name, and the numeral under it, at its full size: 1, 2, 4,
   8, 12 or 16, so that lines start where four-bar phrases do. A name may

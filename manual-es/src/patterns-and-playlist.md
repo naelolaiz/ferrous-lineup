@@ -57,7 +57,7 @@ Cada bloque de la lista de reproducción es un **clip**: un patrón, en un
 lugar de una pista. La línea de la barra de la lista de reproducción lo
 dice en breve: *Haz clic para colocar «Ritmo». Doble clic en un clip
 para editarlo, arrástralo para moverlo, arrastra su borde derecho para
-repetirlo, clic derecho para eliminarlo.*
+repetirlo, clic derecho para ver su menú.*
 
 - **Haz clic** en un lugar vacío de una pista para poner ahí un clip del
   patrón seleccionado.
@@ -66,7 +66,11 @@ repetirlo, clic derecho para eliminarlo.*
   patrones enteros, y toca el patrón esa cantidad de veces seguidas.
 - **Doble clic** en un clip para editarlo: las melodías y los acordes se
   abren en el piano roll, la batería en el rack de canales.
-- **Clic derecho** en un clip para eliminarlo.
+- **Clic derecho** en un clip para ver su menú: **Editar su patrón**,
+  como un doble clic, y **Eliminar**, que elimina todos los clips
+  seleccionados cuando el clip es uno de ellos. En una grabación,
+  **Transcribir otra vez…** ocupa el lugar de Editar (ver
+  [Tomas](takes.md#transcribir-otra-vez-una-toma)).
 
 **Ajuste**, en la barra de la lista de reproducción, dice dónde caen los
 clips: en un **Compás**, un **Pulso** o un **Paso** (una semicorchea).
@@ -99,13 +103,16 @@ barra de la lista de reproducción, también añade una.
 
 - La **luz** a la izquierda de una pista la silencia y le devuelve el
   sonido.
+- **S**, a su derecha, deja sonar solo esa pista: todas las demás se
+  silencian. Haz clic otra vez para oírlas todas.
 - **Haz clic en su nombre** para cambiarlo.
 - **Arrastra su borde inferior** para hacerla más alta o más baja;
   **doble clic** en el borde le devuelve su alto habitual.
 - **Clic derecho en su nombre** para **Alto de la pista**,
   **Restablecer el alto de la pista**, **Insertar una pista arriba**,
-  **Insertar una pista abajo**, **Subir**, **Bajar** y **Eliminar la
-  pista**, que también elimina sus clips.
+  **Insertar una pista abajo**, **Añadir una grabación…** (ver
+  [Tomas](takes.md#añadir-una-grabación-hecha-antes)), **Subir**,
+  **Bajar** y **Eliminar la pista**, que también elimina sus clips.
 
 ## Las franjas sobre las pistas
 

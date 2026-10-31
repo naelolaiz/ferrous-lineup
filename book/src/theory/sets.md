@@ -959,10 +959,111 @@ pub struct NoteGroup {
 Its notes are those of the part it was read in, one of each pitch class
 of the form, in the order they come.
 
+### The most used class
+
+Whichever way the notes are grouped, the question an analyst asks next
+is which class the music lives on: the micromode a passage keeps coming
+back to, or the set it is made of. Under the notation row, a line
+answers it:
+
+> Most used: **Menor 3 72%** · 2-3 6% · Menor 2 6% · 2-1 4% · 5 more
+
+That is the tune of **Menor 3 colour** read **in a line**, in threes,
+as micromodes. Each group lasts from where it starts to where the next
+one starts, the way the sheet writes a harmony lasting until the next,
+so a class's share is how much of the song it fills. The first one is
+drawn brightest and the rest fainter; pointing at one gives how many
+times it starts and its forms, the most used first ("Menor 3 9%,
+Menor 3 T5 9%, Menor 3 T9I 6%, …"). The dyads are the line's leftovers: where the
+tune strikes a note again inside a group, C E♭ C, the group has two
+pitch classes, 2-3.
+
+Read as **the sheet's harmonies** or as **forms of the key**, the same
+demo is Menor 3 for 100%: every harmony written and every form read is
+one of its forms. In C major, with **Show** set to pitch-class sets,
+the starting song is 3-11 for 100% too: major and minor triads are one
+class. A class is counted once where two of its groups sound at once,
+so the two forms of **3-3|3-3 T7** fill the bar once, not twice, though
+they are two of its times. Chords, row forms and N.C. are left out: the
+line counts what the sheet names as sets or micromodes, and in a song
+shown as chords it does not appear at all.
+
+`most_used` takes the harmonies as the sheet names them, a step and the
+groups named there, and adds up each class:
+
+```rust
+pub struct ClassUse {
+    pub class: String,
+    pub steps: usize,
+    pub times: usize,
+    pub forms: Vec<(HarmonyName, usize)>,
+}
+
+pub fn most_used(harmonies: &[(usize, Vec<HarmonyName>)], end: usize) -> Tally {
+    let mut classes: Vec<ClassUse> = Vec::new();
+    for (index, (start, names)) in harmonies.iter().enumerate() {
+        let until = harmonies
+            .get(index + 1)
+            .map_or(end, |(next, _)| *next)
+            .min(end);
+        let steps = until.saturating_sub(*start);
+        let mut counted: Vec<String> = Vec::new();
+        for name in names {
+            let Some(class) = class_of(name) else {
+                continue;
+            };
+            // ... find or add the class's entry ...
+            entry.times += 1;
+            if !counted.contains(&class) {
+                entry.steps += steps;
+                counted.push(class);
+            }
+            // ... and add the steps to its form ...
+        }
+    }
+    // ... sort the forms, then the classes, the longest first ...
+}
+```
+
+`harmonies.get(index + 1)` is the next harmony, or `None` after the
+last; `map_or(end, …)` turns that `None` into the end of the song, so
+the last harmony lasts until the song ends. `saturating_sub` subtracts
+without going below zero, should a harmony start past the end. `let
+Some(class) = class_of(name) else { continue; }` is a **let-else**: if
+the name is no set or micromode, the loop moves on to the next name;
+otherwise `class` holds its class for the rest of the loop. The
+`counted` list is what makes two groups of one class at once count
+their steps once.
+
+The classes are sorted by three keys, one after another:
+
+```rust
+classes.sort_by(|a, b| {
+    b.steps
+        .cmp(&a.steps)
+        .then(b.times.cmp(&a.times))
+        .then_with(|| a.class.cmp(&b.class))
+});
+```
+
+`b.steps.cmp(&a.steps)`, with `b` first, sorts from the most steps down.
+Where two classes sound as long, `then` compares how many times each
+starts; where those are the same too, `then_with` compares their names,
+so the order never depends on which class happened to come first.
+`then_with` takes a closure and only runs it when it is needed, which
+is worth it for comparing strings.
+
+Where the bars show the sheet's own harmonies, `written_names` renames
+each one in the notation chosen, in the key on its step, and the last
+one lasts to the end of its bar or of the song, whichever is later.
+Where they show groups read from the notes, `heard_names` names the very
+groups the bars show, so the line and the bars never disagree.
+
 ### Reading only when something changes
 
 Cutting a whole song into groups and naming them takes milliseconds for
-a long song: too slow to repeat sixty times a second while it plays. So the view keeps what it read, and what it read it from:
+a long song: too slow to repeat sixty times a second while it plays. So the view keeps what it read, what it read it from, and the tally of
+its classes:
 
 ```rust
 struct Read {
@@ -970,13 +1071,23 @@ struct Read {
     notes: Vec<HeardNote>,
     keys: KeyMap,
     shown: Rc<[Shown]>,
+    tally: Rc<Tally>,
+    pass: u64,
 }
 ```
 
 Each frame it gathers the song's notes, which is quick, and compares
 them, the choices and the keys with what it read last time. Only when
 something differs, a new choice in a menu, a note edited in the piano
-roll, a key change, does it cut and name the groups again.
+roll, a key change, does it cut and name the groups again, and count
+their classes.
+
+The line of the most used is drawn above the bars, so it asks for the
+groups first, and the bars ask again. Nothing in the song changes
+between the two: the app applies what was clicked after the frame is
+drawn. So `pass` keeps the number of the frame the read was last
+checked in, egui's `cumulative_pass_nr`, and a second question in the
+same frame gets the same answer without gathering the notes again.
 
 The result is an **`Rc<[Shown]>`**, a reference-counted pointer to a
 slice. `Rc` is the single-threaded cousin of `Arc` (see [Instruments:
