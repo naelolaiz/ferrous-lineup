@@ -1,8 +1,9 @@
 //! The chord sheet's notation row: how the harmony is named (as written,
 //! as chords, as pitch-class sets or as micromodes) and, for sets and
 //! micromodes, which notes make each group: the sheet's own harmonies,
-//! the notes sounding together, or the notes one after another in a
-//! line. See `lineup_core::chord_sheet::notation`.
+//! the notes sounding together, the notes one after another in a line,
+//! or the forms of the key's set heard in both ways at once. See
+//! `lineup_core::chord_sheet::notation`.
 
 use std::rc::Rc;
 
@@ -236,8 +237,41 @@ impl NotationView {
             ),
         );
         if self.reads_notes() {
-            self.size_choice(ui);
+            match self.grouping.reads_forms() {
+                true => self.forms_note(ui, project),
+                false => self.size_choice(ui),
+            }
             self.track_choice(ui, project);
+        }
+    }
+
+    /// For the forms of the key: how big they are, or that there are
+    /// none to read where no key of the song is a set.
+    fn forms_note(&self, ui: &mut Ui, project: &Project) {
+        let keys = project.key_map();
+        let sets: Vec<Scale> = std::iter::once(keys.first())
+            .chain(keys.markers().iter().map(|marker| marker.scale))
+            .filter(|key| matches!(key.kind, lineup_core::ScaleKind::Set(_)))
+            .collect();
+        match sets.as_slice() {
+            [] => {
+                let label = ui.weak(tr("No key here is a set"));
+                theme::hint(
+                    label,
+                    tr(
+                        "The forms are read where the key is a pitch-class set or a \
+                         micromode: pick one in the Key menu, or as a key change",
+                    ),
+                );
+            }
+            [key, ..] => {
+                let size = key.pitch_set().len();
+                let label = ui.weak(trf("{} notes", &[&size]));
+                theme::hint(
+                    label,
+                    tr("A form of the key's set has as many notes as the set"),
+                );
+            }
         }
     }
 
@@ -410,14 +444,21 @@ impl NotationView {
         let channel = self
             .channel(project)
             .and_then(|channel| project.channels().get(channel));
-        let what = |in_line: bool| match (in_line, channel) {
-            (true, None) => tr("Notes of every track one after another").to_string(),
-            (false, None) => tr("Notes of every track sounding together").to_string(),
-            (true, Some(channel)) => trf(
+        let what = |grouping: Grouping| match (grouping, channel) {
+            (Grouping::InLine, None) => tr("Notes of every track one after another").to_string(),
+            (Grouping::Mixed, None) => {
+                tr("Forms of the key heard in the notes of every track").to_string()
+            }
+            (_, None) => tr("Notes of every track sounding together").to_string(),
+            (Grouping::InLine, Some(channel)) => trf(
                 "Notes of the {} one after another",
                 &[&tr_name(&channel.name)],
             ),
-            (false, Some(channel)) => trf(
+            (Grouping::Mixed, Some(channel)) => trf(
+                "Forms of the key heard in the notes of the {}",
+                &[&tr_name(&channel.name)],
+            ),
+            (_, Some(channel)) => trf(
                 "Notes of the {} sounding together",
                 &[&tr_name(&channel.name)],
             ),
@@ -438,7 +479,7 @@ impl NotationView {
                     .collect();
                 notes.sort();
                 notes.dedup();
-                let what = what(grouping == Grouping::InLine);
+                let what = what(grouping);
                 let about = match names.as_slice() {
                     [name] => format!("{what}. {}", name.describe(key)),
                     _ => {

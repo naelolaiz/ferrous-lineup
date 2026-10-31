@@ -106,8 +106,10 @@ from A minor to A major and to F♯ minor and back. Each change is a
   wherever it changes, in blue.
 - Right-click a bar number and choose **Key from bar N** to change key
   there, picking a tonic and a scale, or **Remove this key change**.
-  The key can also be a micromode, or a set or a row the song is in
-  (see [Beyond keys](sets-rows-micromodes.md#a-micromode-as-the-key)).
+  The key can also be a micromode, a **twelve-tone row** or a
+  **pitch-class set**, picked as in the Key menus, or a set or a row
+  the song is in (see [Beyond
+  keys](sets-rows-micromodes.md#a-micromode-as-the-key)).
   Bar 1 is the song's own key, which the Key menus change.
 - While the song plays, the harmony keys follow the key at the playhead.
   When it is not the key the song starts in, *Now in A major* appears
@@ -148,5 +150,6 @@ visits to another key, and it can mistake a key for its relative major
 or minor.
 
 Music made of a micromode or another set has no major or minor key.
-For it, a second line says what the passage is made of: see [Finding
+Where the song's key is a set, a micromode, a row or the chromatic
+scale, a second line says what the passage is made of: see [Finding
 the colour](sets-rows-micromodes.md#finding-the-colour).

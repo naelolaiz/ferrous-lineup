@@ -23,6 +23,13 @@
 //!   cut into threes is four groups of the one micromode Menor 3 (3-3):
 //!   B Bb D, Eb G F#, Ab E F, C C# A; in sixes, its two halves are each
 //!   the hexatonic set 6-20.
+//! - **Mixed**, where the key is a set or a micromode: the forms of the
+//!   key's set as the colour check reads them
+//!   ([`crate::harmony::voice_leading::colour`]), each heard partly
+//!   together and partly one after another, as the music has it; and
+//!   where two tracks, or a top line and the chords under it, are each in
+//!   a form of their own at once, both forms, written as two chords at
+//!   once are.
 //!
 //! Nothing here changes the song: the chord sheet shows what these
 //! functions find, and what is written stays as it was.
@@ -30,11 +37,12 @@
 use serde::{Deserialize, Serialize};
 
 use super::HarmonyName;
+use crate::harmony::voice_leading::{FormStatement, HeardIn, Voice, colour, voices_of};
 use crate::harmony::{
     ChordQuality, ChordSymbol, Harmony, HeardNote, Micromode, PitchSet, Scale, ScaleKind,
 };
 use crate::pitch::Note;
-use crate::{Chord, Project};
+use crate::{Chord, NoteEvent, Project};
 
 /// How the chord sheet names each harmony.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, Serialize, Deserialize)]
@@ -260,17 +268,32 @@ pub enum Grouping {
     Together,
     /// The notes one after another: horizontally, as a row is cut.
     InLine,
+    /// The forms of the key's set heard in the notes, together and one
+    /// after another, as the colour check reads them.
+    Mixed,
 }
 
 impl Grouping {
-    pub const ALL: [Grouping; 3] = [Grouping::Written, Grouping::Together, Grouping::InLine];
+    pub const ALL: [Grouping; 4] = [
+        Grouping::Written,
+        Grouping::Together,
+        Grouping::InLine,
+        Grouping::Mixed,
+    ];
 
     pub fn name(self) -> &'static str {
         match self {
             Grouping::Written => "The sheet's harmonies",
             Grouping::Together => "Notes together (vertical)",
             Grouping::InLine => "Notes in a line (serial)",
+            Grouping::Mixed => "Forms of the key (mixed)",
         }
+    }
+
+    /// Whether the groups are the forms of the key's set, as big as the
+    /// set, rather than so many notes.
+    pub fn reads_forms(self) -> bool {
+        self == Grouping::Mixed
     }
 
     /// What it shows, for hints.
@@ -289,6 +312,12 @@ impl Grouping {
                  row is cut into trichords or hexachords; notes struck together count from \
                  the lowest up, and a note struck again at once counts once"
             }
+            Grouping::Mixed => {
+                "The forms of the key's set heard in the notes, as the colour check reads \
+                 them: a form may sound partly together and partly one after another, and \
+                 two tracks, or a top line and the chords under it, may each be in a form of \
+                 their own at once. Only where the key is a pitch-class set or a micromode"
+            }
         }
     }
 }
@@ -300,11 +329,21 @@ impl Grouping {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct NoteGroup {
     pub notes: Vec<Note>,
+    /// The form of the key's set the notes were read as, for
+    /// [`Grouping::Mixed`]: the group is named by it, though a first or
+    /// a last form may not sound whole.
+    pub form: Option<PitchSet>,
 }
 
 impl NoteGroup {
+    /// A group of these notes, named by their own set.
+    pub fn new(notes: Vec<Note>) -> Self {
+        NoteGroup { notes, form: None }
+    }
+
     pub fn set(&self) -> PitchSet {
-        self.notes.iter().map(|note| note.pitch_class()).collect()
+        self.form
+            .unwrap_or_else(|| self.notes.iter().map(|note| note.pitch_class()).collect())
     }
 
     /// Its notes spelled in `key`, in their order: "B Bb D". Notes that
@@ -363,8 +402,102 @@ pub fn heard_groups(
         Grouping::Written => Vec::new(),
         Grouping::Together => together(&notes, size),
         Grouping::InLine => in_line(&notes, size.unwrap_or(3)),
+        Grouping::Mixed => mixed(project, channel),
     };
     merge_repeats(groups)
+}
+
+/// The forms of the key's set the colour check reads in the song's
+/// notes (of channel `channel` only, if given), where the key is a set:
+/// at every step where a form starts, each form heard then, the lowest
+/// first. A form read in all the parts at once is one group; two tracks,
+/// or a top line and the chords under it, each in a form of its own are
+/// two, as two chords at once are.
+pub fn mixed(project: &Project, channel: Option<usize>) -> Vec<HeardGroups> {
+    let mut tracks: Vec<(usize, Vec<NoteEvent>)> = Vec::new();
+    for (part, note) in project.melodic_parts() {
+        if channel.is_some_and(|channel| channel != part) {
+            continue;
+        }
+        match tracks.iter_mut().find(|(track, _)| *track == part) {
+            Some((_, notes)) => notes.push(note),
+            None => tracks.push((part, vec![note])),
+        }
+    }
+    let voices: Vec<Voice> = tracks
+        .iter()
+        .flat_map(|(track, notes)| voices_of(*track, notes))
+        .collect();
+    // The stretches from one key marker to the next, each read on its
+    // own, as the check reads a pattern in its keys.
+    let keys = project.key_map();
+    let end = project.song_length();
+    let mut edges: Vec<usize> = std::iter::once(0)
+        .chain(keys.markers().iter().map(|marker| marker.start))
+        .chain(std::iter::once(end))
+        .filter(|&edge| edge <= end)
+        .collect();
+    edges.sort_unstable();
+    edges.dedup();
+    let spans: Vec<(usize, usize)> = edges.windows(2).map(|pair| (pair[0], pair[1])).collect();
+    let forms = colour::forms_heard(&voices, &spans, |step| keys.key_at(step));
+
+    let mut starts: Vec<usize> = forms.iter().map(|form| form.start).collect();
+    starts.sort_unstable();
+    starts.dedup();
+    starts
+        .into_iter()
+        .map(|start| {
+            let mut groups: Vec<(u32, NoteGroup)> = forms
+                .iter()
+                .filter(|form| (form.start..form.end).contains(&start))
+                .map(|form| {
+                    let notes = notes_of_form(form, &forms, &voices);
+                    let height = notes.iter().map(|note| u32::from(note.midi())).sum::<u32>() * 100
+                        / notes.len().max(1) as u32;
+                    let group = NoteGroup {
+                        notes,
+                        form: Some(form.form),
+                    };
+                    (height, group)
+                })
+                .collect();
+            groups.sort_by_key(|(height, _)| *height);
+            HeardGroups {
+                start,
+                groups: groups.into_iter().map(|(_, group)| group).collect(),
+            }
+        })
+        .collect()
+}
+
+/// The notes `form` was read in, one of each of its pitch classes, in
+/// the order they come (the lowest first, where they start together).
+/// A track whose top line was read on its own (in a form of `forms`
+/// heard at the same time) leaves that line out.
+fn notes_of_form(form: &FormStatement, forms: &[FormStatement], voices: &[Voice]) -> Vec<Note> {
+    let apart: Vec<usize> = forms
+        .iter()
+        .filter(|other| other.start < form.end && form.start < other.end)
+        .filter_map(|other| match other.heard_in {
+            HeardIn::Line(voice) => Some(voice),
+            _ => None,
+        })
+        .collect();
+    let mut notes: Vec<&NoteEvent> = voices
+        .iter()
+        .enumerate()
+        .filter(|(index, voice)| match form.heard_in {
+            HeardIn::All => true,
+            HeardIn::Track(track) => voice.channel == track && !apart.contains(index),
+            HeardIn::Line(line) => *index == line,
+        })
+        .flat_map(|(_, voice)| voice.notes.iter())
+        .filter(|note| (form.start..form.end).contains(&note.start))
+        .filter(|note| form.form.contains(note.pitch.pitch_class()))
+        .collect();
+    notes.sort_by_key(|note| (note.start_tick(), note.pitch));
+    distinct(notes.into_iter().map(|note| note.pitch).collect())
 }
 
 /// The notes sounding together, from each step where a note starts:
@@ -436,7 +569,7 @@ pub fn in_line(notes: &[HeardNote], size: usize) -> Vec<HeardGroups> {
         .into_iter()
         .map(|(start, notes)| HeardGroups {
             start,
-            groups: vec![NoteGroup { notes }],
+            groups: vec![NoteGroup::new(notes)],
         })
         .filter(|heard| heard.sets()[0].len() >= 2)
         .collect()
@@ -463,13 +596,11 @@ fn chunks(notes: Vec<Note>, size: Option<usize>) -> Vec<NoteGroup> {
         return Vec::new();
     }
     let Some(size) = size else {
-        return vec![NoteGroup { notes }];
+        return vec![NoteGroup::new(notes)];
     };
     let mut groups: Vec<NoteGroup> = notes
         .chunks(size.max(1))
-        .map(|chunk| NoteGroup {
-            notes: chunk.to_vec(),
-        })
+        .map(|chunk| NoteGroup::new(chunk.to_vec()))
         .collect();
     if groups.len() > 1 && groups.last().is_some_and(|last| last.notes.len() == 1) {
         let left = groups.pop().map(|last| last.notes).unwrap_or_default();
@@ -535,7 +666,7 @@ pub fn spelled_set(set: PitchSet, key: Scale) -> String {
         .into_iter()
         .map(|p| Note::new(60 + p.semitone()))
         .collect();
-    NoteGroup { notes }.spelled(key)
+    NoteGroup::new(notes).spelled(key)
 }
 
 #[cfg(test)]
@@ -905,6 +1036,104 @@ mod tests {
     }
 
     #[test]
+    fn mixed_reads_the_forms_a_micromode_demo_plays() {
+        use crate::library::{MicromodeStyle, demo};
+        // The band plays the forms written on the sheet, each partly as
+        // chords and partly as a tune: read from the notes, they are
+        // the forms written, bar by bar.
+        let style = MicromodeStyle::named("Menor 3 colour").unwrap();
+        let project = demo::micromode_demo(style);
+        let read = mixed(&project, None);
+        let markers = project.playlist().chord_markers();
+        assert!(markers.len() >= 8);
+        for marker in markers {
+            let heard = read
+                .iter()
+                .find(|heard| heard.start == marker.start)
+                .unwrap_or_else(|| panic!("nothing read at {}", marker.start));
+            assert_eq!(
+                Some(heard.sets()[0]),
+                marker.harmony.pitch_set(),
+                "at {}",
+                marker.start
+            );
+        }
+        // Named as the key is: Menor 3 and its forms.
+        let names: Vec<String> = read[..3]
+            .iter()
+            .map(|heard| {
+                Notation::Key
+                    .name_group(heard.sets()[0], project.scale)
+                    .to_string()
+            })
+            .collect();
+        assert_eq!(names, ["Menor 3", "Menor 3 T4I", "Menor 3 T3"]);
+    }
+
+    #[test]
+    fn mixed_reads_only_where_the_key_is_a_set() {
+        use crate::library::{demo, rows::ROW_STYLES};
+        let style = ROW_STYLES
+            .iter()
+            .find(|style| style.name == "Webern's trichords")
+            .unwrap();
+        // In the row as the key, there are no forms of a set to read.
+        let mut project = demo::row_demo(style);
+        assert!(mixed(&project, None).is_empty());
+        // In its first trichord as a set, 3-3, every trichord of the row
+        // is one of its forms, the tune's and the chords' alike.
+        let first = project.scale.tone_row().unwrap().segments(3)[0];
+        project.scale = Scale::set(project.scale.root, first).named_as_set();
+        let read = mixed(&project, None);
+        assert!(read.len() >= 8);
+        for heard in &read {
+            for set in heard.sets() {
+                assert_eq!(set.set_class().name(), "3-3", "at {}", heard.start);
+            }
+        }
+        assert_eq!(
+            stacked_notes(&read[0].groups, project.scale),
+            "C B Eb",
+            "the row's first trichord, in the order it comes"
+        );
+    }
+
+    #[test]
+    fn mixed_writes_two_forms_at_once_upper_first() {
+        use crate::{Channel, Clip, NoteEvent};
+        // A tune in Menor 3's T0 (C C# E) over chords in its T7 (G Ab B),
+        // on two tracks.
+        let mut project = Project::empty();
+        project.add_channel(Channel::synth());
+        project.add_channel(Channel::synth());
+        let pattern = project.pattern_mut(0).unwrap();
+        pattern.set_length(16);
+        let tune = [72, 73, 76]
+            .iter()
+            .enumerate()
+            .map(|(index, &midi)| NoteEvent::new(Note::new(midi), index * 4, 4));
+        pattern.set_notes(0, tune);
+        pattern.set_notes(
+            1,
+            [55, 56, 59].map(|midi| NoteEvent::new(Note::new(midi), 0, 12)),
+        );
+        project.add_clip(Clip::new(0, 0, 0)).unwrap();
+        project.scale = Scale::set(PitchClass::C, set(&[0, 1, 4]));
+        let read = mixed(&project, None);
+        assert_eq!(read.len(), 1);
+        let names: Vec<HarmonyName> = read[0]
+            .sets()
+            .into_iter()
+            .map(|set| Notation::Sets.name_group(set, project.scale))
+            .collect();
+        assert_eq!(stacked_text(&names), "3-3|3-3 T7");
+        assert_eq!(
+            stacked_notes(&read[0].groups, project.scale),
+            "C C# E | G Ab B"
+        );
+    }
+
+    #[test]
     fn every_note_of_a_line_counts_but_a_repeated_one() {
         // C C D E | F G: the C struck again is one note.
         let line = |midis: &[u8]| -> Vec<HeardNote> {
@@ -937,9 +1166,7 @@ mod tests {
 
     #[test]
     fn groups_spell_chords_as_chords() {
-        let group = NoteGroup {
-            notes: vec![Note::new(60), Note::new(63), Note::new(66)],
-        };
+        let group = NoteGroup::new(vec![Note::new(60), Note::new(63), Note::new(66)]);
         assert_eq!(group.spelled(C_MAJOR), "C Eb Gb");
         assert_eq!(spelled_set(set(&[2, 5, 9]), C_MAJOR), "D F A");
     }

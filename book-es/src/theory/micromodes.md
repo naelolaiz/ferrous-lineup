@@ -1265,14 +1265,18 @@ desbordarse.
 
 Un cambio de tonalidad en la lista de reproducción nombra la tonalidad
 desde un compás, sin mover ninguna nota, y ahora puede ser un
-micromodo, o un conjunto o una serie en que está la canción: una pieza
-puede estar en Menor 3 y pasar a Menor 5 en el compás 9. Las teclas de
-armonía y los grados de la hoja leen la tonalidad de cada compás, así
-que desde el compás 9 ofrecen y cuentan las formas de Menor 5; lo que
-ya está escrito ahí se queda como está, hasta que se escriban formas de
-Menor 5 en su lugar. Una tonalidad de tres notas se nombra por su
-micromodo en todas partes, «Menor 5 sobre Do», porque cada grupo de tres
-notas es uno de los doce.
+micromodo, una serie dodecafónica o un conjunto de clases de alturas
+(hechos como los hacen los menús de tonalidad, con `KindChoice::key`),
+o un conjunto o una serie en que está la canción: una pieza puede estar
+en Menor 3 y pasar a Menor 5 en el compás 9. Las teclas de armonía y
+los grados de la hoja leen la tonalidad de cada compás, así que desde el
+compás 9 ofrecen y cuentan las formas de Menor 5; lo que ya está escrito
+ahí se queda como está, hasta que se escriban formas de Menor 5 en su
+lugar. Una tonalidad de tres notas se nombra por su micromodo, «Menor 5
+sobre Do», porque cada grupo de tres notas es uno de los doce, salvo
+que se haya elegido como conjunto de clases de alturas: entonces es
+«conjunto 3-5 sobre Do», las mismas notas (ver [Tres notas: un conjunto
+o un micromodo](sets.md#tres-notas-un-conjunto-o-un-micromodo)).
 
 ## Revisar el color
 
@@ -1310,7 +1314,9 @@ Lo que les pide a las notas depende del tamaño del conjunto:
   **T5I**, encima de las notas que la tocan. Pasa el puntero por encima
   para leer cómo está hecha la forma y sus notas: «T5I: la forma de la
   tonalidad dada vuelta alrededor de Do, transportada 5 semitonos hacia
-  arriba: Do# Mi Fa.»
+  arriba: Do# Mi Fa.» Donde dos partes están cada una en una forma
+  propia, la línea tiene una franja para cada una (ver [De quién son las
+  notas de una forma](#de-quién-son-las-notas-de-una-forma)).
 - **La línea Voces**, debajo, marca **fuera** para una nota fuera de la
   forma que se oye a su alrededor y, en un micromodo, **hueco** para una
   forma sin terminar, sobre su última nota. Cuando falta una sola nota,
@@ -1452,6 +1458,61 @@ encuentra, con una búsqueda binaria, el primer grupo que empieza cuando
 la nota ya terminó; cada grupo después de este y antes de ese la oye.
 Un tramo cuenta como oídas las notas sostenidas en su primer grupo.
 
+### De quién son las notas de una forma
+
+Hasta aquí, las notas que empiezan juntas eran un grupo, en una forma.
+Eso está bien donde una forma se reparte entre los instrumentos, como
+Webern da las tres notas de una forma a tres de ellos. Pero dos partes
+también pueden estar cada una en una forma propia a la vez: una melodía
+en T0 (Do Do♯ Mi) sobre acordes en T7 (Sol La♭ Si), o la línea de arriba
+de un piano sobre sus propios acordes. Leídas como una sola parte, todas
+las notas de la melodía que empiezan con un acorde quedarían fuera de
+lugar. Así que la revisión lee las notas de tres maneras, `Parts`:
+
+```rust
+pub enum Parts {
+    /// All the notes as one part.
+    Together,
+    /// Each track on its own.
+    EachTrack,
+    /// Each track on its own, with the top line of a track that plays
+    /// chords on its own too.
+    TopLinesApart,
+}
+```
+
+La línea de arriba es la más aguda de las partes en que se dividen los
+acordes de una pista, las mismas partes que sigue la [revisión de la
+conducción de voces](voice-leading.md) (`voices_of`). Cada manera
+divide más las partes de la anterior, así que una manera con tantas
+partes como una ya probada es la misma lectura, y se salta. Cada parte
+se lee por su cuenta, como arriba, y las lecturas se comparan:
+
+```rust
+let missed = reading.out + reading.unheard;
+if best.as_ref().is_none_or(|(least, _)| missed < *least) {
+    best = Some((missed, reading));
+}
+```
+
+`out` cuenta las notas fuera de lugar; `unheard`, las notas que faltan
+en la primera y la última forma de un micromodo, que no están fuera de
+lugar (pueden sonar en el patrón de antes o de después). Cada parte
+tiene una primera y una última forma, así que sin `unheard` una lectura
+con más partes dejaría fuera más notas gratis. Una lectura reemplaza a
+la anterior solo cuando le faltan estrictamente menos notas, así que,
+entre lecturas igual de buenas, gana la de menos partes: una forma
+repartida entre las pistas sigue siendo una forma, porque cada pista
+sola dejaría sus formas sin terminar.
+
+Cada forma guarda de quién son las notas en que se leyó,
+`HeardIn::All`, `HeardIn::Track(channel)` o `HeardIn::Line(part)`.
+Donde las formas se leyeron en más de una parte, la línea Formas tiene
+una franja para cada una, la parte más aguda arriba, y señalar una forma
+nombra su parte: «Melodía: T0: la forma propia de la tonalidad: Do Do#
+Mi.» La [agrupación mixta](sets.md#formas-de-la-tonalidad-mixtas) de la
+hoja de acordes escribe esas formas como dos acordes a la vez.
+
 ## Encontrar el color
 
 **🔍 Buscar la tonalidad** nombra la tonalidad mayor o menor en la que
@@ -1475,6 +1536,28 @@ tonalidad de esos compases con marcas de tonalidad. Ninguna nota se
 mueve, como cuando eliges **conjunto de clases de alturas** en el menú
 Tonalidad; Deshacer lo revierte. Donde el color ya es la tonalidad, la
 línea dice **(la tonalidad)** en su lugar.
+
+La línea está solo donde la tonalidad es un conjunto, un micromodo, una
+serie o la escala cromática. Una canción en una tonalidad mayor o menor
+o en un modo se muestra en acordes, aquí como en la hoja de acordes y en
+el piano roll: la música tonal está hecha de dos micromodos, las
+tríadas mayores y menores (**Acorde menor-mayor**) y la disminuida
+(**Acorde disminuido**), y nombrarlos como micromodos no dice nada
+nuevo; la canción inicial en Do mayor diría «Acorde menor-mayor sobre
+Do». Para encontrar el color de un pasaje en una canción así, por
+ejemplo una pieza importada que resulta no ser tonal, haz primero
+**cromática** la tonalidad. `shows_colours`, en la aplicación, decide,
+antes de leer nada:
+
+```rust
+fn shows_colours(key: Scale) -> bool {
+    !key.kind.is_tonal() || key.kind == ScaleKind::Chromatic
+}
+```
+
+`is_tonal` es verdadero para toda escala que no sea una serie o un
+conjunto, también la cromática; pero la escala cromática tiene todas las
+notas y no dice nada de la armonía, así que se deja pasar.
 
 ![Buscar la tonalidad en la demostración Bruma de tonos enteros: «Suena en las notas de aquí: Re mayor, o La menor, o Do mayor», y debajo «Color en los compases 1 a 8: Mayor 1 sobre Do (la tonalidad), hecho de 6-35 (escala de tonos enteros)» con un botón Usar como tonalidad](../images/step-9-find-colour.png)
 

@@ -157,6 +157,12 @@ menu writes the same harmony four ways, without changing a note:
 **As written**, as **Chords**, as **Pitch-class sets** or as
 **Micromodes**.
 
+Every song opens **As the key**: each harmony in the names of the key
+it is in. A song in a major or minor key or a mode shows chords, a song
+whose key is a set or a row shows sets, and a song in a micromode shows
+micromodes. Pick another name to look at the song that way; it holds
+until you open another song, which opens as its own key again.
+
 ![The chord sheet of the demo Classical cadence with Show set to Pitch-class sets: C, F, G7, C, Am, Dm, G7, C written as 3-11 T7I (C E G), 3-11 T0I (F A C), 4-27 T7I (B D F G), 3-11 T7I, 3-11 T9 (A C E), 3-11 T2 (D F A), 4-27 T7I and 3-11 T7I, each with its notes under it](images/sets-view.png)
 
 | As written | Chords | Pitch-class sets | Micromodes |
@@ -185,9 +191,20 @@ group: **The sheet's harmonies**, **Notes together (vertical)**, or
 which track to read. That reads the song's own notes, so you can look
 at a tune as a chain of three-note groups.
 
+Music built on one set mixes the two: a form may be two notes struck
+together and a third after them. Where the key is a set or a micromode,
+**Forms of the key (mixed)** writes the forms of the key's set as the
+[colour check](#checking-the-colour) reads them, however their notes
+come. Where a tune and the chords under it are each in a form of their
+own, it writes both, the upper first, as two chords at once:
+**3-3|3-3 T7** as pitch-class sets. On **Menor 3 colour** it finds the forms written on the
+sheet, bar by bar. In a song whose key is not a set it has nothing to
+read, and says so.
+
 The **piano roll** has a **Show** menu too, at the top next to **Voice
-leading**, for the chord names above its grid: **Chords**,
-**Pitch-class sets** or **Micromodes**. It names the notes that sound:
+leading**, for the chord names above its grid: **As the key**, which it
+starts with, **Chords**, **Pitch-class sets** or **Micromodes**. It
+names the notes that sound:
 C, D and E together are heard as Cadd9, but as a set they are 3-6, the
 micromode Mayor 1, since no G plays. A chord and its inversion have the
 same notes, so C and C/E, two blocks as chords, are one block as 3-11
@@ -202,6 +219,14 @@ menu of a song in C major, and nothing moves: the key is now named
 7-35, and the harmony keys show the same seven chords with their set
 classes, six of them 3-11 and B D F 3-10. Notes move only when you
 pick a different set.
+
+Three notes are a set and a micromode at once: C C♯ E is the set 3-3
+and the micromode Menor 3. The Key menu keeps the name you pick: from
+a row, **pitch-class set** takes the row's first three notes and names
+them as a set, "set 3-3 on C" for Webern's Concerto row on C; **3** in
+the **Menor** row of micromodes at the bottom of the menu names the
+same notes as a micromode, "Menor 3 on C". Switching between the two moves nothing,
+and **twelve-tone row** brings back the song's own row.
 
 ## Twelve-tone rows
 
@@ -458,6 +483,12 @@ leading and part motion](voice-leading.md)).
    notes that play it. Point at a form to read how it is made and its
    notes: "T4I: the key's form upside down around C, moved up 4
    semitones: C Eb E."
+4. Where two tracks, or a piano's top line and its chords, are each in
+   a form of their own at once, the line has a band for each, the
+   highest on top, and pointing at a form says whose it is. The check
+   reads the parts that way only where it puts fewer notes out of
+   place: a form shared out among the instruments, one note each, stays
+   one form.
 
 The check reads which form sounds where by itself: you don't need to
 write the forms on the chord sheet first. What it asks of the notes
@@ -493,8 +524,9 @@ you add a stray note or take one out of a form.
 **🔍 Find the key**, under the harmony keys (see [Finding the
 key](keys-and-modes.md#finding-the-key-experimental)), says which major
 or minor key the music sounds like it is in. Music made of a micromode
-or another set has no such key, so under it a second line says which
-**colour** the passage is made of, when it finds one:
+or another set has no such key, so where the song's key is a set, a
+micromode, a row or the chromatic scale, a second line under it says
+which **colour** the passage is made of, when it finds one:
 
 - **The micromode** whose forms hold the notes, strongest, with any
   that fit almost as well after it, fainter: "Colour in bars 1 to 8:
@@ -515,6 +547,11 @@ In pattern mode it reads the whole pattern.
 with key markers on the playlist, so the harmony keys, the chord sheet
 and the colour check all follow it. No note moves, and Undo takes it
 back. Where it is the key already, the line says **(the key)**.
+
+A song in a major or minor key or a mode has no colour line: it is
+shown in chords, as on the chord sheet. To look for the colour of such
+a song, an imported piece that does not sound tonal, say, pick
+**chromatic** in the Key menu first; nothing moves.
 
 Try it on **File > Demos > Micromodes > Whole-tone haze**. Its notes
 are the whole-tone scale, which fits no major or minor key, so the

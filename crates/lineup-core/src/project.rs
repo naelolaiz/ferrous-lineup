@@ -2396,6 +2396,15 @@ impl Project {
     /// not muted (drums and samplers do not count), with its start in
     /// timeline steps, cut where its clip's pattern ends.
     fn melodic_notes(&self) -> Vec<NoteEvent> {
+        self.melodic_parts()
+            .into_iter()
+            .map(|(_, note)| note)
+            .collect()
+    }
+
+    /// The notes of [`Project::melodic_notes`], each with the channel
+    /// that plays it.
+    pub fn melodic_parts(&self) -> Vec<(usize, NoteEvent)> {
         let mut notes = Vec::new();
         for clip in self.playlist.audible_clips() {
             let Some(pattern) = self.patterns.get(clip.pattern) else {
@@ -2412,7 +2421,12 @@ impl Project {
                     continue;
                 }
                 for round in clip.rounds(length) {
-                    notes.extend(pattern.notes(index).iter().filter_map(|n| round.place(n)));
+                    notes.extend(
+                        pattern
+                            .notes(index)
+                            .iter()
+                            .filter_map(|n| Some((index, round.place(n)?))),
+                    );
                 }
             }
         }
