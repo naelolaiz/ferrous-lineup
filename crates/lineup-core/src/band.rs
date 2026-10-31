@@ -3149,6 +3149,8 @@ impl Project {
         // last part goes on into the next time round, not into the end.
         let repeats = self.repeated_chorus().is_some();
         let mut fills = 0;
+        let mut lands = false;
+        let mut turns = drum_form::Turns::default();
         let mut notes = Vec::new();
         for (index, (range, kind)) in parts.iter().enumerate() {
             let part = DrumPart {
@@ -3162,7 +3164,11 @@ impl Project {
                     Then::Part
                 },
                 lead_in: kind.lead_in,
+                crash: lands,
+                turn: turns.of(kind),
             };
+            lands = drum_form::ends_with_fill(rhythm, &part);
+            turns.played(kind, part.bars.len());
             for (drum, note) in drum_form::part_drums(rhythm, &part, &mut fills) {
                 if in_held(note.start) {
                     continue;
