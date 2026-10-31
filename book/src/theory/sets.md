@@ -386,6 +386,13 @@ another set keeps every form's degree, on the sheet and in the notes,
 as switching a key's mode does (see [Another colour, the same
 degrees](micromodes.md#another-colour-the-same-degrees)).
 
+With a set as the key, the piano roll's **Voice leading** tick box
+checks the set's **colour**: it reads which form sounds where, shows
+the forms by their degree on a Forms line, and marks the notes outside
+the form heard around them. A micromode must also sound whole, so a
+form of it left unfinished is marked too (see [Checking the
+colour](micromodes.md#checking-the-colour)).
+
 ### How near: the notes a form keeps
 
 The forms go from home to the farthest by the notes each keeps of home.
