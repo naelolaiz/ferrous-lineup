@@ -930,7 +930,8 @@ undo: after Ctrl+Z brings the previous style back, the pattern matches
 an older copy, and the next click still swaps it in place.
 
 Harmony styles and rhythms take the parts you ticked (see [Which parts
-to take](#which-parts-to-take)). Row styles and micromode styles have no such choice: they
+to take](#which-parts-to-take)). Row styles and micromode styles have no such choice (only
+Chord progression gives a row style its own row in place of the key's): they
 are tried the same way, and differ only in the notes they write. So
 their shared steps are one method, and the different step is a closure
 passed in:
