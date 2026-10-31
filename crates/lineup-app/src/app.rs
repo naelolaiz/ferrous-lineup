@@ -188,8 +188,6 @@ pub struct LineupApp {
     video_dialog: video::VideoDialog,
     /// The trace of what is played, while Settings > Playback > Trace is on.
     trace: Option<trace::LiveTrace>,
-    /// A recording being listened to in the background, if any.
-    import: Option<import::Import>,
     /// Find the key: the key worked out from the music.
     key_finder: key_finder::KeyFinder,
     /// A take: singing or whistling along with the song, into notes.
@@ -312,7 +310,6 @@ impl LineupApp {
             quit_after_export: false,
             video_dialog: video::VideoDialog::default(),
             trace: None,
-            import: None,
             key_finder: key_finder::KeyFinder::default(),
             voice: voice::Voice::default(),
             live: live::Live::new(midi),
@@ -2065,7 +2062,6 @@ impl LineupApp {
         self.handle_dropped_files(ctx);
         self.check_export(ctx);
         self.check_sounds(ctx);
-        self.check_import(ctx);
         self.check_voice(ctx);
         self.store_swings(ctx);
         if self.playing {

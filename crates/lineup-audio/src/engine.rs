@@ -3482,8 +3482,7 @@ mod tests {
 
     #[test]
     fn a_recording_stops_when_its_track_is_muted() {
-        // A two-second sound started by one step, as an imported
-        // recording is.
+        // A two-second sound started by one step, as a take is.
         let mut h = harness();
         let recording = Sampler::new(Arc::new(SampleData::new(vec![0.5; 2 * 48_000], RATE)));
         send(

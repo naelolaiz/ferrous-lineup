@@ -5365,11 +5365,7 @@ fn silent_wav(name: &str, seconds: u32) -> std::path::PathBuf {
     let folder = std::env::temp_dir().join(format!("lineup-drop-{}", std::process::id()));
     std::fs::create_dir_all(&folder).unwrap();
     let path = folder.join(name);
-    let recording = lineup_listen::Recording {
-        samples: vec![0.0; seconds as usize * 8_000],
-        sample_rate: 8_000,
-    };
-    lineup_listen::arrange::write_wav(&recording, 0.0, &path).unwrap();
+    lineup_listen::wav::write(&vec![0.0; seconds as usize * 8_000], 8_000, &path).unwrap();
     path
 }
 
@@ -5388,7 +5384,7 @@ impl egui::DroppedFile for Dropped {
 }
 
 #[test]
-fn a_recording_dropped_on_the_window_is_imported_and_a_short_sound_goes_to_the_sampler() {
+fn a_recording_dropped_on_the_window_becomes_a_take_and_a_short_sound_goes_to_the_sampler() {
     let drop = |screen: &mut Screen, path: &std::path::Path| {
         let raw = RawInput {
             screen_rect: Some(Rect::from_min_size(Pos2::ZERO, screen.size)),
@@ -5403,18 +5399,26 @@ fn a_recording_dropped_on_the_window_is_imported_and_a_short_sound_goes_to_the_s
         let mut screen = Screen::new();
         screen.app.rack_open = rack_open;
         screen.draw(vec![]);
-        let channels = screen.app.project.channels().len();
-        // A song-long WAV is listened to, as File > Import does.
+        let before = screen.app.project.clone();
+        // A song-long WAV is heard, and offered as a take of this song.
         drop(&mut screen, &recording);
-        assert!(screen.app.import.is_some(), "rack open: {rack_open}");
-        assert_eq!(screen.app.project.channels().len(), channels);
+        assert!(screen.app.hearing_recording(), "rack open: {rack_open}");
+        let started = std::time::Instant::now();
+        while screen.app.hearing_recording() {
+            assert!(started.elapsed().as_secs() < 60, "still hearing it");
+            std::thread::sleep(std::time::Duration::from_millis(20));
+            screen.draw(vec![]);
+        }
+        assert!(screen.app.take_waiting(), "rack open: {rack_open}");
+        assert_eq!(screen.app.project, before, "nothing written yet");
         // A short one is a new sampler channel.
         let mut screen = Screen::new();
         screen.app.rack_open = rack_open;
         screen.draw(vec![]);
+        let channels = screen.app.project.channels().len();
         drop(&mut screen, &hit);
         screen.draw(vec![]);
-        assert!(screen.app.import.is_none());
+        assert!(!screen.app.hearing_recording());
         assert_eq!(
             screen.app.project.channels().len(),
             channels + 1,
