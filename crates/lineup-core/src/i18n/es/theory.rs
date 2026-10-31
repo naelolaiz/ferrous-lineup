@@ -1976,10 +1976,6 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Voice leading: it takes two parts or more; show the other tracks (Ghost notes) or write chords.",
         "Conducción de voces: hacen falta dos partes o más; muestra las otras pistas (Notas fantasma) o escribe acordes.",
     ),
-    (
-        "Voice leading: the classical rules are for keys, and the twelve-tone rules for rows; a pitch-class set has no rules of its own here.",
-        "Conducción de voces: las reglas clásicas son para tonalidades, y las dodecafónicas para series; un conjunto de clases de alturas no tiene aquí reglas propias.",
-    ),
     ("Waltz", "Vals"),
     ("Webern's Concerto", "Concierto de Webern"),
     ("Webern's Symphony", "Sinfonía de Webern"),
@@ -2448,4 +2444,31 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("parallel", "paralela"),
     ("leading-tone exchange", "intercambio de sensible"),
     ("relative", "relativa"),
+    ("Outside the colour", "Fuera del color"),
+    ("Form left unfinished", "Forma sin terminar"),
+    ("out", "fuera"),
+    (
+        "Outside the colour: {} plays {}, which is not in {}, the form heard there.",
+        "Fuera del color: {} toca {}, que no está en {}, la forma que se oye ahí.",
+    ),
+    (
+        "Form left unfinished: {} stops after {}, with {}'s {}; {} before the next form starts.",
+        "Forma sin terminar: {} se detiene después de {}, con {} en {}; {} antes de que empiece la forma siguiente.",
+    ),
+    ("no note of it", "ninguna de sus notas"),
+    (
+        "Where the key is a pitch-class set, the set gives the music its colour, as the key does in tonal music: the notes come from forms of the set, the set moved or turned upside down, one form after another. A note outside the form heard around it brings in the sound of another set.",
+        "Cuando la tonalidad es un conjunto de clases de alturas, el conjunto le da a la música su color, como la tonalidad en la música tonal: las notas salen de formas del conjunto, el conjunto trasladado o dado vuelta, una forma tras otra. Una nota fuera de la forma que se oye a su alrededor trae el sonido de otro conjunto.",
+    ),
+    (
+        "A micromode is heard whole: its colour is the sound of its three notes, together as a chord, one after another in a line, or shared out among the parts. Two of them alone make an interval that other micromodes have too, and the colour is lost.",
+        "Un micromodo se oye entero: su color es el sonido de sus tres notas, juntas como un acorde, una tras otra en una línea o repartidas entre las partes. Dos de ellas solas forman un intervalo que también tienen otros micromodos, y el color se pierde.",
+    ),
+    ("set {}", "conjunto {}"),
+    (
+        "Colour: no notes of the set yet.",
+        "Color: todavía no hay notas del conjunto.",
+    ),
+    ("every note in the colour", "todas las notas en el color"),
+    ("Colour of {}, {}: {}.", "Color de {}, {}: {}."),
 ];
