@@ -386,6 +386,196 @@ se escribe como esa escala, y sigue como esa tonalidad cuando la
 tonalidad vuelve a cambiar (`set_as_scale` y `as_key`, en [Escalas,
 modos y tonalidades](scales.md)).
 
+## Un conjunto como tonalidad: sus formas
+
+La música construida sobre un solo conjunto, como la de Webern y buena
+parte de la de Kröpfl, hace su armonía con las **formas** del propio
+conjunto: el conjunto transportado, o dado vuelta y transportado. Una
+tonalidad que es un micromodo muestra sus formas en las teclas de
+armonía y las nombra por su grado (ver [Un micromodo como tonalidad:
+grados](micromodes.md#un-micromodo-como-tonalidad-grados)). Cualquier
+conjunto se puede leer igual, así que una tonalidad que es un conjunto
+de 2 a 11 notas tiene un selector **Acordes**/**Formas**: acordes
+apilados con sus notas, como en la tabla de arriba, o sus formas. Un
+conjunto de tres notas ya es un acorde, así que siempre muestra sus
+formas.
+
+Los grados se cuentan como en un micromodo: **T*n*** es la forma propia
+de la tonalidad subida *n* semitonos, **T*n*I** la forma de la
+tonalidad dada vuelta alrededor de la nota de la tonalidad y después
+subida *n*.
+
+### Qué tan cerca: las notas que conserva una forma
+
+Las formas van de casa a la más lejana según las notas que cada una
+conserva de casa. Para Do mayor como conjunto es una vieja conocida:
+
+| Forma | Escala | Notas que conserva de Do mayor |
+|---|---|---|
+| T0 | Do mayor | 7 |
+| T5, T7 | Fa mayor, Sol mayor | 6 |
+| T10, T2 | Si♭ mayor, Re mayor | 5 |
+| T3, T9 | Mi♭ mayor, La mayor | 4 |
+| T8, T4 | La♭ mayor, Mi mayor | 3 |
+| T1, T11, T6 | Re♭ mayor, Si mayor, Fa♯ mayor | 2 |
+
+Cada paso en el círculo de quintas cambia una nota, así que las notas
+comunes cuentan las quintas entre dos tonalidades: el círculo de
+quintas es la cercanía de las formas de 7-35. **Cercanas** muestra las
+formas que conservan al menos la mitad de las notas de casa (para tres
+notas, al menos una), aquí las nueve tonalidades hasta cuatro quintas
+de distancia; **Todas las formas** muestra las doce.
+
+Otros conjuntos dan mapas menos conocidos. Do Mi Sol Si♭ como conjunto,
+4-27, las notas de una séptima de dominante, tiene 24 formas: las doce
+séptimas de dominante y, dadas vuelta, las doce séptimas
+semidisminuidas. Dado vuelta alrededor de Do, Do Mi Sol Si♭ se vuelve
+Do La♭ Fa Re, Dm7b5, y un tono más arriba eso es Mi Sol Si♭ Re, Em7b5:
+**T2I**, la única forma que conserva tres notas de casa. Otras nueve
+conservan dos (Eb7, F#7, A7 y seis séptimas semidisminuidas), siete
+conservan una y seis ninguna.
+
+Una tonalidad nombra una forma como lo que es cuando la música tonal
+tiene un nombre para ella: un acorde (C7, Em7b5), deletreado desde su
+fundamental, o, para más de cinco notas, la escala que es cuando es la
+escala de la tonalidad transportada (7-35 subido una quinta desde Do
+mayor es Sol mayor, escrito con Fa♯). Cualquier otra cosa son sus notas
+en forma normal.
+
+### Progresiones de formas
+
+En una tonalidad que es un conjunto, el botón **Progresión** de la hoja
+de acordes no ofrece las progresiones de la Biblioteca, que son acordes
+en una tonalidad mayor o menor. Ofrece maneras de encadenar las formas
+del conjunto, los recorridos de `micromodal.rs` (ver [Música con un
+solo micromodo](micromodes.md#música-con-un-solo-micromodo)), ahora para
+cualquier conjunto, y escribe ocho compases de ellas:
+
+- **Conservar todas las notas menos una**: cada forma conserva todas
+  las notas de la anterior menos una. Do mayor como conjunto recorre el
+  círculo de quintas hacia los bemoles: Fa mayor, Si♭ mayor, Mi♭
+  mayor… Para tres notas es el recorrido de los micromodos, **Conservar
+  dos notas, mover una**.
+- **Conservar todas las notas que se pueda**, que aparece en su lugar
+  cuando las formas del conjunto conservan todas las notas menos una
+  solo de a pares. 4-27 es un conjunto así: C7 y Em7b5 conservan tres
+  notas la una de la otra y de ninguna otra forma, así que un recorrido
+  que conservara tres se mecería entre ellas para siempre. Como nunca
+  vuelve enseguida a la forma anterior, sigue conservando dos: C7,
+  Em7b5, A7, C#m7b5, C#7, Fm7b5, Ab7, Cm7b5. Las séptimas de dominante
+  y las semidisminuidas se turnan, y Em7b5 a A7 es el ii∅–V7 de Re
+  menor.
+- **Conservar una nota, mover dos**, para tres notas: un pivote sobre
+  una nota.
+- **Las doce notas, cada *N* formas**: ver más abajo.
+- **Secuencias**: todas las notas suben un semitono, un tono, una
+  tercera menor, una cuarta o una quinta en cada compás.
+
+Cada compás recibe su forma como conjunto (o como micromodo), con su
+grado y las notas que conserva debajo, y la banda toca las formas como
+acordes cuyas notas comunes se quedan en las mismas teclas
+(`micromodal::voice`, la disposición de un estilo de micromodo), sobre
+la fundamental cuando la forma es un acorde y si no sobre la primera
+nota de su forma normal.
+
+### Las doce notas: agregados
+
+La música dodecafónica cuenta en **agregados**: tramos que tienen las
+doce notas. Un conjunto de tres, cuatro o seis notas puede hacer uno con
+sus propias formas cuando algunas de sus formas no comparten ninguna
+nota y entre todas cubren las doce. Menor 3 lo hace de 18 maneras, con
+cuatro formas cada vez; la serie del Concierto de Webern, Op. 24, es
+cuatro formas de él, una tras otra. Un hexacordo cuyo complemento, las
+seis notas que deja fuera, es una forma del mismo hexacordo es
+**combinatorio**, la palabra de Milton Babbitt para lo que las series
+de Schoenberg hacen con sus mitades: los seis semitonos de Do a Fa y
+los seis de Fa♯ a Si son un par así. Veinte de las cincuenta clases de
+hexacordos lo son; las otras treinta, las relacionadas en Z, dejan fuera
+seis notas de otra clase. Peter Schat construyó su *Reloj tonal* (*Tone
+Clock*) sobre grupos así de tricordios, y llamó a su manera de
+hacerlos, un tricordio movido por los intervalos de otro, **dirigir**
+(*steering*).
+
+| Conjunto | Maneras de repartir las doce notas |
+|---|---|
+| Menor 3 (Do Do♯ Mi), y las tríadas mayores y menores | 18 cada uno |
+| la tríada aumentada | 1: las cuatro tríadas aumentadas |
+| la tríada disminuida | ninguna: sus formas siempre se superponen |
+| cuatro semitonos (Do Do♯ Re Mi♭) | 4 |
+| el acorde de séptima disminuida | 1: las tres séptimas disminuidas |
+| 4-27, la séptima de dominante | ninguna |
+| seis semitonos (de Do a Fa) | 6: cada uno con los seis a un tritono |
+| la escala de tonos enteros | 1: las dos escalas de tonos enteros |
+
+**Las doce notas, cada *N* formas** solo aparece para los conjuntos que
+pueden hacerlo. Toca una manera de repartir las doce notas, cada forma
+yendo a la más cercana de las que quedan del grupo, y después empieza el
+grupo siguiente desde una forma de otra manera que conserve todas las
+notas que pueda de la última forma, para que los agregados se unan
+suavemente.
+
+### En Rust: un rango en un `match`, y una búsqueda que retrocede
+
+Qué formas son acordes es un `match` sobre el tamaño del conjunto:
+
+```rust
+pub fn form_chord(form: PitchSet) -> Option<Chord> {
+    match form.len() {
+        3 => Micromode::of(form).and_then(|micromode| micromode.chord(form)),
+        4..=5 => match analyze(stacked(&form.normal_form())) {
+            Harmony::Chord { chord, .. } if chord.pitch_set() == form => Some(chord),
+            _ => None,
+        },
+        _ => None,
+    }
+}
+```
+
+`4..=5` es un **patrón de rango**: coincide con 4 y con 5. El `if`
+después del patrón interno es una **guarda**: la rama se toma solo
+cuando el acorde encontrado tiene exactamente las notas de la forma,
+así que cuatro notas que solo hacen un acorde dejando una fuera no
+reciben el nombre de ese acorde. Tres notas van al micromodo, que solo
+llama acorde a una tríada: Do Do♯ Mi es Menor 3, no un C#m(maj7)
+incompleto.
+
+Encontrar las maneras de repartir las doce notas es una búsqueda que
+prueba una forma, sigue, y saca la forma cuando la manera está completa
+o trabada:
+
+```rust
+fn split(
+    held: u16,
+    chosen: &mut Vec<PitchSet>,
+    forms: &[PitchSet],
+    ways: &mut Vec<Vec<PitchSet>>,
+) {
+    let Some(lowest) = (0..12).find(|&note| held & (1 << note) == 0) else {
+        ways.push(chosen.clone());
+        return;
+    };
+    for &form in forms {
+        if form.bits() & held == 0 && form.bits() & (1 << lowest) != 0 {
+            chosen.push(form);
+            split(held | form.bits(), chosen, forms, ways);
+            chosen.pop();
+        }
+    }
+}
+```
+
+`held` tiene un bit por cada nota ya tomada. La nota más grave que
+todavía no está tomada tiene que estar en la forma siguiente, así que
+cada manera se encuentra una sola vez, con sus formas en un solo orden,
+y nunca se prueba una forma que comparte una nota con `held`. Cuando
+todas las notas están tomadas, `find` da `None` y `let ... else` anota
+la manera. Un solo vector `chosen` sirve para toda la búsqueda: `push`
+antes de bajar un nivel y `pop` después, así que siempre tiene las
+formas de la manera que se está armando. Esto es **vuelta atrás**
+(*backtracking*). `split` es una función dentro de una función: solo se
+usa ahí, y no puede capturar variables, así que todo lo que necesita se
+le pasa.
+
 ## Una armonía, cuatro nombres
 
 La hoja de acordes aplica la misma regla a cada armonía. Su fila
@@ -730,6 +920,22 @@ fn sets_that_make_a_chord_are_written_as_the_chord() {
 Una prueba de la ventana (`ux_tests.rs`) toca el estilo Cuatro acordes,
 recorre el menú Mostrar, comprueba los nombres, y después vuelve atrás y
 comprueba que el proyecto está exactamente como estaba.
+
+Las formas de una tonalidad que es un conjunto se prueban donde se
+hacen. `keys.rs` comprueba Do mayor como conjunto (sus formas son las
+doce escalas mayores, ordenadas por el círculo de quintas, Sol mayor
+escrito con Fa♯, nueve cercanas), C7 (casa, después Em7b5 como T2I, 24
+formas en total) y un hexacordo sin nombre. `micromodal.rs` comprueba
+las maneras en que los conjuntos reparten las doce notas (18 para Menor
+3, 1 para la tríada aumentada, ninguna para la disminuida, 6 para el
+hexacordo cromático, cada uno a un tritono de su otra mitad), que cada
+grupo de un recorrido de las doce notas las tiene todas, que Do mayor
+recorre las quintas, que el recorrido desde C7 va a Em7b5 y después
+sigue sin volver enseguida atrás, y que el bajo toca la fundamental de
+C7 y de Em7b5. `band.rs` comprueba que la banda deja las notas que
+comparten dos formas en las mismas teclas y que una progresión de
+formas llega a la hoja; una prueba de la aplicación pasa una tonalidad
+C7 a **Formas** y escribe una progresión desde el menú **Progresión**.
 
 Los ejercicios sobre conjuntos están en [Ejercicios: la teoría musical
 en código](exercises.md).
