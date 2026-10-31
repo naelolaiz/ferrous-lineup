@@ -42,6 +42,20 @@
 //! A pattern is read on its own, but a form may come into the first
 //! stretch from the pattern before, and go on from the last into the
 //! next pattern, so neither counts as unfinished.
+//!
+//! ## Whose notes make a form
+//!
+//! A form may be shared out among the instruments, one note each, as in
+//! Webern's Concerto: then all the parts are read as one, and notes that
+//! start together are heard in one form. But two parts may also each be
+//! in a form of their own at once, a tune in one over chords in
+//! another, or a piano's top line over its own chords. So the check
+//! reads the notes three ways ([`Parts`]): all together, each track on
+//! its own, and each track with its top line apart. It keeps the reading
+//! that leaves the fewest notes out of place, counting the notes missing
+//! from every form, the first and the last too (each part has a first
+//! and a last form, and leaving those out would favour more parts); of
+//! readings as good, the one with fewer parts.
 
 use std::cmp::Reverse;
 
@@ -63,6 +77,63 @@ const OUT_OF_PLACE: u32 = 4;
 const NEW_FORM: u32 = 2;
 const NEW_FORM_OF_A_COLLECTION: u32 = 8;
 
+/// Whose notes a form was read in.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum HeardIn {
+    /// Every part's, read as one.
+    All,
+    /// The notes of one track (a channel), or of the parts of it left
+    /// when its top line is read on its own.
+    Track(usize),
+    /// One line: a part, as an index into the voices read.
+    Line(usize),
+}
+
+/// Which notes a reading of the forms takes as one part (see the module
+/// documentation).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Parts {
+    /// All the notes as one part.
+    Together,
+    /// Each track on its own.
+    EachTrack,
+    /// Each track on its own, with the top line of a track that plays
+    /// chords on its own too.
+    TopLinesApart,
+}
+
+impl Parts {
+    /// The readings tried, the one with the fewest parts first.
+    pub const ALL: [Parts; 3] = [Parts::Together, Parts::EachTrack, Parts::TopLinesApart];
+
+    /// The notes of `voices` from step `start` up to `end`, in the parts
+    /// this reading takes, each with whose notes they are.
+    fn split(self, voices: &[Voice], start: usize, end: usize) -> Vec<(HeardIn, Vec<PartNote>)> {
+        let mut parts: Vec<(HeardIn, Vec<PartNote>)> = Vec::new();
+        for (index, voice) in voices.iter().enumerate() {
+            let heard_in = match self {
+                Parts::Together => HeardIn::All,
+                Parts::TopLinesApart if voice.of > 1 && voice.rank == 0 => HeardIn::Line(index),
+                Parts::EachTrack | Parts::TopLinesApart => HeardIn::Track(voice.channel),
+            };
+            let notes = voice
+                .notes
+                .iter()
+                .filter(|note| (start..end).contains(&note.start))
+                .map(|&note| PartNote { voice: index, note });
+            match parts.iter_mut().find(|(heard, _)| *heard == heard_in) {
+                Some((_, part)) => part.extend(notes),
+                None => parts.push((heard_in, notes.collect())),
+            }
+        }
+        parts.retain(|(_, notes)| !notes.is_empty());
+        for (_, notes) in &mut parts {
+            notes.sort_by_key(|played| (played.note.start_tick(), Reverse(played.note.pitch)));
+        }
+        parts
+    }
+}
+
 /// One form of the key's set heard through a stretch of the pattern,
 /// for the colour check.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -74,6 +145,8 @@ pub struct FormStatement {
     pub end: usize,
     /// The key there, the set.
     pub key: Scale,
+    /// Whose notes it was read in.
+    pub heard_in: HeardIn,
 }
 
 impl FormStatement {
@@ -138,21 +211,50 @@ pub(super) fn check(
     let mut slips = Vec::new();
     let mut statements = Vec::new();
     for stretch in stretches(beats, key_at) {
-        let mut notes: Vec<PartNote> = voices
-            .iter()
-            .enumerate()
-            .flat_map(|(voice, part)| {
-                part.notes
-                    .iter()
-                    .filter(|note| (stretch.start..stretch.end).contains(&note.start))
-                    .map(move |&note| PartNote { voice, note })
-            })
-            .collect();
-        notes.sort_by_key(|played| (played.note.start_tick(), Reverse(played.note.pitch)));
-        read(&notes, stretch.key, &mut slips, &mut statements);
+        let best = read_parts(voices, stretch.start, stretch.end, stretch.key);
+        slips.extend(best.slips);
+        statements.extend(best.forms);
     }
     statements.sort_by_key(|statement| statement.start);
     (slips, statements)
+}
+
+/// The forms of the key's set heard in `voices`, read as the colour
+/// check reads them, over `spans` of steps: where the key is a set, in
+/// order. The chord sheet shows them as its mixed grouping.
+pub fn forms_heard(
+    voices: &[Voice],
+    spans: &[(usize, usize)],
+    key_at: impl Fn(usize) -> Scale,
+) -> Vec<FormStatement> {
+    check(voices, spans, &key_at).1
+}
+
+/// The best reading of the notes of `voices` from step `start` up to
+/// `end` as forms of the set `key` is: of the ways [`Parts`] takes the
+/// parts, the one that leaves the fewest notes out of place, then the
+/// one with the fewest parts.
+fn read_parts(voices: &[Voice], start: usize, end: usize, key: Scale) -> Reading {
+    let mut best: Option<(usize, Reading)> = None;
+    let mut tried: Vec<usize> = Vec::new();
+    for parts in Parts::ALL {
+        let split = parts.split(voices, start, end);
+        // Each way splits the parts of the one before it further, so one
+        // with as many parts as one tried before is the same reading.
+        if tried.contains(&split.len()) {
+            continue;
+        }
+        tried.push(split.len());
+        let mut reading = Reading::default();
+        for (heard_in, notes) in &split {
+            reading.add(read(notes, key, *heard_in));
+        }
+        let missed = reading.out + reading.unheard;
+        if best.as_ref().is_none_or(|(least, _)| missed < *least) {
+            best = Some((missed, reading));
+        }
+    }
+    best.map(|(_, reading)| reading).unwrap_or_default()
 }
 
 /// How well some notes fit the set `key` is, read as the check reads
@@ -174,19 +276,33 @@ pub(crate) fn fit(notes: &[NoteEvent], key: Scale) -> Fit {
         .map(|&note| PartNote { voice: 0, note })
         .collect();
     parts.sort_by_key(|played| (played.note.start_tick(), Reverse(played.note.pitch)));
-    let (mut slips, mut forms) = (Vec::new(), Vec::new());
-    read(&parts, key, &mut slips, &mut forms);
-    let out = slips
-        .iter()
-        .map(|slip| match (slip.kind, slip.colour) {
-            (SlipKind::FormUnfinished, Some(place)) => place.missing.len(),
-            _ => 1,
-        })
-        .sum();
+    let reading = read(&parts, key, HeardIn::All);
     Fit {
         notes: parts.len(),
-        out,
-        forms,
+        out: reading.out,
+        forms: reading.forms,
+    }
+}
+
+/// A reading of some notes as forms: what is out of place, the forms
+/// read, how many notes are out of place (outside their form, or
+/// missing from a micromode's form left unfinished), and how many notes
+/// the first and the last forms of a micromode leave out, which is not
+/// out of place.
+#[derive(Default)]
+struct Reading {
+    slips: Vec<Slip>,
+    forms: Vec<FormStatement>,
+    out: usize,
+    unheard: usize,
+}
+
+impl Reading {
+    fn add(&mut self, other: Reading) {
+        self.slips.extend(other.slips);
+        self.forms.extend(other.forms);
+        self.out += other.out;
+        self.unheard += other.unheard;
     }
 }
 
@@ -245,13 +361,15 @@ struct Best {
 }
 
 /// Reads `notes`, in the order they start, as forms of the set `key` is
-/// (see the module documentation), and reports what is out of place.
-fn read(notes: &[PartNote], key: Scale, slips: &mut Vec<Slip>, read: &mut Vec<FormStatement>) {
+/// (see the module documentation), the notes `heard_in` some parts, and
+/// reports what is out of place.
+fn read(notes: &[PartNote], key: Scale, heard_in: HeardIn) -> Reading {
+    let mut reading = Reading::default();
     let groups: Vec<&[PartNote]> = notes
         .chunk_by(|a, b| a.note.start_tick() == b.note.start_tick())
         .collect();
     if groups.is_empty() {
-        return;
+        return reading;
     }
     let forms: Vec<PitchSet> = forms_by_nearness(key)
         .into_iter()
@@ -359,11 +477,12 @@ fn read(notes: &[PartNote], key: Scale, slips: &mut Vec<Slip>, read: &mut Vec<Fo
             Some(&(next, _, _)) => groups[next][0].note.start,
             None => played.iter().map(|p| p.note.end()).max().unwrap_or(start),
         };
-        read.push(FormStatement {
+        reading.forms.push(FormStatement {
             form,
             start,
             end: end.max(start + 1),
             key,
+            heard_in,
         });
         let place = ColourPlace {
             form,
@@ -372,7 +491,8 @@ fn read(notes: &[PartNote], key: Scale, slips: &mut Vec<Slip>, read: &mut Vec<Fo
         };
         for &note in &played {
             if !form.contains(note.note.pitch.pitch_class()) {
-                slips.push(Slip {
+                reading.out += 1;
+                reading.slips.push(Slip {
                     notes: vec![note],
                     colour: Some(place),
                     ..Slip::of(SlipKind::OutsideColour, key)
@@ -385,7 +505,11 @@ fn read(notes: &[PartNote], key: Scale, slips: &mut Vec<Slip>, read: &mut Vec<Fo
                 union(heard, common(classes(group), form))
             });
         let missing = without(form, heard);
+        if whole && may_stop(from, to) {
+            reading.unheard += missing.len();
+        }
         if !may_stop(from, to) && !missing.is_empty() {
+            reading.out += missing.len();
             // Marked on the last group, the highest note of it: after it,
             // the next form starts.
             let last = groups[to - 1][0];
@@ -394,7 +518,7 @@ fn read(notes: &[PartNote], key: Scale, slips: &mut Vec<Slip>, read: &mut Vec<Fo
                 (Some(only), None) => nearest(last.note.pitch, only),
                 _ => None,
             };
-            slips.push(Slip {
+            reading.slips.push(Slip {
                 notes: vec![last],
                 colour: Some(ColourPlace {
                     heard,
@@ -406,6 +530,7 @@ fn read(notes: &[PartNote], key: Scale, slips: &mut Vec<Slip>, read: &mut Vec<Fo
             });
         }
     }
+    reading
 }
 
 /// The note of `pitch_class` nearest `note`.
@@ -746,5 +871,61 @@ mod tests {
         assert_eq!(kinds(&check), vec![]);
         assert_eq!(degrees(&check), vec!["T0"]);
         assert_eq!(check.forms[0].end, 16);
+    }
+
+    /// The forms read, as "T0 in Track(0)", in order.
+    fn heard(check: &VoiceLeading) -> Vec<String> {
+        check
+            .forms
+            .iter()
+            .map(|form| {
+                let degree = form.degree().map(|d| d.to_string()).unwrap_or_default();
+                format!("{degree} in {:?}", form.heard_in)
+            })
+            .collect()
+    }
+
+    #[test]
+    fn two_tracks_may_each_be_in_a_form_of_their_own() {
+        // A tune in T0 (C C# E) then T5I (C# E F), over chords in T7
+        // (G G# B) then T2 (D D# F#): the notes that start together are
+        // in two forms at once.
+        let check = check_in(
+            &[
+                track("C5 C#5 E5 C#5 E5 F5", 4, 0),
+                track("G3+G#3+B3 D3+D#3+F#3", 12, 0),
+            ],
+            menor_3,
+        );
+        assert_eq!(kinds(&check), vec![]);
+        assert_eq!(
+            heard(&check),
+            vec![
+                "T0 in Track(0)",
+                "T7 in Track(1)",
+                "T5I in Track(0)",
+                "T2 in Track(1)"
+            ]
+        );
+        // A form shared out among the tracks is still read as one, by all
+        // of them: read on its own, each track would leave its forms
+        // unfinished.
+        let shared = check_in(
+            &[track("C#5 E5 E5 F5", 4, 0), track("C4 C#4", 8, 0)],
+            menor_3,
+        );
+        assert_eq!(heard(&shared), vec!["T0 in All", "T5I in All"]);
+    }
+
+    #[test]
+    fn a_top_line_may_be_in_a_form_of_its_own() {
+        // One track: a tune in T0 on top of chords in T7, struck with
+        // every note of it.
+        let check = check_in(
+            &[track("C5+G3+G#3+B3 C#5+G3+G#3+B3 E5+G3+G#3+B3", 4, 0)],
+            menor_3,
+        );
+        assert_eq!(kinds(&check), vec![]);
+        assert_eq!(heard(&check), vec!["T0 in Line(0)", "T7 in Track(0)"]);
     }
 }
