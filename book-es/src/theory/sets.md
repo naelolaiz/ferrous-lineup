@@ -879,9 +879,17 @@ conjuntos **a partir de sus notas**, de dos maneras:
 - **horizontalmente**, las notas una detrás de otra en una línea, como
   se corta una serie dodecafónica en grupos de tres o de seis.
 
+La música construida sobre un conjunto mezcla las dos: una forma de
+Menor 3 puede ser dos notas tocadas juntas y una tercera después, o una
+melodía cuyas notas sostienen los acordes de debajo. Así que donde la
+tonalidad es un conjunto o un micromodo hay una tercera manera, las
+formas del conjunto de la tonalidad como las lee la [revisión del
+color](micromodes.md#revisar-el-color).
+
 Con **Conjuntos de clases de alturas** o **Micromodos** a la vista, un
 segundo menú elige cuál: **Las armonías de la hoja** (renombradas, como
-antes), **Notas a la vez (vertical)** o **Notas en línea (serial)**. Al
+antes), **Notas a la vez (vertical)**, **Notas en línea (serial)** o
+**Formas de la tonalidad (mixtas)**. Al
 leer notas, la hoja muestra los grupos que encuentra, cada uno donde
 empieza, y deja en paz lo escrito: escribir en un compás sigue
 escribiendo su armonía, y **Como está escrito** la muestra otra vez.
@@ -914,13 +922,11 @@ fn chunks(notes: Vec<Note>, size: Option<usize>) -> Vec<NoteGroup> {
         return Vec::new();
     }
     let Some(size) = size else {
-        return vec![NoteGroup { notes }];
+        return vec![NoteGroup::new(notes)];
     };
     let mut groups: Vec<NoteGroup> = notes
         .chunks(size.max(1))
-        .map(|chunk| NoteGroup {
-            notes: chunk.to_vec(),
-        })
+        .map(|chunk| NoteGroup::new(chunk.to_vec()))
         .collect();
     if groups.len() > 1 && groups.last().is_some_and(|last| last.notes.len() == 1) {
         let left = groups.pop().map(|last| last.notes).unwrap_or_default();
@@ -977,6 +983,45 @@ hexatónico. Las doce en un solo grupo son el total cromático, 12-1.
 Un grupo que repite el anterior se escribe una vez, donde empieza, como
 la hoja escribe un acorde solo donde cambia (`merge_repeats`).
 
+### Formas de la tonalidad, mixtas
+
+`mixed` no corta las notas por su cuenta: se lo pide a la revisión del
+color, que lee cada tramo de la canción en una tonalidad como formas
+del conjunto de la tonalidad, vengan como vengan sus notas, juntas o
+una tras otra (ver [Leer las formas: la lectura más
+barata](micromodes.md#leer-las-formas-la-lectura-más-barata)). La hoja
+escribe, donde empieza una forma, todas las formas que se oyen ahí.
+Donde dos pistas, o una línea de arriba y los acordes debajo, están
+cada una en una forma propia (ver [De quién son las notas de una
+forma](micromodes.md#de-quién-son-las-notas-de-una-forma)), son dos
+formas a la vez, escritas la de arriba primero como dos acordes a la
+vez: una melodía en la T0 de Menor 3 sobre acordes en su T7 es
+**3-3|3-3 T7**, con sus notas **Do Do♯ Mi | Sol La♭ Si**. El menú del
+tamaño no tiene nada que elegir: una forma tiene tantas notas como el
+conjunto de la tonalidad. Donde ninguna tonalidad de la canción es un
+conjunto, el menú lo dice, y los compases no muestran nada.
+
+En la demostración **Color Menor 3**, cuya banda toca las formas
+escritas en la hoja, en parte como acordes y en parte como melodía, las
+formas leídas de las notas son las escritas, compás por compás; una
+prueba lo comprueba. Un grupo se nombra por su forma, no por las notas
+oídas, porque la primera y la última forma de un tramo pueden no sonar
+enteras; es el único campo que tiene un `NoteGroup` además de sus
+notas:
+
+```rust
+pub struct NoteGroup {
+    pub notes: Vec<Note>,
+    /// The form of the key's set the notes were read as, for
+    /// [`Grouping::Mixed`]: the group is named by it, though a first or
+    /// a last form may not sound whole.
+    pub form: Option<PitchSet>,
+}
+```
+
+Sus notas son las de la parte en que se leyó, una de cada clase de
+altura de la forma, en el orden en que llegan.
+
 ### Leer solo cuando algo cambia
 
 Cortar una canción entera en grupos y nombrarlos lleva milisegundos en
@@ -1032,16 +1077,17 @@ nombre entero y sus notas. Cómo hace caber la hoja los nombres en los
 compases está en [La hoja de acordes: modelo, distribución y
 texto](../band/chord-sheet.md).
 
-Las elecciones de los menús son un pequeño struct guardado en la
-memoria de egui, que la aplicación guarda en el disco, así que siguen
-ahí la próxima vez que arranca:
+Los tamaños de los grupos son un pequeño struct guardado en la memoria
+de egui, que la aplicación guarda en el disco, así que siguen ahí la
+próxima vez que arranca. La notación y la agrupación no están en él: son
+de cada canción, y toda canción se abre **Según la tonalidad** con las
+armonías de la hoja (ver [Una armonía, cuatro
+nombres](#una-armonía-cuatro-nombres)).
 
 ```rust
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
 struct Choices {
-    notation: Notation,
-    grouping: Grouping,
     /// How many different notes a group of notes sounding together
     /// holds, or `None` for all of them.
     together: Option<usize>,

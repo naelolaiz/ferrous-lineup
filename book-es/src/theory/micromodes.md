@@ -1314,7 +1314,9 @@ Lo que les pide a las notas depende del tamaño del conjunto:
   **T5I**, encima de las notas que la tocan. Pasa el puntero por encima
   para leer cómo está hecha la forma y sus notas: «T5I: la forma de la
   tonalidad dada vuelta alrededor de Do, transportada 5 semitonos hacia
-  arriba: Do# Mi Fa.»
+  arriba: Do# Mi Fa.» Donde dos partes están cada una en una forma
+  propia, la línea tiene una franja para cada una (ver [De quién son las
+  notas de una forma](#de-quién-son-las-notas-de-una-forma)).
 - **La línea Voces**, debajo, marca **fuera** para una nota fuera de la
   forma que se oye a su alrededor y, en un micromodo, **hueco** para una
   forma sin terminar, sobre su última nota. Cuando falta una sola nota,
@@ -1455,6 +1457,61 @@ Los grupos están ordenados por su comienzo, así que `partition_point`
 encuentra, con una búsqueda binaria, el primer grupo que empieza cuando
 la nota ya terminó; cada grupo después de este y antes de ese la oye.
 Un tramo cuenta como oídas las notas sostenidas en su primer grupo.
+
+### De quién son las notas de una forma
+
+Hasta aquí, las notas que empiezan juntas eran un grupo, en una forma.
+Eso está bien donde una forma se reparte entre los instrumentos, como
+Webern da las tres notas de una forma a tres de ellos. Pero dos partes
+también pueden estar cada una en una forma propia a la vez: una melodía
+en T0 (Do Do♯ Mi) sobre acordes en T7 (Sol La♭ Si), o la línea de arriba
+de un piano sobre sus propios acordes. Leídas como una sola parte, todas
+las notas de la melodía que empiezan con un acorde quedarían fuera de
+lugar. Así que la revisión lee las notas de tres maneras, `Parts`:
+
+```rust
+pub enum Parts {
+    /// All the notes as one part.
+    Together,
+    /// Each track on its own.
+    EachTrack,
+    /// Each track on its own, with the top line of a track that plays
+    /// chords on its own too.
+    TopLinesApart,
+}
+```
+
+La línea de arriba es la más aguda de las partes en que se dividen los
+acordes de una pista, las mismas partes que sigue la [revisión de la
+conducción de voces](voice-leading.md) (`voices_of`). Cada manera
+divide más las partes de la anterior, así que una manera con tantas
+partes como una ya probada es la misma lectura, y se salta. Cada parte
+se lee por su cuenta, como arriba, y las lecturas se comparan:
+
+```rust
+let missed = reading.out + reading.unheard;
+if best.as_ref().is_none_or(|(least, _)| missed < *least) {
+    best = Some((missed, reading));
+}
+```
+
+`out` cuenta las notas fuera de lugar; `unheard`, las notas que faltan
+en la primera y la última forma de un micromodo, que no están fuera de
+lugar (pueden sonar en el patrón de antes o de después). Cada parte
+tiene una primera y una última forma, así que sin `unheard` una lectura
+con más partes dejaría fuera más notas gratis. Una lectura reemplaza a
+la anterior solo cuando le faltan estrictamente menos notas, así que,
+entre lecturas igual de buenas, gana la de menos partes: una forma
+repartida entre las pistas sigue siendo una forma, porque cada pista
+sola dejaría sus formas sin terminar.
+
+Cada forma guarda de quién son las notas en que se leyó,
+`HeardIn::All`, `HeardIn::Track(channel)` o `HeardIn::Line(part)`.
+Donde las formas se leyeron en más de una parte, la línea Formas tiene
+una franja para cada una, la parte más aguda arriba, y señalar una forma
+nombra su parte: «Melodía: T0: la forma propia de la tonalidad: Do Do#
+Mi.» La [agrupación mixta](sets.md#formas-de-la-tonalidad-mixtas) de la
+hoja de acordes escribe esas formas como dos acordes a la vez.
 
 ## Encontrar el color
 
