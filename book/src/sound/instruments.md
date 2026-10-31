@@ -303,15 +303,13 @@ gate: like a drum machine, it plays its whole sound every time, and
 because it has voices, a new hit does not cut off the one before.
 
 That is right for drums and wrong for one thing: a long recording, such
-as a whole song imported as audio, would play on after Stop. So
-`release_all` fades out the voices of a sound longer than ten seconds,
-in about 15 ms, and leaves short hits ringing:
+as a whole song added as a take, would play on after Stop. So
+`release_all` fades out the voices of a long sound, in about 15 ms, and
+leaves short hits ringing:
 
 ```rust
 pub fn release_all(&mut self) {
-    let long = self.sample.frames().len() as u64
-        > u64::from(self.sample.sample_rate()) * LONG_SAMPLE_SECONDS;
-    if long {
+    if self.is_long() {
         for voice in self.voices.iter_mut().filter(|voice| !voice.is_idle()) {
             voice.fading.get_or_insert(1.0);
         }
@@ -326,7 +324,7 @@ fades the song's sounds whatever their length.
 
 A note sounds when playback reaches the step it starts on. For a drum
 hit that is all there is to it, but a recording is one note on the
-first step of a song: started from bar 20, the song would play without
+first step of a take: started from bar 20, the song would play without
 it. So when playback starts, jumps, or comes round to the start of the
 loop, the engine's `resume_long_sounds` looks back over the song for
 the notes that started before the playhead, and asks each instrument

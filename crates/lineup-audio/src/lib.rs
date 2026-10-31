@@ -15,6 +15,8 @@
 //! - [`engine`] opens the sound card with `cpal`, runs the sequencer and
 //!   the instruments on the audio thread, and receives [`Command`]s from
 //!   the UI thread and keys from a MIDI keyboard.
+//! - [`input`] records a take from the microphone while the song plays,
+//!   and places it in the song.
 //! - [`render`] runs the same audio thread without a sound card, to save
 //!   a song as a WAV file.
 //! - [`trace`] writes down every note the audio thread plays, to check
@@ -26,6 +28,7 @@ pub mod drums;
 pub mod dsp;
 pub mod effects;
 pub mod engine;
+pub mod input;
 pub mod instrument;
 pub mod levels;
 mod metronome;
@@ -39,8 +42,8 @@ pub mod trace;
 
 pub use effects::DelayLine;
 pub use engine::{
-    AudioEngine, ChannelNotes, Command, EngineError, EngineInfo, LapTempos, LiveInput, MidiOutput,
-    PlayMode,
+    AudioEngine, ChannelNotes, Command, EngineError, EngineInfo, Heard, LapTempos, LiveInput,
+    MidiOutput, PlayMode, SongClock,
 };
 pub use instrument::Instrument;
 pub use levels::Levels;

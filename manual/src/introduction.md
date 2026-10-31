@@ -32,7 +32,9 @@ Linux, macOS and Windows.
 - **Edit every note.** What the band plays lands on tracks of its own,
   as ordinary [patterns](patterns-and-playlist.md). Open one in the
   [piano roll](piano-roll.md) to see how a bossa nova pianist spreads a
-  chord, change it, or write your own parts from scratch.
+  chord, change it, or write your own parts from scratch. Or sing or
+  whistle a part along with the song, and the app writes its notes
+  for you, in a [take](takes.md).
 - **Listen and study.** Hundreds of [demo songs](finding-a-demo.md),
   from folk songs and tangos to jazz standards and *Boléro*, open with
   their chords written out, and the [listening guide](finding-a-demo.md)
@@ -55,7 +57,8 @@ Linux, macOS and Windows.
    piano roll, the harmony keys, tempo and key changes, and the
    settings.
 4. **Sound, MIDI and files**: the mixer, MIDI keyboards and synths,
-   saving and opening, and exporting.
+   takes sung or whistled into the song, saving and opening, and
+   exporting.
 5. **Learning harmony**: notes and scales, keys and modes, chords and
    what they do, voice leading, rhythm and meter, sets and rows, and
    practising.

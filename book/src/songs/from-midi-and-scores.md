@@ -166,11 +166,8 @@ has to be heard.
 ### Finding the beat
 
 The beat is found the way a listener finds it, with the method of Dan
-Ellis's "Beat tracking by dynamic programming" (2007), the same one the
-app uses on a recording (see [Beats: onsets, autocorrelation and
-dynamic
-programming](../theory/listen.md#beats-onsets-autocorrelation-and-dynamic-programming)):
-how much new sound starts at each moment, the steadiest period in it,
+Ellis's "Beat tracking by dynamic programming" (2007): how much new
+sound starts at each moment, the steadiest period in it,
 then the chain of beats that lands on the most onsets while keeping
 close to that period. Each bar then gets the tempo it was played at,
 and a tempo marker is written wherever the tempo moves by half a beat a

@@ -10,7 +10,7 @@ finish-args:
   - --share=ipc
   - --socket=wayland
   - --socket=fallback-x11
-  # Audio output.
+  # Audio output, and the microphone for takes.
   - --socket=pulseaudio
   # The window is drawn with OpenGL.
   - --device=dri
