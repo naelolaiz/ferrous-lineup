@@ -99,8 +99,14 @@ cosas, que se eligen a la izquierda:
 
 Las formas empiezan por casa y siguen según cuántas notas conservan de
 casa, más brillantes cuantas más conservan. Cada tecla muestra las
-notas de la forma en su orden más compacto y, debajo, la forma como la
-escribe la hoja de acordes. Un conjunto es música sin tonalidad, así
+notas de la forma en su orden más compacto y, debajo, el conjunto, 4-27
+o 6-20, el mismo en todas las teclas. Las teclas se ensanchan cuando
+las notas lo necesitan, así que seis notas en solfeo se escriben
+enteras. Apunta a una tecla para leer el nombre de la forma como lo
+escribe la hoja de acordes, «4-27 T2»: ese nombre cuenta desde la forma
+prima del conjunto sobre Do, y el grado de la tecla cuenta desde la
+tonalidad, así que los dos números difieren salvo que la tonalidad sea
+la forma prima sobre Do. Un conjunto es música sin tonalidad, así
 que ni las teclas ni los acordes apilados con el conjunto llevan los
 nombres de los acordes y escalas de la música tonal a los que pueden
 sonar. En una tonalidad que es el conjunto Do Mi Sol Si♭ (4-27), T2I es
@@ -115,7 +121,7 @@ tonalidad](#un-micromodo-como-tonalidad)). **Cercanas** muestra las
 formas que conservan al menos la mitad de las notas de casa, **Todas las
 formas** las muestra todas.
 
-![Las teclas de armonía en una tonalidad que es el conjunto Do Mi Sol Si♭, conjunto 4-27 en el menú Tonalidad, con Formas activado, después de tocar T2I: T0 (Mi Sol Si♭ Do), T2I (Re Mi Sol Si♭), después T3, T6, T9 y las formas dadas vuelta que conservan dos notas, cada una con su nombre como lo escribe la hoja de acordes debajo (4-27 T0I, 4-27 T2…); T0 aparece con borde porque conserva tres notas de T2I](images/set-forms-keys.png)
+![Las teclas de armonía en una tonalidad que es el conjunto Do Mi Sol Si♭, conjunto 4-27 en el menú Tonalidad, con Formas activado, después de tocar T2I: T0 (Mi Sol Si♭ Do), T2I (Re Mi Sol Si♭), después T3, T6, T9 y las formas dadas vuelta que conservan dos notas, cada una con 4-27 debajo; T0 aparece con borde porque conserva tres notas de T2I](images/set-forms-keys.png)
 
 **Una progresión de formas.** En una tonalidad que es un conjunto, el
 botón **Progresión** de la hoja de acordes ofrece maneras de encadenar
@@ -517,7 +523,7 @@ siendo ii en cualquier tonalidad mayor. Casa es siempre T0. Con las
 tríadas, el acorde paralelo es T7I: Do menor en Do mayor, y Do mayor en
 Do menor.
 
-![Las teclas de armonía en una tonalidad de Menor 3 sobre Do después de tocar T1I: T0, T1I, T4I y T5I, después las formas que conservan una nota de casa, cada una con sus notas y su nombre; T0, T8 y T9 aparecen con borde porque conservan dos notas de La Do Do♯, y la ayuda de abajo lo dice](images/micromode-keys.png)
+![Las teclas de armonía en una tonalidad de Menor 3 sobre Do después de tocar T1I: T0, T1I, T4I y T5I, después las formas que conservan una nota de casa, cada una con sus notas y Menor 3 debajo; T0, T8 y T9 aparecen con borde porque conservan dos notas de La Do Do♯, y la ayuda de abajo lo dice](images/micromode-keys.png)
 
 Las **teclas de armonía** muestran las formas de la tonalidad: casa
 primero, después las formas que conservan dos de sus notas, después las
