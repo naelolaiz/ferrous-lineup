@@ -7,7 +7,7 @@ with the extension `.lineup`.
 
 ```text
 (
-    format: 30,
+    format: 31,
     tempo: 130.0,
     scale: (root: C, kind: Major),
     channels: [
@@ -20,7 +20,7 @@ with the extension `.lineup`.
 
 [Saving](../program/saving.md) explains RON, serde and the `ProjectFile`
 struct that stands between the file and the live `Project`. This page is
-the reference for the number at the top: `FORMAT_VERSION` is **30** in
+the reference for the number at the top: `FORMAT_VERSION` is **31** in
 [`crates/lineup-core/src/file.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/file.rs).
 
 ## The format number
@@ -29,7 +29,7 @@ The number says which features a file may contain. It is not the app's
 version.
 
 `format_for` writes the **lowest** format that can hold the project, not
-always 30. A plain project stays format 1, so any version of Ferrous
+always 31. A plain project stays format 1, so any version of Ferrous
 Lineup can open it. A song with a chord sheet but no band is format 12;
 a band is format 13; a locked channel is at least format 23. The number
 is that of the highest feature the song uses, and each format can hold
@@ -73,6 +73,7 @@ what it uses.
 | 28 | A horn section in the band, and EQ, compression and delay on a channel. | It would play no horns, and every channel without its effects. | [How the band plays](../band/band.md#a-horn-section), [The mixer](../sound/mixer.md#each-channels-effects) |
 | 29 | A band playing the drums of another style than its chord and bass parts, or leaving the drums to the song. | It would play the drums of the band's own style. | [How the band plays](../band/band.md#a-band-in-the-song), [The library](../band/library.md#which-parts-to-take) |
 | 30 | A band playing the chord sheet in a micromode style. | It would play the forms as chords and a bass line. | [Micromodes](../theory/micromodes.md#in-a-song-the-band-plays-the-forms-on-the-sheet) |
+| 31 | A band playing the chord sheet in a twelve-tone style. | It would play each form of the row as four chords of three notes. | [Twelve-tone rows](../theory/twelve-tone.md#in-a-song-the-band-plays-the-forms-on-the-sheet) |
 
 Two records can be in a file of any format, because a version that
 skips them still plays the song exactly. One says where each part of the
