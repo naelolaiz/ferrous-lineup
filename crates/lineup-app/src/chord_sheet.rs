@@ -40,10 +40,11 @@ use lineup_core::band::{Ending, Variation};
 use lineup_core::chord_sheet::function::{Function, Functions, Role};
 use lineup_core::chord_sheet::{Push, Stop, read_typed_bar_after, text, write_bar};
 use lineup_core::general_midi;
+use lineup_core::harmony::degree;
 use lineup_core::library::{Genre, Style};
 use lineup_core::{
     Band, BandStyle, Bar, ChordMarker, HarmonyName, KeyMap, MAX_SONG_STEPS, Meter, Note, Pass,
-    Player, Project, band_styles,
+    PitchSet, Player, Project, band_styles,
 };
 
 use crate::library_browser::{LibraryAction, LibraryBrowser, LibraryPurpose, Tried};
@@ -1115,16 +1116,20 @@ impl ChordSheet {
             return (going_on, shown);
         }
         let functions = self.functions();
+        let markers = project.playlist().chord_markers();
         let written = |marker: &ChordMarker| {
             // Each harmony is read in the key on its own step: a key can
             // change partway through a bar.
             let key = keys.key_at(marker.start);
             let function = |shown: &ChordMarker| marked(&functions, shown);
+            // In a key that is a set, how a form links to the harmony
+            // before: the notes it keeps.
+            let before = linked_before(markers, marker, key);
             self.notation.written(
                 marker,
                 key,
-                |shown| caption(shown, key, function(shown)),
-                |shown| describe(shown, key, function(shown)),
+                |shown| caption(shown, key, function(shown), before),
+                |shown| describe(shown, key, function(shown), before),
                 |shown| function(shown).map(tint),
                 voicing,
             )
@@ -2412,6 +2417,7 @@ fn caption(
     marker: &ChordMarker,
     key: lineup_core::Scale,
     function: Option<&Function>,
+    before: Option<PitchSet>,
 ) -> Option<String> {
     let numeral = match function {
         Some(function) => function.numeral().map(|numeral| match function.tag() {
@@ -2420,8 +2426,15 @@ fn caption(
         }),
         None => marker.harmony.caption(key),
     };
+    let common = before
+        .zip(marker.harmony.pitch_set())
+        .map(|(before, here)| match degree::kept(before, here) {
+            1 => tr("1 common").to_string(),
+            kept => trf("{} common", &[&kept]),
+        });
     let words: Vec<String> = numeral
         .into_iter()
+        .chain(common)
         .chain(marker.push.map(|_| tr("push").to_string()))
         .chain(marker.stop.map(|stop| tr(stop.name()).to_string()))
         .collect();
@@ -2431,11 +2444,23 @@ fn caption(
 /// A sentence about a harmony and what the band does there, for its
 /// hint. A chord from outside the key, or the pivot of a key change, is
 /// described as `function` reads it.
-fn describe(marker: &ChordMarker, key: lineup_core::Scale, function: Option<&Function>) -> String {
+fn describe(
+    marker: &ChordMarker,
+    key: lineup_core::Scale,
+    function: Option<&Function>,
+    before: Option<PitchSet>,
+) -> String {
     let mut text = match function {
         Some(function) => function.describe(),
         None => marker.harmony.describe(key),
     };
+    if let Some((before, here)) = before.zip(marker.harmony.pitch_set()) {
+        let link = degree::describe_link(before, here, |p| key.spell(p).to_string());
+        text.push_str(&format!(
+            " {}",
+            trf("From the harmony before, it {}.", &[&link])
+        ));
+    }
     if let Some(push) = marker.push {
         text.push_str(&format!(" {}: {}.", tr("Push"), push.describe()));
     }
@@ -2447,6 +2472,27 @@ fn describe(marker: &ChordMarker, key: lineup_core::Scale, function: Option<&Fun
         ));
     }
     text
+}
+
+/// In a key that is a set, such as a micromode, the notes of the harmony
+/// before `marker` on the sheet, when both are sets or micromodes: in
+/// music without chords, one group leads to the next by the notes they
+/// share, as Kröpfl's micromodal music links its forms.
+fn linked_before(
+    markers: &[ChordMarker],
+    marker: &ChordMarker,
+    key: lineup_core::Scale,
+) -> Option<PitchSet> {
+    let group = |harmony: HarmonyName| match harmony {
+        HarmonyName::Set(set) | HarmonyName::Micromode(set) => Some(set),
+        _ => None,
+    };
+    if !matches!(key.kind, lineup_core::ScaleKind::Set(_)) {
+        return None;
+    }
+    group(marker.harmony)?;
+    let before = markers.iter().rev().find(|m| m.start < marker.start)?;
+    group(before.harmony)
 }
 
 /// The menu that marks a harmony of `bar` (one of its markers, `here`)
