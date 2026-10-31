@@ -52,10 +52,6 @@ fn main_texts(text: &str) -> Option<&'static str> {
         "No recent songs" => "No hay canciones recientes",
         "Clear recent songs" => "Borrar canciones recientes",
         "Demos" => "Demostraciones",
-        "Import recording…" => "Importar grabación…",
-        "Open an MP3 or WAV file and add chords that follow it" => {
-            "Abre un archivo MP3 o WAV y añade acordes que lo sigan"
-        }
         "Import MIDI file…" => "Importar archivo MIDI…",
         "Open a .mid file: its notes, tempo, time signatures and key" => {
             "Abre un archivo .mid: sus notas, tempo, compases y tonalidad"

@@ -34,8 +34,9 @@
 
 - [The mixer](mixer.md)
 - [MIDI keyboards and synths](midi.md)
+- [Takes: singing or whistling a part](takes.md)
 - [Saving, opening and recovering](saving.md)
-- [Opening MIDI files and recordings](importing.md)
+- [Opening MIDI files and chord sheets](importing.md)
 - [Exporting](exporting.md)
 
 # Part 5: Learning harmony

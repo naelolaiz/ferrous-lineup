@@ -15,7 +15,7 @@ use lineup_core::{History, Project, file};
 use super::LineupApp;
 use super::export::MidiExport;
 use super::library::Demo;
-use crate::channel_rack::is_project_file;
+use crate::channel_rack::{is_project_file, is_recording};
 use crate::i18n::{tr, tr_name, trf};
 use crate::library_browser::Tried;
 use crate::piano_roll::PianoRoll;
@@ -39,7 +39,6 @@ pub(super) enum Pending {
     Open,
     OpenPath(PathBuf),
     Demo(Demo),
-    Import,
     ImportMidi,
     ImportChordSheet,
     Quit,
@@ -269,16 +268,6 @@ impl LineupApp {
             self.recent_menu(ui);
             self.demos_menu(ui);
             if ui
-                .button(crate::i18n::tr("Import recording…"))
-                .on_hover_text(crate::i18n::tr(
-                    "Open an MP3 or WAV file and add chords that follow it",
-                ))
-                .clicked()
-            {
-                self.request(&ctx, Pending::Import);
-                ui.close();
-            }
-            if ui
                 .button(crate::i18n::tr("Import MIDI file…"))
                 .on_hover_text(crate::i18n::tr(
                     "Open a .mid file: its notes, tempo, time signatures and key",
@@ -466,7 +455,6 @@ impl LineupApp {
             }
             Pending::OpenPath(path) => self.open_now(path),
             Pending::Demo(demo) => self.open_demo(demo),
-            Pending::Import => self.import_recording(),
             Pending::ImportMidi => self.import_midi(),
             Pending::ImportChordSheet => self.import_chord_sheet(),
             Pending::Quit => {
@@ -483,7 +471,7 @@ impl LineupApp {
 
     fn open_now(&mut self, path: PathBuf) {
         if lineup_listen::is_audio_file(&path) {
-            self.import_path(path);
+            self.open_recording(path);
             return;
         }
         if lineup_core::midi_file::is_midi_file(&path) {
@@ -508,9 +496,9 @@ impl LineupApp {
 
     /// Swaps in another project and tells the audio thread about it.
     pub(super) fn replace_project(&mut self, mut project: Project, path: Option<PathBuf>) {
-        // An import that is still listening would replace this project
-        // when it finished: it was started for the one being left behind.
-        let stopped_import = self.import.take().is_some();
+        // A take belongs to the song it was sung along with, and a
+        // recording still being heard to the song it was added to.
+        let stopped_listening = self.forget_voice();
         // The chords heard in the song are still the song's.
         project.follow_along(fill_chord_sheet);
         self.project = project;
@@ -534,9 +522,10 @@ impl LineupApp {
         self.chord_sheet.new_song();
         self.playlist.new_song();
         self.harmony_keys.forget_chords();
-        self.key_finder.new_project(&self.project, Vec::new());
+        self.key_finder.new_project(&self.project);
         self.message = None;
-        self.notice = stopped_import.then(|| tr("Stopped importing the recording.").to_string());
+        self.notice =
+            stopped_listening.then(|| tr("Stopped listening to the recording.").to_string());
         // Undo cannot go back into another file, and its samples may
         // not be needed any more.
         self.history = History::new(super::edit::undo_limit_for(&self.project));
@@ -598,11 +587,14 @@ impl LineupApp {
         }
     }
 
-    /// A project file dropped on the window is opened, and a MIDI file,
-    /// a chord sheet or a recording imported (see [`is_project_file`]).
-    /// While the channel rack is closed, dropped sounds become new
-    /// sampler channels (when it is open, the rack handles them, so they
-    /// can land on a row).
+    /// A project file dropped on the window is opened, and a MIDI file
+    /// or a chord sheet imported (see [`is_project_file`]). A recording
+    /// is added to the song as a take (see
+    /// `lineup_audio::sample::is_recording`): dropped on the playlist,
+    /// from the bar and on the track under the pointer; anywhere else,
+    /// from the playhead. While the channel rack is
+    /// closed, dropped sounds become new sampler channels (when it is
+    /// open, the rack handles them, so they can land on a row).
     pub(super) fn handle_dropped_files(&mut self, ctx: &egui::Context) {
         let dropped: Vec<PathBuf> = ctx.input(|input| {
             input
@@ -612,8 +604,10 @@ impl LineupApp {
                 .map(|dropped| dropped.path().to_path_buf())
                 .collect()
         });
-        let (mut projects, samples): (Vec<PathBuf>, Vec<PathBuf>) =
+        let (mut projects, others): (Vec<PathBuf>, Vec<PathBuf>) =
             dropped.into_iter().partition(|path| is_project_file(path));
+        let (recordings, samples): (Vec<PathBuf>, Vec<PathBuf>) =
+            others.into_iter().partition(|path| is_recording(path));
         // A file opened from the system's file manager while the app runs
         // (see `open_files`) is opened as a dropped one is.
         projects.extend(crate::open_files::take());
@@ -626,6 +620,17 @@ impl LineupApp {
                     Some(tr("Drop one project file at a time: none was opened.").to_string());
             } else {
                 self.open_path(ctx, path);
+            }
+        }
+        let mut recordings = recordings.into_iter();
+        if let Some(path) = recordings.next() {
+            if recordings.next().is_some() {
+                self.message =
+                    Some(tr("Drop one recording at a time: none was added.").to_string());
+            } else {
+                let place = self.playlist.recording_drop(ctx, &self.project);
+                let (at, track) = place.map_or((None, None), |(step, track)| (Some(step), track));
+                self.add_recording_path(path, at, track);
             }
         }
         if !self.rack_open {

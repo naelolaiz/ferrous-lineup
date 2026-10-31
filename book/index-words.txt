@@ -39,17 +39,18 @@ Finding the key: theory/hearing.md#finding-the-key
 Harmony keys: theory/numerals.md#the-harmony-keys, theory/sets.md#a-key-as-a-set-the-same-notes-another-name
 Hearing chords: theory/hearing.md
 Horn section: band/band.md#a-horn-section
-Importing a recording: theory/listen.md
 Key change: theory/scales.md#changing-key-moving-the-song, theory/scales.md#key-changes-partway-through-key-markers, theory/hearing.md#where-the-key-changes
 Key marker: theory/scales.md#key-changes-partway-through-key-markers
 Keyboard shortcuts: program/undo.md#keyboard-shortcuts, program/editors.md#the-order-of-the-shortcuts, program/egui.md#every-key-in-a-list
 Language: program/languages.md
+Latency: theory/listen.md#when-was-it-sung-two-clocks
 Latin American music: songs/demos.md, songs/from-midi-and-scores.md
 Lead sheet: band/lead-sheet.md
 Library: band/library.md
 Lineup Osc: sound/instruments.md#the-lineup-osc
 Locked track: band/song-form.md#locking-a-track-styles-play-around-it
 Meter: see Time signature
+Microphone: theory/listen.md#when-was-it-sung-two-clocks, theory/listen.md#in-the-app
 MIDI file: sound/midi.md#writing-a-midi-file, sound/midi.md#reading-a-midi-file, songs/from-midi-and-scores.md
 MIDI keyboard: sound/midi.md#a-keys-way-in
 MIDI Out: sound/midi.md#midi-out-an-instrument-with-an-outbox, sound/midi.md#sending-channels-over-midi
@@ -61,12 +62,14 @@ Orchestra: band/orchestra.md
 Pattern: program/project.md
 Piano roll: program/editors.md
 Pitch class: theory/pitch.md
+Pitch tracking: theory/listen.md#hearing-the-pitch
 Pitch-class set: theory/sets.md
 Playback trace: sound/trace.md
 Playlist: program/project.md, program/editors.md#the-playlist
 Practice: band/practice.md
 Preferences: program/egui.md#kept-by-name-not-by-type, sound/soundfonts.md#asked-until-answered
 Project file: program/saving.md, reference/project-format.md
+pYIN: theory/listen.md#pyin-every-dip-a-candidate
 Recording MIDI keys: sound/midi.md#recording-from-a-key-to-a-note
 Release packages: shipping/releases.md
 Roman numeral: theory/numerals.md
@@ -81,6 +84,7 @@ SoundFont: sound/soundfonts.md
 Speed trainer: band/practice.md
 Style editor: band/style-editor.md
 Style: band/library.md#styles-a-table-in-a-static, band/band.md, band/song-form.md#a-style-for-each-section
+Take: theory/listen.md
 Tango: songs/demos.md, songs/from-midi-and-scores.md
 Tempo: sound/tempo.md
 Time signature: sound/tempo.md
@@ -93,8 +97,10 @@ Variations: band/song-form.md#variations-a-and-b-the-band-digs-in
 Velocity: program/editors.md#the-velocity-lane, songs/demos.md#playing-like-a-person
 Version: shipping/releases.md, program/egui.md#help-the-manual-and-about
 Video export: sound/export.md
+Viterbi algorithm: theory/hearing.md#where-the-key-changes, theory/listen.md#viterbi-one-path-through-the-whole-take
 Voice leading: theory/voice-leading.md
 WAV export: sound/export.md
+YIN: theory/listen.md#yin-a-sound-compared-with-itself
 Zoom: program/egui.md#zoom
 
 Function: not program/sync.md
