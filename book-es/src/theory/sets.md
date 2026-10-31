@@ -621,8 +621,24 @@ conservan una y seis ninguna.
 
 En la aplicación, una tecla nunca llama a una forma de un conjunto por
 el acorde o la escala a la que suena. Su tecla muestra el grado, las
-notas en forma normal y, debajo, la forma como la escribe la hoja de
-acordes: T2I de Do Mi Sol Si♭ es Re Mi Sol Si♭, **4-27 T2**. Una forma
+notas en forma normal y, debajo, el conjunto que es toda forma de la
+tonalidad, 4-27. El nombre propio de la forma como lo escribe la hoja
+de acordes, siendo T2I de Do Mi Sol Si♭ Re Mi Sol Si♭, **4-27 T2**, está
+en la ayuda de la tecla, no en la tecla: el T*n* de la hoja cuenta desde
+la forma prima de la clase sobre Do y el grado desde la tonalidad, así
+que en una tonalidad que no es la forma prima sobre Do los dos no
+coinciden. *Los tricordios de Webern* con su 6-20 como tonalidad lo
+mostró: T0, la forma propia de la tonalidad, es 6-20 T3. `form_footer`
+da el conjunto (o el micromodo, o la tríada de un micromodo acorde);
+`describe_form` agrega «En la hoja de acordes: 6-20 T3.» a la ayuda
+detallada.
+
+Las teclas de una fila son tan anchas como lo piden sus notas más
+anchas: `keys_width` mide las notas de cada tecla al tamaño de letra de
+la tecla y da a todas las teclas de la fila la más ancha, como mínimo
+los 76 puntos de siempre, así que seis notas en solfeo, «Mib Mi Sol Lab
+Si Do», se escriben enteras en lugar de meterse en la tecla de al lado.
+Una fila demasiado larga para la ventana pasa a una segunda línea. Una forma
 de más de cinco notas que es la escala de la tonalidad transportada se
 sigue escribiendo como esa escala (7-35 subido una quinta desde Do mayor
 se escribe Sol La Si Do Re Mi Fa♯, con Fa♯, no Sol♭), pero no se llama

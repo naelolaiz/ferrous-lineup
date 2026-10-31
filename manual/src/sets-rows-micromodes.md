@@ -91,8 +91,13 @@ play two things, chosen at the left:
 
 The forms come home first, then by how many notes they keep of home,
 brighter the more they keep. Each key shows the form's notes in their
-most compact order and, under them, the form as the chord sheet writes
-it. A set is music without a key, so neither the keys nor the chords
+most compact order and, under them, the set, 4-27 or 6-20, the same on
+every key. The keys widen when the notes need it, so six notes in
+solfège are written whole. Point at a key to read the form's name as
+the chord sheet writes it, "4-27 T2": that name counts from the set's
+prime form on C, while the key's degree counts from the key, so the
+two numbers differ unless the key is the prime form on C. A set is
+music without a key, so neither the keys nor the chords
 stacked from the set are named as the chords and scales of tonal music
 they may sound like. In a key that is C E G B♭ as a set (4-27), T2I is
 D E G B♭, the only form that keeps three of its notes (to a tonal ear,
@@ -104,7 +109,7 @@ are triads by name, show the triad each form is (see [A micromode as
 the key](#a-micromode-as-the-key)). **Near home** shows the forms that
 keep at least half the notes of home, **All forms** shows them all.
 
-![The harmony keys in a key that is the set C E G B♭, set 4-27 in the Key menu, with Forms on, after T2I was played: T0 (E G B♭ C), T2I (D E G B♭), then T3, T6, T9 and the turned forms that keep two notes, each with its name as the chord sheet writes it underneath (4-27 T0I, 4-27 T2…); T0 is outlined because it keeps three notes of T2I](images/set-forms-keys.png)
+![The harmony keys in a key that is the set C E G B♭, set 4-27 in the Key menu, with Forms on, after T2I was played: T0 (E G B♭ C), T2I (D E G B♭), then T3, T6, T9 and the turned forms that keep two notes, each with 4-27 underneath; T0 is outlined because it keeps three notes of T2I](images/set-forms-keys.png)
 
 **A progression of forms.** In a set key, the chord sheet's
 **Progression** button offers ways to chain the set's forms, in place
@@ -473,7 +478,7 @@ Move the whole song to D and every form keeps its degree, as ii stays
 ii in any major key. Home is always T0. With the triads, the parallel
 chord is T7I: C minor in C major, and C major in C minor.
 
-![The harmony keys in a key of Menor 3 on C after T1I was played: T0, T1I, T4I and T5I, then the forms that keep one note of home, each with its notes and its name; T0, T8 and T9 are outlined because they keep two notes of A C C♯, and the hint below says so](images/micromode-keys.png)
+![The harmony keys in a key of Menor 3 on C after T1I was played: T0, T1I, T4I and T5I, then the forms that keep one note of home, each with its notes and Menor 3 underneath; T0, T8 and T9 are outlined because they keep two notes of A C C♯, and the hint below says so](images/micromode-keys.png)
 
 The **harmony keys** show the key's forms, home first, then the forms
 that keep two of its notes, then the ones that keep one; the more a

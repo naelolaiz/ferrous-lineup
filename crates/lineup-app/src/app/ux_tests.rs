@@ -5227,6 +5227,50 @@ fn the_key_menu_lists_the_sets_of_each_size() {
     assert!(!shows(&mut screen, "Caug"));
 }
 
+/// The forms of a hexachord are written whole, six notes in solfège too:
+/// Webern's trichords with its 6-20 as the key, in Spanish. No key's
+/// notes run into the next key's, and under each key is the set, 6-20,
+/// not the sheet's name "6-20 T3", whose T number would disagree with
+/// the key's degree T0.
+#[test]
+fn a_hexachords_forms_are_written_whole_in_solfege() {
+    use lineup_core::library::{RowStyle, demo};
+    use lineup_core::{PitchClass, PitchSet};
+    let mut screen = Screen::new();
+    crate::i18n::set_language(&screen.ctx, crate::i18n::Language::Spanish);
+    let mut webern = demo::row_demo(RowStyle::named("Webern's trichords").unwrap());
+    // The row's first half, Eb E G Ab B C, on C, as the Key menu's
+    // outlined 6-20 takes it.
+    webern.scale = Scale::set(
+        PitchClass::C,
+        PitchSet::from_semitones(&[3, 4, 7, 8, 11, 0]),
+    );
+    screen.app.replace_project(webern, None);
+    screen.app.rack_open = false;
+    screen.app.chord_sheet.open = false;
+    screen.app.harmony_keys.open = true;
+    screen.click("Formas");
+    screen.draw(Vec::new());
+    let output = screen.draw(Vec::new());
+    let notes = [
+        "Mib Mi Sol Lab Si Do",
+        "Do Do# Mi Fa Lab La",
+        "Re Mib Fa# Sol Sib Si",
+        "Do# Re Fa Fa# La Sib",
+    ];
+    let rects: Vec<Rect> = notes
+        .iter()
+        .map(|text| text_rect(&output, text).unwrap_or_else(|| panic!("Missing: {text}")))
+        .collect();
+    for pair in rects.windows(2) {
+        assert!(pair[0].right() < pair[1].left(), "{pair:?}");
+    }
+    assert!(text_rect(&output, "6-20").is_some());
+    assert!(text_rect(&output, "6-20 T3").is_none());
+    lineup_core::NoteNaming::Letters.set();
+    crate::i18n::Language::English.set();
+}
+
 /// A key that is any pitch-class set offers its forms too, and the chord
 /// sheet's Progression menu chains them.
 #[test]
