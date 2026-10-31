@@ -1591,6 +1591,12 @@ impl Project {
             band.take_instruments(style, horns_locked);
         }
         self.drums_come(drums_come);
+        // The song's own players, as a MIDI file brings them, take the
+        // style's sounds by family, as they do without the band.
+        if parts.instruments {
+            let skip = self.bands_channels();
+            apply::own_players_sounds(self, style, &skip);
+        }
         let time = self.meter();
         if parts.time_signature {
             crate::remeter::remeter(self, harmony.map_or(style.time, |style| style.time));
@@ -2334,14 +2340,43 @@ impl Project {
         Some(index)
     }
 
+    /// The channels the band plays on, and those it added: the rest are
+    /// the song's own.
+    fn bands_channels(&self) -> Vec<usize> {
+        let Some(band) = &self.band else {
+            return Vec::new();
+        };
+        let mut channels: Vec<usize> = band.channels.iter().flatten().copied().collect();
+        channels.extend(band.since..self.channels.len());
+        channels
+    }
+
+    /// Whether channel `index` is a bass of the song's own, as a MIDI
+    /// file brings it: named for one, or with a General MIDI bass sound
+    /// (a double bass too), not named for the tune, that plays in the
+    /// song's own patterns. The band's bass takes its place.
+    fn plays_the_songs_bass(&self, index: usize) -> bool {
+        self.channels().get(index).is_some_and(|channel| {
+            channel.is_pitched()
+                && apply::plays_the_bass(channel)
+                && self
+                    .patterns
+                    .iter()
+                    .any(|pattern| pattern.player.is_none() && !pattern.notes(index).is_empty())
+        })
+    }
+
     /// Mutes the chords, bass and drums the song plays without the band:
-    /// the channels the library writes chords and the bass on, unless
-    /// they are locked, and the tracks that hold only drums. Returns what
-    /// it muted.
+    /// the channels the library writes chords and the bass on, and a
+    /// bass of the song's own, unless they are locked, and the tracks
+    /// that hold only drums. Returns what it muted.
     fn mute_the_songs_own(&mut self, drums: bool) -> Muted {
         let mut muted = Muted::default();
         for index in 0..self.channels.len() {
-            if self.accompanies(index) && !self.channels[index].muted && !self.is_locked(index) {
+            if (self.accompanies(index) || self.plays_the_songs_bass(index))
+                && !self.channels[index].muted
+                && !self.is_locked(index)
+            {
                 muted.channels.push(self.channels[index].name.clone());
                 self.channels[index].muted = true;
             }
@@ -3935,6 +3970,125 @@ mod tests {
                 );
             }
         }
+    }
+
+    /// A song as a MIDI file brings it: players named by the file, none
+    /// of them Keys or Bass, the drums in a pattern of their own on a
+    /// track of their own, and the chords heard in the notes.
+    fn imported() -> Project {
+        let mut project = Project::empty();
+        for (name, program, pitches) in [
+            ("vocals", 81, [72, 77, 79, 72]),
+            ("organ", 19, [64, 65, 67, 64]),
+            ("drive guitar", 30, [60, 65, 67, 60]),
+            ("slapbass", 34, [36, 41, 43, 36]),
+        ] {
+            let channel = project
+                .add_channel(Channel {
+                    name: name.into(),
+                    program: Some(program),
+                    ..Channel::synth()
+                })
+                .unwrap();
+            let notes = pitches
+                .into_iter()
+                .enumerate()
+                .map(|(bar, pitch)| NoteEvent::exact(Note::new(pitch), bar * 16, 15));
+            project.pattern_mut(0).unwrap().set_notes(channel, notes);
+        }
+        project.pattern_mut(0).unwrap().set_length(64);
+        project.pattern_mut(0).unwrap().name = "Bars 1–4".into();
+        let kick = project.add_channel(Channel::drum(Drum::Kick)).unwrap();
+        let snare = project.add_channel(Channel::drum(Drum::Snare)).unwrap();
+        let drums = project.add_pattern().unwrap();
+        let pattern = project.pattern_mut(drums).unwrap();
+        pattern.name = "Drums, bars 1–4".into();
+        pattern.set_length(64);
+        pattern.set_notes(kick, (0..64).step_by(8).map(NoteEvent::step));
+        pattern.set_notes(snare, (4..64).step_by(8).map(NoteEvent::step));
+        project.add_clip(Clip::new(0, 0, 0)).unwrap();
+        project.add_track().unwrap();
+        project.track_mut(1).unwrap().name = "Drums".into();
+        project.add_clip(Clip::new(drums, 1, 0)).unwrap();
+        project.remove_unused_tracks();
+        project.write_heard_chords();
+        project
+    }
+
+    #[test]
+    fn a_band_on_a_midi_file_takes_the_place_of_its_bass_and_drums_and_gives_its_players_the_styles_sounds()
+     {
+        let program = |project: &Project, name: &str| {
+            let channel = project.channels().iter().find(|c| c.name == name).unwrap();
+            (channel.program, channel.muted)
+        };
+        let parts = apply::StyleParts {
+            progression: false,
+            ..apply::StyleParts::default()
+        };
+        let mut project = imported();
+        let bluegrass = Style::named("Bluegrass").unwrap();
+        let band_style = BandStyle::of_style(bluegrass).unwrap();
+        project.apply_band_parts(band_style, Some(bluegrass), parts);
+        let band = project.band().unwrap();
+        // The file's own bass and drums give way to the band's.
+        assert_eq!(band.muted.channels, ["slapbass"]);
+        assert_eq!(band.muted.tracks, ["Drums"]);
+        assert_eq!(
+            program(&project, "slapbass"),
+            (Some(band_style.bass_program()), true)
+        );
+        assert!(project.playlist().tracks()[1].muted);
+        // The other players take the style's sounds by family, but the
+        // tune, which keeps its own.
+        let guitar = band_style.extras().guitar.unwrap().program;
+        assert_eq!(program(&project, "drive guitar"), (Some(guitar), false));
+        assert_eq!(
+            program(&project, "organ"),
+            (Some(band_style.piano_program()), false)
+        );
+        assert_eq!(program(&project, "vocals"), (Some(81), false));
+        assert!(!part(&project, Player::Bass).is_empty());
+        assert!(!part(&project, Player::Drums).is_empty());
+
+        // The next style changes them again: a ragtime pianist alone,
+        // whose left hand is the bass, with no guitar and no drums.
+        let ragtime = Style::named("Ragtime").unwrap();
+        let band_style = BandStyle::of_style(ragtime).unwrap();
+        project.apply_band_parts(band_style, Some(ragtime), parts);
+        assert_eq!(
+            program(&project, "drive guitar"),
+            (Some(band_style.piano_program()), false)
+        );
+        assert_eq!(
+            program(&project, "slapbass"),
+            (Some(band_style.bass_program()), true)
+        );
+        assert_eq!(program(&project, "vocals"), (Some(81), false));
+        let bass = project.player_channel(Player::Bass).unwrap();
+        assert_eq!(
+            project.channels()[bass].program,
+            Some(band_style.bass_program())
+        );
+        assert!(part(&project, Player::Drums).is_empty());
+        assert!(
+            project.playlist().tracks()[1].muted,
+            "the file's drums stay out"
+        );
+
+        // And a ragtime band: a banjo, a tuba and its drums.
+        let cakewalk = BandStyle::named("Cakewalk").unwrap();
+        project.apply_band_parts(cakewalk, None, parts);
+        let banjo = cakewalk.extras().guitar.unwrap().program;
+        assert_eq!(program(&project, "drive guitar"), (Some(banjo), false));
+        let bass = project.player_channel(Player::Bass).unwrap();
+        assert_eq!(project.channels()[bass].program, Some(general_midi::TUBA));
+        assert!(!part(&project, Player::Drums).is_empty());
+
+        // When the band goes, the file plays as it came.
+        project.stop_band();
+        assert!(!program(&project, "slapbass").1, "plays again");
+        assert!(!project.playlist().tracks()[1].muted);
     }
 
     #[test]
