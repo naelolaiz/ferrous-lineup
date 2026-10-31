@@ -20,10 +20,12 @@ use crate::chord_sheet::HarmonyName;
 use crate::general_midi;
 use crate::harmony::{Degree, ScaleKind};
 use crate::library::MicromodeStyle;
+use crate::library::Rhythm;
 use crate::library::apply::{BASS, KEYS, LEAD, StyleParts};
 use crate::library::comping::{BassPart, Played};
 use crate::library::interpret::{self, Role};
 use crate::library::micromodes::{DEMO_SECTIONS, MicroVoice};
+use crate::meter::TimeSignature;
 use crate::micromodal::{self, MicroWriting, Span, Texture};
 use crate::pattern::NoteEvent;
 use crate::project::Project;
@@ -193,10 +195,36 @@ impl Project {
     /// with their boxes, as from any style.
     pub fn apply_micromode_style(&mut self, style: &'static MicromodeStyle, parts: StyleParts) {
         let writes = parts.progression || !self.sheet_holds_forms();
+        self.bring_a_band_of_voices(style.rhythm(), parts);
+        if let Some(band) = &mut self.band {
+            band.micromode = Some(style);
+            band.row = None;
+        }
+        self.take_timing(style.time, style.tempo, style.rhythm(), parts);
+        if writes {
+            self.write_micromode_walk(style);
+        }
+        self.band_channels(parts.instruments);
+        self.write_band();
+    }
+
+    /// Brings in a band, or changes the one there is, for a style whose
+    /// own voices play in place of the piano, the bass and the soloist (a
+    /// micromode style or a twelve-tone style), with `rhythm`, the
+    /// style's drums, if it has any.
+    ///
+    /// A band coming in mutes the song's own chords and bass, as any band
+    /// does. With `parts.rhythm`, the style's drums play, and a style
+    /// without drums leaves the song without; otherwise the drums that
+    /// played go on.
+    pub(super) fn bring_a_band_of_voices(
+        &mut self,
+        rhythm: Option<&'static Rhythm>,
+        parts: StyleParts,
+    ) {
         // The style's drums, or none: a style without drums brings none,
         // as a band style without them does.
-        let drums = style
-            .rhythm()
+        let drums = rhythm
             .and_then(|rhythm| BandStyle::named(rhythm.name))
             .or_else(|| BandStyle::named(WITHOUT_DRUMS))
             .expect("the band has a style without drums");
@@ -232,33 +260,36 @@ impl Project {
                 band.tidy_drums();
             }
         }
-        if let Some(band) = &mut self.band {
-            band.micromode = Some(style);
-        }
         self.drums_come(drums_come);
-        let time = self.meter();
-        if parts.time_signature
-            && (time.first() != style.time || !self.playlist.time_markers.is_empty())
+    }
+
+    /// Takes the time signature `time`, the tempo and the swing of a
+    /// style whose drums are `rhythm`, each with its box: the swing of
+    /// its drums, or none without.
+    pub(super) fn take_timing(
+        &mut self,
+        time: TimeSignature,
+        tempo: f32,
+        rhythm: Option<&'static Rhythm>,
+        parts: StyleParts,
+    ) {
+        let meter = self.meter();
+        if parts.time_signature && (meter.first() != time || !self.playlist.time_markers.is_empty())
         {
             if self.playlist.chord_markers.is_empty() && self.song_length() == 0 {
-                self.time_signature = style.time;
+                self.time_signature = time;
                 self.playlist.time_markers.clear();
             } else {
-                crate::remeter::remeter(self, style.time);
+                crate::remeter::remeter(self, time);
             }
         }
-        if parts.tempo && time == self.meter() {
-            self.take_tempo(Tempo::new(style.tempo));
+        if parts.tempo && meter == self.meter() {
+            self.take_tempo(Tempo::new(tempo));
         }
         // The style swings as its drums do, and plays straight without.
         if parts.swing {
-            self.swing = style.rhythm().map_or(0, |rhythm| rhythm.swing);
+            self.swing = rhythm.map_or(0, |rhythm| rhythm.swing);
         }
-        if writes {
-            self.write_micromode_walk(style);
-        }
-        self.band_channels(parts.instruments);
-        self.write_band();
     }
 
     /// Writes the walk of `style` on the chord sheet, from the first bar

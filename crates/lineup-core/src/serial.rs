@@ -124,6 +124,11 @@ pub struct RowWriting {
     pub dynamics: bool,
     /// Whether the octaves follow the row's retrograde.
     pub octaves: bool,
+    /// Whether each form sounds with its combinatorial partner (see
+    /// [`ToneRow::partner`]) an octave under it, note for note in the
+    /// same rhythm, so that every half of the two holds all twelve
+    /// notes. A form without a partner sounds alone.
+    pub partner: bool,
 }
 
 impl Default for RowWriting {
@@ -138,6 +143,7 @@ impl Default for RowWriting {
             durations: false,
             dynamics: false,
             octaves: false,
+            partner: false,
         }
     }
 }
@@ -151,25 +157,62 @@ fn dynamic(level: u8) -> u8 {
 /// says, starting at step 0. Notes that would end after the pattern are
 /// cut short; writing stops at the end of the pattern.
 pub fn write_row(row: ToneRow, writing: &RowWriting, length: usize) -> Vec<NoteEvent> {
+    write_forms(row, writing, length, |count| {
+        writing.chain.nth(writing.label, count)
+    })
+}
+
+/// Writes the forms of `plan` one after another, as [`write_row`]
+/// writes a chain of forms, and the plan again from its first form
+/// until the pattern is full: `P0 RI5 I7 R0`. An empty plan writes
+/// nothing.
+pub fn write_plan(
+    row: ToneRow,
+    writing: &RowWriting,
+    plan: &[RowLabel],
+    length: usize,
+) -> Vec<NoteEvent> {
+    if plan.is_empty() {
+        return Vec::new();
+    }
+    write_forms(row, writing, length, |count| Some(plan[count % plan.len()]))
+}
+
+/// Writes the form `form_after(count)` gives after `count` forms, one
+/// after another, until the pattern is full or there are no more.
+fn write_forms(
+    row: ToneRow,
+    writing: &RowWriting,
+    length: usize,
+    form_after: impl Fn(usize) -> Option<RowLabel>,
+) -> Vec<NoteEvent> {
     let first = row.semitones()[0];
     // The row's numbers: each note's distance above the first note.
     let numbers = row.semitones().map(|n| (n + 12 - first) % 12);
     let together = writing.together.clamp(1, 12);
     let step = writing.step.max(1);
+    // The partner sounds from an octave under the form, and always
+    // under its notes there.
+    let partner_low = Note::new(writing.low.midi().saturating_sub(12).max(24));
     let mut notes = Vec::new();
     let mut start = 0;
-    let mut previous: Option<Note> = None;
+    let mut previous: [Option<Note>; 2] = [None, None];
     // The place in the series of durations, dynamics and octaves, which
     // runs on from one form to the next.
     let mut place = 0;
     let mut count = 0;
     while start < length {
-        let Some(label) = writing.chain.nth(writing.label, count) else {
+        let Some(label) = form_after(count) else {
             break;
         };
         count += 1;
         let form = row.form(label).pitch_classes();
-        for group in form.chunks(together) {
+        let partner = writing
+            .partner
+            .then(|| row.partner(label))
+            .flatten()
+            .map(|partner| row.form(partner).pitch_classes());
+        for (number, group) in form.chunks(together).enumerate() {
             if start >= length {
                 break;
             }
@@ -178,42 +221,61 @@ pub fn write_row(row: ToneRow, writing: &RowWriting, length: usize) -> Vec<NoteE
             } else {
                 step
             };
-            let mut below: Option<Note> = None;
-            for (i, &pitch_class) in group.iter().enumerate() {
-                let k = place + i;
-                let octave = if writing.octaves {
-                    // The retrograde's numbers, in threes.
-                    Some(numbers[11 - k % 12] % 3)
-                } else if writing.register == Register::Wide {
-                    // Low, high, middle, and round again, against the row.
-                    Some([0, 2, 1][k % 3])
-                } else {
-                    None
-                };
-                let pitch = match (octave, writing.register) {
-                    (Some(octave), _) => in_octave(pitch_class, writing.low, octave),
-                    (None, Register::Close) => in_octave(pitch_class, writing.low, 0),
-                    // In a chord, each note goes just above the one below
-                    // it; in a line, as near as can be to the last note.
-                    (None, _) => match (below, previous) {
-                        (Some(lower), _) => above(pitch_class, lower),
-                        (None, Some(last)) => nearest(pitch_class, last, writing.low),
-                        (None, None) => in_octave(pitch_class, writing.low, 0),
-                    },
-                };
-                below = Some(pitch);
-                let velocity = if writing.dynamics {
-                    // The inversion's numbers.
-                    dynamic((12 - numbers[k % 12]) % 12)
-                } else {
-                    crate::DEFAULT_VELOCITY
-                };
-                notes.push(NoteEvent {
-                    velocity,
-                    ..NoteEvent::new(pitch, start, lasts.min(length - start))
-                });
-                if i == 0 {
-                    previous = Some(pitch);
+            // The partner's notes at the same places, at the same time.
+            let partner_group = partner
+                .as_ref()
+                .and_then(|partner| partner.chunks(together).nth(number));
+            let voices = [(group, writing.low)]
+                .into_iter()
+                .chain(partner_group.map(|group| (group, partner_low)));
+            // The lowest note of the form here, which the partner stays
+            // under.
+            let mut floor: Option<Note> = None;
+            for (voice, (group, low)) in voices.enumerate() {
+                let mut below: Option<Note> = None;
+                let mut pitches: Vec<Note> = group
+                    .iter()
+                    .enumerate()
+                    .map(|(i, &pitch_class)| {
+                        let pitch = placed(
+                            pitch_class,
+                            place + i,
+                            &numbers,
+                            writing,
+                            low,
+                            below,
+                            previous[voice],
+                        );
+                        below = Some(pitch);
+                        pitch
+                    })
+                    .collect();
+                if let Some(floor) = floor {
+                    while pitches.iter().any(|pitch| *pitch >= floor)
+                        && pitches.iter().all(|pitch| pitch.midi() >= 24 + 12)
+                    {
+                        pitches = pitches
+                            .iter()
+                            .map(|pitch| Note::new(pitch.midi() - 12))
+                            .collect();
+                    }
+                }
+                floor = floor.or_else(|| pitches.iter().min().copied());
+                for (i, &pitch) in pitches.iter().enumerate() {
+                    let k = place + i;
+                    let velocity = if writing.dynamics {
+                        // The inversion's numbers.
+                        dynamic((12 - numbers[k % 12]) % 12)
+                    } else {
+                        crate::DEFAULT_VELOCITY
+                    };
+                    notes.push(NoteEvent {
+                        velocity,
+                        ..NoteEvent::new(pitch, start, lasts.min(length - start))
+                    });
+                }
+                if let Some(&first) = pitches.first() {
+                    previous[voice] = Some(first);
                 }
             }
             place += group.len();
@@ -221,6 +283,42 @@ pub fn write_row(row: ToneRow, writing: &RowWriting, length: usize) -> Vec<NoteE
         }
     }
     notes
+}
+
+/// Where the `k`-th note written, `pitch_class`, sounds when written
+/// from `low`, with `numbers` the row's numbers: in the octave the
+/// series or the register gives it, or else just above the note `below`
+/// it in a chord, or as near as can be to the `previous` note of the
+/// line.
+fn placed(
+    pitch_class: PitchClass,
+    k: usize,
+    numbers: &[u8; 12],
+    writing: &RowWriting,
+    low: Note,
+    below: Option<Note>,
+    previous: Option<Note>,
+) -> Note {
+    let octave = if writing.octaves {
+        // The retrograde's numbers, in threes.
+        Some(numbers[11 - k % 12] % 3)
+    } else if writing.register == Register::Wide {
+        // Low, high, middle, and round again, against the row.
+        Some([0, 2, 1][k % 3])
+    } else {
+        None
+    };
+    match (octave, writing.register) {
+        (Some(octave), _) => in_octave(pitch_class, low, octave),
+        (None, Register::Close) => in_octave(pitch_class, low, 0),
+        // In a chord, each note goes just above the one below it; in a
+        // line, as near as can be to the last note.
+        (None, _) => match (below, previous) {
+            (Some(lower), _) => above(pitch_class, lower),
+            (None, Some(last)) => nearest(pitch_class, last, low),
+            (None, None) => in_octave(pitch_class, low, 0),
+        },
+    }
 }
 
 /// The note of `pitch_class` in the octave `octave` octaves above the
@@ -362,6 +460,58 @@ mod tests {
         velocities.dedup();
         assert_eq!(velocities.len(), 12);
         assert!(notes.iter().all(|n| (48..84).contains(&n.pitch.midi())));
+    }
+
+    /// With its partner, every half of each form sounds with the other
+    /// six notes under it, at the same times, so each half of the
+    /// pattern holds all twelve; a plan writes its forms in turn.
+    #[test]
+    fn a_form_with_its_partner_and_a_plan() {
+        let lineup = crate::harmony::RowPreset::named("Lineup row").unwrap().row;
+        let writing = RowWriting {
+            label: RowLabel::new(RowForm::Prime, 0),
+            chain: Chain::FourForms,
+            partner: true,
+            ..RowWriting::default()
+        };
+        // Four forms of twelve eighths each.
+        let notes = write_row(lineup, &writing, 96);
+        assert_eq!(notes.len(), 96);
+        for start in (0..96).step_by(12) {
+            let heard: PitchSet = notes
+                .iter()
+                .filter(|note| (start..start + 12).contains(&note.start))
+                .map(|note| note.pitch.pitch_class())
+                .collect();
+            assert_eq!(heard.len(), 12, "from step {start}");
+        }
+        // The partner sounds under the form, at the same moments.
+        let starts: Vec<usize> = notes.iter().map(|note| note.start).collect();
+        assert!(starts.chunks(2).all(|pair| pair[0] == pair[1]));
+        assert!(notes.chunks(2).all(|pair| pair[1].pitch < pair[0].pitch));
+        // A row without a partner plays its forms alone.
+        let lonely = ToneRow::new([0, 1, 2, 3, 5, 6, 4, 7, 8, 9, 10, 11]).unwrap();
+        assert_eq!(write_row(lonely, &writing, 96).len(), 48);
+        // A plan: P0, RI5, I7, then P0 again.
+        let plan = [
+            RowLabel::new(RowForm::Prime, 0),
+            RowLabel::new(RowForm::RetrogradeInversion, 5),
+            RowLabel::new(RowForm::Inversion, 7),
+        ];
+        let writing = RowWriting {
+            step: 1,
+            ..RowWriting::default()
+        };
+        let notes = write_plan(lineup, &writing, &plan, 48);
+        let forms: Vec<String> = pitch_classes(&notes)
+            .chunks(12)
+            .map(|c| {
+                let row = ToneRow::new(c.try_into().unwrap()).unwrap();
+                lineup.label_of(row).unwrap().to_string()
+            })
+            .collect();
+        assert_eq!(forms, ["P0", "RI5", "I7", "P0"]);
+        assert!(write_plan(lineup, &writing, &[], 48).is_empty());
     }
 
     #[test]

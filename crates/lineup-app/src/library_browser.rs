@@ -63,12 +63,12 @@ impl Tried {
     pub fn from_band(band: &Band) -> Self {
         Self {
             user_style: band.custom_rhythm.as_ref().map(|style| style.id()),
-            style: band
-                .harmony_style
-                .filter(|_| band.custom_rhythm.is_none() && band.micromode.is_none()),
+            style: band.harmony_style.filter(|_| {
+                band.custom_rhythm.is_none() && band.micromode.is_none() && band.row.is_none()
+            }),
             rhythm: band.drums_style().and_then(|style| style.rhythm),
             micromode_style: band.micromode,
-            ..Self::default()
+            row_style: band.row,
         }
     }
 }
@@ -1067,8 +1067,10 @@ fn row_styles(
                     &[&style.row, &rhythm, &style.time, &style.tempo],
                 ),
                 tr(
-                    "The key becomes the row, starting on the key note. While the song plays, \
-                    a click plays the whole song this way."
+                    "It plays the key's row when the key is a row, and else its own, starting on \
+                    the key note. In a song, the band plays it from the chord sheet: the forms \
+                    of the row written there (P0, RI5…), or else its own plan, which it writes \
+                    on the sheet. With Chord progression, its own row and plan."
                 ),
             );
             let selected = tried.row_style == Some(style);
