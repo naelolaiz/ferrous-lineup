@@ -82,6 +82,8 @@ pub enum PlaylistAction {
     /// Move the playhead to this step of the playlist's timeline.
     Seek(usize),
     AddSection(Section),
+    /// Keep the sections heard in the song's notes as its own.
+    KeepHeardSections,
     /// Rename, move, resize or repeat a section.
     SetSection {
         index: usize,
