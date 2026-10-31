@@ -47,6 +47,63 @@ pub struct Rhythm {
     /// felt in (see [`TimeSignature::felt_groups`]). Its lines are what
     /// it plays in its own time signature (see [`Rhythm::notes_in`]).
     pub follows_the_meter: bool,
+    /// How its bars are laid out over a part of a song, for a rhythm
+    /// whose lines are an opening, grooves and a closing rather than one
+    /// loop (see [`Layout`]).
+    pub layout: Option<Layout>,
+    /// The fills it plays at the ends of parts, after its own [`fill`]:
+    /// `None` for the usual ones of its genre (see
+    /// [`super::drum_form`]).
+    ///
+    /// [`fill`]: Rhythm::fill
+    pub fills: Option<&'static [&'static str]>,
+}
+
+/// How a rhythm whose lines are more than a loop lays them out over a
+/// part of a song. Its lines are, bar after bar, the opening, each groove
+/// and each closing (see [`super::drum_form`]).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Layout {
+    /// The bars it opens the song with.
+    pub opening: usize,
+    /// How many bars each groove lasts. Each kind of part has `turns` of
+    /// them, which its phrases take turns with: the first ones for the
+    /// song's first kind of part (A), the next for the next (B), and so
+    /// on round.
+    pub grooves: &'static [usize],
+    pub turns: usize,
+    /// The bars that close each phrase, and how many closings the
+    /// phrases take turns with.
+    pub closing: usize,
+    pub closings: usize,
+}
+
+impl Layout {
+    /// How many bars its lines last.
+    pub fn bars(&self) -> usize {
+        self.opening + self.grooves.iter().sum::<usize>() + self.closing * self.closings.max(1)
+    }
+
+    /// The bar of the lines the groove of kind `kind` starts on, in a
+    /// phrase that takes turn `turn`, and how long it lasts.
+    pub fn groove(&self, kind: usize, turn: usize) -> (usize, usize) {
+        let turns = self.turns.max(1);
+        let kinds = (self.grooves.len() / turns).max(1);
+        let groove = ((kind % kinds) * turns + turn % turns) % self.grooves.len().max(1);
+        let from = self.opening + self.grooves[..groove].iter().sum::<usize>();
+        (from, self.grooves.get(groove).copied().unwrap_or(1).max(1))
+    }
+
+    /// The bar of the lines the first closing starts on.
+    pub fn closing_from(&self) -> usize {
+        self.opening + self.grooves.iter().sum::<usize>()
+    }
+
+    /// The bar of the lines the closing of a phrase that takes turn
+    /// `turn` starts on.
+    pub fn closing_at(&self, turn: usize) -> usize {
+        self.closing_from() + (turn % self.closings.max(1)) * self.closing
+    }
 }
 
 /// One hit: how hard, and how many semitones up or down.
@@ -126,6 +183,45 @@ impl Rhythm {
             time.steps_per_bar(),
             length,
         )
+    }
+
+    /// The notes `drum` plays in a bar of `time` lasting `length` steps,
+    /// from its first step: bar `index` of its line, counted round. A
+    /// rhythm that follows the meter is written out again for `time`, as
+    /// [`Rhythm::notes_in`] does.
+    pub fn bar_notes(
+        &self,
+        drum: Drum,
+        index: usize,
+        time: TimeSignature,
+        length: usize,
+    ) -> Vec<NoteEvent> {
+        let Some((_, line)) = self.lines.iter().find(|(d, _)| *d == drum) else {
+            return Vec::new();
+        };
+        let bars = if self.follows_the_meter && time != self.time {
+            parse_line(&in_meter(line, self.time, time))
+        } else {
+            parse_line(line)
+        }
+        .unwrap_or_default();
+        if bars.is_empty() {
+            return Vec::new();
+        }
+        let steps = &bars[index % bars.len()];
+        steps
+            .iter()
+            .enumerate()
+            .take(time.steps_per_bar().min(length))
+            .filter_map(|(at, hit)| {
+                let (velocity, shift) = (*hit)?;
+                let pitch = STEP_NOTE.transpose(shift).unwrap_or(STEP_NOTE);
+                Some(NoteEvent {
+                    velocity,
+                    ..NoteEvent::new(pitch, at, 1)
+                })
+            })
+            .collect()
     }
 
     /// The rhythm called `name` in [`RHYTHMS`] or [`FILLS`].
@@ -297,6 +393,8 @@ impl Rhythm {
             time,
             tempo: 100.0,
             lines: Vec::leak(lines),
+            layout: None,
+            fills: None,
             fill: "",
             about: "A plain beat on the beats of the bar.",
             swing: 0,
@@ -371,6 +469,8 @@ const fn rhythm(
         about,
         swing: 0,
         follows_the_meter: false,
+        layout: None,
+        fills: None,
     }
 }
 
@@ -383,6 +483,20 @@ impl Rhythm {
         Rhythm { swing, ..self }
     }
 
+    const fn laid_out(self, layout: Layout) -> Rhythm {
+        Rhythm {
+            layout: Some(layout),
+            ..self
+        }
+    }
+
+    const fn filling_with(self, fills: &'static [&'static str]) -> Rhythm {
+        Rhythm {
+            fills: Some(fills),
+            ..self
+        }
+    }
+
     const fn following_the_meter(self) -> Rhythm {
         Rhythm {
             follows_the_meter: true,
@@ -392,6 +506,17 @@ impl Rhythm {
 }
 
 const TWO_FOUR: TimeSignature = TimeSignature::new(2, 4);
+
+/// How the candombes lay out their lines: four bars of opening; two
+/// grooves of four bars for A parts and two for B parts, which their
+/// phrases take turns with; and two closings of two bars.
+const CANDOMBE: Layout = Layout {
+    opening: 4,
+    grooves: &[4, 4, 4, 4],
+    turns: 2,
+    closing: 2,
+    closings: 2,
+};
 const THREE_FOUR: TimeSignature = TimeSignature::new(3, 4);
 const SIX_EIGHT: TimeSignature = TimeSignature::new(6, 8);
 const TWELVE_EIGHT: TimeSignature = TimeSignature::new(12, 8);
@@ -1242,7 +1367,9 @@ pub static RHYTHMS: &[Rhythm] = &[
         "The Mexican mariachi waltz has no drums: the guitarrón (a big bass guitar) plays beat 1, \
          the vihuela strums beats 2 and 3. A soft kick and rim stand in for them.",
     )
-    .in_time(THREE_FOUR),
+    .in_time(THREE_FOUR)
+    // No drums, so no drum fills.
+    .filling_with(&[]),
     rhythm(
         "Mambo",
         Latin,
@@ -1568,25 +1695,45 @@ pub static RHYTHMS: &[Rhythm] = &[
         "The Andean huayno of Peru and Bolivia: a bombo on the beat, a tap off it, and the \
          charango's steady strum; 2/4, written as pairs of bars.",
     ),
+    // Two candombe percussion sheets ("Materiales de la cuerda del
+    // Candombe" and a murga sheet's candombe page) give each drum's
+    // patterns; the rhythm lays them out over each part of a song (see
+    // `Layout`): four bars of opening; two grooves of four bars for A
+    // parts and two for B parts, which a part's phrases take turns with,
+    // so no two phrases in a row sound the same; and two closings of two
+    // bars, taken in turns too. The repique plays the 3-2 clave on the
+    // wood (Rim) in the opening and in the first bar of every second
+    // phrase, never just before a new part; its "continuo" base (High
+    // tom) in the grooves, the "continuo variante" in every second bar
+    // of B parts and in three of four in their second turn, and its
+    // "fraseo" to close, the second closing leading into it from the
+    // continuo variante. The piano (Low tom) plays its base: "tapado"
+    // strokes, stick and hand together, and loud open strokes just
+    // before beats 2 and 4, with accents on beats 3 and 4 as recordings
+    // of candombe drumming measure them (Maia, Rocamora, Biscainho and
+    // Fuentes, "Adapting meter tracking models to Latin American music",
+    // ISMIR 2022), and its "variación" every fourth bar of a first turn,
+    // every second bar of a second turn and of B parts, three of four in
+    // B's second turn, and in the closings. The chico (Conga) keeps its
+    // ostinato, the hand's accent then two stick strokes, and plays
+    // every sixteenth ("repicado") in each closing's last bar.
     rhythm(
         "Candombe",
         Folklore,
         110.0,
         &[
-            // Eight bars, as the patterns of two candombe percussion sheets
-            // ("Materiales de la cuerda del Candombe" and a murga sheet's
-            // candombe page) take turns. The repique plays the two-bar 3-2
-            // clave on the wood (Rim) twice, then its own base for two bars
-            // and a two-bar phrase (High tom). The piano (Low tom) plays its base
-            // with the Cuareim variation every fourth bar: "tapado" strokes,
-            // stick and hand together, and loud open strokes just before
-            // beats 2 and 4. The chico (Conga) keeps its ostinato, the
-            // hand's accent then two stick strokes, and plays every
-            // sixteenth ("repicado") in the last bar.
             (
                 Rim,
                 "x..x ..x. ..x. x... | x..x ..x. ..x. x... | \
                  x..x ..x. ..x. x... | x..x ..x. ..x. x... | \
+                 .... .... .... .... | .... .... .... .... | \
+                 .... .... .... .... | .... .... .... .... | \
+                 x..x ..x. ..x. x... | .... .... .... .... | \
+                 .... .... .... .... | .... .... .... .... | \
+                 .... .... .... .... | .... .... .... .... | \
+                 .... .... .... .... | .... .... .... .... | \
+                 .... .... .... .... | .... .... .... .... | \
+                 .... .... .... .... | .... .... .... .... | \
                  .... .... .... .... | .... .... .... .... | \
                  .... .... .... .... | .... .... .... ....",
             ),
@@ -1595,31 +1742,135 @@ pub static RHYTHMS: &[Rhythm] = &[
                 ".... .... .... .... | .... .... .... .... | \
                  .... .... .... .... | .... .... .... .... | \
                  xx.x xx.x xx.x xx.x | xx.x xx.x xx.x xx.x | \
-                 .x.x x... .x.x x... | .x.x xx.x xx.x x...",
+                 xx.x xx.x xx.x xx.x | xx.x xx.x xx.x xx.x | \
+                 .... .... .... .... | xx.x xx.x xx.x xx.x | \
+                 xx.x xx.x xx.x xx.x | xx.x xx.x xx.x xx.x | \
+                 xxxx xx.x xx.x xx.x | xx.x xx.x xx.x xx.x | \
+                 xxxx xx.x xx.x xx.x | xx.x xx.x xx.x xx.x | \
+                 xxxx xx.x xx.x xx.x | xxxx xx.x xx.x xx.x | \
+                 xx.x xx.x xx.x xx.x | xxxx xx.x xx.x xx.x | \
+                 .x.x x... .x.x x... | .x.x xx.x xx.x x... | \
+                 xxxx xx.x xx.x xx.x | .x.x xx.x xx.x x...",
             ),
             (
                 LowTom,
-                "x..X .x.. x..X x... | x..X .x.. x..X x... | \
-                 x..X .x.. x..X x... | x..X .xx. x..X x.x. | \
-                 x..X .x.. x..X x... | x..X .x.. x..X x... | \
-                 x..X .x.. x..X x... | x..X .xx. x..X x.x.",
+                "x..X .x.. X..X X... | x..X .x.. X..X X... | \
+                 x..X .x.. X..X X... | x..X .xx. X..X X.x. | \
+                 x..X .x.. X..X X... | x..X .x.. X..X X... | \
+                 x..X .x.. X..X X... | x..X .xx. X..X X.x. | \
+                 x..X .x.. X..X X... | x..X .xx. X..X X.x. | \
+                 x..X .x.. X..X X... | x..X .xx. X..X X.x. | \
+                 x..X .x.. X..X X... | x..X .xx. X..X X.x. | \
+                 x..X .x.. X..X X... | x..X .xx. X..X X.x. | \
+                 x..X .xx. X..X X.x. | x..X .x.. X..X X... | \
+                 x..X .xx. X..X X.x. | x..X .xx. X..X X.x. | \
+                 x..X .x.. X..X X... | x..X .xx. X..X X.x. | \
+                 x..X .xx. X..X X.x. | x..X .xx. X..X X.x.",
             ),
             (
                 Conga,
                 ".Xxx .Xxx .Xxx .Xxx | .Xxx .Xxx .Xxx .Xxx | \
                  .Xxx .Xxx .Xxx .Xxx | .Xxx .Xxx .Xxx .Xxx | \
                  .Xxx .Xxx .Xxx .Xxx | .Xxx .Xxx .Xxx .Xxx | \
+                 .Xxx .Xxx .Xxx .Xxx | .Xxx .Xxx .Xxx .Xxx | \
+                 .Xxx .Xxx .Xxx .Xxx | .Xxx .Xxx .Xxx .Xxx | \
+                 .Xxx .Xxx .Xxx .Xxx | .Xxx .Xxx .Xxx .Xxx | \
+                 .Xxx .Xxx .Xxx .Xxx | .Xxx .Xxx .Xxx .Xxx | \
+                 .Xxx .Xxx .Xxx .Xxx | .Xxx .Xxx .Xxx .Xxx | \
+                 .Xxx .Xxx .Xxx .Xxx | .Xxx .Xxx .Xxx .Xxx | \
+                 .Xxx .Xxx .Xxx .Xxx | .Xxx .Xxx .Xxx .Xxx | \
+                 .Xxx .Xxx .Xxx .Xxx | xXxx xXxx xXxx xXxx | \
                  .Xxx .Xxx .Xxx .Xxx | xXxx xXxx xXxx xXxx",
             ),
         ],
         "",
-        "Montevideo's candombe, eight bars that start again with each part of a song. The \
-         chico keeps its ostinato, the three sixteenths after each beat, the hand's accent \
-         on the first, and plays every sixteenth in the last bar. The piano's open strokes \
-         ring just before beats 2 and 4 among its muffled ones, with a variation every \
-         fourth bar. The repique plays the 3-2 clave on the drum's wooden shell for four \
-         bars, then its own base for two and a two-bar phrase.",
-    ),
+        "Montevideo's candombe, in the Cuareim toque, laid out over each part of a song. The \
+         song opens with the repique playing the 3-2 clave on the drum's wooden shell for \
+         four bars; then it plays its base, and closes every phrase with its two-bar call. \
+         The chico keeps its ostinato, the three sixteenths after each beat, the hand's \
+         accent on the first. The piano's open strokes ring just before beats 2 and 4 among \
+         its muffled ones, which it accents on beats 3 and 4, with a variation every \
+         fourth bar. Phrases take turns, so no two in a row sound the same: every second \
+         one opens with a bar of clave on the wood and varies the piano every second bar, \
+         and every second call starts from the repique's busier base. A part of another kind, a refrain \
+         after the verse, mixes the repique's busier base into its own and varies the \
+         piano every second bar, more often still on its second turn.",
+    )
+    .laid_out(CANDOMBE),
+    rhythm(
+        "Candombe Ansina",
+        Folklore,
+        110.0,
+        &[
+            (
+                Rim,
+                "x..x .x.x x..x x..x | x..x .x.x x..x x..x | \
+                 x..x .x.x x..x x..x | x..x .x.x x..x x..x | \
+                 .... .... .... .... | .... .... .... .... | \
+                 .... .... .... .... | .... .... .... .... | \
+                 x..x .x.x x..x x..x | .... .... .... .... | \
+                 .... .... .... .... | .... .... .... .... | \
+                 .... .... .... .... | .... .... .... .... | \
+                 .... .... .... .... | .... .... .... .... | \
+                 .... .... .... .... | .... .... .... .... | \
+                 .... .... .... .... | .... .... .... .... | \
+                 .... .... .... .... | .... .... .... .... | \
+                 .... .... .... .... | .... .... .... ....",
+            ),
+            (
+                HighTom,
+                ".... .... .... .... | .... .... .... .... | \
+                 .... .... .... .... | .... .... .... .... | \
+                 xx.x xx.x xx.x xx.x | xx.x xx.x xx.x xx.x | \
+                 xx.x xx.x xx.x xx.x | xx.x xx.x xx.x xx.x | \
+                 .... .... .... .... | xx.x xx.x xx.x xx.x | \
+                 xx.x xx.x xx.x xx.x | xx.x xx.x xx.x xx.x | \
+                 xxxx xx.x xx.x xx.x | xx.x xx.x xx.x xx.x | \
+                 xxxx xx.x xx.x xx.x | xx.x xx.x xx.x xx.x | \
+                 xxxx xx.x xx.x xx.x | xxxx xx.x xx.x xx.x | \
+                 xx.x xx.x xx.x xx.x | xxxx xx.x xx.x xx.x | \
+                 .x.x x... .x.x x... | .x.x xx.x xx.x x... | \
+                 xxxx xx.x xx.x xx.x | .x.x xx.x xx.x x...",
+            ),
+            (
+                LowTom,
+                "x..X .x.. XxX. X... | x..X .x.. XxX. X... | \
+                 x..X .x.. XxX. X... | x..X .x.. XxXX X... | \
+                 x..X .x.. XxX. X... | x..X .x.. XxX. X... | \
+                 x..X .x.. XxX. X... | x..X .x.. XxXX X... | \
+                 x..X .x.. XxX. X... | x..X .x.. XxXX X... | \
+                 x..X .x.. XxX. X... | x..X .x.. XxXX X... | \
+                 x..X .x.. XxX. X... | x..X .x.. XxXX X... | \
+                 x..X .x.. XxX. X... | x..X .x.. XxXX X... | \
+                 x..X .x.. XxXX X... | x..X .x.. XxX. X... | \
+                 x..X .x.. XxXX X... | x..X .x.. XxXX X... | \
+                 x..X .x.. XxX. X... | x..X .x.. XxXX X... | \
+                 x..X .x.. XxXX X... | x..X .x.. XxXX X...",
+            ),
+            (
+                Conga,
+                ".Xxx .Xxx .Xxx .Xxx | .Xxx .Xxx .Xxx .Xxx | \
+                 .Xxx .Xxx .Xxx .Xxx | .Xxx .Xxx .Xxx .Xxx | \
+                 .Xxx .Xxx .Xxx .Xxx | .Xxx .Xxx .Xxx .Xxx | \
+                 .Xxx .Xxx .Xxx .Xxx | .Xxx .Xxx .Xxx .Xxx | \
+                 .Xxx .Xxx .Xxx .Xxx | .Xxx .Xxx .Xxx .Xxx | \
+                 .Xxx .Xxx .Xxx .Xxx | .Xxx .Xxx .Xxx .Xxx | \
+                 .Xxx .Xxx .Xxx .Xxx | .Xxx .Xxx .Xxx .Xxx | \
+                 .Xxx .Xxx .Xxx .Xxx | .Xxx .Xxx .Xxx .Xxx | \
+                 .Xxx .Xxx .Xxx .Xxx | .Xxx .Xxx .Xxx .Xxx | \
+                 .Xxx .Xxx .Xxx .Xxx | .Xxx .Xxx .Xxx .Xxx | \
+                 .Xxx .Xxx .Xxx .Xxx | xXxx xXxx xXxx xXxx | \
+                 .Xxx .Xxx .Xxx .Xxx | xXxx xXxx xXxx xXxx",
+            ),
+        ],
+        "",
+        "Montevideo's candombe in the Ansina toque, from the Palermo neighbourhood: the \
+         repique opens on the wooden shell with the Ansina madera, eight strokes a bar, and \
+         the piano answers its open stroke before beat 2 with three quick strokes around \
+         beat 3, the open hand between two open sticks. It is laid out over each part of a \
+         song as the Cuareim candombe is.",
+    )
+    .laid_out(CANDOMBE),
     rhythm(
         "Polca",
         Folklore,
@@ -2306,6 +2557,19 @@ pub static FILLS: &[Rhythm] = &[
         "The beat stutters before the next bar.",
     ),
     rhythm(
+        "Jazz fill",
+        Jazz,
+        140.0,
+        &[
+            (Ride, "x... x.x. .... ...."),
+            (Snare, ".... ..x. x.x. x.X."),
+            (Kick, "o... .... ...x ...."),
+        ],
+        "",
+        "The snare talks back to the band over the last two beats, the kick drops a bomb, \
+         and the ride comes in again on the next one.",
+    ),
+    rhythm(
         "Crash ending",
         Pop,
         110.0,
@@ -2421,6 +2685,23 @@ mod tests {
                 for steps in bars {
                     assert_eq!(steps.len(), bar, "{}: {line}", rhythm.name);
                 }
+            }
+        }
+    }
+
+    #[test]
+    fn layouts_cover_their_lines_and_listed_fills_exist() {
+        for rhythm in RHYTHMS.iter().chain(FILLS) {
+            if let Some(layout) = rhythm.layout {
+                assert_eq!(layout.bars(), rhythm.bars(), "{}", rhythm.name);
+                assert!(!layout.grooves.is_empty(), "{}", rhythm.name);
+            }
+            for name in rhythm.fills.unwrap_or_default() {
+                assert!(
+                    FILLS.iter().any(|fill| fill.name == *name),
+                    "{}: no fill called {name}",
+                    rhythm.name
+                );
             }
         }
     }
