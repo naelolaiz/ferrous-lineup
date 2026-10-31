@@ -32,7 +32,7 @@ use crate::harmony::{Chord, PitchSet, Scale, ScaleKind};
 use crate::i18n::{tr, trf};
 use crate::library::apply::{self, BASS, KEYS};
 use crate::library::comping::{Bass, BassPart, Comping, Played};
-use crate::library::drum_form::{self, DrumPart, Then};
+use crate::library::drum_form::{self, DrumPart, PartKind, Then};
 use crate::library::interpret::{self, Role};
 use crate::library::voicing::bass_line;
 use crate::library::{Genre, RHYTHMS, Rhythm, Style};
@@ -1066,51 +1066,6 @@ fn player_volume(player: Player) -> f32 {
 
 /// How far above the piano's voicing the strings play: an octave.
 const STRINGS_OCTAVE: i32 = 12;
-
-/// What kind of part of the song the drums play (see
-/// [`Project::drum_parts`]).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-struct PartKind {
-    /// Its section's kind: the same number for sections of the same name.
-    groove: usize,
-    /// Whether it opens the song.
-    opens: bool,
-    /// Whether it is a pickup before the song's first section.
-    lead_in: bool,
-}
-
-/// The kind of each of `form`'s sections, as the drums play them: the
-/// same number for sections of the same name ("Verse 2" is a verse), in
-/// the order they first come, an intro and a coda as the first kind; and
-/// whether it is an intro.
-fn section_kinds(form: &[Section]) -> Vec<(usize, bool)> {
-    let mut names: Vec<String> = Vec::new();
-    form.iter()
-        .map(|section| {
-            let name = section
-                .name
-                .trim()
-                .trim_end_matches(|c: char| c.is_ascii_digit() || c.is_whitespace())
-                .to_lowercase();
-            let intro = name.starts_with("intro");
-            let first = intro
-                || ["coda", "outro", "ending", "final"]
-                    .iter()
-                    .any(|word| name.starts_with(word));
-            if first {
-                return (0, intro);
-            }
-            let kind = names
-                .iter()
-                .position(|known| *known == name)
-                .unwrap_or_else(|| {
-                    names.push(name);
-                    names.len() - 1
-                });
-            (kind, false)
-        })
-        .collect()
-}
 
 /// What the drums play in the last bar of an ending: the fill of the
 /// library that is one hit of the kick and the crash cymbal.
@@ -2965,11 +2920,9 @@ impl Project {
     }
 
     /// The parts of the song the drums play (see
-    /// [`crate::library::drum_form`]), as runs of `bars`: the stretches
-    /// between the song's sections, written or heard, the chorus after the
-    /// band's intro, and the changes of variation and style in `changes`.
-    /// Each has what kind of part it is, by its section's name; the last,
-    /// up to `end`, ends the song.
+    /// [`drum_form::form_parts`]): the stretches between the song's
+    /// sections, written or heard, the chorus after the band's intro, and
+    /// the changes of variation and style in `changes`.
     fn drum_parts(
         &self,
         bars: &[Bar],
@@ -2977,58 +2930,14 @@ impl Project {
         end: usize,
         changes: &[usize],
     ) -> Vec<(std::ops::Range<usize>, PartKind)> {
-        let bars_to_end = bars.partition_point(|bar| bar.start < end);
-        if bars_to_end == 0 {
-            return Vec::new();
-        }
-        let bar_of = |step: usize| {
-            bars.partition_point(|bar| bar.start <= step)
-                .saturating_sub(1)
-        };
-        let mut starts: Vec<usize> = form
-            .iter()
-            .flat_map(|section| [section.start, section.end()])
-            .chain(
-                self.chorus()
-                    .into_iter()
-                    .flat_map(|(start, end)| [start, end]),
-            )
+        let chorus = self.chorus();
+        let cuts: Vec<usize> = chorus
+            .into_iter()
+            .flat_map(|(start, end)| [start, end])
             .chain(changes.iter().copied())
-            .filter(|&start| start > 0 && start < end)
-            .map(bar_of)
             .collect();
-        starts.push(0);
-        starts.sort_unstable();
-        starts.dedup();
-        let kinds = section_kinds(form);
-        let intro_end = self.chorus().map_or(0, |(start, _)| start);
-        let first_section = form.first().map_or(0, |section| bar_of(section.start));
-        let mut parts = Vec::new();
-        for (index, &from) in starts.iter().enumerate() {
-            let to = starts.get(index + 1).copied().unwrap_or(bars_to_end);
-            if from >= to {
-                continue;
-            }
-            let at = bars[from].start;
-            let section = form.iter().position(|section| section.contains(at));
-            let (groove, named_intro) = section.map_or((0, false), |section| kinds[section]);
-            // A bar or two before the song's first section is a pickup
-            // the drums lead in with; more is a part of its own.
-            let lead_in = section.is_none() && to <= first_section && first_section - from <= 2;
-            let opens = !lead_in
-                && (named_intro
-                    || at < intro_end
-                    || parts.iter().all(|(_, kind): &(_, PartKind)| kind.lead_in));
-            parts.push((
-                from..to,
-                PartKind {
-                    groove,
-                    opens,
-                    lead_in,
-                },
-            ));
-        }
-        parts
+        let intro_end = chorus.map_or(0, |(start, _)| start);
+        drum_form::form_parts(bars, form, end, &cuts, intro_end)
     }
 
     /// The drums: the style's rhythm laid out over each part of the song
