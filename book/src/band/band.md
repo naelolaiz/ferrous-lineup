@@ -463,11 +463,13 @@ half step below F: the line would reach its lead-in a beat early.
 
 ### The drums
 
-The drums play the style's rhythm in every bar, with its fill in the
-last bar of every eight (`PHRASE_BARS`, as most songs are built), in the
-last bar before a section or a change of variation, and at the end of
-the intro and of the chorus. A change of variation or style starts with
-a crash cymbal. Variations, the intro and the ending are in [Song form,
+The drums lay the style's rhythm out over the song's parts, its
+sections or the parts heard in its notes: a fill closes each part, a
+small one marks every eight bars inside long ones, the part after a
+fill starts with a crash cymbal, and a part of another kind moves the
+hi-hat to the ride (see [Drums by part](song-form.md#drums-by-part)).
+A fill also leads into a change of variation or style, which starts
+with a crash. Variations, the intro and the ending are in [Song form,
 sections, variations and locks](song-form.md).
 
 ### Each part, as patterns
@@ -475,10 +477,12 @@ sections, variations and locks](song-form.md).
 A whole song does not fit in one pattern (a pattern holds at most 256
 steps, 16 bars of 4/4), and one giant pattern would be hard to read
 anyway. `chunks` cuts the song into stretches: whole bars of one time
-signature, inside one section, as long as a pattern may be. `write_part`
-cuts the notes at those lines (a note that lasts past the end of a
-stretch goes on at the start of the next) and compares each stretch's
-notes with those before:
+signature, inside one of the song's parts (its sections, or the parts
+heard in its notes), as long as a pattern may be. `write_part` cuts the
+notes at those lines (a note that lasts past the end of a stretch goes
+on at the start of the next, and a note held over the start of a part
+joins the two stretches into one) and compares each stretch's notes
+with those before:
 
 ```rust
 let index = match contents.iter().position(|known| *known == content) {

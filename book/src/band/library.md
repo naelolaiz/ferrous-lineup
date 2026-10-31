@@ -307,6 +307,39 @@ every bar's own meter instead, for music whose meter changes all the
 time (see [An orchestra for music that changes
 meter](orchestra.md)).
 
+### Laid out over a song's parts
+
+Most rhythms are a loop of a bar or two, and the drums play it over and
+over, with fills where the song's parts end (see [Drums by
+part](song-form.md#drums-by-part)). Some music is built otherwise: a
+candombe's drums open with the clave played on the repique's wooden
+shell, groove on the repique's base, and close every phrase with its
+call, the "fraseo". `Rhythm::laid_out` gives a rhythm a `Layout`, and
+its lines are then read as those pieces one after another:
+
+```rust
+const CANDOMBE: Layout = Layout {
+    opening: 4,
+    grooves: &[4, 4, 4, 4],
+    turns: 2,
+    closing: 2,
+    closings: 2,
+};
+```
+
+So the candombe's lines are 24 bars long: four bars of opening; two
+grooves of four bars for A parts and two for B parts; and two closings
+of two bars. A phrase takes turns with the grooves of its kind and with
+the closings (`Layout::groove`, `Layout::closing_at`), counting the
+phrases of that kind the song has played: the first phrase of an A part
+plays the first groove and the first closing, the next the second ones,
+and so on round. The second groove opens with a bar of clave on the
+wood and varies the piano more; the second closing starts from the
+repique's busier base, so the clave never comes just before a new part.
+A phrase too short for it all plays the opening's start and the
+closing. Such a rhythm needs no fill from the table: its closing is its
+fill.
+
 ### A rhythm for any time signature
 
 When you change a song's time signature by hand, it needs a rhythm in

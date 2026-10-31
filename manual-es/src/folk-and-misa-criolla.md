@@ -106,7 +106,11 @@ el bajo de la dominante y lleva a Mi.
 - **Uruguay**: el **candombe** de Montevideo. *Candombe del barrio* se
   mueve en 3 + 3 + 2, el tresillo en el que también se apoyan la
   milonga y el tango; *Candombe para Gardel*, de Rubén Rada, cambia de modo una y
-  otra vez, de Sol mayor a Sol menor y de vuelta.
+  otra vez, de Sol mayor a Sol menor y de vuelta. **Candombe** y
+  **Candombe Ansina**, de la Biblioteca, tocan los tres tambores de una
+  cuerda de candombe: el repique abre la canción con la clave en la
+  madera del tambor, y las frases se turnan, para que nunca suenen dos
+  iguales seguidas.
 - **Brasil**: las canciones de los gaúchos de Rio Grande do Sul, como
   *Boi barroso*, y *Luar do sertão*, una *toada* sobre la luna del
   sertón.
