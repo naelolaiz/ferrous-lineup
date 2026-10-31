@@ -201,6 +201,18 @@ own, it writes both, the upper first, as two chords at once:
 sheet, bar by bar. In a song whose key is not a set it has nothing to
 read, and says so.
 
+To find the micromode or the set a song uses the most, look at the line
+under these menus. **Most used** ranks every class the sheet shows, the
+one that sounds longest first, with how much of the song it fills:
+**Menor 3 72% · 2-3 6% · Menor 2 6% …** for the tune of **Menor 3
+colour** read in a line, in threes. It counts the groups the way the
+second menu makes them, so change the grouping or the track and the
+ranking follows. Each harmony counts from where it starts until the
+next one. Point at a class to see how many times it comes and which of
+its forms come most; **more** at the end lists the rest. The line
+appears only when **Show** names the harmony as sets or micromodes:
+chords, row forms and N.C. are not counted.
+
 The **piano roll** has a **Show** menu too, at the top next to **Voice
 leading**, for the chord names above its grid: **As the key**, which it
 starts with, **Chords**, **Pitch-class sets** or **Micromodes**. It
