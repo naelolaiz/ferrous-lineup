@@ -185,6 +185,18 @@ group: **The sheet's harmonies**, **Notes together (vertical)**, or
 which track to read. That reads the song's own notes, so you can look
 at a tune as a chain of three-note groups.
 
+The **piano roll** has a **Show** menu too, at the top next to **Voice
+leading**, for the chord names above its grid: **Chords**,
+**Pitch-class sets** or **Micromodes**. It names the notes that sound:
+C, D and E together are heard as Cadd9, but as a set they are 3-6, the
+micromode Mayor 1, since no G plays. A chord and its inversion have the
+same notes, so C and C/E, two blocks as chords, are one block as 3-11
+T7I. Where a block is too narrow for the whole name, it shows the class
+alone, **3-11**; point at it to read the full name in the line under
+the toolbar.
+
+![The piano roll of the demo Whole-tone haze with Show set to Pitch-class sets: the All row above the grid names 2-2, 3-6, 2-2, 2-2 T2, 3-6 T2 and so on, a block for each beat](images/piano-roll-sets.png)
+
 The key works the same way. Pick **pitch-class set** in the **Key**
 menu of a song in C major, and nothing moves: the key is now named
 7-35, and the harmony keys show the same seven chords with their set
@@ -475,3 +487,37 @@ G4, which is not in T0 (C C# E), the form heard there."; hover over the
 line to read why music built on a set avoids it. The micromode demos
 keep every note in their colour, so the check stays quiet on them until
 you add a stray note or take one out of a form.
+
+### Finding the colour
+
+**🔍 Find the key**, under the harmony keys (see [Finding the
+key](keys-and-modes.md#finding-the-key-experimental)), says which major
+or minor key the music sounds like it is in. Music made of a micromode
+or another set has no such key, so under it a second line says which
+**colour** the passage is made of, when it finds one:
+
+- **The micromode** whose forms hold the notes, strongest, with any
+  that fit almost as well after it, fainter: "Colour in bars 1 to 8:
+  Mayor 1 on C". Point at it to read how many of the notes are in its
+  forms, and which form is its home: the one heard longest.
+- **The collection** of notes the passage is made of, as a scale is
+  the notes a melody is made of: "made of 6-35 (whole-tone scale)". A
+  collection that is just the major or minor key shown is not named
+  again.
+
+![Find the key on the demo Whole-tone haze: "Sounds in the notes here: D major, or A minor, or C major", and under it "Colour in bars 1 to 8: Mayor 1 on C (the key), made of 6-35 (whole-tone scale)" with a Use as the key button](images/find-colour.png)
+
+In a song it reads eight bars at a time: the eight around the playhead,
+counted from the start of the song or from the key marker before them.
+In pattern mode it reads the whole pattern.
+
+**Use as the key** makes that micromode or set the key of those bars,
+with key markers on the playlist, so the harmony keys, the chord sheet
+and the colour check all follow it. No note moves, and Undo takes it
+back. Where it is the key already, the line says **(the key)**.
+
+Try it on **File > Demos > Micromodes > Whole-tone haze**. Its notes
+are the whole-tone scale, which fits no major or minor key, so the
+first line's guess, D major, is a poor one. The colour line names what
+the music is made of: Mayor 1 (C D E), moved by whole tones, and the
+whole-tone scale on C.

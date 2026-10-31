@@ -28,6 +28,7 @@ Atajos de teclado: program/undo.md#atajos-de-teclado, program/editors.md#el-orde
 Batería: sound/instruments.md#una-batería-hecha-con-unas-líneas-de-matemáticas, band/library.md#ritmos-una-línea-por-tambor, sound/mixer.md#orden-de-partitura-la-batería-junta
 Biblioteca: band/library.md
 Cambio de tonalidad: theory/scales.md#cambiar-de-tonalidad-mover-la-canción, theory/scales.md#cambios-de-tonalidad-a-mitad-de-camino-marcas-de-tonalidad, theory/hearing.md#dónde-cambia-la-tonalidad
+Carril de acordes: program/editors.md#el-carril-de-acordes-chunk_by-y-luego-medir, theory/sets.md#en-el-piano-roll
 Clase de altura: theory/pitch.md
 Clip: program/project.md, program/editors.md#la-lista-de-reproducción
 Compás: sound/tempo.md
@@ -37,6 +38,7 @@ Conjunto de clases de alturas: theory/sets.md
 Demo: songs/demos.md, songs/from-midi-and-scores.md
 Deshacer: program/undo.md
 Editor de estilos: band/style-editor.md
+Encontrar el color: theory/micromodes.md#encontrar-el-color
 Encontrar la tonalidad: theory/hearing.md#encontrar-la-tonalidad
 Entrenador de velocidad: band/practice.md
 Entrenamiento auditivo: band/practice.md

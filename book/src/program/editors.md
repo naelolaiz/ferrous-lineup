@@ -1027,27 +1027,44 @@ The lane above the grid names the harmony. Its first row names what this
 channel plays at every step; its second row, **All**, names what the
 whole song sounds like there, beat by beat, as [Hearing
 harmony](../theory/hearing.md) works it out. Each row joins
-neighbouring steps with the same harmony into one block:
+neighbouring steps with the same name into one block.
+
+What "the same" means depends on the lane's **Show** menu. As chords, a
+harmony holds its bass, so C and C/E are two blocks; as pitch-class
+sets they are one, the same notes (see [In the piano
+roll](../theory/sets.md#in-the-piano-roll)). So each step first gets
+what the lane will call it, and the blocks are made from that:
 
 ```rust
-// `chunk_by` splits a slice wherever two neighbours differ. A
-// harmony holds its bass, so C and C/E are two blocks.
+#[derive(PartialEq)]
+enum LaneName {
+    Heard(Harmony),
+    Named(Vec<HarmonyName>),
+}
+
+let steps: Vec<LaneName> = harmonies
+    .iter()
+    .map(|&(harmony, notes)| match self.notation.name_heard(&harmony, notes, scale) {
+        Some(names) => LaneName::Named(names),
+        None => LaneName::Heard(harmony),
+    })
+    .collect();
 let mut start = 0;
-for run in harmonies.chunk_by(|a, b| a == b) {
+for run in steps.chunk_by(|a, b| a == b) {
     let end = start + run.len();
-    if let Some(label) = run[0].label_in(scale) {
-        // ...a block from step `start` to step `end`, with the label...
-    }
+    // ...a block from step `start` to step `end`, named by `run[0]`...
     start = end;
 }
 ```
 
 `chunk_by` splits a slice into runs wherever the closure says two
 neighbours do not belong together. Each `run` is a slice of the original
-vector, so nothing is copied. Comparing whole harmonies, not their
-labels, matters: every group of notes without a chord name is labelled
-"?", and joining by label would turn several different unnamed chords
-in a row into one long "?" block, as if one chord were held.
+vector, so nothing is copied. The `==` it uses is the one
+`#[derive(PartialEq)]` writes: two `LaneName`s are equal when they are
+the same variant with equal contents. Comparing whole harmonies, not
+their labels, matters: every group of notes without a chord name is
+labelled "?", and joining by label would turn several different unnamed
+chords in a row into one long "?" block, as if one chord were held.
 
 Running `analyze` for every step on every frame sounds like a lot, but it
 is at most a few hundred small loops over a few notes. Measure before
@@ -1080,8 +1097,10 @@ if name.size().x <= chord_rect.width() - 2.0 {
 wide and tall it is. If it fits in the block, with a point to spare on
 each side, the same galley is painted; nothing is laid out twice.
 `galley` takes the top-left corner of the text, so the centre is moved
-back by half the size. If it does not fit, nothing is drawn; pointing at
-the block still names the chord in full in the line under the toolbar.
+back by half the size. A set or a micromode has a shorter name to try
+first, its class alone, "3-11" for "3-11 T7I"; if even that does not
+fit, nothing is drawn. Pointing at the block still names it in full in
+the line under the toolbar.
 
 ### Scale highlighting
 
