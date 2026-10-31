@@ -11,13 +11,15 @@
 //! key menu can switch back to them after the key was a scale for a while.
 
 use eframe::egui::{self, Color32, RichText, Ui};
+use lineup_core::chord_sheet::notation::{SongSet, song_set};
 use lineup_core::harmony::{Micromode, MicromodeFamily, micromodes_in};
 use lineup_core::harmony::{
     ROW_PRESETS, RowForm, RowLabel, RowPreset, SetClass, ToneRow, digits, pc_digit,
 };
 use lineup_core::serial::{Chain, Register, RowWriting, read_plan, write_plan, write_row};
 use lineup_core::{
-    Chord, ChordStamp, Note, NoteEvent, NoteName, PitchClass, PitchSet, Scale, ScaleKind, Spelling,
+    Chord, ChordStamp, Note, NoteEvent, NoteName, PitchClass, PitchSet, Project, Scale, ScaleKind,
+    Spelling,
 };
 
 use crate::i18n::{tr, tr_name, trc, trf};
@@ -93,13 +95,24 @@ pub(crate) fn set_key(ctx: &egui::Context, scale: Scale, root: PitchClass) -> Sc
 }
 
 /// What a key menu has selected for `scale`: its kind, or, for a key of
-/// three notes named as one, its micromode.
+/// three notes named as one, its micromode. `Class` is a set class
+/// picked in the menu's list of sets, upright or inverted (see
+/// [`SetClass::on`]); [`KindChoice::of`] never returns it, as a key that
+/// is a set is shown as the "pitch-class set" entry, with its class
+/// marked in the list.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub(crate) enum KindChoice {
     Kind(ScaleKind),
     Row,
     Set,
     Micromode(&'static Micromode),
+    Class {
+        class: &'static SetClass,
+        inverted: bool,
+    },
+    /// The set of a size the song uses most, as it is in the song (see
+    /// [`lineup_core::chord_sheet::notation::song_set`]).
+    Found(PitchSet),
 }
 
 impl KindChoice {
@@ -118,7 +131,8 @@ impl KindChoice {
     ///
     /// The notes stay as they are wherever the menu says so: picking
     /// "pitch-class set" (see [`set_key`]), or picking the micromode a
-    /// set of three notes already is, only names them the other way.
+    /// set of three notes already is, only names them the other way, and
+    /// so does picking the set class a micromode already is.
     pub(crate) fn key(self, ctx: &egui::Context, scale: Scale, tonic: NoteName) -> Option<Scale> {
         if KindChoice::of(scale) == self {
             return None;
@@ -134,7 +148,33 @@ impl KindChoice {
                 scale.named_as_micromode()
             }
             KindChoice::Micromode(micromode) => micromode.key(root),
+            KindChoice::Class { class, inverted } => {
+                return set_choice(scale, root, class.on(root, inverted));
+            }
+            // On the key note if the set has it, or else on its first
+            // note: a key holds its own note.
+            KindChoice::Found(set) => {
+                let root = if set.contains(root) {
+                    root
+                } else {
+                    set.normal_form().first().copied().unwrap_or(root)
+                };
+                return set_choice(scale, root, set);
+            }
         })
+    }
+}
+
+/// The key `set` on `root` makes of `scale`, named as a set, or `None`
+/// if `scale` is that already; a micromode that is that set is only
+/// named as a set.
+fn set_choice(scale: Scale, root: PitchClass, set: PitchSet) -> Option<Scale> {
+    let same =
+        matches!(scale.kind, ScaleKind::Set(_)) && scale.pitch_set() == set && root == scale.root;
+    match (same, scale.micromode()) {
+        (true, None) => None,
+        (true, Some(_)) => Some(scale.named_as_set()),
+        (false, _) => Some(Scale::set(root, set).named_as_set()),
     }
 }
 
@@ -238,6 +278,7 @@ pub fn kind_menu(
     scale: Scale,
     tonic: NoteName,
     width: f32,
+    song: &Project,
 ) -> Option<Scale> {
     let ctx = ui.ctx().clone();
     // The song's own row or set is the one to come back to: Webern's
@@ -259,13 +300,21 @@ pub fn kind_menu(
     let mut open = false;
     let response = egui::ComboBox::from_id_salt(salt)
         .width(width)
-        // As tall as there is room for: the scales, the row, the set and
+        // As tall as there is room for: the scales, the row, the sets and
         // the micromodes.
         .height(620.0)
+        // The sizes and the "Inverted" switch of the list of sets change
+        // only what the menu lists, so it stays open until a key is
+        // picked, or a click lands outside it.
+        .close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside)
         .selected_text(RichText::new(selected).strong())
         .show_ui(ui, |ui| {
             open = true;
-            let mut pick = |choice: KindChoice| picked = choice.key(&ctx, scale, tonic);
+            let mut close = false;
+            let mut pick = |choice: KindChoice| {
+                picked = choice.key(&ctx, scale, tonic);
+                close = true;
+            };
             for option in ScaleKind::ALL {
                 let choice = KindChoice::Kind(option);
                 if ui
@@ -297,6 +346,8 @@ pub fn kind_menu(
                 pick(KindChoice::Set);
             }
             ui.separator();
+            set_list(ui, salt, scale, tonic, song, frames, &mut pick);
+            ui.separator();
             ui.weak(tr("Micromodes (Kröpfl)"));
             // One short row per family, to keep the menu short: Menor 1
             // to 5, Mayor 1 to 4, and the three triads.
@@ -319,6 +370,9 @@ pub fn kind_menu(
                     }
                 });
             }
+            if close {
+                ui.close();
+            }
         })
         .response;
     let frames = if open { frames.saturating_add(1) } else { 0 };
@@ -330,6 +384,169 @@ pub fn kind_menu(
         picked = Some(Scale::written(tonic, scale.kind).named_like(scale));
     }
     picked.filter(|new| *new != scale)
+}
+
+/// The button of the set class the song uses most among those of its
+/// size, outlined, with how much of the song it fills and how it was
+/// read when pointed at. Picking it takes the song's own set, where it
+/// is in the song, rather than the class on the key note.
+fn found_option(
+    ui: &mut Ui,
+    found: SongSet,
+    song: &Project,
+    root: PitchClass,
+    selected: bool,
+) -> egui::Response {
+    let root = if found.set.contains(root) {
+        root
+    } else {
+        found.set.normal_form().first().copied().unwrap_or(root)
+    };
+    let notes = normal_names(found.set, Scale::set(root, found.set));
+    let read = match found
+        .channel
+        .and_then(|channel| song.channels().get(channel))
+    {
+        Some(channel) => trf("in the line of {}", &[&channel.name]),
+        None => tr("in the notes sounding together").to_string(),
+    };
+    let response = ui.selectable_label(selected, found.class.name());
+    ui.painter().rect_stroke(
+        response.rect.expand(1.0),
+        egui::CornerRadius::same(3),
+        egui::Stroke::new(1.5, ui.visuals().selection.bg_fill),
+        egui::StrokeKind::Outside,
+    );
+    response.on_hover_text(trf(
+        "{}. The set of {} notes this song uses most: {} of the song, {}. As the key: {}.",
+        &[
+            &found.class.describe(),
+            &found.class.cardinality.to_string(),
+            &format!("{}%", found.percent()),
+            &read,
+            &notes,
+        ],
+    ))
+}
+
+/// How many sets the key menu's list of sets puts in each row.
+const SET_COLUMNS: usize = 5;
+
+/// The key menu's list of pitch-class sets, as the micromodes are listed
+/// under it: a row of sizes, an "Inverted" switch, and every set class
+/// of the size chosen, by its Forte name, to pick as the key on the key
+/// note (see [`SetClass::on`]). The class of a key that is a set is
+/// marked. The size and the switch start as the key's own each time the
+/// menu opens: C major lists the sets of seven notes, with 7-35 in it.
+fn set_list(
+    ui: &mut Ui,
+    salt: &str,
+    scale: Scale,
+    tonic: NoteName,
+    song: &Project,
+    frames: u8,
+    pick: &mut impl FnMut(KindChoice),
+) {
+    // The class of the key, and whether it is the inverted one: none for
+    // a key named as a micromode, which is marked among the micromodes.
+    let key_class = match scale.kind {
+        ScaleKind::Set(_) if scale.micromode().is_none() => {
+            let set = scale.pitch_set();
+            Some((set.set_class(), set.set_class().is_inverted(set)))
+        }
+        _ => None,
+    };
+    let start = || {
+        let notes = scale.pitch_set().len();
+        let size = if (2..=10).contains(&notes) { notes } else { 3 };
+        (size, key_class.is_some_and(|(_, inverted)| inverted))
+    };
+    let state_id = egui::Id::unique((salt, "set list"));
+    let (mut size, mut inverted) = if frames == 0 {
+        start()
+    } else {
+        ui.ctx()
+            .data(|data| data.get_temp(state_id))
+            .unwrap_or_else(start)
+    };
+    ui.weak(tr("Pitch-class sets"));
+    ui.horizontal(|ui| {
+        ui.add_sized(
+            [46.0, 18.0],
+            egui::Label::new(RichText::new(tr("Notes")).weak()),
+        );
+        for notes in 2..=10 {
+            ui.selectable_value(&mut size, notes, notes.to_string());
+        }
+    });
+    ui.checkbox(&mut inverted, tr("Inverted (I)"))
+        .on_hover_text(tr("Turn every interval upside down first"));
+    // The song's own set of this size, read again when the menu opens or
+    // the size changes.
+    let found_id = egui::Id::unique((salt, "song's set"));
+    let found = match ui
+        .ctx()
+        .data(|data| data.get_temp::<(usize, Option<SongSet>)>(found_id))
+    {
+        Some((read, found)) if read == size && frames > 0 => found,
+        _ => {
+            let found = song_set(song, size);
+            ui.ctx()
+                .data_mut(|data| data.insert_temp(found_id, (size, found)));
+            found
+        }
+    };
+    let root = tonic.pitch_class();
+    egui::Grid::new((salt, "sets"))
+        .spacing([6.0, 2.0])
+        .show(ui, |ui| {
+            let classes = SetClass::all()
+                .iter()
+                .filter(|class| class.cardinality as usize == size);
+            for (i, class) in classes.enumerate() {
+                let is_key = key_class.is_some_and(|(key, key_inverted)| {
+                    *key == *class && (key_inverted == inverted || class.is_symmetric())
+                });
+                let songs = found.filter(|found| *found.class == *class);
+                let response = match songs {
+                    Some(found) => found_option(ui, found, song, root, is_key),
+                    None => set_option(ui, class, root, inverted, is_key),
+                };
+                if is_key && frames < 3 {
+                    response.scroll_to_me(Some(egui::Align::Center));
+                }
+                if response.clicked() {
+                    pick(match songs {
+                        Some(found) => KindChoice::Found(found.set),
+                        None => KindChoice::Class { class, inverted },
+                    });
+                }
+                if (i + 1) % SET_COLUMNS == 0 {
+                    ui.end_row();
+                }
+            }
+        });
+    ui.ctx()
+        .data_mut(|data| data.insert_temp(state_id, (size, inverted)));
+}
+
+/// A set class's button in the key menu, by its Forte name, with what it
+/// is and the notes it would have on `root` when pointed at.
+fn set_option(
+    ui: &mut Ui,
+    class: &SetClass,
+    root: PitchClass,
+    inverted: bool,
+    selected: bool,
+) -> egui::Response {
+    let set = class.on(root, inverted);
+    let notes = normal_names(set, Scale::set(root, set));
+    ui.selectable_label(selected, class.name())
+        .on_hover_text(trf(
+            "{}. As the key, on the key note: {}. From another set or micromode, every form keeps \
+         its degree and the notes go with it. From a key, the notes stay as they are.",
+            &[&class.describe(), &notes],
+        ))
 }
 
 /// What picking "twelve-tone row" in a key menu does.
@@ -1575,6 +1792,66 @@ mod tests {
                 }
             }
         }
+    }
+
+    /// A set picked in the key menu's list of sets is the key on the key
+    /// note, upright or inverted, named as a set; picking the set the key
+    /// already is changes nothing, and picking the set a micromode is
+    /// only names it as a set.
+    #[test]
+    fn a_set_picked_from_the_list_is_the_key_on_the_key_note() {
+        let ctx = egui::Context::default();
+        let triad = PitchSet::from_semitones(&[0, 4, 7]).set_class();
+        let major = Scale::new(PitchClass::C, ScaleKind::Major);
+        let pick = |key: Scale, class: &'static SetClass, inverted: bool, tonic: &str| {
+            KindChoice::Class { class, inverted }.key(&ctx, key, NoteName::parse(tonic).unwrap())
+        };
+        // From C major, 3-11 on C upright is C Eb G, inverted C E G.
+        let minor = pick(major, triad, false, "C").unwrap();
+        assert_eq!(minor.pitch_set(), PitchSet::from_semitones(&[0, 3, 7]));
+        let upright = pick(major, triad, true, "C").unwrap();
+        assert_eq!(upright.pitch_set(), PitchSet::from_semitones(&[0, 4, 7]));
+        assert_eq!(upright.root, PitchClass::C);
+        assert_eq!(KindChoice::of(upright), KindChoice::Set);
+        assert_eq!(crate::i18n::key_name(upright), "set 3-11 on C");
+        // The same set again: nothing to do. On D: D F# A.
+        assert_eq!(pick(upright, triad, true, "C"), None);
+        let on_d = pick(upright, triad, true, "D").unwrap();
+        assert_eq!(on_d.pitch_set(), PitchSet::from_semitones(&[2, 6, 9]));
+        // Six notes: 6-20 on C, C C# E F G# A.
+        let hexatonic = PitchSet::from_semitones(&[0, 1, 4, 5, 8, 9]).set_class();
+        let six = pick(upright, hexatonic, false, "C").unwrap();
+        assert_eq!(
+            six.pitch_set(),
+            PitchSet::from_semitones(&[0, 1, 4, 5, 8, 9])
+        );
+        // Menor 3 on C is 3-3 on C: picking 3-3 there renames it only.
+        let menor_3 = Micromode::named("Menor 3").unwrap().key(PitchClass::C);
+        let class = menor_3.pitch_set().set_class();
+        let inverted = class.is_inverted(menor_3.pitch_set());
+        let renamed = pick(menor_3, class, inverted, "C").unwrap();
+        assert_eq!(renamed, menor_3.named_as_set());
+        assert_eq!(renamed.pitch_set(), menor_3.pitch_set());
+        // The song's own set is taken where it is: Webern's row in sixes
+        // is 6-20, its first half, on C.
+        use lineup_core::chord_sheet::notation::song_set;
+        use lineup_core::library::{RowStyle, demo};
+        let webern = demo::row_demo(RowStyle::named("Webern's trichords").unwrap());
+        let found = song_set(&webern, 6).unwrap();
+        let tonic = webern.scale.spell(webern.scale.root);
+        let key = KindChoice::Found(found.set)
+            .key(&ctx, webern.scale, tonic)
+            .unwrap();
+        assert_eq!(key.pitch_set(), found.set);
+        assert_eq!(key.root, PitchClass::C);
+        assert_eq!(crate::i18n::key_name(key), "set 6-20 on C");
+        // A set without the key note is on its own first note: G B D
+        // from C major is 3-11 on G.
+        let g = PitchSet::from_semitones(&[7, 11, 2]);
+        let key = KindChoice::Found(g)
+            .key(&ctx, major, NoteName::parse("C").unwrap())
+            .unwrap();
+        assert_eq!((key.root, key.pitch_set()), (PitchClass::G, g));
     }
 
     /// "pitch-class set" names the notes the key already had, so the
