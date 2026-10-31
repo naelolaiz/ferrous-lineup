@@ -2720,8 +2720,8 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("🗑 Delete section", "🗑 Eliminar sección"),
     ("Spread out", "Abiertas"),
     (
-        "The three notes in any order from the bottom, over more than an octave: C C# E can sound as E C C#",
-        "Las tres notas en cualquier orden desde abajo, en más de una octava: Do Do# Mi puede sonar como Mi Do Do#",
+        "The three notes in any order from the bottom, up to two octaves wide: C C# E can sound as E C C#",
+        "Las tres notas en cualquier orden desde abajo, hasta dos octavas de ancho: Do Do# Mi puede sonar como Mi Do Do#",
     ),
     (
         "Minor (with a semitone), major (a whole tone, no semitone) or a chord (two thirds or more)",

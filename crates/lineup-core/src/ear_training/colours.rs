@@ -247,7 +247,7 @@ pub struct MicromodeSettings {
     /// By place in [`Direction::ALL`].
     pub directions: Choices,
     /// Whether the notes may come in any order from the bottom, spread
-    /// over more than an octave, as music spreads them.
+    /// over up to two octaves, as music spreads them.
     pub spread: bool,
 }
 
