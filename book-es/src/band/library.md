@@ -323,6 +323,40 @@ compás, para la música cuyo compás cambia todo el tiempo (ver [Una
 orquesta para música que cambia de
 compás](orchestra.md)).
 
+### Repartido sobre las partes de una canción
+
+La mayoría de los ritmos son un giro de un compás o dos, y la batería lo
+toca una y otra vez, con rellenos donde terminan las partes de la
+canción (ver [La batería por partes](song-form.md#la-batería-por-partes)).
+Alguna música se construye de otra manera: los tambores de un candombe
+abren con la clave tocada en la madera del repique, hacen el groove con
+la base del repique, y cierran cada frase con su llamada, el «fraseo».
+`Rhythm::laid_out` le da a un ritmo un `Layout`, y sus líneas se leen
+entonces como esas piezas, una tras otra:
+
+```rust
+const CANDOMBE: Layout = Layout {
+    opening: 4,
+    grooves: &[4, 4, 4, 4],
+    turns: 2,
+    closing: 2,
+    closings: 2,
+};
+```
+
+Así, las líneas del candombe duran 24 compases: cuatro de apertura; dos
+grooves de cuatro compases para las partes A y dos para las B; y dos
+cierres de dos compases. Una frase se turna con los grooves de su clase
+y con los cierres (`Layout::groove`, `Layout::closing_at`), contando las
+frases de esa clase que la canción ya tocó: la primera frase de una
+parte A toca el primer groove y el primer cierre, la siguiente los
+segundos, y así sucesivamente. El segundo groove abre con un compás de
+clave en la madera y varía más el piano; el segundo cierre arranca
+desde la base más cargada del repique, para que la clave nunca llegue
+justo antes de una parte nueva. Una frase demasiado corta para todo eso
+toca el comienzo de la apertura y el cierre. Un ritmo así no necesita
+un relleno de la tabla: su cierre es su relleno.
+
 ### Un ritmo para cualquier compás
 
 Cuando cambias a mano el compás de una canción, hace falta un ritmo en
