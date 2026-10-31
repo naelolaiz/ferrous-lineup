@@ -1573,18 +1573,52 @@ pub static RHYTHMS: &[Rhythm] = &[
         Folklore,
         110.0,
         &[
-            // The madera, the piano and the chico in their Cuareim versions,
-            // as the murga percussion sheet writes them. The piano's closed
-            // left hand is soft, its open stick strokes loud.
-            (Rim, "x..x .x.x x.x. x..x"),
-            (LowTom, "o..X .o.. o..X o..."),
-            (Conga, ".Xxx .Xxx .Xxx .Xxx"),
+            // Eight bars, as the patterns of two candombe percussion sheets
+            // ("Materiales de la cuerda del Candombe" and a murga sheet's
+            // candombe page) take turns. The repique plays the 3-2 clave on
+            // the wood (Rim) for two bars, its own base for four and a
+            // two-bar phrase (High tom). The piano (Low tom) plays its base
+            // with the Cuareim variation every fourth bar: "tapado" strokes,
+            // stick and hand together, and loud open strokes just before
+            // beats 2 and 4. The chico (Conga) keeps its ostinato, the
+            // hand's accent then two stick strokes, and plays every
+            // sixteenth ("repicado") in the last bar.
+            (
+                Rim,
+                "x..x ..x. ..x. x... | x..x ..x. ..x. x... | \
+                 .... .... .... .... | .... .... .... .... | \
+                 .... .... .... .... | .... .... .... .... | \
+                 .... .... .... .... | .... .... .... ....",
+            ),
+            (
+                HighTom,
+                ".... .... .... .... | .... .... .... .... | \
+                 xx.x xx.x xx.x xx.x | xx.x xx.x xx.x xx.x | \
+                 xx.x xx.x xx.x xx.x | xx.x xx.x xx.x xx.x | \
+                 .x.x x... .x.x x... | .x.x xx.x xx.x x...",
+            ),
+            (
+                LowTom,
+                "x..X .x.. x..X x... | x..X .x.. x..X x... | \
+                 x..X .x.. x..X x... | x..X .xx. x..X x.x. | \
+                 x..X .x.. x..X x... | x..X .x.. x..X x... | \
+                 x..X .x.. x..X x... | x..X .xx. x..X x.x.",
+            ),
+            (
+                Conga,
+                ".Xxx .Xxx .Xxx .Xxx | .Xxx .Xxx .Xxx .Xxx | \
+                 .Xxx .Xxx .Xxx .Xxx | .Xxx .Xxx .Xxx .Xxx | \
+                 .Xxx .Xxx .Xxx .Xxx | .Xxx .Xxx .Xxx .Xxx | \
+                 .Xxx .Xxx .Xxx .Xxx | xXxx xXxx xXxx xXxx",
+            ),
         ],
         "",
-        "Montevideo's candombe in its Cuareim style: the stick plays the madera on the \
-         drum's wooden shell, as the repique does between its phrases; the chico plays the \
-         three sixteenths after each beat, the first one loud; and the piano's open strokes \
-         ring just before beats 2 and 4, over soft strokes of the hand.",
+        "Montevideo's candombe, eight bars that start again with each part of a song. The \
+         chico keeps its ostinato, the three sixteenths after each beat, the hand's accent \
+         on the first, and plays every sixteenth in the last bar. The piano's open strokes \
+         ring just before beats 2 and 4 among its muffled ones, with a variation every \
+         fourth bar. The repique plays the 3-2 clave on the drum's wooden shell for two \
+         bars, its own base for four, and a two-bar phrase.",
     ),
     rhythm(
         "Polca",

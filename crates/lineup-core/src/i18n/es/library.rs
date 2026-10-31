@@ -774,8 +774,8 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("Mixolydian rock", "Rock mixolidio"),
     ("Modal jazz", "Jazz modal"),
     (
-        "Montevideo's candombe in its Cuareim style: the stick plays the madera on the drum's wooden shell, as the repique does between its phrases; the chico plays the three sixteenths after each beat, the first one loud; and the piano's open strokes ring just before beats 2 and 4, over soft strokes of the hand.",
-        "El candombe de Montevideo en su estilo Cuareim: el palo toca la madera del tambor, como hace el repique entre sus frases; el chico toca las tres semicorcheas que siguen a cada pulso, la primera fuerte; y los golpes abiertos del piano suenan justo antes del 2 y del 4, sobre golpes suaves de la mano.",
+        "Montevideo's candombe, eight bars that start again with each part of a song. The chico keeps its ostinato, the three sixteenths after each beat, the hand's accent on the first, and plays every sixteenth in the last bar. The piano's open strokes ring just before beats 2 and 4 among its muffled ones, with a variation every fourth bar. The repique plays the 3-2 clave on the drum's wooden shell for two bars, its own base for four, and a two-bar phrase.",
+        "El candombe de Montevideo, ocho compases que vuelven a empezar con cada parte de una canción. El chico mantiene su ostinato, las tres semicorcheas que siguen a cada pulso, con el acento de la mano en la primera, y toca todas las semicorcheas en el último compás. Los golpes abiertos del piano suenan justo antes del 2 y del 4 entre sus golpes tapados, con una variación cada cuatro compases. El repique toca la clave 3-2 en la madera del tambor durante dos compases, su base durante cuatro y una frase de dos compases.",
     ),
     ("Murga", "Murga"),
     ("Musette", "Musette"),
