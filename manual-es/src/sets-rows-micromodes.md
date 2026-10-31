@@ -140,6 +140,22 @@ comunes se quedan en las mismas teclas, sobre su fundamental cuando la
 forma es un acorde (Do bajo Do7) y si no sobre la primera nota de su
 orden más compacto.
 
+**Un estilo de micromodo sobre tus formas.** En una canción, un estilo
+del grupo **Micromodos (Kröpfl)** de la Biblioteca toca las formas
+escritas en la hoja de acordes, en tu orden, como un estilo toca los
+acordes de una canción tonal: cambias un compás y el estilo toca la
+forma nueva. Sirve en cualquier tonalidad de conjunto, no solo en un
+micromodo: **Puntos vieneses** puede tocar Do7, Mim7b5, La7… en una
+tonalidad que es Do Mi Sol Si♭ como conjunto. El teclado, el bajo y la
+línea del estilo tocan en lugar del piano, el bajo y el solista de la
+banda, y la guitarra, las cuerdas y el órgano descansan. Cuando la hoja
+no tiene formas de la tonalidad (una canción en una tonalidad mayor o
+menor, o una hoja vacía), o cuando la casilla **Progresión de acordes**
+de la Biblioteca está marcada, el estilo escribe en cambio su propio
+recorrido de formas en la hoja, y la tonalidad se vuelve su micromodo,
+empezando en la tónica. Un estilo tuyo, tocado sobre un conjunto, toca
+solo las notas del conjunto.
+
 ## Una armonía, cuatro nombres
 
 Un conjunto es otra manera de **nombrar** notas, no otras notas. El
@@ -326,7 +342,9 @@ por su nombre: `Menor 3`, o `Menor 3 T4I` para una de sus formas.
 Los cuatro grupos de tres de la serie del Concierto op. 24 de Webern, en
 la imagen de la ventana Serie dodecafónica, son todos Menor 3. El grupo
 **Micromodos (Kröpfl)** de la Biblioteca tiene siete estilos, y
-**Archivo > Demostraciones > Micromodos** toca cada uno.
+**Archivo > Demostraciones > Micromodos** toca cada uno. En una
+canción, la banda los toca desde la hoja de acordes (ver [Un estilo de
+micromodo sobre tus formas](#un-conjunto-como-tonalidad-sus-formas)).
 
 ### Un micromodo como tonalidad
 

@@ -721,8 +721,34 @@ To know whether a pattern really changed, it keeps a copy from before
 (`cloned()` turns the `Option<&Pattern>` into an `Option<Pattern>`)
 and compares at the end. `as_ref()` turns the copy back into an
 `Option<&Pattern>`, so the two sides of `!=` have the same type. This
-function, `take_over_harmony`, takes the writing as a closure, so the
-[micromode styles](micromodes.md) use it too.
+function, `take_over_harmony`, is given what to write as a closure:
+
+```rust
+pub(super) fn take_over_harmony(
+    project: &mut Project,
+    uses: &dyn Fn(&str) -> bool,
+    rhythm: Option<&Rhythm>,
+    mut write: impl FnMut(&mut Project, usize, usize, Option<usize>),
+) -> RhythmChange {
+```
+
+The two closures are passed in two different ways, on purpose:
+
+- `uses` only answers a question ("does the style play this
+  channel?"), so it is an `&dyn Fn`: a **trait object**, a reference
+  to some closure whose type is decided at run time. One compiled copy
+  of the function works for every closure.
+- `write` is called once per pattern with `&mut Project`, and does the
+  writing. It is an `impl FnMut`: the compiler makes a copy of the
+  function for each closure type passed in, which is a little faster
+  and allows the closure to change what it captured. `FnMut` is the
+  loosest bound that can still be called many times.
+
+The closure is given `project` as an argument instead of capturing it:
+`take_over_harmony` already holds `&mut Project`, and Rust allows only
+one mutable borrow at a time, so the project is lent to the closure
+for each call. A [micromode style](micromodes.md) in a song works
+otherwise: the band plays it from the forms on the chord sheet.
 
 ## A window that opens in front
 
