@@ -670,73 +670,210 @@ let count = length.div_ceil(self.steps.max(1)).max(1);
 `div_ceil` es la división que redondea hacia arriba: `16.div_ceil(6)`
 es 3, donde `16 / 6` es 2.
 
-## Los estilos se adueñan de la armonía
-
-Un estilo de micromodo, como un estilo dodecafónico, no tiene acordes
-que seguir. Cuando haces clic en él mientras suena la canción,
-*reemplaza* la armonía de la canción: calla los acordes y el bajo que
-no toca, y escribe sus propias voces en los canales correspondientes.
-Los estilos de series hacen lo mismo, así que los dos tipos de estilo
-llaman a una sola función, de [Series dodecafónicas y sus
-reglas](twelve-tone.md#tocar-una-canción-entera-como-una-serie):
-
-```rust
-pub(super) fn take_over_harmony(
-    project: &mut Project,
-    uses: &dyn Fn(&str) -> bool,
-    rhythm: Option<&Rhythm>,
-    mut write: impl FnMut(&mut Project, usize, usize, Option<usize>),
-) -> RhythmChange {
-```
-
-Los dos closures se pasan de dos maneras distintas, a propósito:
-
-- `uses` solo responde una pregunta («¿el estilo toca este canal?»),
-  así que es un `&dyn Fn`: un **trait object**, una referencia a algún
-  closure cuyo tipo se decide al ejecutar. Una sola copia compilada de
-  `take_over_harmony` sirve para todos los closures.
-- `write` se llama una vez por patrón con `&mut Project`, y hace la
-  escritura. Es un `impl FnMut`: el compilador hace una copia de
-  `take_over_harmony` para cada tipo de closure que se le pasa (una para
-  los estilos de series, otra para los de micromodos), lo que es un poco
-  más rápido y deja que el closure cambie lo que capturó. `FnMut` es la
-  cota más laxa que todavía se puede llamar muchas veces.
-
-Los estilos de micromodos la llaman así:
-
-```rust
-pub fn use_micromode_style(project: &mut Project, style: &MicromodeStyle) -> RhythmChange {
-    let key = project.scale.root;
-    let uses = |name: &str| style.voices.iter().any(|voice| voice.channel == name);
-    let change = take_over_harmony(
-        project,
-        &uses,
-        style.rhythm(),
-        |project, pattern, n, keys| {
-            let start = DEMO_SECTIONS[n % DEMO_SECTIONS.len()].0;
-            write_voices(project, pattern, style, key, start, keys);
-        },
-    );
-    if change.harmony > 0 {
-        project.scale = style.scale(key);
-    }
-    change
-}
-```
-
-`n` cuenta los patrones escritos hasta ahora, así que el primer patrón
-de la canción empieza desde el micromodo, el siguiente dado vuelta, el
-siguiente a un tritono, y así: la canción no se repite. El closure
-recibe `project` como argumento en vez de capturarlo:
-`take_over_harmony` ya tiene `&mut Project`, y Rust solo permite un
-préstamo mutable a la vez, así que el proyecto se le presta al closure
-en cada llamada.
-
 Las demostraciones se arman como las dodecafónicas: `section_patterns`
 hace un patrón por sección y lo llena con un closure, y
 `arrange_sections` los pone en la lista de reproducción, con la batería
 entrando después de la primera sección. `micromode_demo` y `row_demo`
 usan las dos, cada una pasando su propio closure.
+
+## En una canción, la banda toca las formas de la hoja
+
+Probado solo, un estilo de micromodo escribe su recorrido en un patrón
+propio, como los otros estilos de la biblioteca (ver [La
+biblioteca](../band/library.md)). En una canción lo toca la banda, como
+toca un estilo tonal: desde la hoja de acordes. Un estilo tonal dice
+*cómo* tocar los acordes y la hoja dice *qué* acordes; un estilo de
+micromodo dice cómo tocar las formas, y la hoja dice qué formas, en qué
+orden. Así, el orden de las formas, el I–IV–V de un micromodo, lo
+escribes tú, con las teclas de armonía, el botón **Progresión** o los
+grados escritos en los compases, y el estilo sigue cada cambio, como un
+estilo tonal sigue un acorde cambiado.
+
+`Band` tiene un campo más:
+
+```rust
+pub micromode: Option<&'static MicromodeStyle>,
+```
+
+Los estilos viven en una tabla `static` (ver [Los micromodos en
+Rust](#los-micromodos-en-rust-una-tabla-en-un-static)), así que la banda
+solo apunta a uno, con una referencia `&'static`, válida mientras corra
+el programa. `None` es una banda tonal. Cualquier otro estilo elegido
+para la banda lo vuelve a `None`.
+
+### Quién toca qué
+
+El teclado del estilo toca en lugar del piano, su bajo en lugar del
+bajo, y su línea en lugar del solista; la guitarra, las cuerdas y el
+órgano no tocan. La batería y los vientos tocan como en cualquier
+estilo. Una función dice de qué músicos decide el estilo:
+
+```rust
+pub(super) fn takes_over(style: &MicromodeStyle, player: Player) -> bool {
+    match player {
+        Player::Drums | Player::Horns => false,
+        Player::Soloist => voice_of(style, player).is_some(),
+        _ => true,
+    }
+}
+```
+
+`band_notes`, que escribe la parte de cada músico, le pregunta primero:
+
+```rust
+if let Some(style) = band.micromode
+    && micromode::takes_over(style, player)
+{
+    return self.micromode_notes(band, style, player, score);
+}
+```
+
+`if let … && …` es una **let chain** (cadena de `let`): el patrón tiene
+que coincidir *y* la condición tiene que cumplirse. Un solista para el
+que el estilo no tiene línea sigue de largo, e improvisa como en
+cualquier estilo. Los músicos que tiene la banda (`Band::players`)
+salen de las mismas voces, así que los botones **Tocas tú** de la hoja
+de acordes nombran solo a los músicos que hay.
+
+### La hoja como tramos
+
+La banda ya lee la hoja como armonías `Played`, cada una con dónde
+empieza y termina y las notas con que la voicea el piano (ver [Cómo toca
+la banda](../band/band.md#las-armonías-como-notas)). Una voz de
+micromodo solo necesita la forma de cada una:
+
+```rust
+fn spans(harmonies: &[Played]) -> Vec<Span> {
+    harmonies
+        .iter()
+        .map(|played| Span {
+            start: played.start,
+            end: played.end,
+            form: match played.bass {
+                BassPart::Chord { chord, .. } => chord.pitch_set(),
+                _ => played.voicing.iter().map(|note| note.pitch_class()).collect(),
+            },
+        })
+        .collect()
+}
+```
+
+Un acorde da sus propias notas, así que C7 escrito como acorde es la
+misma forma que el conjunto Do Mi Sol Si♭. Un conjunto, un micromodo o
+un grupo de una serie da las notas con que se voicea. `collect()` puede
+armar un `PitchSet` porque `PitchSet` implementa
+`FromIterator<PitchClass>`. Un compás sin acorde da un tramo vacío: las
+voces descansan, y siguen desde la forma anterior.
+
+`micromodal::write_spans` voicea los tramos, cada uno desde el
+anterior, con la textura que pide la voz. Es el mismo código que
+escribe el recorrido de un estilo en un patrón: `write_forms` solo
+corta el recorrido en tramos de `steps` pasos cada uno y se los pasa:
+
+```rust
+let spans: Vec<Span> = (0..length)
+    .step_by(steps)
+    .map(|start| Span {
+        start,
+        end: (start + steps).min(length),
+        form: forms[(start / steps) % forms.len()],
+    })
+    .collect();
+write_spans(&spans, writing)
+```
+
+Así, un estilo suena igual probado en un patrón que tocado por la banda
+sobre las mismas formas. `step_by` hace un iterador que toma uno de
+cada `steps` números del rango: 0, 8, 16… para una forma cada medio
+compás.
+
+### Conservar la hoja o escribir el recorrido
+
+`Project::apply_micromode_style` decide primero si las formas de la
+hoja se quedan:
+
+```rust
+let writes = parts.progression || !self.sheet_holds_forms();
+```
+
+La hoja tiene formas cuando la tonalidad es un conjunto y cada armonía
+de la hoja, salvo los compases sin acorde, es una forma de ese
+conjunto, escrita como conjunto o como el acorde que es: Em7b5 es una
+forma de C7 como conjunto, Dm7 no. Entonces el estilo las toca, en tu
+orden, y la tonalidad se queda. Eso sirve para cualquier conjunto, no
+solo para un micromodo: una textura toca cuatro o seis notas como toca
+tres, así que «Puntos vieneses» puede tocar las formas de C7 como
+conjunto. Si no (una hoja tonal, una vacía, o la casilla **Progresión
+de acordes** de la biblioteca marcada), el estilo escribe su propio
+recorrido en la hoja, desde el primer compás hasta el final de la
+canción, cada forma tan larga como la sostiene el estilo, y la
+tonalidad se vuelve su micromodo sobre la nota de la tonalidad de la
+canción, en toda la canción.
+
+El resto es lo que hace cualquier estilo de banda: una banda que entra
+silencia los acordes y el bajo propios de la canción; con la casilla
+**Batería** marcada suena la batería del estilo, y un estilo sin
+batería deja la canción sin ella; el compás, el tempo y el swing siguen
+sus casillas. La banda se crea o se cambia en un solo `match`:
+
+```rust
+match &mut self.band {
+    None => {
+        let mut band = Band::new(drums);
+        // ...
+        if band.end > 0 {
+            band.muted = self.mute_the_songs_own(parts.rhythm);
+        }
+        self.band = Some(band);
+    }
+    Some(band) => {
+        if parts.rhythm {
+            drums_come = band.drums == BandDrums::Song;
+            band.style = drums;
+            band.drums = BandDrums::Style;
+        }
+        // ...
+    }
+}
+```
+
+Hacer `match` sobre `&mut self.band` hace que `band` sea un `&mut Band`
+en el segundo brazo: la banda se cambia donde está, sin sacarla del
+`Option` y volver a ponerla. El primer brazo no liga nada, así que no
+toma prestado nada de `self`, y todavía puede llamar a
+`self.mute_the_songs_own` y asignar `self.band`: el verificador de
+préstamos mira lo que de verdad usa cada brazo.
+
+### Un estilo guardado sobre un conjunto
+
+Un estilo que guardas tú se escribe sobre Do mayor, y cada una de sus
+notas se mueve a la armonía sobre la que toca: Do, Mi y Sol pasan a ser
+la fundamental, la tercera y la quinta del acorde (ver [Tus propios
+estilos](../band/style-editor.md)). Un conjunto no tiene fundamental,
+tercera ni quinta, así que sobre un conjunto las notas van a las notas
+del propio conjunto, contadas hacia arriba desde el bajo: Do, Mi y Sol
+(y Si) toman su primera, segunda y tercera (y cuarta) notas, y
+cualquier otra nota la nota del conjunto más cercana. Un estilo
+guardado sobre un micromodo toca solo las tres notas del micromodo:
+
+```rust
+let target = place
+    .and_then(|place| intervals.get(place).copied())
+    .or_else(|| intervals.iter().copied().min_by_key(|&interval| distance(interval)))
+    .unwrap_or(0);
+```
+
+`and_then` sigue solo si hay un lugar y el conjunto tiene esa cantidad
+de notas; `or_else` recurre a la nota más cercana, y `unwrap_or` al
+bajo para un conjunto vacío.
+
+### En el archivo
+
+La banda guarda el estilo por su nombre, `micromode: Some("Viennese
+points")`, y una versión que no conoce el nombre rechaza el archivo en
+vez de tocar otra cosa. Una banda que toca un estilo de micromodo
+necesita el formato 30 (ver [Formato del archivo de
+proyecto](../reference/project-format.md)).
 
 ## Un micromodo como tonalidad: grados
 
@@ -1154,8 +1291,17 @@ aumentado sin enlace suave; y los nombres de los movimientos P, L y R.
 `library/micromodes.rs` comprueba que cada estilo toca solo su
 micromodo, en cualquier tonalidad y desde el comienzo de cada sección,
 con la tonalidad convertida en el micromodo; que la primera forma
-empieza en la tónica; y que una canción toma un estilo de micromodo. Las
-pruebas de la aplicación comprueban que los micromodos de acordes se
+empieza en la tónica; y `band/micromode.rs`, que la banda toca solo la
+forma escrita en cada compás, con cada estilo; que las formas que ya
+están en la hoja se quedan, en su orden, con la tonalidad, y que
+cambiar un compás cambia lo que toca el estilo; que una canción tonal
+recibe en su hoja el recorrido del estilo; que un teclado bloqueado de
+la canción sigue tocando su parte; y que la banda se guarda y se vuelve
+a leer. Un estilo guardado sobre un conjunto toca solo las notas del
+conjunto, para cada nota de la octava sobre cada forma de un
+tetracordio. Las pruebas de la aplicación comprueban que un estilo de
+micromodo elegido en una canción con formas en su hoja toca esas
+formas, que los micromodos de acordes se
 escriben como acordes (Do Mi♭ Sol♭), que **▶ Escucharlo** toca las tres
 notas desde el Do central, y que elegir una forma muestra cómo se
 movió.

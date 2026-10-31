@@ -648,73 +648,203 @@ let count = length.div_ceil(self.steps.max(1)).max(1);
 `div_ceil` is division that rounds up: `16.div_ceil(6)` is 3, where
 `16 / 6` is 2.
 
-## Styles take over the harmony
-
-A micromode style, like a twelve-tone style, has no chords to follow.
-When you click it while the song plays, it *replaces* the song's
-harmony: it silences the chords and the bass it does not play, and
-writes its own voices on the right channels. The row styles do the
-same, so both kinds of style call one function, from
-[Twelve-tone rows and their
-rules](twelve-tone.md#playing-a-whole-song-as-a-row):
-
-```rust
-pub(super) fn take_over_harmony(
-    project: &mut Project,
-    uses: &dyn Fn(&str) -> bool,
-    rhythm: Option<&Rhythm>,
-    mut write: impl FnMut(&mut Project, usize, usize, Option<usize>),
-) -> RhythmChange {
-```
-
-The two closures are passed in two different ways, on purpose:
-
-- `uses` only answers a question ("does the style play this
-  channel?"), so it is an `&dyn Fn`: a **trait object**, a reference
-  to some closure whose type is decided at run time. One compiled copy
-  of `take_over_harmony` works for every closure.
-- `write` is called once per pattern with `&mut Project`, and does the
-  writing. It is an `impl FnMut`: the compiler makes a copy of
-  `take_over_harmony` for each closure type passed in (one for the row
-  styles, one for the micromode styles), which is a little faster and
-  allows the closure to change what it captured. `FnMut` is the
-  loosest bound that can still be called many times.
-
-The micromode styles call it like this:
-
-```rust
-pub fn use_micromode_style(project: &mut Project, style: &MicromodeStyle) -> RhythmChange {
-    let key = project.scale.root;
-    let uses = |name: &str| style.voices.iter().any(|voice| voice.channel == name);
-    let change = take_over_harmony(
-        project,
-        &uses,
-        style.rhythm(),
-        |project, pattern, n, keys| {
-            let start = DEMO_SECTIONS[n % DEMO_SECTIONS.len()].0;
-            write_voices(project, pattern, style, key, start, keys);
-        },
-    );
-    if change.harmony > 0 {
-        project.scale = style.scale(key);
-    }
-    change
-}
-```
-
-`n` counts the patterns written so far, so the first pattern of the
-song starts from the micromode, the next upside down, the next a
-tritone away, and so on: the song does not repeat itself. The closure
-is given `project` as an argument instead of capturing it:
-`take_over_harmony` already holds `&mut Project`, and Rust allows only
-one mutable borrow at a time, so the project is lent to the closure for
-each call.
-
 The demos are arranged like the twelve-tone demos: `section_patterns`
 makes one pattern per section and fills it with a closure, and
 `arrange_sections` lays them out on the playlist, with the drums coming
 in after the first section. `micromode_demo` and `row_demo` both use
 them, each passing its own closure.
+
+## In a song, the band plays the forms on the sheet
+
+Tried on its own, a micromode style writes its walk into a pattern of
+its own, as the other library styles do (see [The
+library](../band/library.md)). In a song, the band plays it, the way it
+plays a tonal style: from the chord sheet. A tonal style says *how* to
+play chords and the sheet says *which* chords; a micromode style says
+how to play forms, and the sheet says which forms, in which order. So
+the order of the forms, a micromode's I–IV–V, is yours to write, with
+the harmony keys, the **Progression** button or degrees typed in the
+bars, and the style follows every change, as a tonal style follows a
+changed chord.
+
+`Band` has one more field:
+
+```rust
+pub micromode: Option<&'static MicromodeStyle>,
+```
+
+The styles live in a `static` table (see [The micromodes in
+Rust](#the-micromodes-in-rust-a-table-in-a-static)), so the band only
+points at one, with a `&'static` reference that is valid as long as
+the program runs. `None` is a tonal band. Any other style picked for
+the band sets it back to `None`.
+
+### Who plays what
+
+The style's keys play in place of the piano, its bass in place of the
+bass, and its line in place of the soloist; the guitar, the strings and
+the organ do not play. The drums and the horns play as in any style.
+One function says which players the style decides:
+
+```rust
+pub(super) fn takes_over(style: &MicromodeStyle, player: Player) -> bool {
+    match player {
+        Player::Drums | Player::Horns => false,
+        Player::Soloist => voice_of(style, player).is_some(),
+        _ => true,
+    }
+}
+```
+
+`band_notes`, which writes each player's part, asks it first:
+
+```rust
+if let Some(style) = band.micromode
+    && micromode::takes_over(style, player)
+{
+    return self.micromode_notes(band, style, player, score);
+}
+```
+
+`if let … && …` is a **let chain**: the pattern has to match *and* the
+condition has to hold. A soloist the style has no line for falls
+through, and improvises as in any style. The players the band has
+(`Band::players`) come from the same voices, so the chord sheet's
+**You play** buttons name only the players there are.
+
+### The sheet as spans
+
+The band already reads the sheet into `Played` harmonies, each with
+where it starts and ends and the notes the piano voices it with (see
+[How the band plays](../band/band.md#the-harmonies-as-notes)). A
+micromode voice needs only the form of each:
+
+```rust
+fn spans(harmonies: &[Played]) -> Vec<Span> {
+    harmonies
+        .iter()
+        .map(|played| Span {
+            start: played.start,
+            end: played.end,
+            form: match played.bass {
+                BassPart::Chord { chord, .. } => chord.pitch_set(),
+                _ => played.voicing.iter().map(|note| note.pitch_class()).collect(),
+            },
+        })
+        .collect()
+}
+```
+
+A chord gives its own notes, so C7 typed as a chord is the same form as
+the set C E G B♭. A set, a micromode or a group of a row gives the notes
+it is voiced with. `collect()` can build a `PitchSet` because
+`PitchSet` implements `FromIterator<PitchClass>`. A bar of no chord
+gives an empty span: the voices rest, and go on from the form before.
+
+`micromodal::write_spans` voices the spans, each from the one before,
+in the texture the voice asks for. It is the very code that writes a
+style's walk into a pattern: `write_forms` only cuts the walk into
+spans of `steps` steps each and hands them over:
+
+```rust
+let spans: Vec<Span> = (0..length)
+    .step_by(steps)
+    .map(|start| Span {
+        start,
+        end: (start + steps).min(length),
+        form: forms[(start / steps) % forms.len()],
+    })
+    .collect();
+write_spans(&spans, writing)
+```
+
+So a style sounds the same tried in a pattern and played by the band
+over the same forms. `step_by` makes an iterator that takes every
+`steps`-th number of the range: 0, 8, 16… for a form every half bar.
+
+### Keeping the sheet, or writing the walk
+
+`Project::apply_micromode_style` first decides whether the forms on the
+sheet stay:
+
+```rust
+let writes = parts.progression || !self.sheet_holds_forms();
+```
+
+The sheet holds forms when the key is a set and every harmony on it,
+but bars of no chord, is a form of that set, written as a set or as the
+chord it is: Em7b5 is a form of C7 as a set, Dm7 is not. Then the style
+plays them, in your order, and the key stays. That works for any set,
+not only a micromode: a texture plays four or six notes as it plays
+three, so "Viennese points" can play the forms of C7 as a set.
+Otherwise (a tonal sheet, an empty one, or the Library's **Chord
+progression** box ticked) the style writes its own walk on the sheet,
+from the first bar to the end of the song, each form as long as the
+style holds it, and the key becomes its micromode on the song's key
+note, all through the song.
+
+The rest is what any band style does: a band coming in mutes the song's
+own chords and bass; with the **Drums** box ticked the style's drums
+play, and a style without drums leaves the song without; the time
+signature, the tempo and the swing follow their boxes. The band is made
+or changed in one `match`:
+
+```rust
+match &mut self.band {
+    None => {
+        let mut band = Band::new(drums);
+        // ...
+        if band.end > 0 {
+            band.muted = self.mute_the_songs_own(parts.rhythm);
+        }
+        self.band = Some(band);
+    }
+    Some(band) => {
+        if parts.rhythm {
+            drums_come = band.drums == BandDrums::Song;
+            band.style = drums;
+            band.drums = BandDrums::Style;
+        }
+        // ...
+    }
+}
+```
+
+Matching on `&mut self.band` makes `band` a `&mut Band` in the second
+arm: the band is changed where it is, without taking it out of the
+`Option` and putting it back. The first arm binds nothing, so nothing
+of `self` is borrowed inside it, and it can still call
+`self.mute_the_songs_own` and set `self.band`: the borrow checker
+looks at what each arm really uses.
+
+### A saved style over a set
+
+A style you save yourself is written over C major, and each of its
+notes is moved to the harmony it plays over: C, E and G become the
+chord's root, third and fifth (see [Your own
+styles](../band/style-editor.md)). A set has no root, third or fifth,
+so over a set the notes go to the set's own notes, counted up from the
+bass: C, E and G (and B) take its first, second and third (and fourth)
+notes, and any other note the set's note nearest to it. A saved style
+over a micromode plays only the micromode's three notes:
+
+```rust
+let target = place
+    .and_then(|place| intervals.get(place).copied())
+    .or_else(|| intervals.iter().copied().min_by_key(|&interval| distance(interval)))
+    .unwrap_or(0);
+```
+
+`and_then` keeps going only if there is a place and the set has that
+many notes; `or_else` falls back to the nearest note, and `unwrap_or`
+to the bass for an empty set.
+
+### In the file
+
+The band saves the style by name, `micromode: Some("Viennese points")`,
+and a version that does not know the name refuses the file rather than
+play something else. A band playing a micromode style needs format 30
+(see [Project file format](../reference/project-format.md)).
 
 ## A micromode as the key: degrees
 
@@ -1110,8 +1240,16 @@ names of the P, L and R moves.
 `library/micromodes.rs` checks that every style plays only its
 micromode, in any key and from every section's start, with the key
 becoming the micromode; that the first form starts on the key note;
-and that a song takes a micromode style. The app's tests check that
-chord micromodes are spelled as chords (C E♭ G♭), that **▶ Hear it**
+and `band/micromode.rs` that the band plays only the form written in
+each bar, with every style; that forms already on the sheet stay, in
+their order, with the key, and that changing a bar changes what the
+style plays; that a tonal song takes the style's walk on its sheet;
+that a locked Keys of the song keeps playing its part; and that the
+band is saved and read again. A saved style over a set plays only the
+set's notes, for every note of the octave over every form of a
+tetrachord. The app's tests check that a micromode style clicked in a
+song with forms on its sheet plays those forms, that chord
+micromodes are spelled as chords (C E♭ G♭), that **▶ Hear it**
 plays the three notes from middle C, and that picking a form shows how
 it was moved.
 
