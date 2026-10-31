@@ -1575,9 +1575,9 @@ pub static RHYTHMS: &[Rhythm] = &[
         &[
             // Eight bars, as the patterns of two candombe percussion sheets
             // ("Materiales de la cuerda del Candombe" and a murga sheet's
-            // candombe page) take turns. The repique plays the 3-2 clave on
-            // the wood (Rim) for two bars, its own base for four and a
-            // two-bar phrase (High tom). The piano (Low tom) plays its base
+            // candombe page) take turns. The repique plays the two-bar 3-2
+            // clave on the wood (Rim) twice, then its own base for two bars
+            // and a two-bar phrase (High tom). The piano (Low tom) plays its base
             // with the Cuareim variation every fourth bar: "tapado" strokes,
             // stick and hand together, and loud open strokes just before
             // beats 2 and 4. The chico (Conga) keeps its ostinato, the
@@ -1586,14 +1586,14 @@ pub static RHYTHMS: &[Rhythm] = &[
             (
                 Rim,
                 "x..x ..x. ..x. x... | x..x ..x. ..x. x... | \
-                 .... .... .... .... | .... .... .... .... | \
+                 x..x ..x. ..x. x... | x..x ..x. ..x. x... | \
                  .... .... .... .... | .... .... .... .... | \
                  .... .... .... .... | .... .... .... ....",
             ),
             (
                 HighTom,
                 ".... .... .... .... | .... .... .... .... | \
-                 xx.x xx.x xx.x xx.x | xx.x xx.x xx.x xx.x | \
+                 .... .... .... .... | .... .... .... .... | \
                  xx.x xx.x xx.x xx.x | xx.x xx.x xx.x xx.x | \
                  .x.x x... .x.x x... | .x.x xx.x xx.x x...",
             ),
@@ -1617,8 +1617,8 @@ pub static RHYTHMS: &[Rhythm] = &[
          chico keeps its ostinato, the three sixteenths after each beat, the hand's accent \
          on the first, and plays every sixteenth in the last bar. The piano's open strokes \
          ring just before beats 2 and 4 among its muffled ones, with a variation every \
-         fourth bar. The repique plays the 3-2 clave on the drum's wooden shell for two \
-         bars, its own base for four, and a two-bar phrase.",
+         fourth bar. The repique plays the 3-2 clave on the drum's wooden shell for four \
+         bars, then its own base for two and a two-bar phrase.",
     ),
     rhythm(
         "Polca",
