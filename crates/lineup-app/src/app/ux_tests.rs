@@ -5062,6 +5062,62 @@ fn a_micromode_key_names_its_forms_by_their_degrees() {
     assert!(!shows(&mut screen, "T6"));
 }
 
+/// A key that is any pitch-class set offers its forms too, and the chord
+/// sheet's Progression menu chains them.
+#[test]
+fn any_set_key_has_forms_and_a_progression_of_them() {
+    let mut screen = Screen::new();
+    let mut project = Project::with_band();
+    // The dominant seventh as a set, 4-27 on C: C E G Bb.
+    project.scale = Scale::set(
+        lineup_core::PitchClass::C,
+        lineup_core::PitchSet::from_semitones(&[0, 4, 7, 10]),
+    );
+    project.follow_chord_sheet();
+    screen.app.replace_project(project, None);
+    screen.app.rack_open = false;
+    screen.app.harmony_keys.open = true;
+    let shows = |screen: &mut Screen, text: &str| {
+        screen.draw(Vec::new());
+        let output = screen.draw(Vec::new());
+        text_rect(&output, text).is_some()
+    };
+    // Chords stacked from the set first, as before.
+    assert!(shows(&mut screen, "Chords"));
+    assert!(!shows(&mut screen, "T2I"));
+    screen.click("Forms");
+    // Home, then Em7b5, which keeps three of its notes.
+    assert!(shows(&mut screen, "T2I"));
+    assert!(shows(&mut screen, "Em7b5"));
+    assert!(shows(&mut screen, "Near home"));
+    // The Progression menu writes eight bars. C7 keeps three notes only
+    // of Em7b5, so the walk goes there and on, keeping as many notes as
+    // it can without going straight back.
+    screen.app.chord_sheet.open = true;
+    screen.click("Progression");
+    screen.click("Keep as many notes as it can");
+    let markers = screen.app.project.playlist().chord_markers().to_vec();
+    assert_eq!(markers.len(), 8);
+    let sets: Vec<lineup_core::PitchSet> = markers
+        .iter()
+        .map(|marker| match marker.harmony {
+            lineup_core::HarmonyName::Set(set) => set,
+            other => panic!("{other}"),
+        })
+        .collect();
+    assert_eq!(sets[0].len(), 4);
+    assert_eq!(
+        sets[1],
+        lineup_core::PitchSet::from_semitones(&[2, 4, 7, 10])
+    );
+    for pair in sets.windows(2) {
+        assert!(lineup_core::harmony::degree::kept(pair[0], pair[1]) >= 2);
+    }
+    for three in sets.windows(3) {
+        assert_ne!(three[0], three[2]);
+    }
+}
+
 mod chord_sheet_layout {
     use super::*;
 

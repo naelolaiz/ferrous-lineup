@@ -1232,6 +1232,18 @@ impl LineupApp {
                     self.chord_sheet.select(from + bars);
                 }
             }
+            SheetAction::WriteForms { walk, from } => {
+                let bars = self.edit("write a progression", |project| {
+                    project.write_form_progression(from, walk)
+                });
+                if bars == 0 {
+                    self.message = Some(tr("There is no room for it on the sheet.").to_string());
+                } else {
+                    self.notice = Some(trf("Wrote {} forms from bar {}", &[&bars, &(from + 1)]));
+                    // The next progression goes on after this one.
+                    self.chord_sheet.select(from + bars);
+                }
+            }
             SheetAction::EndHere(bar) => {
                 self.edit("end the song", |project| project.end_song_at(bar));
             }
