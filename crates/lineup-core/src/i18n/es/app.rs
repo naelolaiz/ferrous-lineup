@@ -167,6 +167,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("add notes", "añadir notas"),
     ("add pattern", "añadir patrón"),
     ("add section", "añadir sección"),
+    (
+        "keep recognized sections",
+        "conservar las secciones reconocidas",
+    ),
     ("add the horns", "añadir los vientos"),
     ("add the soloist", "añadir el solista"),
     ("add track", "añadir pista"),
@@ -1475,6 +1479,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Record what you play on a MIDI or typing keyboard into the channel the piano roll shows, while the pattern plays. Switches to pattern mode.",
         "Graba lo que tocas en un teclado MIDI o en el teclado del equipo en el canal que muestra el piano roll, mientras suena el patrón. Pasa al modo patrón.",
     ),
+    (
+        "Recognized in the song's notes: the band plays by these parts. Click to keep them as the song's sections, to rename, move or change them.",
+        "Reconocidas en las notas de la canción: la banda toca según estas partes. Haz clic para conservarlas como secciones de la canción, y renombrarlas, moverlas o cambiarlas.",
+    ),
     ("Recording", "Grabación"),
     ("Recover it", "Recuperarlo"),
     (
@@ -2466,6 +2474,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "{} changed nothing: the song already goes that way.",
         "{} no cambió nada: la canción ya va por ese camino.",
     ),
+    ("{} · recognized", "{} · reconocida"),
     ("{} chords", "{} acordes"),
     (
         "{} chords were not what you said.",
