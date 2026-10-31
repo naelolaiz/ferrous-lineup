@@ -1087,6 +1087,14 @@ mod tests {
         assert!(pattern.notes(0).is_empty(), "the tune's notes found a home");
         // Track 2 was empty and had the name it was made with.
         assert_eq!(project.playlist().tracks()[1].name, "Take 1");
+
+        // Saved and opened again, the take is still a take, in a format
+        // older versions know they cannot read.
+        assert_eq!(crate::file::format_for(&project), 31);
+        let text = crate::file::to_text(&project).unwrap();
+        let opened = crate::file::from_text(&text).unwrap();
+        assert!(opened.channels()[take_channel].is_take());
+        assert_eq!(opened.playlist().clips(), project.playlist().clips());
     }
 
     #[test]
