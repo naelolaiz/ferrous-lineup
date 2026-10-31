@@ -32,7 +32,7 @@ use crate::harmony::{Chord, Degree, Micromode, PitchSet, Scale, ScaleKind};
 use crate::i18n::{tr, trf};
 use crate::library::apply::{self, BASS, KEYS};
 use crate::library::comping::{Bass, BassPart, Comping, Played};
-use crate::library::drum_form::{self, DrumPart, Then};
+use crate::library::drum_form::{self, DrumPart, PartKind, Then};
 use crate::library::interpret::{self, Role};
 use crate::library::voicing::bass_line;
 use crate::library::{Genre, MicromodeStyle, RHYTHMS, Rhythm, Style};
@@ -1100,51 +1100,6 @@ fn player_volume(player: Player) -> f32 {
 /// How far above the piano's voicing the strings play: an octave.
 const STRINGS_OCTAVE: i32 = 12;
 
-/// What kind of part of the song the drums play (see
-/// [`Project::drum_parts`]).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-struct PartKind {
-    /// Its section's kind: the same number for sections of the same name.
-    groove: usize,
-    /// Whether it opens the song.
-    opens: bool,
-    /// Whether it is a pickup before the song's first section.
-    lead_in: bool,
-}
-
-/// The kind of each of `form`'s sections, as the drums play them: the
-/// same number for sections of the same name ("Verse 2" is a verse), in
-/// the order they first come, an intro and a coda as the first kind; and
-/// whether it is an intro.
-fn section_kinds(form: &[Section]) -> Vec<(usize, bool)> {
-    let mut names: Vec<String> = Vec::new();
-    form.iter()
-        .map(|section| {
-            let name = section
-                .name
-                .trim()
-                .trim_end_matches(|c: char| c.is_ascii_digit() || c.is_whitespace())
-                .to_lowercase();
-            let intro = name.starts_with("intro");
-            let first = intro
-                || ["coda", "outro", "ending", "final"]
-                    .iter()
-                    .any(|word| name.starts_with(word));
-            if first {
-                return (0, intro);
-            }
-            let kind = names
-                .iter()
-                .position(|known| *known == name)
-                .unwrap_or_else(|| {
-                    names.push(name);
-                    names.len() - 1
-                });
-            (kind, false)
-        })
-        .collect()
-}
-
 /// What the drums play in the last bar of an ending: the fill of the
 /// library that is one hit of the kick and the crash cymbal.
 const LAST_HIT: &str = "Crash ending";
@@ -1157,6 +1112,10 @@ struct Chunk {
     start: usize,
     length: usize,
     time: TimeSignature,
+    /// Whether it starts only because a section does: a player holding
+    /// a note over its start plays on in one pattern, so the note is not
+    /// struck again (see [`Project::write_part`]).
+    soft: bool,
 }
 
 impl Chunk {
@@ -2565,11 +2524,11 @@ impl Project {
             .bars()
             .take_while(|bar| bar.start < parts_end)
             .collect();
-        // The drums lay the rhythm out over the song's sections, heard
-        // where none are written; the patterns are cut only where they
-        // are written, so the band plays the rest as before.
+        // The band plays by the song's sections, heard where none are
+        // written: its patterns start where they do, and the drums lay
+        // the rhythm out over them.
         let form = self.form_sections();
-        let chunks = self.chunks(&bars);
+        let chunks = self.chunks(&bars, &form);
         let mut markers: Vec<ChordMarker> = self
             .playlist
             .chord_markers
@@ -2907,16 +2866,19 @@ impl Project {
     }
 
     /// The stretches of the song one pattern of each player covers: the
-    /// bars cut where a section, the chorus, the ending or a variation
-    /// starts or the time signature changes, and wherever a pattern would
-    /// grow too long.
-    fn chunks(&self, bars: &[Bar]) -> Vec<Chunk> {
-        let mut edges: Vec<usize> = self
+    /// bars cut where a section of `form` (written or heard, see
+    /// [`Project::form_sections`]), the chorus, the ending, a variation or
+    /// a section style starts or the time signature changes, and wherever
+    /// a pattern would grow too long.
+    fn chunks(&self, bars: &[Bar], form: &[Section]) -> Vec<Chunk> {
+        let sections: Vec<usize> = self
             .playlist
             .sections
             .iter()
+            .chain(form)
             .flat_map(|section| [section.start, section.end()])
             .collect();
+        let mut edges: Vec<usize> = Vec::new();
         if let Some((start, end)) = self.chorus() {
             edges.extend([start, end]);
         }
@@ -2924,17 +2886,19 @@ impl Project {
         edges.extend(self.section_styles().iter().map(|marker| marker.start));
         let mut chunks: Vec<Chunk> = Vec::new();
         for bar in bars {
-            let joins = chunks.last().is_some_and(|chunk| {
-                chunk.time == bar.time
-                    && chunk.length + bar.length <= MAX_STEPS
-                    && !edges.contains(&bar.start)
+            let fits = chunks.last().is_some_and(|chunk| {
+                chunk.time == bar.time && chunk.length + bar.length <= MAX_STEPS
             });
+            let section = sections.contains(&bar.start);
             match chunks.last_mut() {
-                Some(chunk) if joins => chunk.length += bar.length,
+                Some(chunk) if fits && !section && !edges.contains(&bar.start) => {
+                    chunk.length += bar.length;
+                }
                 _ => chunks.push(Chunk {
                     start: bar.start,
                     length: bar.length,
                     time: bar.time,
+                    soft: fits && section && !edges.contains(&bar.start),
                 }),
             }
         }
@@ -3076,11 +3040,9 @@ impl Project {
     }
 
     /// The parts of the song the drums play (see
-    /// [`crate::library::drum_form`]), as runs of `bars`: the stretches
-    /// between the song's sections, written or heard, the chorus after the
-    /// band's intro, and the changes of variation and style in `changes`.
-    /// Each has what kind of part it is, by its section's name; the last,
-    /// up to `end`, ends the song.
+    /// [`drum_form::form_parts`]): the stretches between the song's
+    /// sections, written or heard, the chorus after the band's intro, and
+    /// the changes of variation and style in `changes`.
     fn drum_parts(
         &self,
         bars: &[Bar],
@@ -3088,58 +3050,14 @@ impl Project {
         end: usize,
         changes: &[usize],
     ) -> Vec<(std::ops::Range<usize>, PartKind)> {
-        let bars_to_end = bars.partition_point(|bar| bar.start < end);
-        if bars_to_end == 0 {
-            return Vec::new();
-        }
-        let bar_of = |step: usize| {
-            bars.partition_point(|bar| bar.start <= step)
-                .saturating_sub(1)
-        };
-        let mut starts: Vec<usize> = form
-            .iter()
-            .flat_map(|section| [section.start, section.end()])
-            .chain(
-                self.chorus()
-                    .into_iter()
-                    .flat_map(|(start, end)| [start, end]),
-            )
+        let chorus = self.chorus();
+        let cuts: Vec<usize> = chorus
+            .into_iter()
+            .flat_map(|(start, end)| [start, end])
             .chain(changes.iter().copied())
-            .filter(|&start| start > 0 && start < end)
-            .map(bar_of)
             .collect();
-        starts.push(0);
-        starts.sort_unstable();
-        starts.dedup();
-        let kinds = section_kinds(form);
-        let intro_end = self.chorus().map_or(0, |(start, _)| start);
-        let first_section = form.first().map_or(0, |section| bar_of(section.start));
-        let mut parts = Vec::new();
-        for (index, &from) in starts.iter().enumerate() {
-            let to = starts.get(index + 1).copied().unwrap_or(bars_to_end);
-            if from >= to {
-                continue;
-            }
-            let at = bars[from].start;
-            let section = form.iter().position(|section| section.contains(at));
-            let (groove, named_intro) = section.map_or((0, false), |section| kinds[section]);
-            // A bar or two before the song's first section is a pickup
-            // the drums lead in with; more is a part of its own.
-            let lead_in = section.is_none() && to <= first_section && first_section - from <= 2;
-            let opens = !lead_in
-                && (named_intro
-                    || at < intro_end
-                    || parts.iter().all(|(_, kind): &(_, PartKind)| kind.lead_in));
-            parts.push((
-                from..to,
-                PartKind {
-                    groove,
-                    opens,
-                    lead_in,
-                },
-            ));
-        }
-        parts
+        let intro_end = chorus.map_or(0, |(start, _)| start);
+        drum_form::form_parts(bars, form, end, &cuts, intro_end)
     }
 
     /// The drums: the style's rhythm laid out over each part of the song
@@ -3302,9 +3220,27 @@ impl Project {
     /// A note that lasts past the end of its chunk goes on at the start
     /// of the next.
     fn write_part(&mut self, player: Player, chunks: &[Chunk], notes: Vec<(usize, NoteEvent)>) {
+        // A note held over the start of a section plays on: the pattern
+        // before it goes on into the section, where it can.
+        let mut joined: Vec<Chunk> = Vec::new();
+        for &chunk in chunks {
+            let held_over = || {
+                notes.iter().any(|(_, note)| {
+                    note.start < chunk.start && note.start + note.length > chunk.start
+                })
+            };
+            match joined.last_mut() {
+                Some(last)
+                    if chunk.soft && last.length + chunk.length <= MAX_STEPS && held_over() =>
+                {
+                    last.length += chunk.length;
+                }
+                _ => joined.push(chunk),
+            }
+        }
         let mut contents: Vec<Content> = Vec::new();
         let mut placed: Vec<(usize, usize)> = Vec::new();
-        for chunk in chunks {
+        for chunk in &joined {
             let mut rows: Vec<(usize, Vec<NoteEvent>)> = Vec::new();
             for &(channel, note) in &notes {
                 let (start, end) = (note.start, note.start + note.length);
@@ -4900,6 +4836,68 @@ mod tests {
     }
 
     /// Where `player` starts notes, and how hard, from step `from` to `to`.
+    #[test]
+    fn the_band_starts_its_patterns_where_the_parts_start() {
+        // Candombe para Gardel's parts are 12, 8, 8, 4, 7 and 12 bars
+        // long: the band's patterns start with them, not every 16 bars.
+        let song = SONGS
+            .iter()
+            .find(|song| song.name == "Candombe para Gardel")
+            .unwrap();
+        let mut project = song_demo(song);
+        let starts: Vec<usize> = project
+            .playlist()
+            .sections()
+            .iter()
+            .map(|section| section.start)
+            .collect();
+        let song_starts: Vec<usize> = project
+            .playlist()
+            .clips()
+            .iter()
+            .filter(|clip| clip.track == 0)
+            .map(|clip| clip.start)
+            .collect();
+        assert_eq!(starts, song_starts);
+        let style = Style::named("Candombe").unwrap();
+        let band = BandStyle::of_style(style).unwrap();
+        project.apply_band_parts(band, Some(style), apply::StyleParts::default());
+        for player in [Player::Piano, Player::Bass, Player::Drums] {
+            let mut clips: Vec<usize> = project
+                .playlist()
+                .clips()
+                .iter()
+                .filter(|clip| project.pattern(clip.pattern).unwrap().player == Some(player))
+                .map(|clip| clip.start)
+                .collect();
+            clips.sort_unstable();
+            assert_eq!(clips, starts, "{player:?}");
+        }
+    }
+
+    #[test]
+    fn a_chord_held_over_a_section_start_is_not_struck_again() {
+        let mut project = band("Pop ballad", &["C", "Am", "", "", "G", "C"]);
+        // F from bar 3 to the end of bar 4, and a section from bar 4.
+        let meter = project.meter();
+        let (three, four) = (meter.bar(2), meter.bar(3));
+        let f = ChordMarker::new(three.start, HarmonyName::parse("F").unwrap());
+        assert!(project.set_chords(three.start, four.end(), &[f]));
+        assert!(
+            project
+                .add_section(Section::new("B", four.start, 3 * four.length))
+                .is_some()
+        );
+        project.follow_chord_sheet();
+        // The strings hold the chord on: nothing strikes it again where
+        // the section starts.
+        assert!(!struck(&project, Player::Strings, three.start, four.start).is_empty());
+        assert_eq!(
+            struck(&project, Player::Strings, four.start, four.start + 1),
+            []
+        );
+    }
+
     fn struck(project: &Project, player: Player, from: usize, to: usize) -> Vec<(usize, u8)> {
         let mut notes = Vec::new();
         for clip in project.playlist().clips() {
