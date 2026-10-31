@@ -45,6 +45,7 @@ pub mod sequencer;
 pub mod serial;
 pub mod sources;
 pub mod swing;
+pub mod take;
 pub mod tempo;
 pub mod tools;
 

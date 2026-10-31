@@ -174,13 +174,17 @@ pub fn is_project(path: &Path) -> bool {
 /// [`crate::band::BandDrums`]): older versions would play the wrong
 /// drums.
 ///
+/// Format 30 added takes, a voice recorded along with the song (see
+/// [`crate::take`] and [`SampleSource::Take`]). Older versions cannot
+/// read them, so a song with a take needs format 30.
+///
 /// A file can also say where the parts of the song came from (see
 /// [`crate::sources`]), in any format: older versions skip it, and lose
 /// nothing they could play. In the same way, a key can be written the
 /// other way round, Gb major rather than F# major (see
 /// [`Scale::other_spelling`]): older versions name it the usual way and
 /// play the same notes.
-pub const FORMAT_VERSION: u32 = 29;
+pub const FORMAT_VERSION: u32 = 30;
 
 /// The oldest format that can hold `project`.
 ///
@@ -285,7 +289,10 @@ pub fn format_for(project: &Project) -> u32 {
     let has_other_drums = project
         .band()
         .is_some_and(|band| band.drums != crate::band::BandDrums::Style);
-    if has_other_drums {
+    let has_takes = project.channels().iter().any(Channel::is_take);
+    if has_takes {
+        30
+    } else if has_other_drums {
         29
     } else if has_horns || has_effects {
         28
