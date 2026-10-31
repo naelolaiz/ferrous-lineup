@@ -125,8 +125,8 @@ pulso, así que puedes poner un acorde en el pulso que quieras.
 
 Una canción se abre con sus acordes ya en la hoja. Una demostración
 escribe el esquema del que se hizo; cualquier otra canción, como un
-archivo MIDI que abriste o una grabación que importaste, recibe los
-acordes que la aplicación oye en ella.
+archivo MIDI que abriste, recibe los acordes que la aplicación oye en
+ella.
 
 **Escribir los acordes que toca la canción**, arriba de la hoja, los
 vuelve a escribir a partir de lo que toca ahora la canción, en lugar de
@@ -177,7 +177,9 @@ Arriba de la hoja:
   como **Micromodos**. Otra elección dura hasta que abres otra canción.
   [Más allá de las
   tonalidades](sets-rows-micromodes.md#una-armonía-cuatro-nombres)
-  explica qué dice cada uno.
+  explica qué dice cada uno. Con conjuntos y micromodos, una línea
+  debajo, **Más usados**, ordena las clases que muestra la hoja según
+  cuánto suena cada una.
 - **Compases por línea**: **Ajustar a los nombres** pone en una línea
   tantos compases como quepan con cada nombre, y el numeral de debajo, a
   tamaño completo: 1, 2, 4, 8, 12 o 16, para que las líneas empiecen

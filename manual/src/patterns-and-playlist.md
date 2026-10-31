@@ -50,7 +50,7 @@ and playing your part](locks.md)).
 Each block on the playlist is a **clip**: one pattern, at one place on
 one track. The playlist's toolbar line says it in short: "Click to
 place "Beat". Double-click a clip to edit it, drag to move it, drag its
-right edge to repeat it, right-click to delete."
+right edge to repeat it, right-click it for its menu."
 
 - **Click** an empty place on a track to put a clip of the selected
   pattern there.
@@ -59,7 +59,10 @@ right edge to repeat it, right-click to delete."
   patterns, and plays the pattern that many times in a row.
 - **Double-click** a clip to edit it: melodies and chords open in the
   piano roll, drums in the channel rack.
-- **Right-click** a clip to delete it.
+- **Right-click** a clip for its menu: **Edit its pattern**, as a
+  double-click does, and **Delete**, which deletes every selected clip
+  when the clip is one of them. On a recording, **Transcribe again…**
+  takes the place of Edit (see [Takes](takes.md#transcribing-a-take-again)).
 
 **Snap**, in the playlist's toolbar, says where clips land: on a
 **Bar**, a **Beat** or a **Step** (a sixteenth note).
@@ -89,12 +92,15 @@ fainter row: place a clip on it, or click its **➕ New track**, and it
 becomes a track. **➕ Track** in the playlist's toolbar adds one too.
 
 - The **light** at the left of a track mutes it and unmutes it.
+- **S**, at its right, plays that track alone: every other track is
+  muted. Click it again to hear them all.
 - **Click its name** to rename it.
 - **Drag its lower edge** to make it taller or shorter;
   **double-click** the edge to give it back its usual height.
 - **Right-click its name** for **Track height**, **Reset track height**,
-  **Insert track above**, **Insert track below**, **Move up**, **Move
-  down** and **Delete track**, which deletes its clips too.
+  **Insert track above**, **Insert track below**, **Add a recording…**
+  (see [Takes](takes.md#adding-a-recording-made-before)), **Move up**,
+  **Move down** and **Delete track**, which deletes its clips too.
 
 ## The strips above the tracks
 

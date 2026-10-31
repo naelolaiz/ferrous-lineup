@@ -107,6 +107,11 @@ Biblioteca](styles.md#los-ajustes-de-la-biblioteca).
 - **Salida**: la tarjeta de sonido en uso, con su frecuencia de muestreo
   y sus canales. **Reiniciar audio** la vuelve a abrir, por ejemplo
   después de enchufar auriculares.
+- **Micrófono**: las tomas se graban desde la entrada predeterminada del
+  sistema. **Retrasar las tomas en** mueve sus notas más tarde en la
+  cuadrícula, o antes con un número negativo, en milisegundos, para una
+  tarjeta de sonido cuyos retardos no son los que dice (ver
+  [Tomas](takes.md#si-las-notas-caen-tarde-o-temprano)).
 - **Sonido de los instrumentos**: **Instrumentos del SoundFont** y
   **Batería del SoundFont**, y **Biblioteca SoundFont**: el SoundFont en
   uso y **Elegir SoundFont…**. Ver [Sonidos](sounds.md).
