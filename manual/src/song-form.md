@@ -142,6 +142,10 @@ yourself.
 - A part of another kind than the one before, a B after an A or a
   refrain after a verse, moves the drummer from the hi-hat to the ride
   cymbal.
+- A candombe **breaks** in the last bar before every new part: the
+  band strikes the first beat and stops, and the repique plays the
+  clave on the wood alone. A part that goes on into another of the same
+  name, "Verse" into "Verse 2", plays on.
 - Folk rhythms fill on their own drums, such as the bombo's head and
   rim. The tango, orchestra and ranchera rhythms stand in for bands
   without a drummer, so they don't fill.

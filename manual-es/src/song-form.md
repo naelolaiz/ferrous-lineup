@@ -156,6 +156,10 @@ donde oyó una parte en un lugar equivocado, marca tú las correctas.
 - Una parte de otra clase que la anterior, una B después de una A o un
   estribillo después de una estrofa, lleva al baterista del hi-hat al
   platillo ride.
+- Un candombe hace un **corte** en el último compás antes de cada parte
+  nueva: la banda golpea el primer pulso y para, y el repique toca solo
+  la clave en la madera. Una parte que sigue con otra del mismo nombre,
+  «Verse» con «Verse 2», sigue tocando.
 - Los ritmos folclóricos hacen sus rellenos en sus propios tambores,
   como el parche y el aro del bombo. Los ritmos de tango, de orquesta y
   de ranchera ocupan el lugar de conjuntos sin baterista, así que no

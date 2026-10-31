@@ -110,7 +110,10 @@ el bajo de la dominante y lleva a Mi.
   **Candombe Ansina**, de la Biblioteca, tocan los tres tambores de una
   cuerda de candombe: el repique abre la canción con la clave en la
   madera del tambor, y las frases se turnan, para que nunca suenen dos
-  iguales seguidas.
+  iguales seguidas. Antes de cada parte nueva, de la estrofa al
+  estribillo, la banda hace un **corte**: golpea el primer pulso del
+  último compás y para, y el repique toca solo la clave en la madera,
+  que lleva a la parte nueva.
 - **Brasil**: las canciones de los gaúchos de Rio Grande do Sul, como
   *Boi barroso*, y *Luar do sertão*, una *toada* sobre la luna del
   sertón.
