@@ -172,7 +172,11 @@ la hoja desde el compás seleccionado, en la tonalidad de la canción, sin
 cambiar el estilo de la banda. La selección pasa después de ellos, así
 que la siguiente progresión que elijas va a continuación. Es una manera
 rápida de empezar una canción: **Progresión** y luego **Cuatro
-acordes** te da I V vi IV, la progresión de mil canciones pop.
+acordes** te da I V vi IV, la progresión de mil canciones pop. Cuando
+la tonalidad de la canción es un conjunto de clases de alturas o un
+micromodo, el botón ofrece en cambio maneras de encadenar las formas del
+conjunto (ver [Un conjunto como
+tonalidad](sets-rows-micromodes.md#un-conjunto-como-tonalidad-sus-formas)).
 
 ## Los ajustes de la Biblioteca
 

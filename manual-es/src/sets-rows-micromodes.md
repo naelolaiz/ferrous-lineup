@@ -81,6 +81,65 @@ con él** pone el conjunto entero con cada clic en el piano roll, y
 de acordes, un conjunto se escribe por su nombre o por sus notas:
 `3-11 T2`, `{Re Fa La}` o `{0,1,4}`.
 
+### Un conjunto como tonalidad: sus formas
+
+Cuando la tonalidad de la canción es un conjunto de clases de alturas
+(después de **Usar como tonalidad**, o de elegir **conjunto de clases de
+alturas** en el menú Tonalidad), las teclas de armonía pueden tocar dos
+cosas, que se eligen a la izquierda:
+
+- **Acordes**: acordes apilados con las notas del conjunto, de tres o
+  cuatro notas.
+- **Formas**: las **formas** del propio conjunto, el conjunto entero
+  transportado o dado vuelta, cada una nombrada por su **grado** (T0,
+  T2, T2I…), como en un micromodo (ver [Un micromodo como
+  tonalidad](#un-micromodo-como-tonalidad)). Un conjunto de tres notas
+  muestra siempre sus formas.
+
+Las formas empiezan por casa y siguen según cuántas notas conservan de
+casa, más brillantes cuantas más conservan. Cuando una forma es algo que
+la música tonal sabe nombrar, su tecla lo dice. En una tonalidad que es
+el conjunto Do Mi Sol Si♭ (4-27, las notas de una séptima de
+dominante), T2I es Mi Sol Si♭ Re, **Mim7b5**, la única forma que conserva
+tres de sus notas. En Do mayor como conjunto (7-35), T7 es **Sol
+mayor**, que conserva seis. **Cercanas** muestra las formas que
+conservan al menos la mitad de las notas de casa, **Todas las formas**
+las muestra todas.
+
+![Las teclas de armonía en una tonalidad que es el conjunto Do Mi Sol Si♭, con Formas activado, después de tocar T2I: T0 (Do7), T2I (Mim7b5), después T3 (Mib7), T6 (Fa♯7), T9 (La7) y las séptimas semidisminuidas que conservan dos notas; T0 aparece con borde porque conserva tres notas de Mi Sol Si♭ Re](images/set-forms-keys.png)
+
+**Una progresión de formas.** En una tonalidad que es un conjunto, el
+botón **Progresión** de la hoja de acordes ofrece maneras de encadenar
+las formas del conjunto, en lugar de las progresiones de la Biblioteca,
+y escribe ocho compases de ellas desde el compás elegido:
+
+- **Conservar todas las notas menos una**: cada forma conserva todas las
+  notas de la anterior menos una, la manera más suave de seguir. Do
+  mayor como conjunto recorre el círculo de quintas: Fa mayor, Si♭
+  mayor, Mi♭ mayor… En un micromodo se llama **Conservar dos notas,
+  mover una**.
+- **Conservar todas las notas que se pueda**, para un conjunto cuyas
+  formas conservan todas las notas menos una solo de a pares, como la
+  séptima de dominante y la séptima semidisminuida: Do7, Mim7b5, La7,
+  Do♯m7b5… Nunca vuelve enseguida al acorde anterior.
+- **Conservar una nota, mover dos** (micromodos): un pivote, un
+  movimiento más amplio.
+- **Las doce notas, cada *N* formas**: formas que no comparten ninguna
+  nota, de modo que unas pocas juntas tienen las doce notas: cuatro
+  formas de un micromodo, los tres acordes de séptima disminuida, o un
+  hexacordo y las seis notas que deja fuera. Después la vuelta siguiente
+  empieza desde una forma que conserva notas de la última. Solo aparece
+  para los conjuntos que pueden hacerlo.
+- **Secuencia**: todas las notas suben un semitono, un tono, una tercera
+  menor, una cuarta o una quinta en cada compás.
+
+Cada compás muestra su grado y cuántas notas conserva del compás
+anterior («T2I · 3 comunes»), y puedes escribir un grado en cualquier
+compás: `T2`, `T5I`. La banda toca cada forma como un acorde cuyas notas
+comunes se quedan en las mismas teclas, sobre su fundamental cuando la
+forma es un acorde (Do bajo Do7) y si no sobre la primera nota de su
+orden más compacto.
+
 ## Una armonía, cuatro nombres
 
 Un conjunto es otra manera de **nombrar** notas, no otras notas. El

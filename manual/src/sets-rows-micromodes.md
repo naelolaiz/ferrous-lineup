@@ -75,6 +75,58 @@ piano roll, and **Use as the key** makes it the song's key. On the
 chord sheet, a set is typed by its name or its notes: `3-11 T2`,
 `{D F A}` or `{0,1,4}`.
 
+### A set as the key: its forms
+
+When the song's key is a pitch-class set (after **Use as the key**, or
+after picking **pitch-class set** in the Key menu), the harmony keys can
+play two things, chosen at the left:
+
+- **Chords**: chords stacked from the set's notes, three or four at a
+  time.
+- **Forms**: the set's own **forms**, the whole set moved or turned
+  upside down, each named by its **degree** (T0, T2, T2I…), as for a
+  micromode (see [A micromode as the key](#a-micromode-as-the-key)). A
+  set of three notes always shows its forms.
+
+The forms come home first, then by how many notes they keep of home,
+brighter the more they keep. When a form is something tonal music has a
+name for, its key says so. In a key that is C E G B♭ as a set (4-27, the
+notes of a dominant seventh), T2I is E G B♭ D, **Em7b5**, the only form
+that keeps three of its notes. In C major as a set (7-35), T7 is **G
+major**, which keeps six. **Near home** shows the forms that keep at
+least half the notes of home, **All forms** shows them all.
+
+![The harmony keys in a key that is the set C E G B♭, with Forms on, after T2I was played: T0 (C7), T2I (Em7b5), then T3 (E♭7), T6 (F♯7), T9 (A7) and the half-diminished sevenths that keep two notes; T0 is outlined because it keeps three notes of E G B♭ D](images/set-forms-keys.png)
+
+**A progression of forms.** In a set key, the chord sheet's
+**Progression** button offers ways to chain the set's forms, in place
+of the Library's progressions, and writes eight bars of them from the
+bar you chose:
+
+- **Keep all notes but one**: each form keeps every note of the one
+  before but one, the smoothest way on. C major as a set walks round
+  the circle of fifths: F major, B♭ major, E♭ major… For a micromode it
+  is called **Keep two notes, move one**.
+- **Keep as many notes as it can**, for a set whose forms keep all
+  notes but one only in pairs, as the dominant seventh and the
+  half-diminished seventh do: C7, Em7b5, A7, C♯m7b5… It never goes
+  straight back to the chord before.
+- **Keep one note, move two** (micromodes): a pivot, a wider move.
+- **All twelve notes, every *N* forms**: forms that share no note, so
+  that every few of them hold all twelve notes between them: four forms
+  of a micromode, the three diminished seventh chords, or a hexachord
+  and the six notes it leaves out. Then the next round starts from a
+  form that keeps notes of the last. It is there only for the sets that
+  can do it.
+- **Sequence**: every note up a semitone, a whole tone, a minor third,
+  a fourth or a fifth each bar.
+
+Each bar shows its degree and how many notes it keeps of the bar before
+("T2I · 3 common"), and you can type a degree in any bar: `T2`, `T5I`.
+The band plays each form as a chord whose shared notes stay on the same
+keys, over its root when the form is a chord (C under C7) and otherwise
+over the first note of its most compact order.
+
 ## One harmony, four names
 
 A set is another way to **name** notes, not other notes. C major's
