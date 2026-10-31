@@ -59,8 +59,10 @@ are in [`book/`](book/), next to the code they describe.
 - **Songs**: over 340 demos, from folk songs and hymns to tangos, jazz
   standards and whole orchestral pieces, plus a library of 217 styles
   and 141 rhythms.
-- **In and out**: MIDI keyboards and synths, MIDI files, recordings
-  (tempo, key and chords heard from an MP3 or WAV), chord charts as
+- **Takes**: sing or whistle a part along with the song, and its notes
+  are written in (pitch, timing and loudness), with the recording kept
+  on a track. A recording made before, as an MP3 or WAV, works the same.
+- **In and out**: MIDI keyboards and synths, MIDI files, chord charts as
   text, lead sheets as PDF, and WAV, MIDI and MP4 video export.
 
 ## Download
@@ -119,8 +121,8 @@ On macOS the program is inside the app bundle:
 |---|---|
 | ![The piano roll on the chords of the demo song, with the chord names above the grid and the chords that often come next lit up](screenshots/piano-roll.png) | ![The Library tab: Bossa nova has just been tried, and its tooltip shows its chords in C major](screenshots/library.png) |
 | The piano roll names the chords as they play and lights up the ones that often come next. | The Library: 217 harmony styles and 141 rhythms to try in your key. |
-| ![A recording imported with File > Import recording: the chords heard on every beat in the piano roll](screenshots/import-recording.png) | ![The menu of a track: insert above or below, move up or down, delete](screenshots/track-menu.png) |
-| An imported recording, with the chords heard on every beat. | Right-click a track's name to insert, move or delete tracks. |
+| ![The Your take window over the playlist: 21 notes heard from bar 1 to bar 6, going to the Lead on a grid of sixteenth notes, with the recording kept on a new track](screenshots/take-review.png) | ![The menu of a track: insert above or below, move up or down, delete](screenshots/track-menu.png) |
+| A sung take: its notes go into the Lead, the recording onto a track. | Right-click a track's name to insert, move or delete tracks. |
 | ![The twelve-tone window beside the piano roll: the matrix of a row with all its forms, and the piano roll numbering the notes of the row](screenshots/twelve-tone-row.png) | ![The pitch-class set browser showing the octatonic scale, 8-28, beside the piano roll](screenshots/pitch-class-sets.png) |
 | A twelve-tone row and its matrix: P, I, R and RI on every note. | The pitch-class sets by Forte number, to draw with or use as a scale. |
 | ![The Micromodes window: the three families of Kröpfl's micromodes, Menor 3 drawn on a clock with its prime form do - do# - mi, and the micromodes in the selected C major chords](screenshots/micromodes.png) | ![The Sets window on 7-35, the diatonic scale, listing the micromodes inside its 35 groups of three](screenshots/micromodes-in-sets.png) |
@@ -134,9 +136,9 @@ On macOS the program is inside the app bundle:
 
 | Path | Contents |
 |------|----------|
-| `crates/lineup-core` | Music types and theory: notes, scales, chords and chord naming, twelve-tone rows, pitch-class sets and micromodes, the harmony keys, tempo and time signatures, patterns, the playlist, project files, undo history and project diffs, the sequencer clock, MIDI messages and MIDI files, recording, lead sheets laid out on pages, and the library of styles, rhythms and songs. No audio, no UI. |
-| `crates/lineup-audio` | Real-time audio engine on top of `cpal`: pattern and song playback, drum synthesis, a pitched sampler, a polyphonic synth, SoundFont instruments (with `rustysynth`), MIDI Out channels, live keys, offline rendering to WAV files, and traces of every note played. |
-| `crates/lineup-listen` | Listening to a recording: decoding audio files, finding the beats, the key and the chord on every beat, and turning them into a project. |
+| `crates/lineup-core` | Music types and theory: notes, scales, chords and chord naming, twelve-tone rows, pitch-class sets and micromodes, the harmony keys, tempo and time signatures, patterns, the playlist, project files, undo history and project diffs, the sequencer clock, MIDI messages and MIDI files, recording, takes lined up with the song, lead sheets laid out on pages, and the library of styles, rhythms and songs. No audio, no UI. |
+| `crates/lineup-audio` | Real-time audio engine on top of `cpal`: pattern and song playback, drum synthesis, a pitched sampler, a polyphonic synth, SoundFont instruments (with `rustysynth`), MIDI Out channels, live keys, offline rendering to WAV files, traces of every note played, and the microphone for takes. |
+| `crates/lineup-listen` | Listening to recordings: decoding audio files, hearing the notes sung or whistled in a take (pitch, start, end and loudness), and saving takes as WAV files. |
 | `crates/lineup-video` | Video files: the app's views painted in memory, encoded as H.264 and MP3 in an MP4 file, with the encoders built from source. |
 | `crates/lineup-app` | The desktop app (`ferrous-lineup`), built with `egui`, with MIDI through `midir`. |
 | `packaging` | The app icon (and the macOS `.icns`, Windows `.ico` and window pixels generated from it), the desktop entry, MIME type and AppStream data, the Inno Setup script, the Flatpak manifest, the AUR PKGBUILDs, and the Debian metadata. |

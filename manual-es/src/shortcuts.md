@@ -166,7 +166,7 @@ El editor de estilos tiene su propio deshacer, aparte del de la canción
 | Hoja de acordes | clic en un compás, luego **Mayús+clic** en otro | selecciona los compases entre ellos |
 | Lista de reproducción | **Ctrl+clic** en clips | los suma a la selección |
 | Lista de reproducción | **Ctrl+arrastrar** en un lugar vacío | selecciona los clips del recuadro |
-| Lista de reproducción | clic derecho en un clip | lo elimina |
+| Lista de reproducción | clic derecho en un clip | su menú: editar, eliminar, transcribir otra vez una toma |
 | Piano roll | **Ctrl+clic** en una nota | la suma a la selección, o la quita |
 | Piano roll | **Ctrl+arrastrar** en un lugar vacío | selecciona las notas del recuadro |
 | Piano roll | clic derecho en una nota, o arrastrar con el botón derecho sobre notas | las elimina |
