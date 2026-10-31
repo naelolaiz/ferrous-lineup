@@ -112,6 +112,21 @@ pub enum SampleSource {
     Builtin(Drum),
     /// A WAV file on disk.
     File(PathBuf),
+    /// A take: a voice recorded while the song played, saved as a WAV
+    /// file (see [`crate::take`]). Unlike a sound, it plays along with
+    /// the song however short it is: from wherever playback starts, and
+    /// it stops when playback stops.
+    Take(PathBuf),
+}
+
+impl SampleSource {
+    /// The file the sound is read from, if it is not built in.
+    pub fn path(&self) -> Option<&std::path::Path> {
+        match self {
+            SampleSource::Builtin(_) => None,
+            SampleSource::File(path) | SampleSource::Take(path) => Some(path),
+        }
+    }
 }
 
 /// What kind of instrument a channel is.
@@ -262,17 +277,20 @@ impl Channel {
     }
 
     /// Whether it can be sent over MIDI: a synth, a built-in drum, or a
-    /// MIDI Out channel already. A sample file has no note a synth could
-    /// play in its place.
+    /// MIDI Out channel already. A sample file or a take has no note a
+    /// synth could play in its place.
     pub fn can_go_over_midi(&self) -> bool {
-        !matches!(self.kind, ChannelKind::Sampler(SampleSource::File(_)))
+        !matches!(
+            self.kind,
+            ChannelKind::Sampler(SampleSource::File(_) | SampleSource::Take(_))
+        )
     }
 
     /// Sends its notes over MIDI, on MIDI channel `midi_channel` (0–15),
     /// keeping its instrument. A name that only said what played it
     /// ("Lineup Osc", "MIDI Out 2") follows to the new MIDI channel. A
     /// built-in drum stays the drum it is, and goes out as its note of a
-    /// General MIDI drum set. A sample file stays as it is.
+    /// General MIDI drum set. A sample file or a take stays as it is.
     pub fn send_over_midi(&mut self, midi_channel: u8) {
         let midi_channel = midi_channel.min(15);
         match self.kind {
@@ -280,7 +298,7 @@ impl Channel {
                 self.sent_on = Some(midi_channel);
                 return;
             }
-            ChannelKind::Sampler(SampleSource::File(_)) => return,
+            ChannelKind::Sampler(SampleSource::File(_) | SampleSource::Take(_)) => return,
             _ => {}
         }
         let plain = match self.kind {
@@ -312,7 +330,7 @@ impl Channel {
 
     /// Whether the channel's notes count in the harmony heard: a synth
     /// or a MIDI Out channel that is not muted, other than the MIDI drum
-    /// channel (10). Samplers, such as an imported recording, do not.
+    /// channel (10). Samplers, such as a take, do not.
     pub fn plays_notes(&self) -> bool {
         let melodic = match self.kind {
             ChannelKind::Synth => true,
@@ -323,15 +341,21 @@ impl Channel {
     }
 
     /// Whether the channel plays tunes, so its notes follow a change of
-    /// key. Built-in drums and the MIDI drum channel do not.
+    /// key. Built-in drums, the MIDI drum channel and takes do not: a
+    /// take's one note starts the recording, which plays as it was sung.
     pub fn is_pitched(&self) -> bool {
         !matches!(
             self.kind,
-            ChannelKind::Sampler(SampleSource::Builtin(_))
+            ChannelKind::Sampler(SampleSource::Builtin(_) | SampleSource::Take(_))
                 | ChannelKind::MidiOut {
                     channel: DRUM_CHANNEL
                 }
         )
+    }
+
+    /// Whether it is a take (see [`crate::take`]).
+    pub fn is_take(&self) -> bool {
+        matches!(self.kind, ChannelKind::Sampler(SampleSource::Take(_)))
     }
 }
 
@@ -2256,7 +2280,7 @@ impl Project {
     /// imported song with no key signature sounds like it is in.
     ///
     /// Synths and MIDI Out channels that are not muted count, drums and
-    /// samplers (such as an imported recording) do not.
+    /// samplers (such as a take) do not.
     pub fn heard_keys(&self) -> Vec<KeySpan> {
         let meter = self.meter();
         let end = self.song_length();

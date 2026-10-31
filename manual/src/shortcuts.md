@@ -164,7 +164,7 @@ styles](style-editor.md)).
 | Playlist | **Ctrl+drag** on an empty place | selects the clips in the box |
 | Piano roll | **Ctrl+click** a note | adds it to the selection, or takes it out |
 | Piano roll | **Ctrl+drag** on an empty place | selects the notes in the box |
-| Playlist | right-click a clip | deletes it |
+| Playlist | right-click a clip | its menu: edit, delete, transcribe a take again |
 | Piano roll | right-click a note, or right-drag over notes | deletes them |
 | Library | **Ctrl+click** a style | applies it at once |
 | Chord sheet, bar numbers, track and channel names, styles | right-click | opens their menu |

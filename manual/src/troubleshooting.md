@@ -62,6 +62,23 @@ apart from what you hear, note by note, so the file never stutters (see
   channel is not muted.
 - See [MIDI keyboards and synths](midi.md).
 
+## Takes
+
+- **"Could not record a take: no microphone found".** The system has
+  no input to record from: plug in a microphone or a headset, or choose
+  one as the input in your system's sound settings, then click the
+  microphone button again.
+- **On a Mac, the take is silent.** Ferrous Lineup needs permission to
+  use the microphone: turn it on in System Settings > Privacy &
+  Security > Microphone.
+- **The band's notes are written too**, or notes you did not sing: the
+  microphone hears the speakers. Use headphones.
+- **The notes land a little late or early.** Set **Settings > Audio >
+  Microphone > Move takes later by** (see [Takes](takes.md#if-the-notes-land-late-or-early)).
+- **Your take says "No notes were heard: only the recording can be
+  kept".** The microphone heard you too softly, or not at all: check its level in
+  your system's sound settings, and sing closer to it.
+
 ## The keys don't work
 
 - **Space doesn't play**, and the other keys do nothing: a text box has
@@ -93,7 +110,7 @@ apart from what you hear, note by note, so the file never stutters (see
 - **The chords of an imported MIDI file are wrong.** The app guesses
   them from the notes, and the guess can be wrong where the music is
   thin or moves fast. Correct them on the chord sheet (see [Opening MIDI
-  files and recordings](importing.md#getting-the-chords-right)).
+  files and chord sheets](importing.md#getting-the-chords-right)).
 - **The chord names are not what I expected**, such as Do instead of C,
   or the other way round: **Edit > Settings… > Harmony > Note naming**
   chooses letters or solfège.

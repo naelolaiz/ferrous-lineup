@@ -28,8 +28,8 @@ own:
 | Crate | Kind | Job |
 |-------|------|-----|
 | `lineup-core` | library | The music and the song: notes, scales, chords and harmony, the chord sheet, patterns and the playlist, project files and diffs, undo history, MIDI files, lead sheets, the band, and the library of styles, rhythms and songs. No audio and no UI. |
-| `lineup-audio` | library | The real-time engine and the offline renderer: drums and samplers, the Lineup Osc, SoundFont instruments, song and pattern playback, effects, WAV export, and the trace of every note played. |
-| `lineup-listen` | library | Decodes a recording (MP3, WAV, FLAC or Ogg Vorbis) and listens for its beats, key, chords and meter. Experimental. |
+| `lineup-audio` | library | The real-time engine and the offline renderer: drums and samplers, the Lineup Osc, SoundFont instruments, song and pattern playback, effects, WAV export, the trace of every note played, and the microphone for takes. |
+| `lineup-listen` | library | Decodes a recording (MP3, WAV, FLAC or Ogg Vorbis), hears the notes sung or whistled in it, and saves takes as WAV files. |
 | `lineup-video` | library | Paints the app's views in memory and encodes them as H.264 and MP3 in an MP4 file. |
 | `lineup-app` | binary (program) | The window, built with `egui`, and MIDI through `midir`. It owns the state that joins the other four, and produces the `ferrous-lineup` executable. |
 
