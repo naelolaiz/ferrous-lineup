@@ -252,3 +252,36 @@ The four groups of three in the row of Webern's Concerto, Op. 24, in the
 picture of the Row window, are all Menor 3. The Library's **Micromodes
 (Kröpfl)** group has seven styles, and **File > Demos > Micromodes**
 plays each of them.
+
+### A micromode as the key
+
+When the song's key is a micromode (after **Use as the key**, or after
+a micromode style from the Library), its chords are the micromode's
+**forms**: the same three notes moved, or turned upside down and moved.
+They are named by their **degree**, counted from the key the way a
+Roman numeral is:
+
+- **T0** is the key's own form, home. In Menor 3 on C it is C C♯ E.
+- **T2** is home moved up 2 semitones: D D♯ F♯.
+- **T1I** is home turned upside down and moved: A C C♯.
+
+Move the whole song to D and every form keeps its degree, as ii stays
+ii in any major key. When the key's own form is the upside-down one, as
+a major triad is (the micromode's table writes the minor triad), home
+is **T0I**.
+
+![The harmony keys in a key of Menor 3 on C after T1I was played: T0, T1I, T4I and T5I, then the forms that keep one note of home, each with its notes and its name; T0, T8 and T9 are outlined because they keep two notes of A C C♯, and the hint below says so](images/micromode-keys.png)
+
+The **harmony keys** show the key's forms, home first, then the forms
+that keep two of its notes, then the ones that keep one; the more a
+form keeps of home, the brighter its key. **Near home** leaves out the
+forms that keep no note of home, and **All forms** shows them all (24
+for Menor 3). After you play a form, the forms that keep two of *its*
+notes are outlined: they are the smoothest ways on, one note moving.
+Hover a key to read what stays and what moves, such as "keeps A and C;
+C♯ goes to A♭"; for the major and minor triads it also names the move
+(P, L or R).
+
+On the **chord sheet**, each bar shows its degree, and from the second
+bar on how many notes it keeps of the bar before: "T1I · 2 common".
+Type a degree to write that form: `T2`, `T5I`.
