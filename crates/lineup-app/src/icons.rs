@@ -15,6 +15,11 @@ use crate::theme;
 /// and the colour to draw it in.
 pub type Picture = fn(&Painter, Rect, Color32);
 
+/// How wide a toggle is: a little narrower than the transport's buttons,
+/// so the toolbar fits on one row in a window 1280 points wide, in
+/// Spanish too (see `the_toolbar_fits_on_one_row_at_1280_points`).
+const TOGGLE_WIDTH: f32 = 28.0;
+
 /// The Id of the toggle named `name`, to find it again (in tests).
 pub fn id(name: &str) -> egui::Id {
     egui::Id::unique(("icon-toggle", name))
@@ -24,17 +29,24 @@ pub fn id(name: &str) -> egui::Id {
 /// when `on`. `name` says what it is: it names the button for screen
 /// readers and gives it a lasting Id (see [`id`]).
 pub fn toggle(ui: &mut egui::Ui, name: &str, on: bool, picture: Picture) -> egui::Response {
-    let (_, rect) = ui.allocate_space(vec2(30.0, 26.0));
+    toggle_lit(ui, name, on, theme::ACCENT, picture)
+}
+
+/// A [`toggle`] lit in `light` when `on`, as Rec is lit red.
+pub fn toggle_lit(
+    ui: &mut egui::Ui,
+    name: &str,
+    on: bool,
+    light: Color32,
+    picture: Picture,
+) -> egui::Response {
+    let (_, rect) = ui.allocate_space(vec2(TOGGLE_WIDTH, 26.0));
     let response = ui.interact(rect, id(name), Sense::click());
     response
         .widget_info(|| egui::WidgetInfo::selected(egui::Role::Button, ui.is_enabled(), on, name));
     if ui.is_rect_visible(rect) {
         let visuals = ui.style().interact(&response);
-        let fill = if on {
-            theme::ACCENT
-        } else {
-            visuals.weak_bg_fill
-        };
+        let fill = if on { light } else { visuals.weak_bg_fill };
         let painter = ui.painter();
         painter.rect(
             rect,
@@ -171,6 +183,25 @@ pub fn metronome(painter: &Painter, rect: Rect, color: Color32) {
     painter.circle_filled(at(rect, 0.66, 0.46), 2.0, color);
 }
 
+/// The microphone: its head, its stand and its foot.
+pub fn microphone(painter: &Painter, rect: Rect, color: Color32) {
+    let head = Rect::from_min_max(at(rect, 0.34, 0.0), at(rect, 0.66, 0.62));
+    painter.rect_filled(head, 0.16 * rect.width(), color);
+    let cradle = [
+        (0.2, 0.4),
+        (0.2, 0.55),
+        (0.32, 0.74),
+        (0.5, 0.78),
+        (0.68, 0.74),
+        (0.8, 0.55),
+        (0.8, 0.4),
+    ];
+    let points = cradle.iter().map(|&(x, y)| at(rect, x, y)).collect();
+    painter.add(Shape::line(points, Stroke::new(1.5, color)));
+    line(painter, rect, (0.5, 0.78), (0.5, 0.95), color);
+    line(painter, rect, (0.3, 0.95), (0.7, 0.95), color);
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -179,7 +210,7 @@ mod tests {
     fn every_picture_stays_in_its_square() {
         let ctx = egui::Context::default();
         let square = Rect::from_min_size(Pos2::new(7.0, 5.0), vec2(16.0, 16.0));
-        let pictures: [Picture; 8] = [
+        let pictures: [Picture; 9] = [
             chord_sheet,
             rack,
             piano_roll,
@@ -188,6 +219,7 @@ mod tests {
             follow,
             count_in,
             metronome,
+            microphone,
         ];
         for picture in pictures {
             let mut output = ctx.run_ui(Default::default(), |ui| {

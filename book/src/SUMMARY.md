@@ -41,7 +41,7 @@
 - [Twelve-tone rows and their rules](theory/twelve-tone.md)
 - [Micromodes](theory/micromodes.md)
 - [Voice leading and part motion](theory/voice-leading.md)
-- [Importing a recording (experimental)](theory/listen.md)
+- [Takes: hearing a sung tune](theory/listen.md)
 - [Exercises: music theory in code](theory/exercises.md)
 
 # Part IV: The band

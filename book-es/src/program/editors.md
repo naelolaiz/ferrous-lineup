@@ -247,7 +247,8 @@ el sonido de ese canal; un archivo soltado en cualquier otro sitio se
 convierte en un canal nuevo con el nombre del archivo
 (`path.file_stem()` es el nombre del archivo sin su extensión). Un
 archivo de proyecto, MIDI o de hoja de acordes, o una grabación, se
-deja para la app, que lo abre o lo importa.
+deja para la app, que lo abre, lo importa o lo añade a la canción como
+toma.
 
 La carga ocurre en `LineupApp::load_sample`, en el hilo de la ventana,
 porque leer archivos es lento y nunca debe ocurrir en el hilo de audio.
@@ -1595,6 +1596,47 @@ y por eso el rack y el piano roll obtienen el suyo de pequeñas funciones
 
 ![Un doble clic en un clip de «Ritmo» abre el rack de canales en
 «Ritmo», ajustado a sus filas.](../images/step-8-rack-double-click.png)
+
+### Un clic derecho abre el menú del clip
+
+Un clic derecho en un clip antes lo eliminaba, y arrastrar con el botón
+derecho eliminaba todos los clips que cruzaba. Es rápido, pero un clic
+derecho abre un menú en todos los demás lugares de la aplicación (el
+nombre de una pista, una sección, los números de compás), así que
+eliminar ahí sorprendía. Ahora abre el menú del clip: **Transcribir otra
+vez…** para la grabación de una toma, o **Editar su patrón**, y
+**Eliminar**.
+
+`egui::Popup::context_menu(response)` abre un menú donde se hizo clic
+derecho en la respuesta. Pero la cuadrícula es una sola respuesta
+grande, y un clic derecho en una celda vacía no debería abrir nada. Así
+que la lista de reproducción recuerda en qué clip se hizo clic derecho,
+y dónde, y le dice al menú emergente si abrirse:
+
+```rust
+let mut open = None;
+if response.secondary_clicked() {
+    self.clip_menu = response
+        .interact_pointer_pos()
+        .filter(|pos| cells.contains(*pos))
+        .and_then(|pos| {
+            clip_at(project, layout, pos).map(|index| (index, layout.step_at(pos.x)))
+        });
+    open = Some(egui::SetOpenCommand::Bool(self.clip_menu.is_some()));
+} else if response.clicked() {
+    open = Some(egui::SetOpenCommand::Bool(false));
+}
+```
+
+`open_memory(open)` reemplaza la orden que daría `context_menu`, que se
+abre con cualquier clic derecho. `None` deja el menú como estaba,
+abierto o cerrado. El clip se recuerda por su índice, que sigue siendo
+correcto mientras el menú está abierto: el menú es un emergente, así
+que un clic en él no llega a la cuadrícula, y nada más edita los clips
+mientras tanto.
+
+**Eliminar** elimina el clip, o todos los clips seleccionados cuando es
+uno de ellos, con el mismo `RemoveClips` que manda la tecla Supr.
 
 ### Dibujar las notas de un clip: `Box<dyn Fn>`
 
