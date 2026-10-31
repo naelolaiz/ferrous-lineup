@@ -215,11 +215,13 @@ impl Project {
         while index < self.playlist.clips.len() {
             let clip = self.playlist.clips[index];
             let length = self.patterns[clip.pattern].length();
-            let crosses = clip.start < at && at < clip.start + length * clip.repeats;
+            let crosses = clip.start < at && at < clip.end(length);
             if crosses && self.only_clip(index) && length + steps <= MAX_STEPS {
+                // The step of the pattern played there.
+                let inside = at - clip.start + clip.first_step(length);
                 let pattern = &mut self.patterns[clip.pattern];
                 for channel in 0..pattern.rows() {
-                    let notes = opened(pattern.notes(channel), at - clip.start, steps);
+                    let notes = opened(pattern.notes(channel), inside, steps);
                     pattern.set_notes(channel, notes);
                 }
                 pattern.set_length(length + steps);
@@ -244,14 +246,16 @@ impl Project {
         while index < self.playlist.clips.len() {
             let clip = self.playlist.clips[index];
             let length = self.patterns[clip.pattern].length();
-            let clip_end = clip.start + length * clip.repeats;
+            let clip_end = clip.end(length);
             if clip_end <= start || clip.start >= end {
                 index += 1;
                 continue;
             }
-            let from = start.max(clip.start) - clip.start;
-            let to = end.min(clip_end) - clip.start;
-            if self.only_clip(index) && to - from < length {
+            // The steps of the pattern in them.
+            let first = clip.first_step(length);
+            let from = start.max(clip.start) - clip.start + first;
+            let to = end.min(clip_end) - clip.start + first;
+            if self.only_clip(index) && to - from < clip.length(length) {
                 let pattern = &mut self.patterns[clip.pattern];
                 for channel in 0..pattern.rows() {
                     let notes = closed(pattern.notes(channel), from, to);
@@ -312,21 +316,27 @@ impl Project {
     /// it is now, in its place in the list. A cut between two repeats of
     /// its pattern makes two clips of it; a cut inside one plays that
     /// repeat's two halves from patterns of their own (see
-    /// [`Project::cut_pattern`]). Returns `None`, changing nothing, if
-    /// there are too many patterns for them.
+    /// [`Project::cut_pattern`]). A trimmed clip's pieces leave out what
+    /// it left out. Returns `None`, changing nothing, if there are too
+    /// many patterns for them.
     fn cut_clip(&mut self, index: usize, at: usize) -> Option<usize> {
         let clip = self.playlist.clips[index];
         let length = self.patterns[clip.pattern].length();
-        let end = clip.start + length * clip.repeats;
-        if !(clip.start < at && at < end) {
+        if !(clip.start < at && at < clip.end(length)) {
             return Some(1);
         }
-        let offset = at - clip.start;
+        let skip = clip.first_step(length);
+        // Counted from where the pattern starts its first time round.
+        let offset = at - clip.start + skip;
         let (whole, part) = (offset / length, offset % length);
+        // Where time round `round` starts, or would start untrimmed.
+        let round_start = |round: usize| clip.start + round * length - skip;
+        let last = whole + 1 == clip.repeats;
         let mut pieces = Vec::new();
         if whole > 0 {
             pieces.push(Clip {
                 repeats: whole,
+                cut: 0,
                 ..clip
             });
         }
@@ -334,14 +344,24 @@ impl Project {
         if part > 0 {
             let alone = self.only_clip(index);
             let (head, tail) = self.cut_pattern(clip.pattern, part, alone)?;
-            pieces.push(Clip::new(head, clip.track, clip.start + whole * length));
-            pieces.push(Clip::new(tail, clip.track, at));
+            pieces.push(match whole {
+                0 => Clip {
+                    skip,
+                    ..Clip::new(head, clip.track, clip.start)
+                },
+                _ => Clip::new(head, clip.track, round_start(whole)),
+            });
+            pieces.push(Clip {
+                cut: if last { clip.cut } else { 0 },
+                ..Clip::new(tail, clip.track, at)
+            });
             rest -= 1;
         }
         if rest > 0 {
             pieces.push(Clip {
-                start: end - rest * length,
+                start: round_start(clip.repeats - rest),
                 repeats: rest,
+                skip: 0,
                 ..clip
             });
         }
@@ -617,6 +637,47 @@ mod tests {
         assert_eq!(starts(&halves[0]), [(0, 4)]);
         assert_eq!(starts(&halves[1]), [(0, 4)]);
         assert_eq!(halves[1].length(), 16);
+    }
+
+    #[test]
+    fn a_trimmed_clip_cut_in_two_still_leaves_out_what_it_did() {
+        let mut project = Project::empty();
+        project.add_channel(Channel::synth());
+        let riff = project.pattern_mut(0).unwrap();
+        riff.set_length(32);
+        riff.set_notes(
+            0,
+            [
+                NoteEvent::new(Note::new(60), 0, 4),
+                NoteEvent::new(Note::new(62), 16, 4),
+                NoteEvent::new(Note::new(64), 28, 4),
+            ],
+        );
+        project.add_clip(Clip::new(0, 0, 0)).unwrap();
+        project.add_clip(Clip::new(0, 0, 64)).unwrap();
+        // Without its first note, and with its last one cut short.
+        let clip = project.playlist().clips()[0];
+        let trimmed = clip
+            .trimmed_from(4, 32)
+            .unwrap()
+            .trimmed_to(30, 32)
+            .unwrap();
+        assert!(project.trim_clip(0, trimmed));
+        let heard = |project: &Project, end: usize| -> Vec<(f32, f32, u8)> {
+            let mut notes: Vec<_> = project
+                .heard_notes(0, end)
+                .iter()
+                .map(|note| (note.start, note.end, note.pitch.midi()))
+                .collect();
+            notes.sort_by(|a, b| a.0.total_cmp(&b.0));
+            notes
+        };
+        assert_eq!(heard(&project, 64), [(16.0, 20.0, 62), (28.0, 30.0, 64)]);
+        // A bar put in after the first: the clip is cut where it goes.
+        assert!(project.insert_bars(0, true, 1));
+        assert_eq!(heard(&project, 80), [(32.0, 36.0, 62), (44.0, 46.0, 64)]);
+        assert!(project.delete_bars(1, 1));
+        assert_eq!(heard(&project, 64), [(16.0, 20.0, 62), (28.0, 30.0, 64)]);
     }
 
     #[test]

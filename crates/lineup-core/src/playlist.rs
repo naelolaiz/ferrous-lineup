@@ -24,11 +24,14 @@
 //! [`crate::arrangement`] turns all of this into the list of things the
 //! audio thread plays.
 
+use std::ops::Range;
+
 use serde::{Deserialize, Serialize};
 
 use crate::chord_sheet::ChordMarker;
 use crate::key_map::KeyMarker;
 use crate::meter::TimeMarker;
+use crate::pattern::NoteEvent;
 use crate::tempo::TempoMarker;
 
 /// Steps in one bar of 4/4 time: four beats of four steps.
@@ -104,18 +107,93 @@ impl Track {
 /// The clip does not store its length: it is as long as its pattern
 /// times `repeats`, so making a pattern longer makes all its clips longer
 /// too.
+///
+/// A clip can also be trimmed, as in most audio workstations: dragging
+/// its left edge in hides the start of the pattern (`skip`), and
+/// dragging its right edge in hides the end of its last time round
+/// (`cut`). The hidden notes are not played, but they are still in the
+/// pattern: dragging the edge back out brings them back.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct Clip {
     /// The pattern's position in the project's pattern list.
     pub pattern: usize,
     /// The track's position in the playlist, counted from 0 at the top.
     pub track: usize,
-    /// The step the clip starts on, counted from the start of the song.
+    /// The first step the clip plays, counted from the start of the song.
     pub start: usize,
-    /// How many times the pattern plays, one right after the other:
-    /// 1 to [`MAX_REPEATS`].
+    /// How many times round the pattern the clip plays, one right after
+    /// the other: 1 to [`MAX_REPEATS`]. A trimmed time round counts.
     #[serde(default = "once", skip_serializing_if = "is_once")]
     pub repeats: usize,
+    /// How many steps at the start of the pattern are not played the
+    /// first time round: less than the pattern is long.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub skip: usize,
+    /// How many steps at the end of the pattern are not played the last
+    /// time round: less than the pattern is long.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub cut: usize,
+}
+
+/// Lets serde leave `skip: 0` and `cut: 0` out of files, so a clip that
+/// is not trimmed reads as before.
+fn is_zero(steps: &usize) -> bool {
+    *steps == 0
+}
+
+/// One time a clip plays its pattern: the steps of the pattern heard
+/// that time, and the step of the song the first of them is heard on.
+///
+/// Only the first and last time round can leave steps out, when the
+/// clip is trimmed.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Round {
+    /// The song step `steps.start` is heard on.
+    pub at: usize,
+    /// The steps of the pattern heard.
+    pub steps: Range<usize>,
+}
+
+impl Round {
+    /// The song step on which step `step` of the pattern is heard this
+    /// time round. `step` may be outside `steps`: a note held past the
+    /// end of the round ends where the round ends.
+    pub fn song_step(&self, step: usize) -> usize {
+        (self.at + step).saturating_sub(self.steps.start)
+    }
+
+    /// Whether a note starting on step `start` of the pattern is played
+    /// this time round.
+    pub fn plays(&self, start: usize) -> bool {
+        self.steps.contains(&start)
+    }
+
+    /// The song step just after the last one heard this time round.
+    pub fn end(&self) -> usize {
+        self.at + self.steps.len()
+    }
+
+    /// `note`, a note of the pattern, as heard this time round: on the
+    /// song's timeline, and ending where the round ends at the latest.
+    /// `None` if it does not start in the steps heard.
+    pub fn place(&self, note: &NoteEvent) -> Option<NoteEvent> {
+        if !self.plays(note.start) {
+            return None;
+        }
+        let room = self.steps.end - note.start;
+        Some(match note.length > room {
+            true => NoteEvent {
+                start: self.song_step(note.start),
+                length: room,
+                trim: 0,
+                ..*note
+            },
+            false => NoteEvent {
+                start: self.song_step(note.start),
+                ..*note
+            },
+        })
+    }
 }
 
 impl Clip {
@@ -126,12 +204,130 @@ impl Clip {
             track,
             start,
             repeats: 1,
+            skip: 0,
+            cut: 0,
         }
     }
 
     /// The same clip, playing its pattern `repeats` times.
     pub fn repeated(self, repeats: usize) -> Self {
         Clip { repeats, ..self }
+    }
+
+    /// Whether part of its pattern is left out at either end.
+    pub fn is_trimmed(&self) -> bool {
+        self.skip > 0 || self.cut > 0
+    }
+
+    /// The steps left out at the start and at the end, for a pattern
+    /// `pattern_length` steps long. A pattern made shorter since the clip
+    /// was trimmed leaves at least one step to play.
+    fn trims(&self, pattern_length: usize) -> (usize, usize) {
+        let whole = pattern_length * self.repeats;
+        let skip = self.skip.min(pattern_length.saturating_sub(1));
+        let cut = self
+            .cut
+            .min(pattern_length.saturating_sub(1))
+            .min(whole.saturating_sub(skip + 1));
+        (skip, cut)
+    }
+
+    /// The step of its pattern the clip starts on: 0 unless it is
+    /// trimmed at the start.
+    pub fn first_step(&self, pattern_length: usize) -> usize {
+        self.trims(pattern_length).0
+    }
+
+    /// The song step its pattern's first step falls on the first time
+    /// round, heard or not: `start`, unless the clip is trimmed at the
+    /// start. Never before the start of the song.
+    pub fn origin(&self, pattern_length: usize) -> usize {
+        self.start.saturating_sub(self.first_step(pattern_length))
+    }
+
+    /// How many steps the clip plays, for a pattern `pattern_length`
+    /// steps long: its time rounds, without the steps trimmed.
+    pub fn length(&self, pattern_length: usize) -> usize {
+        let (skip, cut) = self.trims(pattern_length);
+        (pattern_length * self.repeats).saturating_sub(skip + cut)
+    }
+
+    /// The step just after the last one the clip plays.
+    pub fn end(&self, pattern_length: usize) -> usize {
+        self.start + self.length(pattern_length)
+    }
+
+    /// Each time the clip plays its pattern, in order.
+    pub fn rounds(&self, pattern_length: usize) -> impl Iterator<Item = Round> + '_ {
+        let (skip, cut) = self.trims(pattern_length);
+        let repeats = if pattern_length == 0 { 0 } else { self.repeats };
+        (0..repeats).map(move |round| {
+            let first = if round == 0 { skip } else { 0 };
+            let last = if round + 1 == repeats {
+                pattern_length - cut
+            } else {
+                pattern_length
+            };
+            Round {
+                // Round 0 is heard from `start`, the others a whole
+                // pattern later each, less the steps skipped.
+                at: self.start + round * pattern_length - (skip - first),
+                steps: first..last,
+            }
+        })
+    }
+
+    /// The same clip, its left edge moved to song step `step`: steps of
+    /// the pattern are hidden, or come back, so that every note heard
+    /// stays where it was. Past the start of the pattern, the clip plays
+    /// the end of it once more before. `None` if the clip would play
+    /// nothing, start before the song or repeat too often.
+    pub fn trimmed_from(&self, step: usize, pattern_length: usize) -> Option<Clip> {
+        if pattern_length == 0 || step >= self.end(pattern_length) {
+            return None;
+        }
+        let (skip, cut) = self.trims(pattern_length);
+        // Where the pattern starts its first time round, counted as if a
+        // round before could stretch back that far.
+        let origin = self.start as isize - skip as isize;
+        let from = step as isize - origin;
+        // Rounds gained before the first one, or dropped from the start.
+        let rounds = from.div_euclid(pattern_length as isize);
+        let skip = from.rem_euclid(pattern_length as isize) as usize;
+        let repeats = self.repeats as isize - rounds;
+        if !(1..=MAX_REPEATS as isize).contains(&repeats) {
+            return None;
+        }
+        Some(Clip {
+            start: step,
+            repeats: repeats as usize,
+            skip,
+            cut,
+            ..*self
+        })
+    }
+
+    /// The same clip, its right edge moved to song step `step`: the end
+    /// of the last time round is hidden, or comes back, and past the end
+    /// of the pattern the clip plays it again. `None` if the clip would
+    /// play nothing or repeat too often.
+    pub fn trimmed_to(&self, step: usize, pattern_length: usize) -> Option<Clip> {
+        if pattern_length == 0 || step <= self.start {
+            return None;
+        }
+        let (skip, _) = self.trims(pattern_length);
+        // How far the clip reaches into its pattern, counting its rounds.
+        let reach = skip + (step - self.start);
+        let repeats = reach.div_ceil(pattern_length);
+        if repeats > MAX_REPEATS {
+            return None;
+        }
+        Some(Clip {
+            repeats,
+            skip,
+            cut: repeats * pattern_length - reach,
+            ..*self
+        })
     }
 
     /// Whether two clips sit in the same place: same pattern, track and
@@ -338,6 +534,83 @@ mod tests {
         playlist.tracks[1].muted = true;
         let heard: Vec<Clip> = playlist.audible_clips().collect();
         assert_eq!(heard, vec![Clip::new(0, 0, 0)]);
+    }
+
+    /// The (song step, pattern steps) of each time round.
+    fn rounds(clip: &Clip, length: usize) -> Vec<(usize, Range<usize>)> {
+        clip.rounds(length)
+            .map(|round| (round.at, round.steps))
+            .collect()
+    }
+
+    #[test]
+    fn a_clip_plays_its_pattern_whole_each_time_round() {
+        let clip = Clip::new(0, 0, 32).repeated(3);
+        assert_eq!(clip.length(16), 48);
+        assert_eq!(clip.end(16), 80);
+        assert_eq!(rounds(&clip, 16), [(32, 0..16), (48, 0..16), (64, 0..16)]);
+    }
+
+    #[test]
+    fn a_trimmed_clip_leaves_out_both_ends() {
+        // A 16-step pattern three times from step 32, its first 4 steps
+        // and its last 2 left out.
+        let clip = Clip {
+            start: 36,
+            skip: 4,
+            cut: 2,
+            ..Clip::new(0, 0, 0).repeated(3)
+        };
+        assert!(clip.is_trimmed());
+        assert_eq!(clip.length(16), 42);
+        assert_eq!(clip.origin(16), 32);
+        assert_eq!(rounds(&clip, 16), [(36, 4..16), (48, 0..16), (64, 0..14)]);
+        // A note held past the end of the last round ends there.
+        let last = clip.rounds(16).last().unwrap();
+        let held = last.place(&NoteEvent::new(crate::Note::C4, 12, 4)).unwrap();
+        assert_eq!((held.start, held.length), (76, 2));
+        assert_eq!(last.place(&NoteEvent::new(crate::Note::C4, 14, 1)), None);
+        let first = clip.rounds(16).next().unwrap();
+        assert_eq!(first.place(&NoteEvent::new(crate::Note::C4, 2, 4)), None);
+    }
+
+    #[test]
+    fn trimming_an_edge_keeps_every_note_where_it_was() {
+        let clip = Clip::new(0, 0, 32);
+        // The left edge in by 4 steps, then out past the start of the
+        // pattern: the end of the pattern plays once more before.
+        let from = clip.trimmed_from(36, 16).unwrap();
+        assert_eq!(
+            (from.start, from.skip, from.repeats, from.cut),
+            (36, 4, 1, 0)
+        );
+        let before = clip.trimmed_from(28, 16).unwrap();
+        assert_eq!(rounds(&before, 16), [(28, 12..16), (32, 0..16)]);
+        // The right edge in by 2 steps, then out past the end: the
+        // pattern plays again.
+        let to = clip.trimmed_to(46, 16).unwrap();
+        assert_eq!((to.start, to.repeats, to.cut), (32, 1, 2));
+        let longer = clip.trimmed_to(56, 16).unwrap();
+        assert_eq!(rounds(&longer, 16), [(32, 0..16), (48, 0..8)]);
+        // Back where they were: nothing left out.
+        assert_eq!(from.trimmed_from(32, 16), Some(clip));
+        assert_eq!(longer.trimmed_to(48, 16), Some(clip));
+        // Never empty, never before the song, never too many repeats.
+        assert_eq!(clip.trimmed_from(48, 16), None);
+        assert_eq!(clip.trimmed_to(32, 16), None);
+        assert_eq!(clip.trimmed_to(32 + 16 * MAX_REPEATS + 1, 16), None);
+    }
+
+    #[test]
+    fn a_pattern_made_shorter_still_leaves_a_trimmed_clip_a_step() {
+        let clip = Clip {
+            skip: 12,
+            cut: 2,
+            ..Clip::new(0, 0, 12)
+        };
+        assert_eq!(clip.length(16), 2);
+        assert_eq!(clip.length(8), 1);
+        assert_eq!(rounds(&clip, 8), [(12, 7..8)]);
     }
 
     #[test]

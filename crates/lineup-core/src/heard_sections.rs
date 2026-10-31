@@ -470,20 +470,16 @@ impl Project {
             if pattern.player.is_some() {
                 continue;
             }
-            let length = pattern.length();
-            for repeat in 0..clip.repeats {
-                let from = clip.start + repeat * length;
+            for round in clip.rounds(pattern.length()) {
                 for channel in 0..self.channels.len() {
                     for note in pattern.notes(channel) {
-                        if note.start >= length {
+                        let Some(note) = round.place(note) else {
                             continue;
-                        }
-                        let start = from + note.start;
-                        let end = from + (note.start + note.length).min(length);
+                        };
                         notes.push(Sounding {
                             channel,
-                            start,
-                            end: end.max(start + 1),
+                            start: note.start,
+                            end: note.end(),
                             pitch: note.pitch.midi(),
                         });
                     }

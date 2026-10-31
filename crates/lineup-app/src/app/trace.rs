@@ -364,6 +364,53 @@ mod tests {
     }
 
     #[test]
+    fn a_trimmed_clip_plays_nothing_it_hides() {
+        let project = Project::demo();
+        let index = 0;
+        let clip = project.playlist().clips()[index];
+        let length = project.patterns()[clip.pattern].length();
+        let (start, end) = (clip.start, clip.end(length));
+        let mut trimmed = project.clone();
+        let edges = clip.trimmed_from(start + 4, length).unwrap();
+        let edges = edges.trimmed_to(end - 4, length).unwrap();
+        assert!(trimmed.trim_clip(index, edges));
+        let heard = |project: Project| {
+            let mut notes: Vec<_> = app_with(project)
+                .trace_song(TRACE_SAMPLE_RATE)
+                .notes()
+                .into_iter()
+                .map(|note| {
+                    let mine = note.origin.pattern == clip.pattern
+                        && (start..end).contains(&note.origin.song_step);
+                    (mine, note.origin.song_step, note.channel, note.pitch, note)
+                })
+                .collect();
+            notes.sort_by_key(|(_, step, channel, pitch, _)| (*step, *channel, *pitch));
+            notes
+        };
+        let (before, after) = (heard(project), heard(trimmed));
+        let kept: Vec<_> = before
+            .iter()
+            .filter(|(mine, step, ..)| !mine || (start + 4..end - 4).contains(step))
+            .map(|(mine, step, channel, pitch, _)| (*mine, *step, *channel, *pitch))
+            .collect();
+        assert!(
+            kept.len() < before.len(),
+            "the demo's first clip plays at its ends"
+        );
+        let played: Vec<_> = after
+            .iter()
+            .map(|(mine, step, channel, pitch, _)| (*mine, *step, *channel, *pitch))
+            .collect();
+        assert_eq!(played, kept);
+        // What the clip still plays ends where it now ends.
+        for (_, _, _, _, note) in after.iter().filter(|(mine, ..)| *mine) {
+            let steps = note.steps.unwrap_or_default();
+            assert!(note.step + steps <= (end - 4) as f64 + 1e-6, "{note:?}");
+        }
+    }
+
+    #[test]
     fn swing_plays_the_off_beats_late() {
         let mut project = Project::demo();
         project.swing = 50;

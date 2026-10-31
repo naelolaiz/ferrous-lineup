@@ -381,7 +381,7 @@ fn drums_where_it_plays(
         .clips()
         .iter()
         .filter(|clip| clip.pattern == pattern)
-        .map(|clip| clip.start)
+        .map(|clip| clip.origin(length))
         .min()?;
     bars.iter().find(|bar| bar.start == start)?;
     let end = start + length;

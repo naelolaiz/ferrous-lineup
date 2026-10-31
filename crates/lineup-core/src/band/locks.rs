@@ -126,22 +126,11 @@ impl Project {
             if !take(clip, pattern) {
                 continue;
             }
-            let length = pattern.length();
-            for repeat in 0..clip.repeats {
-                let at = clip.start + repeat * length;
+            for round in clip.rounds(pattern.length()) {
                 notes.extend(
                     pattern
                         .all_notes()
-                        .filter(|(_, note)| note.start < length)
-                        .map(|(channel, note)| {
-                            (
-                                channel,
-                                NoteEvent {
-                                    start: at + note.start,
-                                    ..*note
-                                },
-                            )
-                        }),
+                        .filter_map(|(channel, note)| Some((channel, round.place(note)?))),
                 );
             }
         }
