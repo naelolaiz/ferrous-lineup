@@ -235,8 +235,8 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ),
     ("Another solo", "Otro solo"),
     (
-        "Any group of notes as a scale, such as the octatonic scale or a chord with no name. Notes already written stay as they are: from a key, the set is the key's own notes (C major is 7-35), so the harmony keys still match the song.",
-        "Cualquier grupo de notas como escala, como la escala octatónica o un acorde sin nombre. Las notas que ya están escritas se quedan como están: desde una tonalidad, el conjunto son las notas propias de la tonalidad ({C} mayor es 7-35), así que las teclas de armonía siguen coincidiendo con la canción.",
+        "Any group of notes as a scale, such as the octatonic scale or a chord with no name. Notes already written stay as they are: from a key, the set is the key's own notes (C major is 7-35), from a row its first three notes, and from a micromode the same three notes (Menor 3 is 3-3), so the harmony keys still match the song.",
+        "Cualquier grupo de notas como escala, como la escala octatónica o un acorde sin nombre. Las notas que ya están escritas se quedan como están: desde una tonalidad, el conjunto son las notas propias de la tonalidad ({C} mayor es 7-35), desde una serie sus tres primeras notas y desde un micromodo las mismas tres notas (Menor 3 es 3-3), así que las teclas de armonía siguen coincidiendo con la canción.",
     ),
     ("Any instrument", "Cualquier instrumento"),
     (

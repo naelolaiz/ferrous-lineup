@@ -294,7 +294,10 @@ pub fn spanish_name(name: &str) -> Option<String> {
 /// solfège, and "Do mayor" in Spanish. A row is named by its form, "row
 /// P4 (on E)", and a set by its set class, "set 4-28 on C", as
 /// [`Scale::name`](crate::harmony::Scale::name) names them in letters for files and text.
-/// A set of three notes is one of Kröpfl's micromodes: "Menor 3 on C".
+/// A set of three notes is one of Kröpfl's micromodes, "Menor 3 on C",
+/// unless the key is named as a set (see
+/// [`Scale::named_as_set`](crate::harmony::Scale::named_as_set)): "set
+/// 3-3 on C".
 pub fn key_name(scale: crate::harmony::Scale) -> String {
     use crate::harmony::ScaleKind;
     let root = scale.spell(scale.root).to_string();
@@ -305,8 +308,9 @@ pub fn key_name(scale: crate::harmony::Scale) -> String {
             scale.root.semitone(),
             tr("on")
         ),
-        // Three notes are always one of the micromodes: "Menor 3 on C".
-        ScaleKind::Set(set) => match crate::harmony::Micromode::of(set) {
+        // Three notes are one of the micromodes, "Menor 3 on C", unless
+        // the key is named as a set.
+        ScaleKind::Set(set) => match scale.micromode() {
             Some(micromode) => format!("{} {} {root}", micromode.name, tr("on")),
             None => format!(
                 "{} {} {} {root}",

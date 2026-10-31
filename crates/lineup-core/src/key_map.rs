@@ -116,6 +116,11 @@ impl KeyMap {
 /// [`Scale::spelling`]). One that stays where it is keeps its name, so
 /// writing the song's key the other way round, as Gb major rather than
 /// F# major, leaves the key changes as they were written.
+///
+/// A key change in the song's set, named as the song's key is, takes
+/// the new key's notation too: when the song's Menor 3 is named as the
+/// set 3-3 instead, a change to Menor 3 on D becomes 3-3 on D (see
+/// [`Scale::named_as_set`]).
 pub fn moved_key(key: Scale, from: Scale, to: Scale) -> Scale {
     let from = crate::tools::from_key(from, to);
     if !from.kind.notes_follow(to.kind) {
@@ -123,15 +128,17 @@ pub fn moved_key(key: Scale, from: Scale, to: Scale) -> Scale {
     }
     let up = from.root.semitones_up_to(to.root);
     let root = key.root.transpose(up as i32);
-    let kind = if key.kind == from.kind {
-        to.kind
+    let follows = key.kind == from.kind;
+    let kind = if follows { to.kind } else { key.kind };
+    let named_as = if follows && key.is_named_as_set() == from.is_named_as_set() {
+        to
     } else {
-        key.kind
+        key
     };
     if root == key.root && kind == key.kind {
-        return key;
+        return key.named_like(named_as);
     }
-    Scale::new(root, kind)
+    Scale::new(root, kind).named_like(named_as)
 }
 
 #[cfg(test)]
@@ -141,6 +148,33 @@ mod tests {
 
     fn key(root: PitchClass, kind: ScaleKind) -> Scale {
         Scale::new(root, kind)
+    }
+
+    #[test]
+    fn key_changes_in_the_songs_set_take_its_notation() {
+        use crate::harmony::Micromode;
+        let menor_3 = |root| Micromode::named("Menor 3").unwrap().key(root);
+        let song = menor_3(PitchClass::C);
+        let as_set = song.named_as_set();
+        // Named as a set instead, the song's change to Menor 3 on D is
+        // 3-3 on D: the same notes, in the song's notation.
+        let moved = moved_key(menor_3(PitchClass::D), song, as_set);
+        assert_eq!(moved.root, PitchClass::D);
+        assert_eq!(moved.pitch_set(), menor_3(PitchClass::D).pitch_set());
+        assert!(moved.is_named_as_set());
+        // And back.
+        assert_eq!(moved_key(moved, as_set, song), menor_3(PitchClass::D));
+        // A change named the other way from the song keeps its own name
+        // as the song moves: 3-3 on D in a song in Menor 3 on C, moved
+        // to E, is 3-3 on F#.
+        let own = menor_3(PitchClass::D).named_as_set();
+        assert_eq!(
+            moved_key(own, song, menor_3(PitchClass::E)),
+            menor_3(PitchClass::FSharp).named_as_set()
+        );
+        // A change to another set stays as it is.
+        let menor_5 = Micromode::named("Menor 5").unwrap().key(PitchClass::E);
+        assert_eq!(moved_key(menor_5, song, as_set), menor_5);
     }
 
     #[test]

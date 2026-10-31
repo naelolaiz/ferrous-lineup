@@ -47,6 +47,7 @@ use lineup_core::{
 use super::{Layout, PlaylistAction, Snap};
 use crate::i18n::{tr, tr_name, trf};
 use crate::time_picker::time_picker;
+use crate::twelve_tone::{self, KindChoice};
 
 /// How close to a section's right edge the pointer must be to resize it.
 const EDGE: f32 = 6.0;
@@ -496,14 +497,14 @@ fn key_menu(
         return;
     }
     let marker = keys.markers().iter().find(|marker| marker.start == at);
-    // A new note keeps the kind of key, a set or a row too: Menor 3 on
-    // D from here.
+    // A new note keeps the kind of key, a set or a row too, named as it
+    // is: Menor 3 on D from here, or 3-3 on D.
     let kind = here.kind;
     ui.horizontal_wrapped(|ui| {
         ui.set_max_width(260.0);
         for root in PitchClass::ALL {
             // A key written either way is offered both ways: F# and Gb.
-            let usual = Scale::new(root, kind);
+            let usual = Scale::new(root, kind).named_like(here);
             let mut keys: Vec<Scale> = [Some(usual), usual.other_spelling()]
                 .into_iter()
                 .flatten()
@@ -533,6 +534,29 @@ fn key_menu(
             }
         }
     });
+    // A row or a set from here, as the Key menus make them: the notes
+    // stay, and "pitch-class set" names the ones the key had (see
+    // `twelve_tone::set_key`).
+    ui.horizontal_wrapped(|ui| {
+        ui.set_max_width(260.0);
+        let ctx = ui.ctx().clone();
+        let chosen = KindChoice::of(here);
+        let choices = [
+            (KindChoice::Row, "twelve-tone row", twelve_tone::ROW_HELP),
+            (KindChoice::Set, "pitch-class set", twelve_tone::SET_HELP),
+        ];
+        for (choice, name, help) in choices {
+            if ui
+                .selectable_label(chosen == choice, crate::i18n::tr(name))
+                .on_hover_text(tr(help))
+                .clicked()
+                && let Some(key) = choice.key(&ctx, here, here.spell(here.root))
+            {
+                actions.push(PlaylistAction::SetKeyMarker(KeyMarker::new(at, key)));
+                ui.close();
+            }
+        }
+    });
     // The micromodes, then the song's own sets and rows, on this note.
     ui.weak(tr("Micromodes (Kröpfl)"));
     ui.horizontal_wrapped(|ui| {
@@ -554,7 +578,7 @@ fn key_menu(
         }
         let song_keys = std::iter::once(keys.first()).chain(keys.markers().iter().map(|m| m.scale));
         for key in song_keys {
-            let key = Scale::new(here.root, key.kind);
+            let key = Scale::new(here.root, key.kind).named_like(key);
             if key.kind.is_tonal() || offered.contains(&key) {
                 continue;
             }

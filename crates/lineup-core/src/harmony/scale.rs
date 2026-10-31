@@ -4,7 +4,7 @@ use std::cell::Cell;
 
 use serde::{Deserialize, Serialize};
 
-use super::{Chord, ChordQuality, PitchSet, ToneRow};
+use super::{Chord, ChordQuality, Micromode, PitchSet, ToneRow};
 use crate::{Note, NoteName, PitchClass, Spelling};
 
 /// How Roman numerals count the degrees of a minor key. Both ways are
@@ -244,6 +244,16 @@ pub struct Scale {
     /// under its usual name, with the same notes.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     respelled: bool,
+    /// Whether a key of three notes is named as a pitch-class set, "set
+    /// 3-3 on C", rather than as the micromode it also is, "Menor 3 on
+    /// C" (see [`Scale::micromode`]). Every group of three notes is one
+    /// of Kröpfl's micromodes, so only the key itself can say which of
+    /// the two notations it is written in: the notes are the same either
+    /// way. Any other key has one name, and it stays `false`. Files
+    /// leave it out when it is `false`, and older versions, which do not
+    /// know it, name the key as its micromode, with the same notes.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    as_set: bool,
 }
 
 impl Scale {
@@ -253,7 +263,56 @@ impl Scale {
             root,
             kind,
             respelled: false,
+            as_set: false,
         }
+    }
+
+    /// The micromode the key is, when it is named as one: a set of three
+    /// notes, unless it is named as a pitch-class set (see
+    /// [`Scale::named_as_set`]). `None` for every other key.
+    pub fn micromode(self) -> Option<&'static Micromode> {
+        match self.kind {
+            ScaleKind::Set(set) if !self.as_set => Micromode::of(set),
+            _ => None,
+        }
+    }
+
+    /// The same key named as a pitch-class set: a key of three notes is
+    /// "set 3-3 on C" rather than the micromode "Menor 3 on C". No note
+    /// changes. Any other key has only one name, and stays as it is.
+    pub fn named_as_set(self) -> Self {
+        let trichord = matches!(self.kind, ScaleKind::Set(set) if set.len() == 3);
+        Scale {
+            as_set: trichord,
+            ..self
+        }
+    }
+
+    /// The same key named as the micromode it is, if it is a set of
+    /// three notes (see [`Scale::named_as_set`]). No note changes.
+    pub fn named_as_micromode(self) -> Self {
+        Scale {
+            as_set: false,
+            ..self
+        }
+    }
+
+    /// This key named the way `other` is: as a set if `other` is a set of
+    /// three notes named as one, else as a micromode if it is one. A key
+    /// moved to another root, or a key change that follows the song's
+    /// key, keeps its notation this way.
+    pub fn named_like(self, other: Scale) -> Self {
+        if other.as_set {
+            self.named_as_set()
+        } else {
+            self.named_as_micromode()
+        }
+    }
+
+    /// Whether the key is a set of three notes named as a set, not as
+    /// its micromode.
+    pub fn is_named_as_set(self) -> bool {
+        self.as_set && matches!(self.kind, ScaleKind::Set(set) if set.len() == 3)
     }
 
     /// The key on `tonic` as it is written: Gb major, or F# major. A
@@ -1376,6 +1435,50 @@ mod tests {
             ron::from_str::<Scale>("(root:FSharp,kind:Major)").unwrap(),
             f_sharp
         );
+    }
+
+    #[test]
+    fn three_notes_are_named_as_a_micromode_or_as_a_set() {
+        let menor_3 = Micromode::named("Menor 3").unwrap().key(C);
+        assert_eq!(menor_3.micromode().map(|m| m.name), Some("Menor 3"));
+        assert!(!menor_3.is_named_as_set());
+        // The same notes named as a set: no micromode, the same notes.
+        let as_set = menor_3.named_as_set();
+        assert_eq!(as_set.micromode(), None);
+        assert!(as_set.is_named_as_set());
+        assert_eq!(as_set.pitch_set(), menor_3.pitch_set());
+        assert_ne!(as_set, menor_3);
+        assert_eq!(as_set.named_as_micromode(), menor_3);
+        // A key moved to D keeps its notation.
+        let on_d = Scale::new(D, as_set.kind).named_like(as_set);
+        assert!(on_d.is_named_as_set());
+        assert_eq!(
+            Scale::new(D, menor_3.kind)
+                .named_like(menor_3)
+                .micromode()
+                .map(|m| m.name),
+            Some("Menor 3")
+        );
+        // Any other key has one name only.
+        let diminished = Scale::set(C, PitchSet::from_semitones(&[0, 3, 6, 9]));
+        assert_eq!(diminished.named_as_set(), diminished);
+        let c_major = Scale::new(C, ScaleKind::Major);
+        assert_eq!(c_major.named_as_set(), c_major);
+        assert_eq!(c_major.micromode(), None);
+    }
+
+    #[test]
+    fn a_key_named_as_a_set_in_files() {
+        let menor_3 = Micromode::named("Menor 3").unwrap().key(C);
+        let as_set = menor_3.named_as_set();
+        let text = ron::to_string(&as_set).unwrap();
+        assert!(text.contains("as_set:true"), "{text}");
+        assert_eq!(ron::from_str::<Scale>(&text).unwrap(), as_set);
+        // Named as its micromode, the key writes what it wrote before, so
+        // older files read as they did.
+        let text = ron::to_string(&menor_3).unwrap();
+        assert!(!text.contains("as_set"), "{text}");
+        assert_eq!(ron::from_str::<Scale>(&text).unwrap(), menor_3);
     }
 
     #[test]

@@ -421,6 +421,7 @@ fn main_texts(text: &str) -> Option<&'static str> {
         "Sections" => "Secciones",
         "Practice" => "Práctica",
         "Notation" => "Notación",
+        "As the key" => "Según la tonalidad",
         "As written" => "Como está escrito",
         "Chords" => "Acordes",
         "Pitch-class sets" => "Conjuntos de clases de alturas",
