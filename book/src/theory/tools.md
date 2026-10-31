@@ -5,8 +5,8 @@ and [`crates/lineup-app/src/piano_roll.rs`](https://github.com/naelolaiz/ferrous
 
 The piano roll's **Tools** menu changes many notes at once: it moves
 them up a semitone, an octave or a note of the key, earlier or later,
-onto the grid or into the key, inverts chords and turns them into
-arpeggios. Each tool is a function in `lineup_core::tools` that takes
+onto the grid or into the key, inverts chords, turns them into
+arpeggios, and plays them backwards or upside down. Each tool is a function in `lineup_core::tools` that takes
 some notes and returns new ones. None of them knows about windows,
 selections or undo, which is what makes them easy to read and to test.
 This chapter goes through them one by one; how the menu and the arrow
@@ -37,6 +37,17 @@ bass, as [Chords: building, naming and
 inversions](chords.md#inversions) explains. An **arpeggio** plays
 a chord's notes one after another, the way a guitarist picks a chord or
 a harp plays one, instead of all at once.
+
+A tune can also be played **backwards** (its **retrograde**) or
+**upside down** (its **inversion**: every interval turned the other
+way, which is not the inversion of a chord). Both are as old as
+counterpoint. Bach's Musical Offering has a crab canon, a line played
+against itself backwards, and in the counter-fugues of his Art of Fugue
+the subject is answered upside down. He turns it **in the key**: the
+intervals keep their number of notes of the scale but not always their
+size, so the answer stays in the key. Twelve-tone music is built on the two: a row's R and I forms
+are the row backwards and upside down ([Twelve-tone rows and their
+rules](twelve-tone.md)).
 
 ## Notes in, notes out
 
@@ -450,6 +461,96 @@ The `let ... else` takes the two ends or leaves the loop. Unlike
 near the top of the keyboard still draws a chord, in the last inversion
 that fits.
 
+## Backwards and upside down
+
+**Backwards** turns the notes round in time: the last note comes first,
+each as long as it was, and the rests between them come backwards too.
+The notes stay in the stretch they took, from the first note's start to
+the last one's end, so each note's new start is that stretch's two ends
+added, minus the note's own end:
+
+```rust
+pub fn backwards(notes: &[NoteEvent]) -> Vec<NoteEvent> {
+    let (Some(first), Some(last)) = (
+        notes.iter().map(|note| note.start).min(),
+        notes.iter().map(NoteEvent::end).max(),
+    ) else {
+        return Vec::new();
+    };
+    notes
+        .iter()
+        .map(|note| NoteEvent {
+            start: first + last - note.end(),
+            nudge: note.trim,
+            trim: note.nudge,
+            ..*note
+        })
+        .collect()
+}
+```
+
+`min` and `max` give `None` for no notes, and the `let ... else` takes
+both or returns nothing. A note played a little after its step
+(`nudge`, in ticks) that ends a little before its last one (`trim`)
+comes back with the two swapped: what was late at the start is early
+at the end when time runs the other way.
+
+**Pitches backwards** keeps the rhythm and turns only the pitches
+round: the first note's place takes the last note's pitch. Twelve-tone
+composers do this to play a row's retrograde in a rhythm they like.
+`zip` pairs each place with the group at the other end, which `rev`
+gives:
+
+```rust
+pub fn pitches_backwards(notes: &[NoteEvent]) -> Vec<NoteEvent> {
+    let groups = chords(notes);
+    groups
+        .iter()
+        .zip(groups.iter().rev())
+        .flat_map(|(place, pitches)| {
+            pitches.iter().enumerate().map(move |(i, note)| NoteEvent {
+                pitch: note.pitch,
+                ..place[i.min(place.len() - 1)]
+            })
+        })
+        .collect()
+}
+```
+
+The groups are those of `chords`, so a chord moves as a chord into the
+place of the note or chord at the other end, and each of its notes
+takes the length and loudness of a note there (`i.min(place.len() - 1)`
+reuses the last one when the chord has more notes than the place). The
+inner closure is `move` because it keeps `place`, a borrow from the
+outer one, after the outer one has returned it.
+
+**Upside down** turns every interval from the first note the other
+way: a note four semitones above it goes four below. The note's new
+pitch is the first note's pitch twice, minus its own, which is the
+`down` here:
+
+```rust
+let down = 2 * (i32::from(axis.midi()) - i32::from(note.pitch.midi()));
+Some(NoteEvent {
+    pitch: note.pitch.transpose(down)?,
+    ..*note
+})
+```
+
+A major chord, C E G, becomes C A♭ F, F minor; a row's P0 becomes I0.
+`axis` is the first note, or the lowest of the first chord.
+
+**Upside down in the key** counts in notes of the key instead of
+semitones. In C major, around C, E is two notes of the key up, so it
+goes two down, to A; G goes to F. The third C-E comes back as the
+third C-A below: a third still, but minor where it was major, so the
+line stays in the key. A note outside the key is a note of the key
+raised: D♯ is D raised, so it goes where D goes, B, and comes back
+lowered, B♭. The function walks the key with `step_in_key` from the
+first note to the note's own note of the key, counting the steps, and
+then walks as many the other way. In a row every note is in the key,
+so this is the same as **Upside down**.
+
 ## Arpeggios: `cycle`, `step_by` and `zip`
 
 **Arpeggiate chords** plays each chord's notes one after another, for as
@@ -547,7 +648,11 @@ of the result, so you hear where it went without starting the song:
 ```rust
 if matches!(
     tool,
-    Tool::Transpose(_) | Tool::InKey(_) | Tool::Invert { .. }
+    Tool::Transpose(_)
+        | Tool::InKey(_)
+        | Tool::Invert { .. }
+        | Tool::UpsideDown
+        | Tool::UpsideDownInKey
 ) && let Some(first) = tools::chords(&new).into_iter().next()
 {
     actions.push(RollAction::Preview {

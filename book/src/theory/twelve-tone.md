@@ -516,12 +516,49 @@ pub struct RowWriting {
     pub dynamics: bool,
     /// Whether the octaves follow the row's retrograde.
     pub octaves: bool,
+    /// Whether each form sounds with its combinatorial partner (see
+    /// [`ToneRow::partner`]) an octave under it, note for note in the
+    /// same rhythm, so that every half of the two holds all twelve
+    /// notes. A form without a partner sounds alone.
+    pub partner: bool,
 }
 ```
 
 **Then** (`chain`) says what comes after the form until the pattern is
 full: nothing (**Once**), the same form again (**Repeat**), or the four
-forms in turn with the same number (**P, R, I, RI**). **Together** is
+forms in turn with the same number (**P, R, I, RI**). The fourth choice,
+**A plan of forms**, is a plan of the piece, the way a progression is
+the plan of a tonal one: the forms typed in a field, `P0 RI5 I7 R0`,
+or clicked around the matrix, each added at the end. `read_plan` reads
+the field:
+
+```rust
+pub fn read_plan(text: &str) -> Result<Vec<RowLabel>, String> {
+    text.split(|c: char| c.is_whitespace() || matches!(c, ',' | '|' | ';'))
+        .filter(|word| !word.is_empty())
+        .map(|word| {
+            RowLabel::parse(&word.to_ascii_uppercase()).ok_or_else(|| {
+                trf(
+                    "\"{}\" is not a form of the row: write forms as P0, I5, R11 or RI3.",
+                    &[&word],
+                )
+            })
+        })
+        .collect()
+}
+```
+
+`split` takes a closure that says which characters cut the text, so
+spaces, commas and the bars of the chord sheet all separate forms, and
+`filter` drops the empty words two separators in a row leave. Each word
+becomes a `Result`, and collecting `Result`s into `Result<Vec<_>, _>`
+stops at the first error, as collecting `Option`s does ([Editing tools
+as plain functions](tools.md#when-a-tool-cannot-work-collecting-options)):
+the window shows that error under the field. `RowLabel::parse` is the
+same reader the chord sheet uses for a form typed in a bar; the plan
+puts each word in capitals first, which the sheet cannot do, since
+there a small `i7` is a Roman numeral. `write_plan` then writes the
+forms one after another, and round again, until the pattern is full. **Together** is
 `together`, and **Each** is `step`. The three **registers** (the
 **Octaves** menu) decide the octaves when the row does not:
 
@@ -630,11 +667,82 @@ ScaleKind::Row(_) => {
 
 Changing the key from C major to a row moves no notes, since there is
 no sensible place for E to go in a row; changing to the same row on
-another note moves them all, which is transposing. Switching from a row
+another note moves them all, which is transposing, and changing to
+another row plays the same piece on it ([next section](#another-row-for-the-same-piece)). Switching from a row
 to **pitch-class set** keeps the row's first three notes as the set,
 which are what the harmony keys were playing (see [A key as a set: the
 same notes, another
 name](sets.md#a-key-as-a-set-the-same-notes-another-name)).
+
+### Another row for the same piece
+
+In a tonal key, a new mode keeps every note on its degree: C major to C
+minor lowers E, A and B and leaves the rest ([Scales, modes and
+keys](scales.md#changing-key-moving-the-song)). A row's degrees are its
+places in each form. So changing the key from one row to another keeps
+every note in the form it is part of, at the same place: the fifth note
+of RI5 becomes the fifth note of RI5 of the new row. The plan of forms,
+the rhythm, the chords and the register stay; only the row changes, so
+the piece sounds as it would have if the composer had picked the other
+row.
+
+```rust
+pub fn change_row(note: Note, label: Option<RowLabel>, from: Scale, to: Scale) -> Note {
+    let (Some(old), Some(new)) = (from.tone_row(), to.tone_row()) else {
+        return change_key(note, from, to);
+    };
+    let label = label.unwrap_or(old.label());
+    let up = from.root.semitones_up_to(to.root);
+    let place = old.form(label).position(note.pitch_class());
+    let moved = RowLabel::new(label.form, label.number + up);
+    let target = new.form(moved).pitch_classes()[place];
+    let shift = nearest_shift(note.pitch_class(), target);
+    note.transpose(shift)
+        .or_else(|| note.transpose(shift - 12 * shift.signum()))
+        .unwrap_or(note)
+}
+```
+
+Every form holds each pitch class once, so `position` finds the note's
+place in its form. The forms count from the key note: if the key note
+moves from C to E, every form moves up four semitones with it, and RI5
+becomes RI9 (`RowLabel::new` takes the number round past 11). The note
+then moves the shortest way to its new pitch class, up to a tritone, so
+the line keeps its shape on the keyboard; only at the edge of the MIDI
+range does it go the other way.
+
+Which form a note is part of is written nowhere in a pattern, but the
+[twelve-tone check](#reading-the-row-as-an-analyst-would) reads it, as
+an analyst would: `Project::change_key` asks it for each pattern before
+the key changes, and each note takes the form its track plays there, or
+the one all the tracks share. Where the check found nothing, the form
+written on the chord sheet there is used, then a form another track
+plays there (a line doubled in octaves is read once, for one of the
+two), and last the key's own form, which is `label` when it is `None`.
+
+Some rows give two names to each form. Berg's row is one: its second
+half is its first backwards, a tritone up, so every R form is also a P
+form. The check reads such a form by one of its names, which need not
+be the one it was written as, and changing back to the first row then
+uses that name. The piece is still made of forms of the row, but not
+always the same ones as before; **Ctrl+Z** is the way back to the notes
+exactly as they were.
+
+The key changes later in the song follow the song's key as they do in
+a tonal song: a section in the old row takes the new one, moved with
+the key note, and a section in a row of its own keeps it.
+
+### Backwards and upside down in the piano roll
+
+The piano roll's **Tools** menu makes the other forms from notes you
+drew ([Editing tools as plain
+functions](tools.md#backwards-and-upside-down)): **Backwards** plays
+them backwards in time, rhythm and all, so P0 becomes R0; **Pitches
+backwards** keeps the rhythm and turns only the pitches round, the way
+twelve-tone composers write a retrograde in a rhythm of their own; and
+**Upside down** turns every interval from the first note the other way,
+so P0 becomes I0. **Upside down in the key** counts notes of the key,
+and in a row, where every note is in the key, it gives the same.
 
 ## Row styles and demos
 
