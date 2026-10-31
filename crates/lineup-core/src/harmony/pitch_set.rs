@@ -71,6 +71,11 @@ impl PitchSet {
         self.0 & !other.0 == 0
     }
 
+    /// The pitch classes in both sets.
+    pub fn intersection(self, other: PitchSet) -> PitchSet {
+        PitchSet(self.0 & other.0)
+    }
+
     /// The pitch classes in the set, from C upwards.
     pub fn iter(self) -> impl Iterator<Item = PitchClass> {
         PitchClass::ALL

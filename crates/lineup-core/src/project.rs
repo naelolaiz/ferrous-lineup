@@ -10,6 +10,7 @@ use crate::arrangement::{Arrangement, arrange};
 use crate::band::{Band, StyleMarker, VariationMarker};
 use crate::chord_sheet::{self, ChordMarker, HarmonyName};
 use crate::effects::Effects;
+use crate::harmony::colour_finding::{Colours, find_colours};
 use crate::harmony::key_finding::{KeySpan, chromas_of_notes, key_spans};
 use crate::harmony::voice_leading::{self, RowStatement, VoiceLeading, voices_of};
 use crate::harmony::{
@@ -37,6 +38,10 @@ pub const MAX_PATTERNS: usize = 999;
 
 /// How long a new pattern is, in steps: one bar.
 const NEW_PATTERN_LENGTH: usize = 16;
+
+/// How many bars Find the key reads a colour over at a time (see
+/// [`Project::colour_passage`]).
+pub const COLOUR_BARS: usize = 8;
 
 /// The built-in drum sounds, synthesized by the audio engine.
 ///
@@ -1229,6 +1234,28 @@ impl Project {
         self.playlist.key_markers = self.key_map().tidy().markers().to_vec();
     }
 
+    /// Makes `key` the key from timeline step `start` up to `end`, as Find
+    /// the key's colour does, without moving any note: a key marker on
+    /// `start` (on step 0, the key the song starts in) and one on `end`
+    /// back to the key that was there, unless the song ends there or a
+    /// marker is there already. The markers in between go: the passage is
+    /// in one key now.
+    pub fn set_key_between(&mut self, start: usize, end: usize, key: Scale) {
+        if start >= end {
+            return;
+        }
+        let after = self.key_at(end);
+        self.playlist
+            .key_markers
+            .retain(|marker| !(start < marker.start && marker.start < end));
+        self.set_key_marker(KeyMarker::new(start, key));
+        let marked = self.playlist.key_markers.iter().any(|m| m.start == end);
+        if end < self.song_length() && !marked {
+            self.set_key_marker(KeyMarker::new(end, after));
+        }
+        self.playlist.key_markers = self.key_map().tidy().markers().to_vec();
+    }
+
     /// Removes the key marker on step `start`, if there is one. The song
     /// stays in the key before it.
     pub fn remove_key_marker(&mut self, start: usize) -> Option<KeyMarker> {
@@ -2266,6 +2293,86 @@ impl Project {
             .take_while(|&start| start < end)
             .collect();
         edges.push(end);
+        let notes = self
+            .melodic_notes()
+            .into_iter()
+            .map(|note| (note.pitch, note.start, note.length));
+        key_spans(&chromas_of_notes(notes, &edges))
+            .into_iter()
+            .map(|span| KeySpan {
+                start: edges[span.start],
+                end: edges[span.end],
+                ..span
+            })
+            .collect()
+    }
+
+    /// The colours of the song from timeline step `start` up to `end`
+    /// (see [`crate::harmony::colour_finding`]): the micromodes its notes
+    /// fit and the collection they make, a collection that is only the
+    /// notes of `key` (the key found there) left out. The notes that
+    /// count are those [`Project::heard_keys`] counts, the ones that
+    /// start in the passage.
+    pub fn heard_colours(&self, start: usize, end: usize, key: Option<Scale>) -> Colours {
+        let notes: Vec<NoteEvent> = self
+            .melodic_notes()
+            .into_iter()
+            .filter(|note| (start..end).contains(&note.start))
+            .collect();
+        find_colours(&notes, key)
+    }
+
+    /// The passage whose colour Find the key reads at timeline step
+    /// `step`: the stretch in one key there, from key marker to key
+    /// marker, cut into blocks of [`COLOUR_BARS`] bars from its start, a
+    /// last block of fewer than half as many bars joined to the one
+    /// before. A colour read over a whole long stretch would hide the
+    /// passages that change it, and take long to read.
+    pub fn colour_passage(&self, step: usize) -> (usize, usize) {
+        let mut markers = self.playlist.key_markers.iter().map(|marker| marker.start);
+        let start = markers
+            .clone()
+            .take_while(|&marker| marker <= step)
+            .last()
+            .unwrap_or(0);
+        let end = markers
+            .find(|&marker| marker > step)
+            .unwrap_or(self.song_length())
+            .max(start + 1);
+        self.passage_between(step, start, end)
+    }
+
+    /// The block of [`Project::colour_passage`] that holds `step`, in the
+    /// stretch from `start` up to `end`.
+    fn passage_between(&self, step: usize, start: usize, end: usize) -> (usize, usize) {
+        let bars: Vec<usize> = self
+            .meter()
+            .bars()
+            .map(|bar| bar.start)
+            .skip_while(|&bar| bar < start)
+            .take_while(|&bar| bar < end)
+            .collect();
+        let mut edges: Vec<usize> = bars.iter().step_by(COLOUR_BARS).copied().collect();
+        match edges.first_mut() {
+            Some(first) => *first = start,
+            None => edges.push(start),
+        }
+        let last = bars.len().saturating_sub(1) / COLOUR_BARS * COLOUR_BARS;
+        if edges.len() > 1 && bars.len() - last < COLOUR_BARS / 2 {
+            edges.pop();
+        }
+        edges.push(end);
+        let block = edges
+            .windows(2)
+            .position(|block| (block[0]..block[1]).contains(&step))
+            .unwrap_or(edges.len() - 2);
+        (edges[block], edges[block + 1])
+    }
+
+    /// Every note the song plays on a synth or a MIDI Out channel that is
+    /// not muted (drums and samplers do not count), with its start in
+    /// timeline steps, cut where its clip's pattern ends.
+    fn melodic_notes(&self) -> Vec<NoteEvent> {
         let mut notes = Vec::new();
         for clip in self.playlist.audible_clips() {
             let Some(pattern) = self.patterns.get(clip.pattern) else {
@@ -2288,19 +2395,16 @@ impl Project {
                 {
                     let held = note.length.min(length - note.start);
                     for round in 0..clip.repeats {
-                        notes.push((note.pitch, clip.start + round * length + note.start, held));
+                        notes.push(NoteEvent {
+                            start: clip.start + round * length + note.start,
+                            length: held,
+                            ..*note
+                        });
                     }
                 }
             }
         }
-        key_spans(&chromas_of_notes(notes, &edges))
-            .into_iter()
-            .map(|span| KeySpan {
-                start: edges[span.start],
-                end: edges[span.end],
-                ..span
-            })
-            .collect()
+        notes
     }
 
     /// Adds the notes each melodic channel holds at `step` of `pattern`
@@ -2506,12 +2610,74 @@ fn row_form_of(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::harmony::analyze;
+    use crate::harmony::{Micromode, analyze};
 
     const BEAT: usize = 0;
     const CHORDS: usize = 1;
     const FILL: usize = 2;
     const SYNTH: usize = 4;
+
+    #[test]
+    fn the_micromode_demos_sound_in_their_micromode() {
+        use crate::harmony::colour_finding::Colour;
+        use crate::library::{MICROMODE_STYLES, demo::micromode_demo};
+        for style in &MICROMODE_STYLES {
+            let project = micromode_demo(style);
+            let colours = project.heard_colours(0, project.song_length(), None);
+            let best = colours.micromodes.first().expect(style.name);
+            let micromode = Micromode::number(style.micromode).unwrap();
+            assert_eq!(best.colour, Colour::Micromode(micromode), "{}", style.name);
+            assert!(best.fit >= 0.95, "{}: {}", style.name, best.fit);
+        }
+    }
+
+    #[test]
+    fn a_colour_is_written_as_the_key_of_its_bars_only() {
+        use crate::library::{MICROMODE_STYLES, demo::micromode_demo};
+        let mut project = micromode_demo(&MICROMODE_STYLES[0]);
+        let before = project.clone();
+        let opening = project.key_at(0);
+        let menor_5 = Micromode::named("Menor 5").unwrap().key(PitchClass::D);
+        project.set_key_between(32, 64, menor_5);
+        assert_eq!(project.key_at(0), opening);
+        assert_eq!(project.key_at(32), menor_5);
+        assert_eq!(project.key_at(63), menor_5);
+        assert_eq!(project.key_at(64), opening);
+        assert_eq!(project.patterns, before.patterns, "no note moves");
+        // From the start, the song's own key changes; to the end, no marker
+        // is left after it.
+        project.set_key_between(0, project.song_length(), menor_5);
+        assert_eq!(project.scale, menor_5);
+        assert!(project.playlist.key_markers.is_empty());
+    }
+
+    #[test]
+    fn a_colour_is_read_eight_bars_at_a_time() {
+        let mut project = Project::default();
+        let bar = project.time_signature.steps_per_bar();
+        // Nineteen bars: 8, then 8 + the last 3, too few on their own.
+        let end = 19 * bar;
+        assert_eq!(project.passage_between(0, 0, end), (0, 8 * bar));
+        assert_eq!(project.passage_between(9 * bar, 0, end), (8 * bar, end));
+        assert_eq!(project.passage_between(18 * bar, 0, end), (8 * bar, end));
+        // Twenty bars: the last four make a block of their own.
+        let end = 20 * bar;
+        assert_eq!(project.passage_between(17 * bar, 0, end), (16 * bar, end));
+        // A short stretch is one passage, wherever it starts.
+        let short = project.passage_between(3 * bar, 2 * bar, 6 * bar);
+        assert_eq!(short, (2 * bar, 6 * bar));
+        // Past the stretch, the last passage.
+        let past = project.passage_between(30 * bar, 0, 19 * bar);
+        assert_eq!(past, (8 * bar, 19 * bar));
+        // The stretches are those between key markers: from bar 4 to bar
+        // 31, blocks start on bars 4, 12 and 20, the last one to the end.
+        let d_major = Scale::new(PitchClass::D, crate::ScaleKind::Major);
+        project.set_key_marker(KeyMarker::new(3 * bar, d_major));
+        project.set_key_marker(KeyMarker::new(30 * bar, project.scale));
+        assert_eq!(project.colour_passage(bar), (0, 3 * bar));
+        assert_eq!(project.colour_passage(12 * bar), (11 * bar, 19 * bar));
+        assert_eq!(project.colour_passage(28 * bar), (19 * bar, 30 * bar));
+    }
 
     #[test]
     fn a_channel_goes_over_midi_with_its_instrument() {

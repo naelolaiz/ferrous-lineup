@@ -28,6 +28,7 @@
 mod analysis;
 mod chord;
 pub(crate) mod chord_scale;
+pub mod colour_finding;
 pub mod degree;
 pub mod hearing;
 mod hints;
