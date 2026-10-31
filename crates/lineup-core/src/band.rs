@@ -1467,8 +1467,12 @@ impl Project {
             }
             band.end = self.song_length();
             band.since = self.channels.len();
+            // A song with no chord sheet, such as an imported MIDI file,
+            // gets the chords heard in its notes, and the breaks heard in
+            // its tune marked on them.
             if self.playlist.chord_markers.is_empty() && band.end > 0 {
                 self.write_heard_chords();
+                self.mark_heard_breaks();
             }
             if !self.playlist.chord_markers.is_empty() && !style.follows_the_song() {
                 band.muted = self.mute_the_songs_own(parts.rhythm);
@@ -3029,6 +3033,8 @@ impl Project {
         // last part goes on into the next time round, not into the end.
         let repeats = self.repeated_chorus().is_some();
         let mut fills = 0;
+        let mut lands = false;
+        let mut turns = drum_form::Turns::default();
         let mut notes = Vec::new();
         for (index, (range, kind)) in parts.iter().enumerate() {
             let part = DrumPart {
@@ -3042,7 +3048,11 @@ impl Project {
                     Then::Part
                 },
                 lead_in: kind.lead_in,
+                crash: lands,
+                turn: turns.of(kind),
             };
+            lands = drum_form::ends_with_fill(rhythm, &part);
+            turns.played(kind, part.bars.len());
             for (drum, note) in drum_form::part_drums(rhythm, &part, &mut fills) {
                 if in_held(note.start) {
                     continue;
@@ -3089,7 +3099,16 @@ impl Project {
                 }
             }
         }
-        breaks.apply_to_drums(notes, channel_of(Drum::Kick), channel_of(Drum::Crash))
+        let mut notes =
+            breaks.apply_to_drums(notes, channel_of(Drum::Kick), channel_of(Drum::Crash));
+        // After a shot, the drums call the band back in.
+        let meter = self.meter();
+        for (drum, note) in breaks.calls(rhythm, |step| meter.bar_at(step), false) {
+            if let Some(channel) = channel_of(drum) {
+                notes.push((channel, note));
+            }
+        }
+        notes
     }
 
     /// Puts `player`'s notes (on the song's timeline) into patterns, one
@@ -4664,6 +4683,46 @@ mod tests {
             clips.sort_unstable();
             assert_eq!(clips, starts, "{player:?}");
         }
+    }
+
+    #[test]
+    fn the_candombe_band_breaks_where_candombe_para_gardel_resolves_home() {
+        // Bar 14: the tune lands on the home chord and rests. The band
+        // strikes it together, with a kick and a crash, stops, and the
+        // repique calls it back in over the last two beats.
+        let song = SONGS
+            .iter()
+            .find(|song| song.name == "Candombe para Gardel")
+            .unwrap();
+        let mut project = song_demo(song);
+        let style = Style::named("Candombe").unwrap();
+        let band = BandStyle::of_style(style).unwrap();
+        project.apply_band_parts(band, Some(style), apply::StyleParts::default());
+        let bar = project.meter().bar(13);
+        let beat = bar.time.unit_steps();
+        for player in [Player::Piano, Player::Bass] {
+            let struck = struck(&project, player, bar.start, bar.end());
+            assert!(!struck.is_empty(), "{player:?}");
+            assert!(
+                struck.iter().all(|&(at, _)| at == bar.start),
+                "{player:?}: {struck:?}"
+            );
+        }
+        let drums = struck(&project, Player::Drums, bar.start, bar.end());
+        assert!(drums.iter().any(|&(at, _)| at == bar.start));
+        assert!(
+            drums
+                .iter()
+                .all(|&(at, _)| at == bar.start || at >= bar.start + 2 * beat),
+            "{drums:?}"
+        );
+        assert!(
+            drums.iter().any(|&(at, _)| at >= bar.start + 2 * beat),
+            "the call: {drums:?}"
+        );
+        // And the band comes back in on bar 15.
+        let next = project.meter().bar(14);
+        assert!(!struck(&project, Player::Piano, next.start, next.end()).is_empty());
     }
 
     #[test]
