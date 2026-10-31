@@ -5173,6 +5173,81 @@ fn a_micromode_style_plays_the_forms_written_on_the_sheet() {
     assert!(screen.app.project.band().unwrap().micromode.is_none());
 }
 
+/// Picking another micromode in the harmony keys' key menu changes the
+/// colour of the whole piece and keeps every form's degree: the Menor 3
+/// demo in Menor 5 plays T2 of Menor 5 where it played T2 of Menor 3.
+#[test]
+fn the_key_menu_changes_the_micromode_and_keeps_every_degree() {
+    use lineup_core::harmony::{Micromode, PitchSet};
+    use lineup_core::library::MicromodeStyle;
+    let mut screen = Screen::new();
+    let style = MicromodeStyle::named("Menor 3 colour").unwrap();
+    let demo = lineup_core::library::demo::micromode_demo(style);
+    let degrees: Vec<_> = demo
+        .playlist()
+        .chord_markers()
+        .iter()
+        .map(|marker| marker.harmony.degree(demo.scale).unwrap())
+        .collect();
+    screen.app.replace_project(demo, None);
+    screen.app.rack_open = false;
+    screen.app.harmony_keys.open = true;
+    screen.draw(vec![]);
+    // The key menu shows "Menor 3"; so does the home key below it.
+    screen.draw(vec![]);
+    let output = screen.draw(vec![]);
+    let menu = output
+        .shapes
+        .iter()
+        .filter_map(|shape| match &shape.shape {
+            Shape::Text(text) if text.galley.text() == "Menor 3" => Some(text.pos),
+            _ => None,
+        })
+        .min_by(|a, b| a.y.total_cmp(&b.y))
+        .unwrap();
+    screen.click_at(menu + egui::vec2(4.0, 4.0), Modifiers::NONE);
+    // The micromodes are in short rows: "Menor", then 1 to 5.
+    screen.draw(vec![]);
+    let output = screen.draw(vec![]);
+    let row = text_rect(&output, "Menor")
+        .expect("the Menor row")
+        .center()
+        .y;
+    let five = text_rect_in_row(&output, "5", row).expect("Menor 5");
+    screen.click_at(five.center(), Modifiers::NONE);
+    let project = &screen.app.project;
+    let menor_5 = Micromode::named("Menor 5").unwrap();
+    assert_eq!(project.scale, menor_5.key(lineup_core::PitchClass::C));
+    let forms: Vec<PitchSet> = project
+        .playlist()
+        .chord_markers()
+        .iter()
+        .map(|marker| marker.harmony.pitch_set().unwrap())
+        .collect();
+    let expected: Vec<PitchSet> = degrees
+        .iter()
+        .map(|degree| degree.form(project.scale).unwrap())
+        .collect();
+    assert_eq!(forms, expected);
+    // Every note is in the form written where it plays.
+    for clip in project.playlist().clips() {
+        for (_, note) in project.pattern(clip.pattern).unwrap().all_notes() {
+            let form = project.chord_at(clip.start + note.start).unwrap();
+            let form = form.harmony.pitch_set().unwrap();
+            assert_eq!(Micromode::of(form), Some(menor_5));
+            assert!(form.contains(note.pitch.pitch_class()));
+        }
+    }
+    // The key menu names it, and one step undoes it.
+    let output = screen.draw(vec![]);
+    assert!(text_rect(&output, "Menor 5").is_some());
+    screen.app.undo();
+    assert_eq!(
+        Micromode::of(screen.app.project.scale.pitch_set()).map(|m| m.name),
+        Some("Menor 3")
+    );
+}
+
 mod chord_sheet_layout {
     use super::*;
 

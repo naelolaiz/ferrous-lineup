@@ -9,6 +9,8 @@
 //! `Option`, and `None` means "this would not work, so do nothing": a
 //! chord is never transposed with one of its notes missing.
 
+use crate::harmony::{Degree, PitchSet};
+use crate::pitch::PitchClass;
 use crate::{Note, NoteEvent, Scale, ScaleKind};
 
 /// The notes grouped by the step they start on, each group lowest
@@ -178,6 +180,85 @@ pub fn change_key(note: Note, from: Scale, to: Scale) -> Note {
     } else {
         nearest_in_key(moved, to)
     }
+}
+
+/// Where `note` goes when the song changes key from `from` to `to`
+/// while it plays `form`, the harmony it is part of: a form of the old
+/// key, when the key is a set or a micromode.
+///
+/// Changing the set the key is keeps every form's degree, as changing
+/// a key's mode keeps every chord's (see [`Degree`]): from Menor 3 on C
+/// to Menor 5 on C, T2 (D D# F#) becomes T2 of Menor 5 (D D# G#). Each
+/// note takes the same place in the new form that it had in the old,
+/// counted from the key's note the way the form was made: in Menor 3 on
+/// C, C C# E, the third note is E, and in Menor 5 on C, C C# F#, it is
+/// F#, so every form's third note goes up two semitones (down, in a form
+/// upside down). The note moves the shortest way to its new pitch class.
+/// A new set with fewer notes has no place for the last ones, which go
+/// to the nearest note of the new form.
+///
+/// Without a form (no harmony is known, or the note is not part of it,
+/// or the key is not a set), the note moves as [`change_key`] moves it.
+pub fn change_key_in(note: Note, form: Option<PitchSet>, from: Scale, to: Scale) -> Note {
+    let old = from_key(from, to);
+    let (ScaleKind::Set(_), ScaleKind::Set(_)) = (old.kind, to.kind) else {
+        return change_key(note, from, to);
+    };
+    let Some((degree, place)) = form.and_then(|form| {
+        let degree = Degree::of(old, form)?;
+        Some((degree, place_in(degree, old, note.pitch_class())?))
+    }) else {
+        return change_key(note, from, to);
+    };
+    let target = match note_at(degree, to, place) {
+        Some(target) => target,
+        None => {
+            let Some(new_form) = degree.form(to) else {
+                return change_key(note, from, to);
+            };
+            let moved = note
+                .pitch_class()
+                .transpose(nearest_shift(old.root, to.root));
+            nearest_in_set(moved, new_form)
+        }
+    };
+    let shift = nearest_shift(note.pitch_class(), target);
+    note.transpose(shift)
+        .or_else(|| note.transpose(shift - 12 * shift.signum()))
+        .unwrap_or(note)
+}
+
+/// The shortest move from `from` to `to`, in semitones: up to six
+/// down, or up to six up (a tritone goes up).
+fn nearest_shift(from: PitchClass, to: PitchClass) -> i32 {
+    let up = from.semitones_up_to(to) as i32;
+    if up > 6 { up - 12 } else { up }
+}
+
+/// Which note of the form at `degree` in `key` `pitch_class` is,
+/// counting the notes as the key's own form counts them, up from its
+/// note: the form's first note is the key note moved (or mirrored and
+/// moved), and so on. `None` if it is not in the form.
+fn place_in(degree: Degree, key: Scale, pitch_class: PitchClass) -> Option<usize> {
+    (0..key.kind.intervals().len()).find(|&place| note_at(degree, key, place) == Some(pitch_class))
+}
+
+/// The note in place `place` of the form at `degree` in `key` (see
+/// [`place_in`]), or `None` if the key's form has fewer notes.
+fn note_at(degree: Degree, key: Scale, place: usize) -> Option<PitchClass> {
+    let interval = i32::from(*key.kind.intervals().get(place)?);
+    let from_key_note = if degree.inverted { -interval } else { interval };
+    Some(key.root.transpose(from_key_note + i32::from(degree.up)))
+}
+
+/// The note of `set` nearest to `pitch_class`, the lower one when two
+/// are as near; `pitch_class` itself if the set is empty.
+fn nearest_in_set(pitch_class: PitchClass, set: PitchSet) -> PitchClass {
+    (0..=6)
+        .flat_map(|distance| [-distance, distance])
+        .map(|semitones| pitch_class.transpose(semitones))
+        .find(|&candidate| set.contains(candidate))
+        .unwrap_or(pitch_class)
 }
 
 /// The key a change to `to` starts from: `from`, or, going from a
@@ -453,6 +534,56 @@ mod tests {
         // A set that is no key still leaves the notes where they are.
         let diminished = Scale::set(C, PitchSet::from_semitones(&[0, 3, 6, 9]));
         assert_eq!(moved(63, diminished, minor), 63);
+    }
+
+    #[test]
+    fn a_new_set_keeps_the_degree_of_each_form() {
+        use PitchClass::*;
+        let set = |root, semitones: &[u8]| Scale::set(root, PitchSet::from_semitones(semitones));
+        // Menor 3 on C is C C# E; Menor 5 on C is C C# F#.
+        let (menor_3, menor_5) = (set(C, &[0, 1, 4]), set(C, &[0, 1, 6]));
+        let moved = |midis: &[u8], from: Scale, to: Scale| -> Vec<u8> {
+            let form: PitchSet = midis.iter().map(|&m| Note::new(m).pitch_class()).collect();
+            midis
+                .iter()
+                .map(|&m| change_key_in(Note::new(m), Some(form), from, to).midi())
+                .collect()
+        };
+        // Home, T2 (D D# F#) and T0I (C B Ab, upside down around C):
+        // each third note moves, up or down as the form goes.
+        assert_eq!(moved(&[60, 61, 64], menor_3, menor_5), [60, 61, 66]);
+        assert_eq!(moved(&[62, 63, 66], menor_3, menor_5), [62, 63, 68]);
+        assert_eq!(moved(&[60, 59, 56], menor_3, menor_5), [60, 59, 54]);
+        // And back: the same forms of Menor 3 again.
+        assert_eq!(moved(&[62, 63, 68], menor_5, menor_3), [62, 63, 66]);
+        // Another key note as well: Menor 5 on D is D D# G#, and its T2
+        // is E F A#.
+        assert_eq!(
+            moved(&[62, 63, 66], menor_3, set(D, &[2, 3, 8])),
+            [64, 65, 70]
+        );
+        // To a set of four notes, C E G Bb (C7 as a set): each note takes
+        // the same place, so T2 of Menor 3 becomes T2 of the set, D F# A.
+        assert_eq!(
+            moved(&[62, 63, 66], menor_3, set(C, &[0, 4, 7, 10])),
+            [62, 66, 69]
+        );
+        // From it to Menor 3, the fourth note has no place: Bb goes to the
+        // nearest note of the new form, C.
+        assert_eq!(
+            moved(&[60, 64, 67, 70], set(C, &[0, 4, 7, 10]), menor_3),
+            [60, 61, 64, 72]
+        );
+        // Without a form, or with a note outside it, as `change_key`.
+        assert_eq!(
+            change_key_in(Note::new(62), None, menor_3, menor_5).midi(),
+            62
+        );
+        let home = menor_3.pitch_set();
+        assert_eq!(
+            change_key_in(Note::new(66), Some(home), menor_3, menor_5).midi(),
+            change_key(Note::new(66), menor_3, menor_5).midi()
+        );
     }
 
     #[test]
