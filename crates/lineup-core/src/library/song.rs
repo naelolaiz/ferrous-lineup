@@ -612,6 +612,16 @@ impl Song {
         self.parts.iter().find(|part| part.name == name)
     }
 
+    /// Whether its parts are only numbered ("Part 1", "Part 2"...): cut
+    /// where a MIDI file was, not where the music's parts start.
+    pub fn parts_are_numbered(&self) -> bool {
+        self.parts.iter().all(|part| {
+            part.name
+                .strip_prefix("Part ")
+                .is_some_and(|number| number.chars().all(|c| c.is_ascii_digit()))
+        })
+    }
+
     /// The song called `name`, if there is one.
     pub fn named(name: &str) -> Option<&'static Song> {
         SONGS.iter().find(|song| song.name == name)
