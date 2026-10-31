@@ -216,6 +216,7 @@ Números romanos en tonalidades menores: settings.md#armonía
 Órgano: bigger-band.md#cuerdas-y-órgano
 Ortografía: notes-and-scales.md#sostenidos-bemoles-y-ortografía
 Otro solo: soloist.md#probarlo
+Palíndromo (serie): practising.md#entrenamiento-auditivo-experimental
 Partitura guía: lead-sheets.md
 Pasos: channel-rack.md#leerlo, rhythm-and-meter.md#figuras-y-pasos
 Patrón de prueba: styles.md#adónde-va-un-estilo

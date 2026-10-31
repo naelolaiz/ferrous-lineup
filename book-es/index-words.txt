@@ -71,6 +71,7 @@ Nomenclatura de notas: program/languages.md
 Número romano: theory/numerals.md
 Oír acordes: theory/hearing.md
 Orquesta: band/orchestra.md
+Palíndromo (serie): band/practice.md#series-p-i-r-y-ri
 Paquetes de cada versión: shipping/releases.md
 Partitura guía: band/lead-sheet.md
 Patrón: program/project.md
