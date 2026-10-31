@@ -266,6 +266,28 @@ mismas notas como micromodo, «Menor 3 sobre Do». Pasar de uno a otro no
 mueve nada, y **serie dodecafónica** trae de vuelta la serie de la
 canción.
 
+**Cualquier conjunto como tonalidad.** Debajo de **conjunto de clases
+de alturas**, el menú Tonalidad lista los conjuntos como lista los
+micromodos. **Notas** elige cuántas notas, de 2 a 10, e **Invertido
+(I)** pone los conjuntos al revés; el menú sigue abierto mientras
+cambias cualquiera de los dos. Haz clic en un conjunto para que sea la
+tonalidad sobre la tónica: **3-11** sobre Do es Do Mi♭ Sol, y con
+**Invertido (I)** Do Mi Sol. Un conjunto que es igual al revés, como
+**4-28**, la séptima disminuida, sale igual de las dos maneras. El menú
+se abre en el número de notas de la tonalidad, con su conjunto
+rellenado: Do mayor se abre en los conjuntos de siete notas.
+
+El conjunto que la propia canción usa más, entre los grupos de ese
+número de notas, aparece recuadrado. En *Los tricordios de Webern* es 3-3
+entre los conjuntos de tres y 6-20 entre los de seis, las dos mitades
+de la serie. Apunta a él para leer cuánto de la canción ocupa y dónde
+se encontró: en las notas que suenan juntas, o en la línea de una
+pista. Haz clic en él para tomar las propias notas de la canción como
+tonalidad, así nada tiene que moverse. Cualquier otro conjunto mueve
+las notas como lo hace un micromodo nuevo: desde otro conjunto cada
+forma conserva su grado, y desde una tonalidad mayor o menor las notas
+se quedan como están.
+
 ## Series dodecafónicas
 
 Hacia 1921, Arnold Schoenberg buscó una manera de escribir música en la
