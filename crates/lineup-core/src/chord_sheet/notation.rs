@@ -419,34 +419,7 @@ pub fn heard_groups(
 /// or a top line and the chords under it, each in a form of its own are
 /// two, as two chords at once are.
 pub fn mixed(project: &Project, channel: Option<usize>) -> Vec<HeardGroups> {
-    let mut tracks: Vec<(usize, Vec<NoteEvent>)> = Vec::new();
-    for (part, note) in project.melodic_parts() {
-        if channel.is_some_and(|channel| channel != part) {
-            continue;
-        }
-        match tracks.iter_mut().find(|(track, _)| *track == part) {
-            Some((_, notes)) => notes.push(note),
-            None => tracks.push((part, vec![note])),
-        }
-    }
-    let voices: Vec<Voice> = tracks
-        .iter()
-        .flat_map(|(track, notes)| voices_of(*track, notes))
-        .collect();
-    // The stretches from one key marker to the next, each read on its
-    // own, as the check reads a pattern in its keys.
-    let keys = project.key_map();
-    let end = project.song_length();
-    let mut edges: Vec<usize> = std::iter::once(0)
-        .chain(keys.markers().iter().map(|marker| marker.start))
-        .chain(std::iter::once(end))
-        .filter(|&edge| edge <= end)
-        .collect();
-    edges.sort_unstable();
-    edges.dedup();
-    let spans: Vec<(usize, usize)> = edges.windows(2).map(|pair| (pair[0], pair[1])).collect();
-    let forms = colour::forms_heard(&voices, &spans, |step| keys.key_at(step));
-
+    let (voices, forms) = read_forms(project, channel);
     let mut starts: Vec<usize> = forms.iter().map(|form| form.start).collect();
     starts.sort_unstable();
     starts.dedup();
@@ -474,6 +447,49 @@ pub fn mixed(project: &Project, channel: Option<usize>) -> Vec<HeardGroups> {
             }
         })
         .collect()
+}
+
+/// The forms of the key's set the colour check reads in the song's
+/// notes (of channel `channel` only, if given), where the key is a set,
+/// in order, each with the stretch of the song it is heard through: the
+/// forms [`mixed`] groups the notes by. The harmony keys light the ones
+/// heard at the playhead, so a form played a few notes at a time, as
+/// Webern's trichords play the halves of the row, lights up as a whole.
+pub fn forms_in_song(project: &Project, channel: Option<usize>) -> Vec<FormStatement> {
+    read_forms(project, channel).1
+}
+
+/// The parts of the song's notes (of channel `channel` only, if given)
+/// and the forms of the key's set read in them (see [`forms_in_song`]).
+fn read_forms(project: &Project, channel: Option<usize>) -> (Vec<Voice>, Vec<FormStatement>) {
+    let mut tracks: Vec<(usize, Vec<NoteEvent>)> = Vec::new();
+    for (part, note) in project.melodic_parts() {
+        if channel.is_some_and(|channel| channel != part) {
+            continue;
+        }
+        match tracks.iter_mut().find(|(track, _)| *track == part) {
+            Some((_, notes)) => notes.push(note),
+            None => tracks.push((part, vec![note])),
+        }
+    }
+    let voices: Vec<Voice> = tracks
+        .iter()
+        .flat_map(|(track, notes)| voices_of(*track, notes))
+        .collect();
+    // The stretches from one key marker to the next, each read on its
+    // own, as the check reads a pattern in its keys.
+    let keys = project.key_map();
+    let end = project.song_length();
+    let mut edges: Vec<usize> = std::iter::once(0)
+        .chain(keys.markers().iter().map(|marker| marker.start))
+        .chain(std::iter::once(end))
+        .filter(|&edge| edge <= end)
+        .collect();
+    edges.sort_unstable();
+    edges.dedup();
+    let spans: Vec<(usize, usize)> = edges.windows(2).map(|pair| (pair[0], pair[1])).collect();
+    let forms = colour::forms_heard(&voices, &spans, |step| keys.key_at(step));
+    (voices, forms)
 }
 
 /// The notes `form` was read in, one of each of its pitch classes, in
@@ -1400,6 +1416,42 @@ mod tests {
             "C B Eb",
             "the row's first trichord, in the order it comes"
         );
+    }
+
+    #[test]
+    fn the_forms_in_the_song_are_the_halves_of_webern_s_row_each_over_its_stretch() {
+        use crate::harmony::Degree;
+        use crate::library::{RowStyle, demo};
+        // With 6-20 as the key, on the row's first half (Eb E G Ab B C on
+        // C), each half of the row is one form of it, heard from its first
+        // note to the next half's, though its six notes come three at a
+        // time: P plays T0 then T2, I plays T1 then T3. The harmony keys
+        // light the one at the playhead.
+        let mut webern = demo::row_demo(RowStyle::named("Webern's trichords").unwrap());
+        webern.scale = Scale::set(
+            crate::PitchClass::C,
+            PitchSet::from_semitones(&[3, 4, 7, 8, 11, 0]),
+        );
+        let key = webern.scale;
+        let forms = forms_in_song(&webern, None);
+        let read: Vec<(usize, usize, String)> = forms
+            .iter()
+            .take(2)
+            .map(|form| {
+                let degree = Degree::of(key, form.form).unwrap().to_string();
+                (form.start, form.end, degree)
+            })
+            .collect();
+        assert_eq!(read, [(0, 12, "T0".into()), (12, 36, "T2".into())]);
+        let at = |step: usize| -> Vec<String> {
+            forms
+                .iter()
+                .filter(|form| (form.start..form.end).contains(&step))
+                .map(|form| Degree::of(key, form.form).unwrap().to_string())
+                .collect()
+        };
+        assert_eq!(at(76), ["T1"]);
+        assert_eq!(at(88), ["T3"]);
     }
 
     #[test]

@@ -551,9 +551,14 @@ tonalidad sobre Re es menor, y D7 viene de fuera de la tonalidad.
 
 ## Qué viene después: el conocimiento como datos
 
-Después de un acorde, las teclas que suelen venir a continuación reciben
-un contorno amarillo fino, la más habitual un poco más brillante, y una
-línea de sugerencia dice por qué. `next_chords(scale, current)` da esos
+Mientras suena un acorde, mantenido o sonando en la canción, las teclas
+que suelen venir a continuación reciben un contorno amarillo fino, la
+más habitual un poco más brillante, y una línea de sugerencia dice por
+qué. Suelta la tecla, o detén la canción, y el contorno se va: las
+teclas muestran solo lo que está sonando, así que el acorde que sigue
+el contorno es el que encuentra `sounding` en el código de las teclas,
+primero una tecla mantenida, después un acorde mantenido en un teclado,
+después el de la música. `next_chords(scale, current)` da esos
 acordes, el más habitual primero. El conocimiento no está en el código
 sino en tablas: cada acorde se encuentra por su fundamental (semitonos
 por encima de la tónica) y su tipo de tríada, y lista los movimientos

@@ -611,6 +611,7 @@ impl Views {
                     &[],
                     &heard,
                     hearing.as_ref(),
+                    step.map(crate::harmony_keys::Playhead::Song),
                     false,
                     None,
                     &mut self.parts,

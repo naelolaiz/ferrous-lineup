@@ -68,7 +68,7 @@ use lineup_core::{
 use crate::channel_rack::{self, RackAction};
 use crate::chord_sheet::{self, ChordSheet, SheetAction};
 use crate::ear_training::EarTraining;
-use crate::harmony_keys::{HarmonyAction, HarmonyKeys};
+use crate::harmony_keys::{HarmonyAction, HarmonyKeys, Playhead};
 use crate::i18n::{tr, trf};
 use crate::icons;
 use crate::lead_sheet::LeadSheetWindow;
@@ -120,6 +120,10 @@ pub struct LineupApp {
     pattern: usize,
     mode: PlayMode,
     playing: bool,
+    /// For tests, which have no sound card to count the steps: where the
+    /// song or pattern is while `playing`.
+    #[cfg(test)]
+    test_playhead: Option<usize>,
     /// Where playback starts or carries on from while stopped or paused:
     /// a step of the pattern in pattern mode, of the song in song mode.
     cursor: usize,
@@ -280,6 +284,8 @@ impl LineupApp {
             pattern: 0,
             mode: PlayMode::Song,
             playing: false,
+            #[cfg(test)]
+            test_playhead: None,
             over_song: None,
             cursor: 0,
             marker: 0,
@@ -1930,6 +1936,10 @@ impl LineupApp {
     /// The step the sequencer is on, or `None` when stopped. In pattern
     /// mode it is a step of the selected pattern; in song mode, of the song.
     fn playhead(&self) -> Option<usize> {
+        #[cfg(test)]
+        if self.playing && self.test_playhead.is_some() {
+            return self.test_playhead;
+        }
         match &self.audio {
             Audio::Running(engine) if self.playing => engine.playhead(),
             _ => None,
@@ -2153,6 +2163,14 @@ impl LineupApp {
             .map_or("", |channel| channel.name.as_str());
         let heard = self.chord_playing();
         let hearing = self.hearing_playing();
+        let playhead = match (self.playhead(), self.mode) {
+            (Some(step), PlayMode::Pattern) => Some(Playhead::Pattern {
+                pattern: self.pattern,
+                step,
+            }),
+            (Some(_), PlayMode::Song) => self.song_position().map(|(step, _)| Playhead::Song(step)),
+            (None, _) => None,
+        };
         // While the chord sheet has the keyboard, digits are sets
         // and figures typed in a bar.
         let digits = !self.live.typing()
@@ -2171,6 +2189,7 @@ impl LineupApp {
                     &held,
                     &heard,
                     hearing.as_ref(),
+                    playhead,
                     digits,
                     key_heard.as_ref(),
                     self.playlist.library_parts_mut(),

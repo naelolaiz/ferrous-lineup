@@ -37,7 +37,9 @@ keyboard, to play its chord on the channel selected in the channel rack
 
 While the music plays, the key of the chord you hear lights up, and the
 chords that often follow it are framed, so you can watch a song's
-harmony move.
+harmony move. The frames are there only while a chord sounds: let go
+of the key, or stop the music, and they go, so the keys always show
+what is playing.
 
 ## The controls at the left
 

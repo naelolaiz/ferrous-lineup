@@ -42,7 +42,9 @@ el rack de canales (*Mantén una tecla o pulsa de 1 a 7 para tocar en
 
 Mientras suena la música, se enciende la tecla del acorde que oyes, y
 los acordes que suelen seguirlo quedan enmarcados, así que puedes ver
-moverse la armonía de una canción.
+moverse la armonía de una canción. Los marcos están solo mientras suena
+un acorde: suelta la tecla, o detén la música, y se van, así que las
+teclas siempre muestran lo que está sonando.
 
 ## Los controles de la izquierda
 
