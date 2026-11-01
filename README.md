@@ -144,11 +144,15 @@ stored in that tag. Its binaries are run artifacts only: it never
 changes published release assets or notes.
 
 Upload the LFS objects before publishing rewritten Git refs. Update
-main and all rewritten release tags in one atomic, lease-protected push,
+all rewritten branches and release tags in one atomic, lease-protected push,
 then dispatch this workflow from main. Do not rely on tag-push triggers
 for the rebuilds: GitHub does not create those events when more than
 three tags are pushed together. Rerunning an old workflow run also uses
 its old commit, not the rewritten tag.
+
+After the rewrite, collaborators should re-clone or replay their local
+work onto the new history. Merging old branches back into it would
+restore the original large image history.
 
 Use the AUR and Flathub recipes from main after migration. Their updated
 commit pins and LFS sources must be published to those package
