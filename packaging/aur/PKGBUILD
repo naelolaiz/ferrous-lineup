@@ -1,7 +1,7 @@
 # Maintainer: naelolaiz <naelolaiz@users.noreply.github.com>
 pkgname=ferrous-lineup
 pkgver=0.5.0
-pkgrel=1
+pkgrel=2
 pkgdesc="Play songs with a backing band and learn harmony"
 arch=('x86_64' 'aarch64')
 url="https://github.com/naelolaiz/ferrous-lineup"
@@ -16,19 +16,26 @@ depends=(
   'wayland'
   'xdg-desktop-portal'
 )
-makedepends=('rust')
-source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
-# Run `updpkgsums` once the v$pkgver tag exists; GitHub's archive of a
-# tag is not the same file as the working tree.
-sha256sums=('7610abe8a67fe3d58e47f79b811b6e76be14f8d2612e2bbe3f614138c9781ec6')
+makedepends=('git' 'git-lfs' 'rust')
+# The commit corresponding to v0.5.0; a Git source retrieves LFS assets
+# without depending on GitHub's source-archive settings.
+_commit=b4e72107938833bc60af54a56d3397b83cbedb07
+source=("$pkgname::git+$url.git#commit=$_commit")
+sha256sums=('SKIP')
+
+prepare() {
+  cd "$pkgname"
+  git lfs install --local
+  git lfs pull
+}
 
 build() {
-  cd "$pkgname-$pkgver"
+  cd "$pkgname"
   cargo build --release --locked
 }
 
 package() {
-  cd "$pkgname-$pkgver"
+  cd "$pkgname"
 
   install -Dm755 target/release/ferrous-lineup "$pkgdir/usr/bin/ferrous-lineup"
   install -Dm644 packaging/linux/io.github.naelolaiz.FerrousLineup.desktop \

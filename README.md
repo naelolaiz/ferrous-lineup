@@ -134,6 +134,26 @@ of your own with the band. `cargo test` runs the tests, and
 On macOS the program is inside the app bundle:
 `"/Applications/Ferrous Lineup.app/Contents/MacOS/ferrous-lineup" --trace song.lineup`.
 
+## Validating migrated releases
+
+The **Validate release tags** workflow is run by hand from **main**.
+Choose one release tag or **all** to test and build all seven migrated
+releases on Linux, macOS and Windows. It checks out each tag with LFS
+enabled, using the workflow from main rather than the older workflow
+stored in that tag. Its binaries are run artifacts only: it never
+changes published release assets or notes.
+
+Upload the LFS objects before publishing rewritten Git refs. Update
+main and all rewritten release tags in one atomic, lease-protected push,
+then dispatch this workflow from main. Do not rely on tag-push triggers
+for the rebuilds: GitHub does not create those events when more than
+three tags are pushed together. Rerunning an old workflow run also uses
+its old commit, not the rewritten tag.
+
+Use the AUR and Flathub recipes from main after migration. Their updated
+commit pins and LFS sources must be published to those package
+repositories after the new Git refs and LFS objects are available.
+
 ## Screenshots
 
 | | |

@@ -1,0 +1,103 @@
+name: Validate release tags
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release to validate, or all seven migrated releases"
+        type: choice
+        required: true
+        default: all
+        options:
+          - all
+          - v0.1.1
+          - v0.1.2
+          - v0.2.0
+          - v0.3.0
+          - v0.4.0
+          - v0.4.1
+          - v0.5.0
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  select:
+    name: Select release tags
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    outputs:
+      tags: ${{ steps.tags.outputs.tags }}
+    steps:
+      - id: tags
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          case "$TAG" in
+            all)
+              tags='["v0.1.1","v0.1.2","v0.2.0","v0.3.0","v0.4.0","v0.4.1","v0.5.0"]'
+              ;;
+            v0.1.1|v0.1.2|v0.2.0|v0.3.0|v0.4.0|v0.4.1|v0.5.0)
+              tags="[\"$TAG\"]"
+              ;;
+            *)
+              echo "::error::Unsupported release tag: $TAG"
+              exit 1
+              ;;
+          esac
+          echo "tags=$tags" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Validate ${{ matrix.tag }} (${{ matrix.platform.name }})
+    needs: select
+    strategy:
+      fail-fast: false
+      matrix:
+        tag: ${{ fromJSON(needs.select.outputs.tags) }}
+        platform:
+          - name: Linux
+            os: ubuntu-latest
+            binary: target/release/ferrous-lineup
+          - name: macOS
+            os: macos-latest
+            binary: target/release/ferrous-lineup
+          - name: Windows
+            os: windows-latest
+            binary: target/release/ferrous-lineup.exe
+    runs-on: ${{ matrix.platform.os }}
+    steps:
+      # Use the workflow from main, not a historical tag's pre-LFS workflow.
+      - uses: actions/checkout@v5
+        with:
+          ref: refs/tags/${{ matrix.tag }}
+          lfs: true
+
+      - name: Verify LFS assets
+        run: git lfs fsck --objects --pointers
+
+      - name: Install system libraries
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libasound2-dev libxkbcommon-dev libwayland-dev
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: release-validation-${{ matrix.tag }}
+
+      - name: Test
+        run: cargo test --workspace --locked
+
+      - name: Build release
+        run: cargo build --release --locked
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: validated-${{ matrix.tag }}-${{ matrix.platform.name }}
+          path: ${{ matrix.platform.binary }}
+          if-no-files-found: error
