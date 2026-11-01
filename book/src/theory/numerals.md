@@ -532,9 +532,12 @@ minor, and D7 comes from outside the key.
 
 ## What comes next: knowledge as data
 
-After a chord, the keys that often come next get a thin yellow
-outline, the most usual one a little brighter, and a hint line says
-why. `next_chords(scale, current)` gives those chords, most usual first.
+While a chord sounds, held down or playing in the song, the keys that
+often come next get a thin yellow outline, the most usual one a little
+brighter, and a hint line says why. Let go, or stop the song, and the
+outline goes: the keys show only what is playing, so the chord the
+outline follows is the one `sounding` finds in the keys' code, a key
+held down first, then a chord held on a keyboard, then the music's. `next_chords(scale, current)` gives those chords, most usual first.
 The knowledge is not in code but in tables: each chord is found by its
 root (semitones above the tonic) and its kind of triad, and lists the
 moves that often follow it.

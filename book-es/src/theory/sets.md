@@ -652,14 +652,15 @@ tres notas nombradas como conjunto, 3-11, no.
 
 ### El borde de las formas
 
-Después de que suena una forma, aparecen con borde las formas que más
-notas conservan de ella: los enlaces más suaves. `degree::nearest_links`
+Mientras suena una forma, mantenida o sonando en la canción, aparecen
+con borde las formas que más notas conservan de ella: los enlaces más
+suaves. `degree::nearest_links`
 las encuentra y dice cuántas notas conservan. Para la mayoría de los
 conjuntos son todas las notas de la forma menos una, las formas que da
 `degree::smooth_links`. Pero cuanto más simétrico es un conjunto, menos
 formas tiene, y algunos no tienen ninguna a una nota de distancia.
 6-20, el conjunto hexatónico, tiene cuatro formas, y cada una conserva
-tres notas de otras dos y ninguna de la tercera: después de T0 (Mi♭ Mi
+tres notas de otras dos y ninguna de la tercera: de T0 (Mi♭ Mi
 Sol La♭ Si Do), T1 (Do Do♯ Mi Fa La♭ La) y T3 (Re Mi♭ Fa♯ Sol Si♭ Si)
 conservan tres cada una. La tríada aumentada, la séptima disminuida y
 la escala de tonos enteros van más lejos: sus formas no comparten
@@ -671,16 +672,80 @@ distancia.
 cuenta, así que nunca habla de un borde que no está en pantalla: «Con
 borde: conservan todas las notas de T4 menos una», «Con borde:
 conservan 3 notas de T0; ninguna forma conserva más» o «Ninguna otra
-forma comparte una nota con T0». Una forma con borde después de otra
-puede estar lejos de casa y quedar fuera con **Cercanas**:
-`HarmonyKeys::show_far_forms` guarda la última forma y sus formas con
+forma comparte una nota con T0». Una forma con borde mientras suena
+otra puede estar lejos de casa y quedar fuera con **Cercanas**:
+`HarmonyKeys::show_far_forms` guarda la forma que suena y sus formas con
 borde, y `keys::form_keys_with` las muestra después de las cercanas, en
-su orden de cercanía. Las teclas cercanas no cambian de lugar, y las
-lejanas solo cambian cuando no se mantiene ninguna tecla lejana, así
-que ninguna tecla se mueve bajo el puntero. Una prueba toma cada forma
-de cada clase de conjuntos como la última tocada, con Cercanas y con Todas las formas, y
-comprueba que cada forma con borde tiene su tecla y que la línea dice
-cuántas notas conservan las formas con borde.
+su orden de cercanía. Se quedan cuando la forma deja de sonar, para que
+se pueda tocar el paso siguiente, y solo cambian cuando suena otra
+forma y no se mantiene ninguna tecla lejana; las teclas cercanas no
+cambian de lugar, así que ninguna tecla se mueve bajo el puntero. Una
+prueba toma cada forma de cada clase de conjuntos como la que suena,
+con Cercanas y con Todas las formas, y comprueba que cada forma con
+borde tiene su tecla y que la línea dice cuántas notas conservan las
+formas con borde.
+
+El borde está solo mientras suena una forma, como las sugerencias de
+las teclas de acordes están solo mientras suena un acorde: las teclas
+muestran lo que está sonando. `show_forms` busca la forma que suena en
+este orden:
+
+```rust
+let held_form = whole(held);
+let mut in_music: Vec<PitchSet> = self.forms_at(project, playhead);
+in_music.retain(of_key);
+in_music.extend(whole(heard).filter(|set| !in_music.contains(set)));
+let sounding = self
+    .down
+    .as_ref()
+    .and_then(|down| down.form)
+    .or(held_form)
+    .or(in_music.first().copied());
+let (next, keeps) = sounding.map(degree::nearest_links).unwrap_or_default();
+```
+
+Primero una tecla de armonía mantenida (`Down` guarda la forma que
+toca), después una forma entera mantenida en un teclado (`whole` se
+queda con un conjunto solo si tiene tantas notas como la tonalidad y es
+una de sus formas), después la música. Si no suena nada, `sounding` es
+`None`, ninguna forma tiene borde y la línea vuelve a «Mantén una tecla
+o pulsa 1 a 4».
+
+### Formas oídas a lo largo del tiempo
+
+Las formas de un conjunto rara vez suenan enteras de una vez. *Los
+tricordios de Webern*, con 6-20 como tonalidad, toca cada mitad de la
+serie como dos acordes de tres notas, una forma de 3-3 cada uno; las
+seis notas de la mitad, una forma de 6-20, nunca suenan juntas.
+Leyendo solo las notas que suenan juntas, las teclas nunca encendían una
+forma mientras sonaba la canción. Ahora leen la música a lo largo del
+tiempo, como lo hace el agrupamiento mixto de la hoja de acordes:
+`forms_at` pide las formas que se oyen en el cursor de reproducción.
+
+```rust
+pub enum Playhead {
+    Song(usize),
+    Pattern { pattern: usize, step: usize },
+}
+```
+
+En la canción, `notation::forms_in_song` da cada forma del conjunto de
+la tonalidad que lee la revisión del color (ver [Formas de la
+tonalidad, mixtas](#formas-de-la-tonalidad-mixtas)), cada una con el
+tramo en que se oye, desde su primera nota hasta donde empieza la forma
+siguiente; `notation::mixed` agrupa los compases de la hoja de acordes
+con la misma lista. Para un patrón tocado solo, las formas salen de la
+revisión de la conducción de voces del patrón, las que dibuja el carril
+Formas del piano roll. Leer toda la canción lleva un momento, así que
+`FormsRead` guarda las formas junto con aquello de lo que se leyeron,
+las notas de la canción y su mapa de tonalidades, o el patrón, su
+compás y sus tonalidades, y `forms_at` vuelve a leer solo cuando eso
+cambia; en cada cuadro solo elige las formas cuyo tramo contiene el
+cursor. En la canción de Webern la lista empieza con T0 desde el paso 0,
+T2 desde el paso 12, T0 desde el paso 36, y pasa a T1 y T3 donde la
+serie suena dada vuelta, así que se enciende la tecla de la mitad que
+suena, y las formas que conservan tres de sus notas aparecen con
+borde.
 
 ### Progresiones de formas
 
