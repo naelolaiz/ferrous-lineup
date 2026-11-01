@@ -16,7 +16,7 @@ the `.deb`.
 
 ## Submitting
 
-1. Tag the release (`v0.2.0`) so the manifest's `tag:` exists, and add
+1. Tag the release (`v0.5.0`) so the manifest's `tag:` exists, and add
    the tag's commit to the manifest.
 2. Fork <https://github.com/flathub/flathub>, add a branch named
    `io.github.naelolaiz.FerrousLineup`, and copy these files into it.
