@@ -17,6 +17,7 @@ four layers to write into the song.
 | `bass` | Bass notes: start, end, pitch and loudness | pYIN in the bass register (28–300 Hz), with 75 ms frames and a 20 Hz high-pass / 500 Hz low-pass |
 | `drums` | Kick, snare and closed/open hi-hat hits | Harmonic-percussive separation, semi-adaptive NMF templates and spectral onset picking |
 | `chords` | Chord changes and bass inversions | Chordino-style NNLS note spectra and a Viterbi chord-state decoder |
+| `separation` | Optional local source-separation helpers before DSP extraction | Independently compiled adapters for charon_audio, stem-splitter-core and demucs-rs; no model/runtime linked into the app |
 | `wav` | Saving a take as a WAV file, kept next to the song | [hound](https://crates.io/crates/hound), 32-bit float mono |
 
 Lining the layers up with the song (which step each note or hit starts
@@ -84,9 +85,9 @@ about 78 minutes to process 21.8 minutes of audio and peaked at 1.6 GB
 RSS. stem-splitter-core peaked at 5.0 GB RSS on its three-track run.
 demucs-rs's CPU backend took 9.4 minutes for one 13-second track; its
 Vulkan backend lost the Radeon driver's device context. These costs are
-why source separation is not an app dependency. The comparison does
-suggest it could be worthwhile as an optional, explicitly downloaded
-model for bass-heavy extraction. Melody and chord separation were not
+why source separation is optional and disabled by default, rather than a
+linked model/runtime dependency. It is most promising for bass-heavy
+extraction. Melody and chord separation were not
 scored: these datasets do not provide suitable mixed-recording
 annotations for those layers.
 
@@ -102,6 +103,37 @@ MDB_DRUMS="/path/to/MDB Drums" \
 MDB_SEPARATED="/path/to/charon:/path/to/stem-splitter" \
   cargo test --release -p lineup-listen --test bass_notes -- --ignored --nocapture
 ```
+
+### Trying the backends in the app
+
+Build `lineup-app` with `--features separation` for all adapters, or any
+combination of `separation-charon`, `separation-stem-splitter` and
+`separation-demucs`. With no features, no helper can run. Choose a compiled
+backend in **Settings > Audio > Source separation**; **Off** preserves
+the DSP-on-mix behavior. A saved backend missing from a later build is
+reported rather than silently replaced.
+
+[The helper installer](../../scripts/install-separators.sh) builds the
+three pinned upstream CLIs independently and installs them beside a
+release build. This is intentional: charon_audio currently pins `ort`
+rc.13 while stem-splitter-core pins rc.11, with the same native-library
+link name. They cannot coexist unchanged in one Cargo dependency graph.
+The adapter passes arguments without a shell and uses Charon's
+`--no-server` mode, so a resident server cannot override the chosen model.
+
+The original stereo file is passed to the helper; microphone samples
+are written to a temporary WAV. All four stems must decode successfully
+and match the input duration within 50 ms. Their own sample rates are
+used by the extractors. The original recording is kept separately for
+playback. Errors are shown, never silently replaced with analysis of the
+mix. Cancellation stops and reaps the helper. Temporary audio and logs
+are removed on completion; model caches are retained.
+
+`tests/separation.rs` is an ignored, real-helper smoke test with its
+environment-variable instructions at the top. Ordinary feature-enabled
+tests use local fixtures, without model downloads. The app maps vocals
+to melody, drums to hits, bass to bass notes and `other` to chords; the
+vocal stem is not a general instrumental-melody stem.
 
 ## Rough edges
 

@@ -33,10 +33,13 @@ crate distinto:
    el principio de la grabación. Encuentra golpes de batería mediante
    separación armónico-percusiva, plantillas NMF y detección espectral
    de ataques; encuentra cambios de acordes con espectros de notas NNLS
-   y un decodificador de Viterbi. No sabe nada de canciones. Son
-   extractores DSP aplicados a la mezcla, no separación de fuentes: la
-   batería cubre bombo, caja y hi-hat, y el bajo es una estimación
-   monofónica que aún no se ha evaluado con un conjunto de referencia.
+   y un decodificador de Viterbi. No sabe nada de canciones. De forma
+   predeterminada estos extractores DSP usan la mezcla. Características
+   opcionales de Cargo añaden separadores locales, elegidos en Ajustes:
+   la voz alimenta la melodía; la batería y el bajo, sus extractores; y
+   `other`, los acordes. La batería cubre bombo, caja y hi-hat; el bajo es
+   una estimación monofónica evaluada contra notas de pistas aisladas
+   como referencia indirecta, no contra anotaciones hechas a mano.
    Las casillas **Extraer** de **Tu toma** eligen qué resultados
    escribir; los acordes solo están disponibles en modo canción.
 2. **¿Cuándo se cantaron?** `lineup-audio` sabe cuándo tocó la tarjeta

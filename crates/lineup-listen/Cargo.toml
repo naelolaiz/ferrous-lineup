@@ -7,8 +7,16 @@ license.workspace = true
 repository.workspace = true
 rust-version.workspace = true
 
+[features]
+default = []
+separation = ["separation-charon", "separation-stem-splitter", "separation-demucs"]
+separation-charon = ["dep:tempfile"]
+separation-stem-splitter = ["dep:tempfile"]
+separation-demucs = ["dep:tempfile"]
+
 [dependencies]
 lineup-core.workspace = true
 symphonia.workspace = true
 realfft.workspace = true
 hound.workspace = true
+tempfile = { version = "3", optional = true }

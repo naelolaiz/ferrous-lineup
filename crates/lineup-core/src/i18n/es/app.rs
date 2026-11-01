@@ -451,7 +451,6 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ),
     ("Chords in {}", "Acordes en {}"),
     ("Chords of {}", "Acordes de {}"),
-    ("Chords", "Acordes"),
     (
         "Chords of {} notes of the set",
         "Acordes de {} notas del conjunto",
@@ -3053,4 +3052,90 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "How the chord lane names the harmony. The notes stay as they are: a set or a micromode is another way to write the same chord",
         "Cómo nombra la armonía la fila de acordes sobre la cuadrícula. Las notas no cambian: un conjunto o un micromodo es otra manera de escribir el mismo acorde",
     ),
+    ("Off", "Desactivada"),
+    ("Source separation", "Separación de fuentes"),
+    (
+        "Separate recordings with a local helper before extracting notes.",
+        "Separa las grabaciones con un programa local antes de extraer las notas.",
+    ),
+    ("Separator executable", "Ejecutable del separador"),
+    ("Choose executable", "Elegir ejecutable"),
+    ("HTDemucs model", "Modelo HTDemucs"),
+    ("Choose model", "Elegir modelo"),
+    (
+        "Leave paths blank to use bundled helpers, then PATH.",
+        "Deja las rutas vacías para buscar los programas incluidos y después en PATH.",
+    ),
+    (
+        "Audio stays on this computer. Helpers may download model weights on first use.",
+        "El audio no sale de esta computadora. Los programas pueden descargar los pesos del modelo la primera vez.",
+    ),
+    (
+        "Melody uses vocals; chords use other instruments. Turn off for instrumental melodies.",
+        "La melodía usa la voz; los acordes, los otros instrumentos. Desactívala para melodías instrumentales.",
+    ),
+    (
+        "Applies to the next analysis, including Transcribe again.",
+        "Se aplica al próximo análisis, incluido Transcribir otra vez.",
+    ),
+    ("Unknown separator: {}", "Separador desconocido: {}"),
+    (
+        "The {} separator is not enabled in this build.",
+        "El separador {} no está habilitado en esta compilación.",
+    ),
+    (
+        "Choose a separator executable.",
+        "Elige un ejecutable del separador.",
+    ),
+    (
+        "Choose an existing HTDemucs ONNX model for charon_audio.",
+        "Elige un archivo de modelo HTDemucs ONNX existente para charon_audio.",
+    ),
+    ("Analysis was cancelled.", "Se canceló el análisis."),
+    (
+        "Source separation failed: {}",
+        "Falló la separación de fuentes: {}",
+    ),
+    (
+        "Invalid audio for source separation.",
+        "Audio no válido para la separación de fuentes.",
+    ),
+    (
+        "Could not start separator {}: {}",
+        "No se pudo iniciar el separador {}: {}",
+    ),
+    (
+        "{} separator failed ({}): {}",
+        "Falló el separador {} ({}): {}",
+    ),
+    (
+        "Could not read separated stem {}: {}",
+        "No se pudo leer la pista separada {}: {}",
+    ),
+    (
+        "Separated stem {} has invalid audio or a different duration.",
+        "La pista separada {} tiene audio no válido o una duración distinta.",
+    ),
+    (
+        "Retry or discard the failed take first.",
+        "Primero vuelve a intentar o descarta la toma fallida.",
+    ),
+    (
+        "Separating audio with {}...",
+        "Separando el audio con {}...",
+    ),
+    (
+        "Listening to the separated stems...",
+        "Escuchando las pistas separadas...",
+    ),
+    ("Cancelling analysis...", "Cancelando el análisis..."),
+    ("Cancel analysis", "Cancelar análisis"),
+    ("Take analysis failed", "Falló el análisis de la toma"),
+    (
+        "Your recording is kept here until you retry or discard it.",
+        "Tu grabación se conserva aquí hasta que vuelvas a intentar o la descartes.",
+    ),
+    ("Retry analysis", "Reintentar análisis"),
+    ("Analyze without separation", "Analizar sin separación"),
+    ("Separated with {}", "Separada con {}"),
 ];

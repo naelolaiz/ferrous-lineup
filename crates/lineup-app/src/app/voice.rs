@@ -25,6 +25,7 @@
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU32, Ordering};
+use std::sync::mpsc::{self, Receiver, Sender};
 use std::thread::{self, JoinHandle};
 use std::time::Duration;
 
@@ -37,6 +38,7 @@ use lineup_core::take::{
     transcribe_bass, transcribe_chords, transcribe_drums, transcribe_with, tune_channel,
 };
 use lineup_core::{MAX_TRACKS, Meter, Project};
+use lineup_listen::separation::{Backend, Cancellation, Config, Input};
 use lineup_listen::voice;
 
 use super::{APP_NAME, Audio, LineupApp, preferences};
@@ -92,15 +94,45 @@ const NAMED_NOTES: usize = 12;
 #[derive(Default)]
 pub(super) struct Voice {
     recording: Option<Taking>,
-    hearing: Option<JoinHandle<Heard>>,
+    hearing: Option<JoinHandle<Result<Heard, Box<FailedTake>>>>,
     loading: Option<Loading>,
     review: Option<Review>,
+    failed: Option<FailedTake>,
+    cancel: Cancellation,
+    progress: Option<Receiver<Stage>>,
     /// The pitch heard last while recording, as the bits of an `f32`
     /// MIDI number; not a number when none.
     live_pitch: Arc<AtomicU32>,
     /// Where takes are saved instead of the usual place, for the tests.
     #[cfg(test)]
     folder: Option<PathBuf>,
+}
+
+impl Voice {
+    fn worker_control(&mut self) -> (Cancellation, Sender<Stage>) {
+        self.cancel.cancel();
+        self.cancel = Cancellation::default();
+        let (sender, receiver) = mpsc::channel();
+        self.progress = Some(receiver);
+        (self.cancel.clone(), sender)
+    }
+}
+
+impl Drop for Voice {
+    fn drop(&mut self) {
+        self.cancel.cancel();
+    }
+}
+
+enum Stage {
+    Separating(Backend),
+    HearingStems,
+}
+
+struct FailedTake {
+    recording: Recording,
+    along: Along,
+    error: String,
 }
 
 /// A take being recorded.
@@ -118,6 +150,7 @@ struct Heard {
     drums: Vec<DrumHit>,
     bass: Vec<BassNote>,
     chords: Vec<HeardChord>,
+    separator: Option<Backend>,
     /// The name of a recording added from a file: the file's, without
     /// its extension. `None` for a take recorded here.
     name: Option<String>,
@@ -134,6 +167,7 @@ struct Analysis {
     drums: Vec<DrumHit>,
     bass: Vec<BassNote>,
     chords: Vec<HeardChord>,
+    separator: Option<Backend>,
 }
 
 /// A recording added from a file, being read and heard, to lay on the
@@ -393,9 +427,31 @@ fn free_file(folder: &Path, name: &str) -> PathBuf {
 }
 
 /// Hears the notes of a take: run on a thread of its own.
-fn hear(recording: Recording, along: Along) -> Heard {
-    let analysis = analyze(&recording.samples, recording.sample_rate);
-    Heard {
+fn hear(
+    recording: Recording,
+    along: Along,
+    config: Option<Config>,
+    cancel: Cancellation,
+    progress: Sender<Stage>,
+) -> Result<Heard, Box<FailedTake>> {
+    let analysis = match analyze(
+        &recording.samples,
+        recording.sample_rate,
+        None,
+        config.as_ref(),
+        &cancel,
+        &progress,
+    ) {
+        Ok(analysis) => analysis,
+        Err(error) => {
+            return Err(Box::new(FailedTake {
+                recording,
+                along,
+                error,
+            }));
+        }
+    };
+    Ok(Heard {
         recording,
         along,
         notes: analysis.notes,
@@ -403,20 +459,70 @@ fn hear(recording: Recording, along: Along) -> Heard {
         drums: analysis.drums,
         bass: analysis.bass,
         chords: analysis.chords,
+        separator: analysis.separator,
         name: None,
-    }
+    })
 }
 
 /// Hears all four layers of a recording on its worker thread.
-fn analyze(samples: &[f32], sample_rate: u32) -> Analysis {
-    let (notes, tuning) = notes_in(samples, sample_rate);
-    Analysis {
+fn analyze(
+    samples: &[f32],
+    sample_rate: u32,
+    path: Option<&Path>,
+    config: Option<&Config>,
+    cancel: &Cancellation,
+    progress: &Sender<Stage>,
+) -> Result<Analysis, String> {
+    let check = || cancel.check().map_err(|error| error.to_string());
+    check()?;
+    let stems = if let Some(config) = config {
+        let _ = progress.send(Stage::Separating(config.backend));
+        let input = match path {
+            Some(path) => Input::File {
+                path,
+                seconds: samples.len() as f64 / f64::from(sample_rate),
+            },
+            None => Input::Samples {
+                samples,
+                sample_rate,
+            },
+        };
+        let stems = lineup_listen::separation::separate(input, config, cancel)
+            .map_err(|error| error.to_string())?;
+        let _ = progress.send(Stage::HearingStems);
+        Some(stems)
+    } else {
+        None
+    };
+    check()?;
+    let (melody, melody_rate) = stems.as_ref().map_or((samples, sample_rate), |stems| {
+        (stems.vocals.samples.as_slice(), stems.vocals.sample_rate)
+    });
+    let (notes, tuning) = notes_in(melody, melody_rate);
+    check()?;
+    let (drums, drum_rate) = stems.as_ref().map_or((samples, sample_rate), |stems| {
+        (stems.drums.samples.as_slice(), stems.drums.sample_rate)
+    });
+    let drums = lineup_listen::drums::hits(drums, drum_rate);
+    check()?;
+    let (bass, bass_rate) = stems.as_ref().map_or((samples, sample_rate), |stems| {
+        (stems.bass.samples.as_slice(), stems.bass.sample_rate)
+    });
+    let bass = lineup_listen::bass::notes(bass, bass_rate);
+    check()?;
+    let (chords, chord_rate) = stems.as_ref().map_or((samples, sample_rate), |stems| {
+        (stems.other.samples.as_slice(), stems.other.sample_rate)
+    });
+    let chords = lineup_listen::chords::heard(chords, chord_rate);
+    check()?;
+    Ok(Analysis {
         notes,
         tuning,
-        drums: lineup_listen::drums::hits(samples, sample_rate),
-        bass: lineup_listen::bass::notes(samples, sample_rate),
-        chords: lineup_listen::chords::heard(samples, sample_rate),
-    }
+        drums,
+        bass,
+        chords,
+        separator: config.map(|config| config.backend),
+    })
 }
 
 /// The notes sung in `samples`, and how sharp they were sung.
@@ -429,9 +535,22 @@ fn notes_in(samples: &[f32], sample_rate: u32) -> (Vec<SungNote>, f32) {
 
 /// Reads the audio file at `path` and hears its notes: run on a thread
 /// of its own.
-fn load(path: &Path) -> Loaded {
+fn load(
+    path: &Path,
+    config: Option<&Config>,
+    cancel: &Cancellation,
+    progress: &Sender<Stage>,
+) -> Loaded {
+    cancel.check().map_err(|error| error.to_string())?;
     let recording = lineup_listen::decode_file(path).map_err(|err| err.to_string())?;
-    let analysis = analyze(&recording.samples, recording.sample_rate);
+    let analysis = analyze(
+        &recording.samples,
+        recording.sample_rate,
+        Some(path),
+        config,
+        cancel,
+        progress,
+    )?;
     Ok((recording, analysis))
 }
 
@@ -486,6 +605,10 @@ impl LineupApp {
         }
         if self.voice.loading.is_some() {
             self.message = Some(tr("Wait until the recording added is heard.").to_string());
+            return;
+        }
+        if self.voice.failed.is_some() {
+            self.message = Some(tr("Retry or discard the failed take first.").to_string());
             return;
         }
         let Audio::Running(engine) = &mut self.audio else {
@@ -550,8 +673,36 @@ impl LineupApp {
             );
             return;
         }
+        let config = super::separation::configuration(&self.preferences);
+        self.hear_take(take, along, config);
+    }
+
+    fn hear_take(
+        &mut self,
+        recording: Recording,
+        along: Along,
+        config: Result<Option<Config>, String>,
+    ) {
+        let config = match config {
+            Ok(config) => config,
+            Err(error) => {
+                self.notice = None;
+                self.voice.failed = Some(FailedTake {
+                    recording,
+                    along,
+                    error,
+                });
+                return;
+            }
+        };
         self.notice = Some(tr("Listening to your take…").to_string());
-        self.voice.hearing = Some(thread::spawn(move || hear(take, along)));
+        self.message = None;
+        let (cancel, progress) = self.voice.worker_control();
+        let language = crate::i18n::Language::current();
+        self.voice.hearing = Some(thread::spawn(move || {
+            language.set();
+            hear(recording, along, config, cancel, progress)
+        }));
     }
 
     /// Forgets any take: recording, being heard or waiting. For a project
@@ -564,8 +715,11 @@ impl LineupApp {
         {
             engine.give_back_song_clock(clock);
         }
+        self.voice.cancel.cancel();
+        self.voice.progress = None;
         self.voice.hearing = None;
         self.voice.review = None;
+        self.voice.failed = None;
         self.voice.loading.take().is_some()
     }
 
@@ -595,6 +749,13 @@ impl LineupApp {
         if self.take_busy() {
             return;
         }
+        let config = match super::separation::configuration(&self.preferences) {
+            Ok(config) => config,
+            Err(error) => {
+                self.message = Some(error);
+                return;
+            }
+        };
         let step = match (self.mode, at) {
             (PlayMode::Song, None) => {
                 let here = self.playhead().unwrap_or(self.cursor);
@@ -626,10 +787,11 @@ impl LineupApp {
         // Errors are written on the worker's thread, in the language
         // chosen.
         let language = crate::i18n::Language::current();
+        let (cancel, progress) = self.voice.worker_control();
         self.voice.loading = Some(Loading {
             worker: thread::spawn(move || {
                 language.set();
-                load(&path)
+                load(&path, config.as_ref(), &cancel, &progress)
             }),
             step,
             name,
@@ -644,7 +806,8 @@ impl LineupApp {
         let busy = self.voice.recording.is_some()
             || self.voice.hearing.is_some()
             || self.voice.loading.is_some()
-            || self.voice.review.is_some();
+            || self.voice.review.is_some()
+            || self.voice.failed.is_some();
         if busy {
             self.message = Some(
                 tr("Finish the take first: write it in or throw it away, then add the recording.")
@@ -670,16 +833,24 @@ impl LineupApp {
         if self.take_busy() {
             return;
         }
+        let config = match super::separation::configuration(&self.preferences) {
+            Ok(config) => config,
+            Err(error) => {
+                self.message = Some(error);
+                return;
+            }
+        };
         if self.mode == PlayMode::Pattern {
             self.set_mode(PlayMode::Song);
         }
         self.notice = Some(trf("Listening to {}…", &[&tr_name(&name)]));
         self.message = None;
         let language = crate::i18n::Language::current();
+        let (cancel, progress) = self.voice.worker_control();
         self.voice.loading = Some(Loading {
             worker: thread::spawn(move || {
                 language.set();
-                load(&path)
+                load(&path, config.as_ref(), &cancel, &progress)
             }),
             step: from,
             name: name.clone(),
@@ -706,6 +877,16 @@ impl LineupApp {
     /// take, or a microphone gone), and opens the review when its notes
     /// are heard.
     pub(super) fn check_voice(&mut self, ctx: &egui::Context) {
+        if let Some(progress) = &self.voice.progress {
+            for stage in progress.try_iter() {
+                self.notice = Some(match stage {
+                    Stage::Separating(backend) => {
+                        trf("Separating audio with {}...", &[&backend.name()])
+                    }
+                    Stage::HearingStems => tr("Listening to the separated stems...").to_string(),
+                });
+            }
+        }
         if let Some(recording) = &self.voice.recording {
             if recording.recorder.has_stopped() {
                 self.stop_voice();
@@ -723,10 +904,12 @@ impl LineupApp {
         }
         if let Some(hearing) = self.voice.hearing.take() {
             self.notice = None;
+            self.voice.progress = None;
             match hearing.join() {
-                Ok(heard) => {
+                Ok(Ok(heard)) => {
                     self.voice.review = Some(Review::new(&self.project, heard, None, ctx));
                 }
+                Ok(Err(failed)) => self.voice.failed = Some(*failed),
                 Err(_) => self.message = Some(tr("Listening to the take failed.").to_string()),
             }
         }
@@ -746,6 +929,7 @@ impl LineupApp {
             return;
         };
         self.notice = None;
+        self.voice.progress = None;
         match loading.worker.join() {
             Ok(Ok((recording, analysis))) => {
                 let take = Take::laid(
@@ -767,6 +951,7 @@ impl LineupApp {
                     drums: analysis.drums,
                     bass: analysis.bass,
                     chords: analysis.chords,
+                    separator: analysis.separator,
                     name: Some(loading.name),
                 };
                 self.voice.review = Some(match loading.again {
@@ -781,8 +966,56 @@ impl LineupApp {
         }
     }
 
+    pub(super) fn voice_status(&self, ui: &mut egui::Ui) {
+        if self.voice.hearing.is_some() || self.voice.loading.is_some() {
+            ui.separator();
+            ui.spinner();
+            if self.voice.cancel.check().is_err() {
+                ui.label(tr("Cancelling analysis..."));
+            } else if ui.small_button(tr("Cancel analysis")).clicked() {
+                self.voice.cancel.cancel();
+            }
+        }
+    }
+
+    fn failed_take_window(&mut self, ctx: &egui::Context) {
+        let Some(failed) = &self.voice.failed else {
+            return;
+        };
+        let mut retry = false;
+        let mut without = false;
+        let mut discard = false;
+        egui::Window::new(tr("Take analysis failed"))
+            .id(egui::Id::unique("failed-take"))
+            .collapsible(false)
+            .show(ctx, |ui| {
+                ui.set_max_width(440.0);
+                ui.colored_label(ui.visuals().error_fg_color, &failed.error);
+                ui.label(tr(
+                    "Your recording is kept here until you retry or discard it.",
+                ));
+                ui.horizontal_wrapped(|ui| {
+                    retry = ui.button(tr("Retry analysis")).clicked();
+                    without = ui.button(tr("Analyze without separation")).clicked();
+                    discard = ui.button(tr("Throw it away")).clicked();
+                });
+            });
+        if (retry || without || discard)
+            && let Some(failed) = self.voice.failed.take()
+            && !discard
+        {
+            let config = if without {
+                Ok(None)
+            } else {
+                super::separation::configuration(&self.preferences)
+            };
+            self.hear_take(failed.recording, failed.along, config);
+        }
+    }
+
     /// The "Your take" window: where the notes of a take go.
     pub(super) fn take_window(&mut self, ctx: &egui::Context) {
+        self.failed_take_window(ctx);
         let Some(review) = &mut self.voice.review else {
             return;
         };
@@ -798,6 +1031,9 @@ impl LineupApp {
             .anchor(egui::Align2::CENTER_CENTER, egui::Vec2::ZERO)
             .show(ctx, |ui| {
                 ui.set_width(420.0);
+                if let Some(backend) = review.heard.separator {
+                    ui.label(trf("Separated with {}", &[&backend.name()]));
+                }
                 review_summary(ui, project, review);
                 ui.separator();
                 egui::Grid::new("take-review-choices")
@@ -1305,6 +1541,7 @@ impl LineupApp {
             drums: Vec::new(),
             bass: Vec::new(),
             chords: Vec::new(),
+            separator: None,
             name: None,
         };
         self.voice.folder = Some(folder);
@@ -1346,6 +1583,208 @@ impl LineupApp {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn separation_off_preserves_the_original_analysis() {
+        let rate = 8_000;
+        let samples: Vec<_> = (0..rate)
+            .map(|frame| (frame as f32 * 440.0 * std::f32::consts::TAU / rate as f32).sin() * 0.3)
+            .collect();
+        let (progress, _) = mpsc::channel();
+        let analysis = analyze(
+            &samples,
+            rate,
+            None,
+            None,
+            &Cancellation::default(),
+            &progress,
+        )
+        .unwrap();
+        let (notes, tuning) = notes_in(&samples, rate);
+        assert_eq!(analysis.notes, notes);
+        assert_eq!(analysis.tuning, tuning);
+        assert_eq!(analysis.drums, lineup_listen::drums::hits(&samples, rate));
+        assert_eq!(analysis.bass, lineup_listen::bass::notes(&samples, rate));
+        assert_eq!(
+            analysis.chords,
+            lineup_listen::chords::heard(&samples, rate)
+        );
+        assert_eq!(analysis.separator, None);
+    }
+
+    #[test]
+    fn separation_failure_and_cancellation_keep_a_microphone_take_for_retry() {
+        for cancelled in [false, true] {
+            let recording = Recording {
+                samples: vec![0.25; 800],
+                sample_rate: 8_000,
+                marks: Vec::new(),
+                lost: 0,
+            };
+            let along = Along::Song(Project::empty().playback_arrangement());
+            let config = Config {
+                backend: Backend::Charon,
+                program: "missing-helper".into(),
+                model: None,
+            };
+            let cancel = Cancellation::default();
+            if cancelled {
+                cancel.cancel();
+            }
+            let (progress, _) = mpsc::channel();
+            let result = hear(recording, along, Some(config), cancel, progress);
+            let failed = match result {
+                Err(failed) => failed,
+                Ok(_) => panic!("a failed separator must not silently analyze the mix"),
+            };
+            assert_eq!(failed.recording.samples, vec![0.25; 800]);
+            assert_eq!(failed.recording.sample_rate, 8_000);
+            assert!(!failed.error.is_empty());
+        }
+    }
+
+    #[test]
+    fn forgetting_or_dropping_a_take_cancels_its_separation_worker() {
+        let mut app = app();
+        let (cancel, _) = app.voice.worker_control();
+        app.forget_voice();
+        assert!(cancel.check().is_err());
+        let (cancel, _) = app.voice.worker_control();
+        drop(app);
+        assert!(cancel.check().is_err());
+    }
+
+    #[test]
+    fn a_failed_separation_can_be_retried_without_losing_the_take() {
+        let mut app = app();
+        let ctx = egui::Context::default();
+        let recording = Recording {
+            samples: vec![0.25; 800],
+            sample_rate: 8_000,
+            marks: Vec::new(),
+            lost: 0,
+        };
+        let along = Along::Song(app.project.playback_arrangement());
+        app.hear_take(
+            recording,
+            along,
+            Ok(Some(Config {
+                backend: Backend::Charon,
+                program: "missing-helper".into(),
+                model: None,
+            })),
+        );
+        let started = std::time::Instant::now();
+        while app.voice.hearing.is_some() {
+            assert!(started.elapsed() < Duration::from_secs(10));
+            std::thread::sleep(Duration::from_millis(10));
+            app.check_voice(&ctx);
+        }
+        assert!(app.voice.review.is_none());
+        let failed = app
+            .voice
+            .failed
+            .take()
+            .expect("the failed take remains available");
+        assert_eq!(failed.recording.samples, vec![0.25; 800]);
+        app.hear_take(failed.recording, failed.along, Ok(None));
+        while app.voice.hearing.is_some() {
+            assert!(started.elapsed() < Duration::from_secs(10));
+            std::thread::sleep(Duration::from_millis(10));
+            app.check_voice(&ctx);
+        }
+        let review = app.voice.review.as_ref().unwrap();
+        assert_eq!(review.heard.recording.samples, vec![0.25; 800]);
+        assert_eq!(review.heard.separator, None);
+    }
+
+    #[cfg(all(
+        unix,
+        any(
+            feature = "separation-charon",
+            feature = "separation-stem-splitter",
+            feature = "separation-demucs"
+        )
+    ))]
+    #[test]
+    fn separation_routes_each_stem_to_its_extractor_at_its_own_sample_rate() {
+        use std::os::unix::fs::PermissionsExt;
+
+        let folder = tempfile::tempdir().unwrap();
+        let tone = |hz: f32, rate: u32| -> Vec<f32> {
+            (0..rate)
+                .map(|i| (i as f32 * hz * std::f32::consts::TAU / rate as f32).sin() * 0.3)
+                .collect()
+        };
+        let vocals = tone(440.0, 16_000);
+        let bass = tone(55.0, 8_000);
+        let drums = vec![0.0; 8_000];
+        let chords: Vec<_> = (0..8_000)
+            .map(|i| {
+                [261.63, 329.63, 392.0]
+                    .iter()
+                    .map(|hz| (i as f32 * hz * std::f32::consts::TAU / 8_000.0).sin() * 0.1)
+                    .sum()
+            })
+            .collect();
+        for (name, samples, rate) in [
+            ("vocals", &vocals, 16_000),
+            ("drums", &drums, 8_000),
+            ("bass", &bass, 8_000),
+            ("other", &chords, 8_000),
+        ] {
+            lineup_listen::wav::write(samples, rate, &folder.path().join(format!("{name}.wav")))
+                .unwrap();
+        }
+        let backend = Backend::available().next().unwrap();
+        let output = match backend {
+            Backend::Charon => "output=$4\nprefix=",
+            Backend::StemSplitter => "output=$5\nprefix=$(basename \"$3\" .wav)_",
+            Backend::Demucs => "output=$7\nprefix=",
+        };
+        let program = folder.path().join("helper");
+        std::fs::write(
+            &program,
+            format!(
+                "#!/bin/sh\nset -eu\n{output}\n\
+             for stem in vocals drums bass other; do\n\
+             cp \"$(dirname \"$0\")/$stem.wav\" \"$output/${{prefix}}$stem.wav\"\ndone\n"
+            ),
+        )
+        .unwrap();
+        std::fs::set_permissions(&program, std::fs::Permissions::from_mode(0o700)).unwrap();
+        let model = folder.path().join("model.onnx");
+        std::fs::write(&model, "fixture model").unwrap();
+        let config = Config {
+            backend,
+            program,
+            model: Some(model),
+        };
+        let original = vec![0.0; 44_100];
+        let original_path = folder.path().join("mix.wav");
+        lineup_listen::wav::write(&original, 44_100, &original_path).unwrap();
+        let (progress, receiver) = mpsc::channel();
+        let analysis = analyze(
+            &original,
+            44_100,
+            Some(&original_path),
+            Some(&config),
+            &Cancellation::default(),
+            &progress,
+        )
+        .unwrap();
+        assert!(!analysis.notes.is_empty() && !analysis.bass.is_empty());
+        assert_eq!(analysis.notes, notes_in(&vocals, 16_000).0);
+        assert_eq!(analysis.drums, lineup_listen::drums::hits(&drums, 8_000));
+        assert_eq!(analysis.bass, lineup_listen::bass::notes(&bass, 8_000));
+        assert_eq!(
+            analysis.chords,
+            lineup_listen::chords::heard(&chords, 8_000)
+        );
+        assert_eq!(analysis.separator, Some(backend));
+        assert!(matches!(receiver.recv().unwrap(), Stage::Separating(value) if value == backend));
+        assert!(matches!(receiver.recv().unwrap(), Stage::HearingStems));
+    }
 
     /// The song's sound from `step` on, for `frames` frames, as song mode
     /// plays it: what the app sends the audio thread, then a jump to

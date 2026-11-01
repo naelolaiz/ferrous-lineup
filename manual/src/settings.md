@@ -106,6 +106,15 @@ Library](styles.md#the-library-settings).
   earlier with a negative number, in milliseconds, for a sound card
   whose delays are not what it says (see
   [Takes](takes.md#if-the-notes-land-late-or-early)).
+- **Source separation**, in builds that enable it: **Off** (the default)
+  or a compiled backend, **charon_audio**, **stem-splitter-core** or
+  **demucs-rs**. Choose its local executable and, for Charon, its
+  HTDemucs ONNX model. Blank paths use helpers installed beside the app,
+  then executables on `PATH`. Each backend's paths and the selection are
+  remembered. Changes apply to the next analysis, including **Transcribe
+  again**. Audio stays local, although helpers may download model weights
+  the first time. See [Takes](takes.md#optional-source-separation) for the
+  layers used and cancellation.
 - **Instrument playback**: **SoundFont instruments** and **SoundFont
   drums**, and **SoundFont library**: the SoundFont in use and **Choose
   SoundFont…**. See [Sounds](sounds.md).

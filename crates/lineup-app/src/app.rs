@@ -34,6 +34,7 @@ mod practice;
 mod preferences;
 mod recent;
 mod recovery;
+mod separation;
 mod settings;
 mod shortcuts;
 mod sounds;
@@ -1916,6 +1917,7 @@ impl LineupApp {
             }
         }
         self.sounds_status(ui);
+        self.voice_status(ui);
         if let Some(notice) = &self.notice {
             ui.separator();
             // The bar is one line: hovering shows a message that was cut.

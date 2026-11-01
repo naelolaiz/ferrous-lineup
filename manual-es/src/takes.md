@@ -66,9 +66,9 @@ En **Extraer**, elige **Melodía**, **Batería**, **Línea de bajo** y/o
 **Acordes**. La batería reconoce bombo, caja y platillos hi-hat; la
 extracción del bajo sigue una sola línea grave y, en una mezcla densa,
 puede confundir otro instrumento grave con el bajo. Los acordes solo
-están disponibles en modo canción. Estos extractores analizan la
-grabación como una mezcla; no separan los instrumentos en pistas
-aisladas.
+están disponibles en modo canción. De forma predeterminada, los
+extractores analizan la grabación como una mezcla. Las compilaciones
+con separadores opcionales pueden analizar pistas separadas.
 
 **Escribirla** lo hace, como un solo paso: **Ctrl+Z** quita toda la
 toma otra vez. **Descartarla**, o cerrar la ventana, no conserva nada.
@@ -80,6 +80,26 @@ suenan cada vez que suena el patrón, así que una melodía corregida una
 vez queda corregida en todos los lugares donde se repite.
 
 ![La lista de reproducción después de escribir la toma: una pista nueva «Toma 1» con la forma de onda de la grabación en un clip rosa del compás 1 al 6, debajo de las pistas Canción y Batería, y la barra de estado que dice «Se escribieron 19 notas en Melodía. La grabación suena como Toma 1. Tema suena 3 veces: tus notas suenan cada vez.»](images/take-written.png)
+
+## Separación de fuentes opcional
+
+Si tu compilación la habilita, **Ajustes > Audio > Separación de fuentes**
+elige un programa local antes de que la aplicación escuche una
+grabación. **Desactivada** conserva el comportamiento habitual. Con un
+separador, la melodía se oye de **vocals**, la batería y el bajo de sus
+propias pistas, y los acordes de **other**. Una pista vocal no es una
+melodía instrumental: desactiva esta opción para silbar o para un
+instrumento solo. La revisión identifica el separador usado;
+**Conservarla** sigue guardando la grabación original, no el audio
+separado.
+
+La separación puede tardar minutos y usar varios gigabytes de memoria.
+**Cancelar análisis** en la barra de estado detiene el programa. Si una
+toma del micrófono falla o se cancela, la aplicación la conserva en una
+ventana de error: **Reintentar análisis**, **Analizar sin separación** o
+**Descartarla**. No se vuelve automáticamente a analizar la mezcla. Los
+archivos importados no se modifican. Cambiar los Ajustes y elegir
+**Transcribir otra vez** permite comparar motores con la misma toma.
 
 ## Cómo se oye la melodía
 

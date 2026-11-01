@@ -55,6 +55,11 @@ impl Preferences {
         }
     }
 
+    pub(super) fn get<T: DeserializeOwned>(&self, name: &str) -> Option<T> {
+        let text = self.map().get(name).cloned()?;
+        ron::from_str(&text).ok()
+    }
+
     fn map(&self) -> MutexGuard<'_, BTreeMap<String, String>> {
         self.0.lock().unwrap_or_else(PoisonError::into_inner)
     }
@@ -62,8 +67,7 @@ impl Preferences {
 
 /// The preference kept as `name`, if there is one and it can be read.
 pub(super) fn get<T: DeserializeOwned>(ctx: &egui::Context, name: &str) -> Option<T> {
-    let text = Preferences::of(ctx).map().get(name).cloned()?;
-    ron::from_str(&text).ok()
+    Preferences::of(ctx).get(name)
 }
 
 /// Keeps `value` as the preference `name`.

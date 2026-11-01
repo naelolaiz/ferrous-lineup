@@ -134,6 +134,54 @@ of your own with the band. `cargo test` runs the tests, and
 On macOS the program is inside the app bundle:
 `"/Applications/Ferrous Lineup.app/Contents/MacOS/ferrous-lineup" --trace song.lineup`.
 
+### Optional source separation
+
+Source-separation adapters are **off at compile time by default**. Enable
+each independently, or enable `separation` for all three:
+
+| Cargo feature | Local helper |
+|---|---|
+| `separation-charon` | `charon` from charon_audio |
+| `separation-stem-splitter` | `stem-splitter` from stem-splitter-core |
+| `separation-demucs` | `demucs` from demucs-rs |
+
+```sh
+# Installs pinned helpers separately and downloads Charon's 316 MB model.
+# Pass charon, stem-splitter and/or demucs to install only those helpers.
+bash scripts/install-separators.sh
+cargo run --release -p lineup-app --features separation
+
+# Or compile just one adapter:
+cargo run --release -p lineup-app --features separation-charon
+
+# No separation adapters:
+cargo run --release -p lineup-app --no-default-features
+```
+
+In **Edit > Settings > Audio > Source separation**, choose **Off** or a
+compiled backend. The choice and each backend's executable/model paths
+are remembered. The installer places helpers in
+`target/release/separators/bin` and the Charon model in its parent; a
+release build finds them there automatically. Use `SEPARATOR_DIR` to
+install elsewhere, then choose the paths in Settings. An executable
+name can also be found on `PATH`. Windows users can run the installer
+from Git Bash, or install the corresponding upstream CLI and choose it.
+
+The adapters launch local executables, not shell commands. This avoids
+linking the two backends' incompatible ONNX Runtime versions into the
+app and isolates backend crashes. No audio is uploaded. demucs-rs and
+stem-splitter may download model weights on first use; the installer
+builds the CPU demucs-rs variant because the tested Vulkan driver
+failed. A separately built GPU executable can be selected in Settings.
+
+Separation runs before extraction for new recordings, microphone takes,
+and **Transcribe again**. Melody uses vocals, drums and bass use their
+own stems, and chords use `other`; leave separation off for whistles or
+instrumental melodies. The original recording is retained for playback.
+The status bar can cancel analysis; a failed microphone take stays
+available to retry or explicitly analyze without separation.
+See the [measurements and limitations](crates/lineup-listen/README.md#source-separation-comparison).
+
 ## Validating migrated releases
 
 The rewritten history is staged on `migration/lfs-history`, with

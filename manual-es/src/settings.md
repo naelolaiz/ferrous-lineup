@@ -112,6 +112,17 @@ Biblioteca](styles.md#los-ajustes-de-la-biblioteca).
   cuadrícula, o antes con un número negativo, en milisegundos, para una
   tarjeta de sonido cuyos retardos no son los que dice (ver
   [Tomas](takes.md#si-las-notas-caen-tarde-o-temprano)).
+- **Separación de fuentes**, en compilaciones que la habilitan:
+  **Desactivada** (la opción predeterminada) o un motor compilado,
+  **charon_audio**, **stem-splitter-core** o **demucs-rs**. Elige su
+  ejecutable local y, para Charon, su modelo HTDemucs ONNX. Las rutas
+  vacías buscan los programas instalados junto a la aplicación y después
+  los ejecutables en `PATH`. Se recuerdan la selección y las rutas de
+  cada motor. Los cambios se aplican al próximo análisis, incluido
+  **Transcribir otra vez**. El audio no sale de la computadora, aunque los
+  programas pueden descargar los pesos del modelo la primera vez. Ver
+  [Tomas](takes.md#separación-de-fuentes-opcional) para las capas usadas y
+  la cancelación.
 - **Sonido de los instrumentos**: **Instrumentos del SoundFont** y
   **Batería del SoundFont**, y **Biblioteca SoundFont**: el SoundFont en
   uso y **Elegir SoundFont…**. Ver [Sonidos](sounds.md).

@@ -30,10 +30,13 @@ different crate:
    recording's start. It finds drum hits with harmonic-percussive
    separation, NMF templates and spectral onset picking; it finds chord
    changes with NNLS note spectra and a Viterbi decoder. It knows
-   nothing of songs. These are DSP extractors applied to the mix, not
-   source separation: drums cover kick, snare and hi-hat, and bass is a
-   monophonic estimate that has not yet been benchmarked on a reference
-   dataset. The **Extract** checkboxes in **Your take** choose which
+   nothing of songs. By default these DSP extractors use the mix.
+   Optional Cargo features add local source-separation helpers, selected
+   in Settings: vocals feed melody, drums and bass feed their respective
+   extractors, and `other` feeds chords. Drums cover kick, snare and
+   hi-hat; bass is a monophonic estimate, evaluated against isolated-stem
+   notes as a proxy rather than hand-annotated truth.
+   The **Extract** checkboxes in **Your take** choose which
    results to write; chords are available only in song mode.
 2. **When were they sung?** `lineup-audio` knows when the sound card
    played each bit of the song and when the microphone heard each bit

@@ -60,6 +60,19 @@ jobs:
       - name: Test
         run: cargo test --workspace
 
+      - name: Test optional separation adapters
+        run: |
+          cargo test -p lineup-listen --all-features --lib separation
+          cargo test -p lineup-app --all-features separation
+
+      - name: Check individual separation features
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          for feature in separation-charon separation-stem-splitter separation-demucs; do
+            cargo check -p lineup-app --no-default-features --features "$feature"
+          done
+
       - name: Build release
         run: cargo build --release
 
