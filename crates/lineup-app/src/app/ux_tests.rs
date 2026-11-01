@@ -5304,29 +5304,102 @@ fn webern_in_set(semitones: &[u8]) -> Screen {
     screen
 }
 
-/// 6-20, the first half of Webern's row, has four forms and none keeps
-/// five of its six notes: after T0 plays, T1 and T3, which keep three,
-/// are outlined, and the line under the keys says so. Before, nothing
-/// was outlined and the line said "Outlined: they keep all but one
-/// note of T0".
-#[test]
-fn on_6_20_the_forms_that_keep_three_notes_are_outlined() {
-    let mut screen = webern_in_set(&[3, 4, 7, 8, 11, 0]);
-    screen.click("T0");
+/// Holds the mouse button down on the key labelled `label`, without
+/// letting go.
+fn hold(screen: &mut Screen, label: &str) {
     screen.draw(Vec::new());
     let output = screen.draw(Vec::new());
+    let pos = text_rect(&output, label)
+        .unwrap_or_else(|| panic!("Missing key: {label}"))
+        .center();
+    screen.draw(vec![
+        Event::PointerMoved(pos),
+        Event::PointerButton {
+            pos,
+            button: PointerButton::Primary,
+            pressed: true,
+            modifiers: Modifiers::NONE,
+        },
+    ]);
+}
+
+/// Lets go of the mouse button where the pointer is.
+fn let_go(screen: &mut Screen) {
+    let pos = screen
+        .ctx
+        .input(|input| input.pointer.latest_pos())
+        .unwrap_or_default();
+    screen.draw(vec![Event::PointerButton {
+        pos,
+        button: PointerButton::Primary,
+        pressed: false,
+        modifiers: Modifiers::NONE,
+    }]);
+}
+
+/// Two frames, so what the first changed is drawn in the second.
+fn settle(screen: &mut Screen) -> FullOutput {
+    screen.draw(Vec::new());
+    screen.draw(Vec::new())
+}
+
+/// Whether the key labelled `label` is lit (framed in white, 3 points
+/// wide) in `output`.
+fn key_lit(output: &FullOutput, label: &str) -> bool {
+    let Some(at) = text_rect(output, label) else {
+        return false;
+    };
+    output.shapes.iter().any(|shape| {
+        matches!(&shape.shape, Shape::Rect(rect)
+            if rect.stroke.width == 3.0 && rect.rect.contains(at.center()))
+    })
+}
+
+/// Whether the chord key labelled `label` has a yellow outline, of the
+/// most usual next chord or of another, in `output`.
+fn chord_outlined(output: &FullOutput, label: &str) -> bool {
+    let Some(at) = text_rect(output, label) else {
+        return false;
+    };
+    let yellow = egui::Color32::from_rgb(255, 214, 92);
+    let colours = [yellow.gamma_multiply(0.8), yellow.gamma_multiply(0.4)];
+    output.shapes.iter().any(|shape| {
+        matches!(&shape.shape, Shape::Rect(rect)
+            if colours.contains(&rect.stroke.color) && rect.rect.contains(at.center()))
+    })
+}
+
+/// 6-20, the first half of Webern's row, has four forms and none keeps
+/// five of its six notes: while T0 is held, T1 and T3, which keep
+/// three, are outlined, and the line under the keys says so. Let go, and
+/// the outline goes, as the chord keys' does: the keys show what is
+/// playing.
+#[test]
+fn on_6_20_the_forms_that_keep_three_notes_are_outlined_while_one_is_held() {
+    let mut screen = webern_in_set(&[3, 4, 7, 8, 11, 0]);
+    hold(&mut screen, "T0");
+    let output = settle(&mut screen);
     let line = "The set's forms, nearest home first. Outlined: they keep 3 notes of T0; no \
                 form keeps more.";
     assert!(text_rect(&output, line).is_some());
+    assert!(key_lit(&output, "T0"));
     assert!(form_outlined(&output, "T1"));
     assert!(form_outlined(&output, "T3"));
     assert!(!form_outlined(&output, "T2"));
-    // After T2, which shares no note with T0, T1 and T3 again.
-    screen.click("T2");
-    screen.draw(Vec::new());
-    let output = screen.draw(Vec::new());
+    let_go(&mut screen);
+    let output = settle(&mut screen);
+    for label in ["T0", "T1", "T2", "T3"] {
+        assert!(!form_outlined(&output, label), "{label}");
+        assert!(!key_lit(&output, label), "{label}");
+    }
+    let line = "The set's forms, nearest home first. Hold a key or press 1 to 4.";
+    assert!(text_rect(&output, line).is_some());
+    // While T2, which shares no note with T0, is held: T1 and T3 again.
+    hold(&mut screen, "T2");
+    let output = settle(&mut screen);
     assert!(form_outlined(&output, "T1") && form_outlined(&output, "T3"));
     assert!(!form_outlined(&output, "T0"));
+    let_go(&mut screen);
 }
 
 /// The augmented triad's forms share no note: none is outlined, and the
@@ -5334,28 +5407,28 @@ fn on_6_20_the_forms_that_keep_three_notes_are_outlined() {
 #[test]
 fn the_augmented_triad_outlines_nothing_and_says_why() {
     let mut screen = webern_in_set(&[0, 4, 8]);
-    screen.click("T1");
-    screen.draw(Vec::new());
-    let output = screen.draw(Vec::new());
+    hold(&mut screen, "T1");
+    let output = settle(&mut screen);
     let line = "The micromode's forms, nearest home first. No other form shares a note with T1.";
     assert!(text_rect(&output, line).is_some());
     for label in ["T0", "T2", "T3"] {
         assert!(!form_outlined(&output, label), "{label}");
     }
+    let_go(&mut screen);
 }
 
-/// With Near home, a form outlined after one played can be far from
+/// With Near home, a form outlined while one is held can be far from
 /// home: it joins the end of the row, so the outline is on a key that is
 /// there. In 4-4 on C (C C# D F), T5I keeps all but one note of T3, which
-/// keeps only one note of home.
+/// keeps only one note of home. Let go, the key stays, so it can be
+/// played next, but its outline goes.
 #[test]
 fn a_far_form_outlined_joins_the_near_home_row() {
     let mut screen = webern_in_set(&[0, 1, 2, 5]);
     let output = screen.draw(Vec::new());
     assert!(text_rect(&output, "T3").is_none());
-    screen.click("T5I");
-    screen.draw(Vec::new());
-    let output = screen.draw(Vec::new());
+    hold(&mut screen, "T5I");
+    let output = settle(&mut screen);
     let line = "The set's forms, nearest home first. Outlined: they keep all but one note of T5I.";
     assert!(text_rect(&output, line).is_some());
     assert!(form_outlined(&output, "T3"));
@@ -5363,6 +5436,87 @@ fn a_far_form_outlined_joins_the_near_home_row() {
     let t3 = text_rect(&output, "T3").unwrap();
     let t7i = text_rect(&output, "T7I").unwrap();
     assert!(t3.left() > t7i.left() || t3.top() > t7i.top());
+    let_go(&mut screen);
+    let output = settle(&mut screen);
+    assert!(text_rect(&output, "T3").is_some());
+    assert!(!form_outlined(&output, "T3"));
+}
+
+/// The chord keys too: while V is held in C major, I, which most often
+/// comes next, is outlined; let go, and nothing is, and the line under
+/// the keys says how to play again.
+#[test]
+fn the_chord_keys_outline_what_comes_next_only_while_a_chord_sounds() {
+    let mut screen = Screen::new();
+    screen.app.rack_open = false;
+    screen.app.chord_sheet.open = false;
+    screen.app.harmony_keys.open = true;
+    assert_eq!(screen.app.project.scale.kind, lineup_core::ScaleKind::Major);
+    hold(&mut screen, "V");
+    let output = settle(&mut screen);
+    assert!(key_lit(&output, "V"));
+    assert!(chord_outlined(&output, "I"));
+    let_go(&mut screen);
+    let output = settle(&mut screen);
+    for label in ["I", "ii", "iii", "IV", "V", "vi", "vii°"] {
+        assert!(!chord_outlined(&output, label), "{label}");
+    }
+    assert!(
+        text_rect(
+            &output,
+            "Hold a key or press 1 to 7 to play on \"Lineup Osc\"."
+        )
+        .is_some()
+    );
+}
+
+/// While Webern's trichords play, with 6-20 as the key, the form being
+/// played lights up, though its six notes come three at a time, and the
+/// forms nearest it are outlined: in the first bar (P, the row) the
+/// first half of the row is T0, the second T2; in I, upside down, T1
+/// and T3. Stopped, nothing is lit or outlined. Before, the keys only
+/// lit a form whose six notes sounded at once, which Webern never plays.
+#[test]
+fn while_the_song_plays_the_form_being_played_lights_up() {
+    let mut screen = webern_in_set(&[3, 4, 7, 8, 11, 0]);
+    screen.app.playing = true;
+    let at = |screen: &mut Screen, step: usize| {
+        screen.app.test_playhead = Some(step);
+        settle(screen)
+    };
+    let line = |form: &str| {
+        format!(
+            "The set's forms, nearest home first. Outlined: they keep 3 notes of {form}; no \
+             form keeps more."
+        )
+    };
+    let output = at(&mut screen, 4);
+    assert!(key_lit(&output, "T0"));
+    assert!(form_outlined(&output, "T1") && form_outlined(&output, "T3"));
+    assert!(!form_outlined(&output, "T2"));
+    assert!(text_rect(&output, &line("T0")).is_some());
+    let output = at(&mut screen, 14);
+    assert!(key_lit(&output, "T2"));
+    assert!(!key_lit(&output, "T0"));
+    assert!(text_rect(&output, &line("T2")).is_some());
+    let output = at(&mut screen, 76);
+    assert!(key_lit(&output, "T1"));
+    assert!(form_outlined(&output, "T0") && form_outlined(&output, "T2"));
+    assert!(text_rect(&output, &line("T1")).is_some());
+    // A pattern played on its own: the row's first half again.
+    screen.app.mode = PlayMode::Pattern;
+    screen.app.pattern = 0;
+    let output = at(&mut screen, 4);
+    assert!(key_lit(&output, "T0"));
+    assert!(form_outlined(&output, "T1") && form_outlined(&output, "T3"));
+    // Stopped: nothing lit, nothing outlined.
+    screen.app.mode = PlayMode::Song;
+    screen.app.playing = false;
+    let output = settle(&mut screen);
+    for label in ["T0", "T1", "T2", "T3"] {
+        assert!(!key_lit(&output, label), "{label}");
+        assert!(!form_outlined(&output, label), "{label}");
+    }
 }
 
 /// A key that is any pitch-class set offers its forms too, and the chord

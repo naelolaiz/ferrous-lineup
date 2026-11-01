@@ -131,26 +131,39 @@ hacia abajo: dos de cuatro para 4-27, tres de siete para 7-21. Si menos
 de cuatro formas están así de cerca, las muestra todas. **Todas las
 formas** las muestra todas, las más lejanas al final.
 
-Después de tocar una forma, las formas que conservan todas sus notas
-menos una aparecen con borde: son las maneras más suaves de seguir, con
-una sola nota que se mueve. La línea debajo de las teclas nombra la
-forma desde la que se cuentan. En esa tonalidad de 7-21, después de T4
-(Si Do Do♯ Mi♭ Mi Sol La♭), las teclas con borde son T0, T8, T3I, T7I y
-T11I, que conservan seis de sus siete notas.
+Mientras suena una forma, mantenida o sonando en la canción, las
+formas que conservan todas sus notas menos una aparecen con borde: son
+las maneras más suaves de seguir, con una sola nota que se mueve. La
+línea debajo de las teclas nombra la forma desde la que se cuentan. En
+esa tonalidad de 7-21, mientras suena T4 (Si Do Do♯ Mi♭ Mi Sol La♭),
+las teclas con borde son T0, T8, T3I, T7I y T11I, que conservan seis de
+sus siete notas. Suelta la tecla, o detén la canción, y el borde se va:
+las teclas muestran lo que está sonando, como las de los acordes.
 
 Algunos conjuntos no tienen ninguna forma a una nota de distancia, y
 entonces aparecen con borde las formas que más notas conservan, y la
 línea dice cuántas. 6-20, la primera mitad de la serie de Webern (Mi♭
-Mi Sol La♭ Si Do como tonalidad), tiene solo cuatro formas: después de
-T0, T1 y T3 aparecen con borde, porque conservan tres de sus seis
+Mi Sol La♭ Si Do como tonalidad), tiene solo cuatro formas: mientras
+suena T0, T1 y T3 aparecen con borde, porque conservan tres de sus seis
 notas, y la línea dice «Con borde: conservan 3 notas de T0; ninguna
 forma conserva más». Donde ninguna otra forma comparte una sola nota,
 como en la séptima disminuida o la escala de tonos enteros, ninguna
 tiene borde y la línea dice «Ninguna otra forma comparte una nota con
 T0». Una forma con borde lejana de casa se suma al final de la fila con
-**Cercanas**, así que todo borde está en una tecla que se ve.
+**Cercanas**, así que todo borde está en una tecla que se ve; la tecla
+se queda al soltar, para que puedas tocarla después.
 
-![Las teclas de armonía en una tonalidad que es el conjunto Do Mi Sol Si♭, conjunto 4-27 en el menú Tonalidad, con Formas activado, después de tocar T2I: T0 (Mi Sol Si♭ Do), T2I (Re Mi Sol Si♭), después T3, T6, T9 y las formas dadas vuelta que conservan dos notas, cada una con 4-27 debajo; T0 aparece con borde porque conserva tres notas de T2I](images/set-forms-keys.png)
+Mientras suena la canción, se enciende la forma que se está tocando,
+aunque sus notas lleguen de a pocas. Las teclas leen la canción como lo
+hace **Formas de la tonalidad (mixtas)** en la hoja de acordes (ver
+[Una armonía, cuatro nombres](#una-armonía-cuatro-nombres)). En
+*Los tricordios de Webern* con 6-20 como tonalidad, cada mitad de la serie
+llega como dos acordes de tres notas, y la mitad se enciende como una
+sola forma: T0 y T2 mientras suenan la serie y su retrógrado, T1 y T3
+mientras suena dada vuelta, con borde en las formas más cercanas a cada
+una. Un patrón tocado solo se lee igual.
+
+![Las teclas de armonía en una tonalidad que es el conjunto Do Mi Sol Si♭, conjunto 4-27 en el menú Tonalidad, con Formas activado, mientras se mantiene T2I: T0 (Mi Sol Si♭ Do), T2I (Re Mi Sol Si♭), encendida, después T3, T6, T9 y las formas dadas vuelta que conservan dos notas, cada una con 4-27 debajo; T0 aparece con borde porque conserva tres notas de T2I](images/set-forms-keys.png)
 
 **Una progresión de formas.** En una tonalidad que es un conjunto, el
 botón **Progresión** de la hoja de acordes ofrece maneras de encadenar
@@ -552,7 +565,7 @@ siendo ii en cualquier tonalidad mayor. Casa es siempre T0. Con las
 tríadas, el acorde paralelo es T7I: Do menor en Do mayor, y Do mayor en
 Do menor.
 
-![Las teclas de armonía en una tonalidad de Menor 3 sobre Do después de tocar T1I: T0, T1I, T4I y T5I, después las formas que conservan una nota de casa, cada una con sus notas y Menor 3 debajo; T0, T8 y T9 aparecen con borde porque conservan dos notas de La Do Do♯, y la ayuda de abajo lo dice](images/micromode-keys.png)
+![Las teclas de armonía en una tonalidad de Menor 3 sobre Do mientras se mantiene T1I: T0, T1I (encendida), T4I y T5I, después las formas que conservan una nota de casa, cada una con sus notas y Menor 3 debajo; T0, T8 y T9 aparecen con borde porque conservan dos notas de La Do Do♯, y la ayuda de abajo lo dice](images/micromode-keys.png)
 
 Las **teclas de armonía** muestran las formas de la tonalidad: casa
 primero, después las formas que conservan dos de sus notas, después las
@@ -560,8 +573,8 @@ que conservan una; cuanto más conserva una forma de casa, más brillante
 es su tecla. Las formas que conservan la misma cantidad van por grado,
 primero las derechas. **Cercanas** deja fuera las formas que no conservan ninguna
 nota de casa, y **Todas las formas** las muestra todas (24 para Menor
-3). Después de tocar una forma, las formas que conservan dos de *sus*
-notas aparecen con borde: son las maneras más suaves de seguir, con una
+3). Mientras suena una forma, mantenida o sonando en la canción, las
+formas que conservan dos de *sus* notas aparecen con borde: son las maneras más suaves de seguir, con una
 sola nota que se mueve. La línea debajo de las teclas nombra la forma
 desde la que se cuentan, y una forma con borde lejana de casa se suma
 al final de la fila. Las cuatro formas de la tríada aumentada (Acorde

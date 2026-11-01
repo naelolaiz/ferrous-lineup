@@ -119,24 +119,37 @@ keep at least half the notes of home, rounded down: two of four for
 near, it shows them all. **All forms** shows them all, the farthest
 last.
 
-After you play a form, the forms that keep all of its notes but one are
-outlined: they are the smoothest ways on, one note moving. The line
-under the keys names the form they are counted from. In that key of
-7-21, after T4 (B C C♯ E♭ E G A♭), the outlined keys are T0, T8, T3I,
-T7I and T11I, each keeping six of its seven notes.
+While a form sounds, held down or playing in the song, the forms that
+keep all of its notes but one are outlined: they are the smoothest ways
+on, one note moving. The line under the keys names the form they are
+counted from. In that key of 7-21, while T4 (B C C♯ E♭ E G A♭) sounds,
+the outlined keys are T0, T8, T3I, T7I and T11I, each keeping six of
+its seven notes. Let go, or stop the song, and the outline goes: the
+keys show what is playing, as the chord keys do.
 
 Some sets have no form one note away, and then the forms that keep the
 most notes are outlined, and the line says how many. 6-20, the first
 half of Webern's row (E♭ E G A♭ B C as the key), has only four forms:
-after T0, T1 and T3 are outlined, each keeping three of its six notes,
-and the line says "Outlined: they keep 3 notes of T0; no form keeps
-more". Where no other form shares a note at all, as in the diminished
-seventh or the whole-tone scale, nothing is outlined and the line says
-"No other form shares a note with T0". An outlined form that is far
-from home joins the end of the row under **Near home**, so every
-outline is on a key you can see.
+while T0 sounds, T1 and T3 are outlined, each keeping three of its six
+notes, and the line says "Outlined: they keep 3 notes of T0; no form
+keeps more". Where no other form shares a note at all, as in the
+diminished seventh or the whole-tone scale, nothing is outlined and the
+line says "No other form shares a note with T0". An outlined form that
+is far from home joins the end of the row under **Near home**, so every
+outline is on a key you can see; the key stays when you let go, so you
+can play it next.
 
-![The harmony keys in a key that is the set C E G B♭, set 4-27 in the Key menu, with Forms on, after T2I was played: T0 (E G B♭ C), T2I (D E G B♭), then T3, T6, T9 and the turned forms that keep two notes, each with 4-27 underneath; T0 is outlined because it keeps three notes of T2I](images/set-forms-keys.png)
+While the song plays, the form being played lights up, even when its
+notes come a few at a time. The keys read the song as the chord sheet's
+**Forms of the key (mixed)** does (see [One harmony, four
+names](#one-harmony-four-names)). In *Webern's trichords* with 6-20 as
+the key, each half of the row comes as two chords of three notes, and
+the half lights up as one form: T0 and T2 while the row and its
+retrograde play, T1 and T3 while it plays upside down, with the forms
+nearest each outlined. A pattern played on its own is read the same
+way.
+
+![The harmony keys in a key that is the set C E G B♭, set 4-27 in the Key menu, with Forms on, while T2I is held: T0 (E G B♭ C), T2I (D E G B♭), lit, then T3, T6, T9 and the turned forms that keep two notes, each with 4-27 underneath; T0 is outlined because it keeps three notes of T2I](images/set-forms-keys.png)
 
 **A progression of forms.** In a set key, the chord sheet's
 **Progression** button offers ways to chain the set's forms, in place
@@ -505,15 +518,16 @@ Move the whole song to D and every form keeps its degree, as ii stays
 ii in any major key. Home is always T0. With the triads, the parallel
 chord is T7I: C minor in C major, and C major in C minor.
 
-![The harmony keys in a key of Menor 3 on C after T1I was played: T0, T1I, T4I and T5I, then the forms that keep one note of home, each with its notes and Menor 3 underneath; T0, T8 and T9 are outlined because they keep two notes of A C C♯, and the hint below says so](images/micromode-keys.png)
+![The harmony keys in a key of Menor 3 on C while T1I is held: T0, T1I (lit), T4I and T5I, then the forms that keep one note of home, each with its notes and Menor 3 underneath; T0, T8 and T9 are outlined because they keep two notes of A C C♯, and the hint below says so](images/micromode-keys.png)
 
 The **harmony keys** show the key's forms, home first, then the forms
 that keep two of its notes, then the ones that keep one; the more a
 form keeps of home, the brighter its key. Forms that keep as many go by
 degree, the ones the right way up first. **Near home** leaves out the
 forms that keep no note of home, and **All forms** shows them all (24
-for Menor 3). After you play a form, the forms that keep two of *its*
-notes are outlined: they are the smoothest ways on, one note moving.
+for Menor 3). While a form sounds, held down or playing in the song,
+the forms that keep two of *its* notes are outlined: they are the
+smoothest ways on, one note moving.
 The line under the keys names the form they are counted from, and an
 outlined form far from home joins the end of the row. The four forms of
 the augmented triad (Acorde aumentado) share no note, so none is

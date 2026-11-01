@@ -142,13 +142,13 @@ III](numerals.md#tonalidades-menores-biii-o-iii)).
 
 ### 8. Después viene la napolitana (lineup-core, medio)
 
-Después de un acorde, las teclas de armonía remarcan los acordes que
-suelen seguirlo, sacados de las tablas de `harmony/progression.rs`
+Mientras suena un acorde, las teclas de armonía remarcan los acordes
+que suelen seguirlo, sacados de las tablas de `harmony/progression.rs`
 (mira [Qué viene después: el conocimiento como
 datos](numerals.md#qué-viene-después-el-conocimiento-como-datos)).
 La hoja de acordes ya nombra el **acorde napolitano**, ♭II, un acorde
 mayor sobre el segundo grado rebajado (Re♭ en Do), pero `next_chords`
-no tiene un lugar para él, así que después de un acorde de Re♭ no se
+no tiene un lugar para él, así que mientras suena un acorde de Re♭ no se
 ilumina nada.
 
 La napolitana suele ir a V, o a I⁶₄ y luego a V. Añade un `Slot` con

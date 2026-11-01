@@ -614,13 +614,13 @@ three notes named as a set, 3-11, do not.
 
 ### The outline on the forms
 
-After a form plays, the forms that keep the most of its notes are
-outlined: the smoothest ways on. `degree::nearest_links` finds them and
+While a form sounds, held down or playing in the song, the forms that
+keep the most of its notes are outlined: the smoothest ways on. `degree::nearest_links` finds them and
 says how many notes they keep. For most sets that is all of the form's
 notes but one, the forms `degree::smooth_links` gives. But the more
 symmetric a set, the fewer its forms, and some have none one note away.
 6-20, the hexatonic set, has four forms, and each keeps three notes of
-two others and none of the third: after T0 (E♭ E G A♭ B C), T1 (C C♯ E
+two others and none of the third: of T0 (E♭ E G A♭ B C), T1 (C C♯ E
 F A♭ A) and T3 (D E♭ F♯ G B♭ B) keep three each. The augmented triad,
 the diminished seventh and the whole-tone scale go further: their
 forms share no note at all, so nothing is outlined. Of the 220 set
@@ -630,14 +630,73 @@ classes of two to ten notes, 69 have no form one note away.
 never speaks of an outline that is not on screen: "Outlined: they keep
 all but one note of T4", "Outlined: they keep 3 notes of T0; no form
 keeps more", or "No other form shares a note with T0". A form outlined
-after one played may be far from home and left out by **Near home**:
-`HarmonyKeys::show_far_forms` keeps the last form and its outlined
+while one sounds may be far from home and left out by **Near home**:
+`HarmonyKeys::show_far_forms` keeps the form sounding and its outlined
 forms, and `keys::form_keys_with` shows them after the near ones, in
-their order of nearness. The near keys keep their places, and the far
-ones only change when no far key is held, so no key moves under the
-pointer. A test takes every form of every set class as the last one
-played, with Near home and with All forms, and checks that each outlined form has a key and
-that the line says how many notes the outlined forms keep.
+their order of nearness. They stay when the form stops, so a way on can
+still be played, and only change when another form sounds and no far
+key is held; the near keys keep their places, so no key moves under the
+pointer. A test takes every form of every set class as the one
+sounding, with Near home and with All forms, and checks that each
+outlined form has a key and that the line says how many notes the
+outlined forms keep.
+
+The outline is there only while a form sounds, as the chord keys'
+suggestions are only there while a chord does: the keys show what is
+playing. `show_forms` finds the form sounding in this order:
+
+```rust
+let held_form = whole(held);
+let mut in_music: Vec<PitchSet> = self.forms_at(project, playhead);
+in_music.retain(of_key);
+in_music.extend(whole(heard).filter(|set| !in_music.contains(set)));
+let sounding = self
+    .down
+    .as_ref()
+    .and_then(|down| down.form)
+    .or(held_form)
+    .or(in_music.first().copied());
+let (next, keeps) = sounding.map(degree::nearest_links).unwrap_or_default();
+```
+
+A harmony key held down (`Down` keeps the form it plays) comes first,
+then a whole form held on a keyboard (`whole` keeps a set only if it
+has as many notes as the key and is one of its forms), then the music.
+With nothing sounding, `sounding` is `None`, nothing is outlined, and
+the line goes back to "Hold a key or press 1 to 4."
+
+### Forms heard over time
+
+A set's forms are rarely struck whole. *Webern's trichords*, with 6-20
+as the key, plays each half of the row as two chords of three notes, a
+form of 3-3 each; the six notes of the half, a form of 6-20, never
+sound at once. Reading only the notes sounding together, the keys never
+lit a form while the song played. They now read the music over time,
+the way the chord sheet's mixed grouping does: `forms_at` asks for the
+forms heard at the playhead.
+
+```rust
+pub enum Playhead {
+    Song(usize),
+    Pattern { pattern: usize, step: usize },
+}
+```
+
+In the song, `notation::forms_in_song` gives every form of the key's set
+the colour check reads (see [Forms of the key,
+mixed](#forms-of-the-key-mixed)), each with the stretch it is heard
+through, from its first note to where
+the next form starts; `notation::mixed` groups the chord sheet's bars by
+the same list. For a pattern played on its own, the forms come from the
+pattern's voice-leading check, the ones the piano roll's Forms lane
+draws. Reading the whole song takes a moment, so `FormsRead` keeps the
+forms with what they were read from, the song's notes and its key map,
+or the pattern, its time and its keys, and `forms_at` reads again only
+when that changes; each frame it only picks the forms whose stretch
+holds the playhead. In Webern's song the list starts T0 from step 0, T2
+from step 12, T0 from step 36, and turns to T1 and T3 where the row
+plays upside down, so the key of the half playing lights, and the
+forms that keep three of its notes are outlined.
 
 ### Progressions of forms
 

@@ -915,12 +915,12 @@ Menor 3 has 24 forms. From C C♯ E, three keep two notes (A C C♯, C E♭ E
 and C♯ E F), nine keep one, and eleven keep none. So the harmony keys of
 a micromode key show its forms in that order, home first, each brighter
 the more it keeps of home, and leave out the ones that keep nothing
-until **All forms** asks for them. After a form plays, the forms that
+until **All forms** asks for them. While a form sounds, the forms that
 keep two of *its* notes are outlined, as the tonal keys outline the
 chords that usually come next, and the hint says what stays and what
 moves: "keeps A and C; C♯ goes to A♭". For the triads it also names the
 move, P, L or R. The augmented triad is the one micromode with no form
-two notes away: its four forms share no note, so after one plays none
+two notes away: its four forms share no note, so while one sounds none
 is outlined, and the line says "No other form shares a note with T0"
 (see [The outline on the forms](sets.md#the-outline-on-the-forms)).
 

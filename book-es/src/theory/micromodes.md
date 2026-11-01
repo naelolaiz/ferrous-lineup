@@ -950,14 +950,14 @@ Do Do♯, Do Mi♭ Mi y Do♯ Mi Fa), nueve conservan una y once no conservan
 ninguna. Así que las teclas de armonía de una tonalidad que es un
 micromodo muestran sus formas en ese orden, casa primero, cada una más
 brillante cuanto más conserva de casa, y dejan fuera las que no
-conservan nada hasta que **Todas las formas** las pide. Después de que
-suena una forma, las formas que conservan dos de *sus* notas aparecen
-con borde, como las teclas tonales marcan con borde los acordes que suelen
+conservan nada hasta que **Todas las formas** las pide. Mientras suena
+una forma, las formas que conservan dos de *sus* notas aparecen con
+borde, como las teclas tonales marcan con borde los acordes que suelen
 venir después, y la ayuda dice qué se queda y qué se mueve: «conserva La
 y Do; Do♯ pasa a La♭». Para las tríadas también nombra el movimiento, P,
 L o R. La tríada aumentada es el único micromodo sin ninguna forma a dos
-notas: sus cuatro formas no comparten ninguna nota, así que después de
-que suena una ninguna tiene borde, y la línea dice «Ninguna otra forma
+notas: sus cuatro formas no comparten ninguna nota, así que mientras
+suena una ninguna tiene borde, y la línea dice «Ninguna otra forma
 comparte una nota con T0» (ver [El borde de las
 formas](sets.md#el-borde-de-las-formas)).
 
