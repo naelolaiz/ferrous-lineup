@@ -5271,6 +5271,100 @@ fn a_hexachords_forms_are_written_whole_in_solfege() {
     crate::i18n::Language::English.set();
 }
 
+/// Whether the key labelled `label` has the outline of a smooth way on
+/// (the yellow frame, 1.5 points wide) in `output`.
+fn form_outlined(output: &FullOutput, label: &str) -> bool {
+    let Some(at) = text_rect(output, label) else {
+        return false;
+    };
+    output.shapes.iter().any(|shape| {
+        matches!(&shape.shape, Shape::Rect(rect)
+            if rect.stroke.width == 1.5 && rect.rect.contains(at.center()))
+    })
+}
+
+/// Opens Webern's trichords with `semitones` on C as the key, the harmony
+/// keys showing its forms, in English.
+fn webern_in_set(semitones: &[u8]) -> Screen {
+    use lineup_core::library::{RowStyle, demo};
+    let mut screen = Screen::new();
+    let mut webern = demo::row_demo(RowStyle::named("Webern's trichords").unwrap());
+    webern.scale = Scale::set(
+        lineup_core::PitchClass::C,
+        lineup_core::PitchSet::from_semitones(semitones),
+    );
+    screen.app.replace_project(webern, None);
+    screen.app.rack_open = false;
+    screen.app.chord_sheet.open = false;
+    screen.app.harmony_keys.open = true;
+    // Three notes always show their forms; more need the Forms switch.
+    if semitones.len() > 3 {
+        screen.click("Forms");
+    }
+    screen
+}
+
+/// 6-20, the first half of Webern's row, has four forms and none keeps
+/// five of its six notes: after T0 plays, T1 and T3, which keep three,
+/// are outlined, and the line under the keys says so. Before, nothing
+/// was outlined and the line said "Outlined: they keep all but one
+/// note of T0".
+#[test]
+fn on_6_20_the_forms_that_keep_three_notes_are_outlined() {
+    let mut screen = webern_in_set(&[3, 4, 7, 8, 11, 0]);
+    screen.click("T0");
+    screen.draw(Vec::new());
+    let output = screen.draw(Vec::new());
+    let line = "The set's forms, nearest home first. Outlined: they keep 3 notes of T0; no \
+                form keeps more.";
+    assert!(text_rect(&output, line).is_some());
+    assert!(form_outlined(&output, "T1"));
+    assert!(form_outlined(&output, "T3"));
+    assert!(!form_outlined(&output, "T2"));
+    // After T2, which shares no note with T0, T1 and T3 again.
+    screen.click("T2");
+    screen.draw(Vec::new());
+    let output = screen.draw(Vec::new());
+    assert!(form_outlined(&output, "T1") && form_outlined(&output, "T3"));
+    assert!(!form_outlined(&output, "T0"));
+}
+
+/// The augmented triad's forms share no note: none is outlined, and the
+/// line says no form shares a note instead of promising an outline.
+#[test]
+fn the_augmented_triad_outlines_nothing_and_says_why() {
+    let mut screen = webern_in_set(&[0, 4, 8]);
+    screen.click("T1");
+    screen.draw(Vec::new());
+    let output = screen.draw(Vec::new());
+    let line = "The micromode's forms, nearest home first. No other form shares a note with T1.";
+    assert!(text_rect(&output, line).is_some());
+    for label in ["T0", "T2", "T3"] {
+        assert!(!form_outlined(&output, label), "{label}");
+    }
+}
+
+/// With Near home, a form outlined after one played can be far from
+/// home: it joins the end of the row, so the outline is on a key that is
+/// there. In 4-4 on C (C C# D F), T5I keeps all but one note of T3, which
+/// keeps only one note of home.
+#[test]
+fn a_far_form_outlined_joins_the_near_home_row() {
+    let mut screen = webern_in_set(&[0, 1, 2, 5]);
+    let output = screen.draw(Vec::new());
+    assert!(text_rect(&output, "T3").is_none());
+    screen.click("T5I");
+    screen.draw(Vec::new());
+    let output = screen.draw(Vec::new());
+    let line = "The set's forms, nearest home first. Outlined: they keep all but one note of T5I.";
+    assert!(text_rect(&output, line).is_some());
+    assert!(form_outlined(&output, "T3"));
+    // It comes last, after the near forms, which keep their places.
+    let t3 = text_rect(&output, "T3").unwrap();
+    let t7i = text_rect(&output, "T7I").unwrap();
+    assert!(t3.left() > t7i.left() || t3.top() > t7i.top());
+}
+
 /// A key that is any pitch-class set offers its forms too, and the chord
 /// sheet's Progression menu chains them.
 #[test]

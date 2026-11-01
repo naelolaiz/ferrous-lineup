@@ -22,7 +22,10 @@
 //! micromode's own forms instead, each called by its degree (T0 for the
 //! key's own form, T2, T5I...), home first and the nearest next; the
 //! forms that keep two notes of the last one played get the outline,
-//! since keeping two notes and moving one is the smoothest way on.
+//! since keeping two notes and moving one is the smoothest way on. A key
+//! that is any other set can show its forms the same way; where no form
+//! keeps all but one note of the last, as for 6-20, the forms that keep
+//! the most get the outline.
 //!
 //! Under it, the experimental Find the key option shows the key the
 //! music sounds like it is in, and the next best keys, fainter, when it
@@ -305,8 +308,11 @@ pub struct HarmonyKeys {
     /// forms.
     forms: bool,
     /// The last form of the key's set played, here or in the music, for
-    /// the outline on the forms that keep all but one of its notes.
+    /// the outline on the forms that keep the most of its notes.
     last_form: Option<PitchSet>,
+    /// The forms shown beyond Near home: the last form and the forms
+    /// outlined after it (see [`HarmonyKeys::show_far_forms`]).
+    far_forms: Vec<PitchSet>,
 }
 
 impl HarmonyKeys {
@@ -341,6 +347,7 @@ impl HarmonyKeys {
             all_forms: false,
             forms: false,
             last_form: None,
+            far_forms: Vec::new(),
         }
     }
 
@@ -351,6 +358,7 @@ impl HarmonyKeys {
         self.last_chord = None;
         self.last_bass = None;
         self.last_form = None;
+        self.far_forms.clear();
     }
 
     /// Lets go of the key that is down, if any. Called when the bar is
@@ -389,10 +397,11 @@ impl HarmonyKeys {
         let scale = here;
         let size = self.size_for(scale);
         if self.shows_forms(scale)
-            && let Some(forms) = keys::form_keys(scale, self.all_forms)
+            && let Some(forms) = keys::form_keys_with(scale, self.all_forms, &self.far_forms)
         {
+            let near = keys::form_keys(scale, self.all_forms).map_or(0, |near| near.len());
             let mut actions =
-                self.show_forms(ui, project, here, &forms, held, heard, digits, parts);
+                self.show_forms(ui, project, here, &forms, near, held, heard, digits, parts);
             self.find_key_line(ui, key_heard, &mut actions);
             return actions;
         }
@@ -559,11 +568,15 @@ impl HarmonyKeys {
         actions
     }
 
-    /// The bar for a key of three notes, a micromode: a key for each of
+    /// The bar for a key that is a set or a micromode: a key for each of
     /// its forms (see [`keys::form_keys`]), the brighter the more notes it
     /// keeps from home. The form playing, held on a keyboard or heard in
-    /// the music, is lit, and the forms that keep two of its notes (or of
-    /// the last one played) are outlined: the smoothest ways on.
+    /// the music, is lit, and the forms that keep the most of its notes
+    /// (or of the last one played) are outlined: the smoothest ways on,
+    /// all its notes but one where any form keeps that many (see
+    /// [`degree::nearest_links`]). The line under the keys says how many
+    /// the outlined ones keep, so it never promises an outline that is
+    /// not there.
     #[allow(clippy::too_many_arguments)]
     fn show_forms(
         &mut self,
@@ -571,6 +584,7 @@ impl HarmonyKeys {
         project: &Project,
         here: Scale,
         forms: &[GroupKey],
+        near: usize,
         held: &[Note],
         heard: &[Note],
         digits: bool,
@@ -591,7 +605,7 @@ impl HarmonyKeys {
         let last = self
             .last_form
             .filter(|&form| Degree::of(scale, form).is_some());
-        let next = last.map(degree::smooth_links).unwrap_or_default();
+        let (next, keeps) = last.map(degree::nearest_links).unwrap_or_default();
         let mut pressed = None;
         let width = keys_width(ui, forms);
         ui.add_space(4.0);
@@ -616,67 +630,15 @@ impl HarmonyKeys {
         ui.horizontal_wrapped(|ui| {
             self.hints_menu(ui);
             let keys = trf("1 to {}", &[&forms.len().min(7)]);
-            let from = last
+            let outline = last
                 .and_then(|form| Degree::of(scale, form))
-                .map(|degree| degree.to_string());
+                .map(|degree| Outline {
+                    from: degree.to_string(),
+                    keeps,
+                    size: key.len(),
+                });
             let micromode = scale.micromode().is_some();
-            let hint = match (self.hints, from) {
-                (HintLevel::Minimal, _) => String::new(),
-                (HintLevel::Short, Some(from)) if micromode => trf(
-                    "The micromode's forms, nearest home first. Outlined: they keep two notes of {}.",
-                    &[&from],
-                ),
-                (HintLevel::Short, Some(from)) => trf(
-                    "The set's forms, nearest home first. Outlined: they keep all but one note \
-                     of {}.",
-                    &[&from],
-                ),
-                (HintLevel::Short, None) if micromode => trf(
-                    "The micromode's forms, nearest home first. Hold a key or press {}.",
-                    &[&keys],
-                ),
-                (HintLevel::Short, None) => trf(
-                    "The set's forms, nearest home first. Hold a key or press {}.",
-                    &[&keys],
-                ),
-                (_, from) if micromode => {
-                    let outline = match from {
-                        Some(from) => trf(
-                            " The outlined forms keep two notes of {} and move one: the \
-                             smoothest ways on.",
-                            &[&from],
-                        ),
-                        None => String::new(),
-                    };
-                    trf(
-                        "Music on one micromode makes its chords and its tunes of the \
-                         micromode's own forms, so these are its keys, each called by its \
-                         degree: T0 is the key's own form, T2 the same moved up two \
-                         semitones, T2I upside down. The more notes a form keeps from home, the \
-                         brighter its key.{} Hold one (or press {}) to play it.",
-                        &[&outline, &keys],
-                    )
-                }
-                (_, from) => {
-                    let outline = match from {
-                        Some(from) => trf(
-                            " The outlined forms keep all but one note of {}: the smoothest \
-                             ways on.",
-                            &[&from],
-                        ),
-                        None => String::new(),
-                    };
-                    trf(
-                        "Music on one pitch-class set makes its harmony of the set's own \
-                         forms, so these are its keys, each called by its degree: T0 is the \
-                         key's own form, T2 the same moved up two semitones, T2I upside down. \
-                         The more notes a form keeps from home, the brighter its key.{} Hold \
-                         one (or press {}) to play it.",
-                        &[&outline, &keys],
-                    )
-                }
-            };
-            ui.weak(hint);
+            ui.weak(forms_hint(self.hints, micromode, outline.as_ref(), &keys));
         });
         let plays: Vec<Play> = forms
             .iter()
@@ -689,7 +651,33 @@ impl HarmonyKeys {
             .collect();
         self.follow_mouse(pressed, &plays, &mut actions);
         self.follow_digits(ui, digits, &plays, &mut actions);
+        self.show_far_forms(ui, scale, near);
         actions
+    }
+
+    /// Picks the forms beyond Near home that the next frame shows: the
+    /// last form played and the forms outlined after it (see
+    /// [`keys::form_keys_with`]), so the outline is always on a key that
+    /// is there. Not while a key that came in this way is held, so the
+    /// keys do not move under the pointer; the near keys, `near` of them,
+    /// come first and never move.
+    fn show_far_forms(&mut self, ui: &Ui, scale: Scale, near: usize) {
+        if self.down.as_ref().is_some_and(|down| down.key >= near) {
+            return;
+        }
+        let far: Vec<PitchSet> = self
+            .last_form
+            .filter(|&form| Degree::of(scale, form).is_some())
+            .map(|form| {
+                let mut far = degree::nearest_links(form).0;
+                far.push(form);
+                far
+            })
+            .unwrap_or_default();
+        if far != self.far_forms {
+            self.far_forms = far;
+            ui.ctx().request_repaint();
+        }
     }
 
     /// The bar for a twelve-tone row or a pitch-class set: a key for each
@@ -1534,6 +1522,89 @@ fn form_key(
     response
 }
 
+/// The outline on the forms row: from which form, named by its degree,
+/// how many of its notes the outlined forms keep (0 when no other form
+/// shares a note with it, and none is outlined), and how many notes a
+/// form has.
+struct Outline {
+    from: String,
+    keeps: usize,
+    size: usize,
+}
+
+/// The line under a row of forms (see [`HarmonyKeys::show_forms`]): what
+/// the keys are and what the outline on them means, at the hint `level`.
+/// It says how many notes the outlined forms keep, all but one, fewer
+/// ("they keep 3 notes of T0; no form keeps more", for 6-20) or none
+/// outlined at all, so it never speaks of an outline that is not there.
+fn forms_hint(level: HintLevel, micromode: bool, outline: Option<&Outline>, keys: &str) -> String {
+    match level {
+        HintLevel::Minimal => String::new(),
+        HintLevel::Short => {
+            let what = match micromode {
+                true => tr("The micromode's forms, nearest home first."),
+                false => tr("The set's forms, nearest home first."),
+            };
+            let more = match outline {
+                None => trf("Hold a key or press {}.", &[&keys]),
+                Some(o) if o.keeps == 0 => trf("No other form shares a note with {}.", &[&o.from]),
+                Some(o) if o.keeps + 1 == o.size && micromode => {
+                    trf("Outlined: they keep two notes of {}.", &[&o.from])
+                }
+                Some(o) if o.keeps + 1 == o.size => {
+                    trf("Outlined: they keep all but one note of {}.", &[&o.from])
+                }
+                Some(o) => trf(
+                    "Outlined: they keep {} notes of {}; no form keeps more.",
+                    &[&o.keeps, &o.from],
+                ),
+            };
+            format!("{what} {more}")
+        }
+        HintLevel::Detailed => {
+            let outlined = match outline {
+                None => String::new(),
+                Some(o) if o.keeps == 0 => trf(
+                    " No other form shares a note with {}, so none is outlined.",
+                    &[&o.from],
+                ),
+                Some(o) if o.keeps + 1 == o.size && micromode => trf(
+                    " The outlined forms keep two notes of {} and move one: the smoothest \
+                     ways on.",
+                    &[&o.from],
+                ),
+                Some(o) if o.keeps + 1 == o.size => trf(
+                    " The outlined forms keep all but one note of {}: the smoothest ways on.",
+                    &[&o.from],
+                ),
+                Some(o) => trf(
+                    " No form keeps all but one note of {}: the outlined forms keep {} of its \
+                     notes, and no form keeps more, so they are the smoothest ways on.",
+                    &[&o.from, &o.keeps],
+                ),
+            };
+            match micromode {
+                true => trf(
+                    "Music on one micromode makes its chords and its tunes of the \
+                     micromode's own forms, so these are its keys, each called by its \
+                     degree: T0 is the key's own form, T2 the same moved up two \
+                     semitones, T2I upside down. The more notes a form keeps from home, the \
+                     brighter its key.{} Hold one (or press {}) to play it.",
+                    &[&outlined, &keys],
+                ),
+                false => trf(
+                    "Music on one pitch-class set makes its harmony of the set's own \
+                     forms, so these are its keys, each called by its degree: T0 is the \
+                     key's own form, T2 the same moved up two semitones, T2I upside down. \
+                     The more notes a form keeps from home, the brighter its key.{} Hold \
+                     one (or press {}) to play it.",
+                    &[&outlined, &keys],
+                ),
+            }
+        }
+    }
+}
+
 /// What a form's key says under its notes: for a chord micromode, the
 /// triad it is ("Ab"); otherwise what every form of the key is, the
 /// micromode or the set class, named as the key `scale` is ("Menor 3",
@@ -1792,7 +1863,137 @@ fn scale_dot(painter: &Painter, scale: Scale, pitch_class: PitchClass, key: Rect
 mod tests {
     use super::*;
     use lineup_core::ChordQuality;
-    use lineup_core::harmony::next_chords;
+    use lineup_core::harmony::{Micromode, next_chords};
+
+    /// The line under the forms of `key` after `last` played, as
+    /// `show_forms` writes it, with the forms it outlines.
+    fn outline_after(key: Scale, last: PitchSet, level: HintLevel) -> (String, Vec<PitchSet>) {
+        let (next, keeps) = degree::nearest_links(last);
+        let outline = Degree::of(key, last).map(|degree| Outline {
+            from: degree.to_string(),
+            keeps,
+            size: key.pitch_set().len(),
+        });
+        let micromode = key.micromode().is_some();
+        let line = forms_hint(level, micromode, outline.as_ref(), "1 to 7");
+        (line, next)
+    }
+
+    #[test]
+    fn on_6_20_the_outline_is_on_the_forms_that_keep_three_notes() {
+        // Webern's trichords with 6-20 as the key: Eb E G Ab B C on C.
+        let key = Scale::set(
+            PitchClass::C,
+            PitchSet::from_semitones(&[3, 4, 7, 8, 11, 0]),
+        );
+        let forms = keys::form_keys(key, false).unwrap();
+        let labels: Vec<&str> = forms.iter().map(|form| form.label.as_str()).collect();
+        assert_eq!(labels, ["T0", "T1", "T3", "T2"]);
+        let (line, outlined) = outline_after(key, key.pitch_set(), HintLevel::Short);
+        assert_eq!(
+            line,
+            "The set's forms, nearest home first. Outlined: they keep 3 notes of T0; no \
+             form keeps more."
+        );
+        let outlined: Vec<&str> = forms
+            .iter()
+            .filter(|form| outlined.contains(&form.pitch_set()))
+            .map(|form| form.label.as_str())
+            .collect();
+        assert_eq!(outlined, ["T1", "T3"]);
+        let (line, _) = outline_after(key, key.pitch_set(), HintLevel::Detailed);
+        assert!(
+            line.contains(
+                "No form keeps all but one note of T0: the outlined forms keep 3 of its \
+                 notes, and no form keeps more"
+            ),
+            "{line}"
+        );
+    }
+
+    #[test]
+    fn the_augmented_micromode_outlines_nothing_and_says_so() {
+        let key = Micromode::named("Acorde aumentado")
+            .unwrap()
+            .key(PitchClass::C);
+        let (line, outlined) = outline_after(key, key.pitch_set(), HintLevel::Short);
+        assert!(outlined.is_empty());
+        assert_eq!(
+            line,
+            "The micromode's forms, nearest home first. No other form shares a note with T0."
+        );
+        // Menor 3 still outlines the forms that keep two notes.
+        let key = Micromode::named("Menor 3").unwrap().key(PitchClass::C);
+        let (line, outlined) = outline_after(key, key.pitch_set(), HintLevel::Short);
+        assert_eq!(outlined.len(), 3);
+        assert!(
+            line.ends_with("Outlined: they keep two notes of T0."),
+            "{line}"
+        );
+    }
+
+    /// For every set class as the key, after every one of its forms (any
+    /// can be heard in the music, near home or not), with Near home and
+    /// with All forms: every outlined form has a key on screen, and the
+    /// line under the keys says how many notes the outlined ones keep, or
+    /// that no form shares a note, so it never promises an outline that
+    /// is not there.
+    #[test]
+    fn the_line_under_the_forms_never_promises_an_outline_that_is_not_there() {
+        for class in lineup_core::harmony::SetClass::all() {
+            if !(2..12).contains(&class.prime.len()) {
+                continue;
+            }
+            // A set of three notes is a micromode unless named as a set.
+            let as_key = Scale::set(PitchClass::C, class.prime);
+            for key in [as_key, as_key.named_as_set()] {
+                for all in [false, true] {
+                    check_outlines(class, key, all);
+                }
+            }
+        }
+    }
+
+    fn check_outlines(class: &lineup_core::harmony::SetClass, key: Scale, all: bool) {
+        let name = class.name();
+        let size = key.pitch_set().len();
+        let every: Vec<PitchSet> = keys::form_keys(key, true)
+            .unwrap()
+            .iter()
+            .map(GroupKey::pitch_set)
+            .collect();
+        for &last in &every {
+            let (line, outlined) = outline_after(key, last, HintLevel::Short);
+            // What show_far_forms adds beyond Near home after `last`.
+            let mut far = outlined.clone();
+            far.push(last);
+            let shown: Vec<PitchSet> = keys::form_keys_with(key, all, &far)
+                .unwrap()
+                .iter()
+                .map(GroupKey::pitch_set)
+                .collect();
+            assert!(outlined.iter().all(|set| shown.contains(set)), "{name}");
+            assert!(shown.contains(&last), "{name}");
+            match outlined.first().map(|&set| degree::kept(last, set)) {
+                None => assert!(
+                    line.contains("No other form shares a note"),
+                    "{name}: {line}"
+                ),
+                // A key of three notes is a micromode: two of three.
+                Some(keeps) if keeps + 1 == size => {
+                    let said = match key.micromode() {
+                        Some(_) => "they keep two notes of",
+                        None => "they keep all but one note of",
+                    };
+                    assert!(line.contains(said), "{name}: {line}");
+                }
+                Some(keeps) => {
+                    let said = format!("they keep {keeps} notes of");
+                    assert!(line.contains(&said), "{name}: {line}");
+                }
+            }
+        }
+    }
 
     #[test]
     fn after_the_tonic_six_four_the_hint_goes_on_to_v() {
