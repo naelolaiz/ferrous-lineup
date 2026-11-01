@@ -48,13 +48,60 @@ from the ignored tests in `tests/drum_hits.rs` and
 | Drums | MDB Drums, full mixes: mean F for kick, snare and hi-hat, hits within 50 ms | 0.652 |
 | Drums | MDB Drums, drums alone: same measure | 0.784 |
 | Chords | GuitarSet, root / major-minor / exact chord accuracy by time | 0.764 / 0.700 / 0.562 |
-| Bass | Synthetic low-register phrases only; no reference-dataset evaluation yet | Not benchmarked |
+| Bass | MDB Drums proxy: mean per-track note F on mix / separated bass stem | 0.133 / 0.899 |
 
-These are classical DSP baselines, not source-separated results. The
-drum extractor reports kick, snare and hi-hats; it does not yet
-transcribe toms, cymbals or percussion. The chord results are strongest
-on GuitarSet's rock and singer-songwriter recordings and weaker on its
-funk and jazz recordings.
+The bass numbers are **not transcription accuracy**: MDB Drums has no
+bass-note annotations. Instead, pYIN notes from each isolated bass track
+stand in for the written notes, measuring how much the rest of the mix
+interferes. The drum extractor reports kick, snare and hi-hats; it does
+not yet transcribe toms, cymbals or percussion. The chord results are
+strongest on GuitarSet's rock and singer-songwriter recordings and
+weaker on its funk and jazz recordings.
+
+### Source-separation comparison
+
+We also ran the same DSP extractors on HTDemucs-separated stems. On all
+23 MDB Drums tracks, charon_audio's bass stems raised the bass proxy's
+mean per-track note F from 0.133 (mix) to 0.899. The drum hit F for
+kick, snare and hi-hat rose from 0.652 to 0.758; drums alone score 0.784.
+Separation helps bass substantially, but helps drum hits only modestly.
+
+| Separator | Measurement | Result |
+|-----------|-------------|--------|
+| charon_audio | Median scale-invariant SDR against MDB drum / bass multitrack stems (23 tracks) | 11.47 / 12.21 dB |
+| stem-splitter-core | Same SDR (three-track subset only) | 14.72 / 12.36 dB |
+| stem-splitter-core vs charon_audio | Median SDR between their drums / bass on the same three tracks | 24.3 / 23.0 dB |
+| demucs-rs CPU vs charon_audio | SDR between outputs on one 13-second track, drums / bass | 17.9 / 21.4 dB |
+
+These are different Rust runtimes for the same family of HTDemucs model,
+not independent separation algorithms. stem-splitter-core's three-track
+subset is too small to claim better quality; the close stem agreement
+suggests the model is the main factor. Some individual SDR scores vary
+widely, so the medians are more informative than any one track.
+
+On this machine (Ryzen 7 7735U, 16 logical CPUs), charon_audio took
+about 78 minutes to process 21.8 minutes of audio and peaked at 1.6 GB
+RSS. stem-splitter-core peaked at 5.0 GB RSS on its three-track run.
+demucs-rs's CPU backend took 9.4 minutes for one 13-second track; its
+Vulkan backend lost the Radeon driver's device context. These costs are
+why source separation is not an app dependency. The comparison does
+suggest it could be worthwhile as an optional, explicitly downloaded
+model for bass-heavy extraction. Melody and chord separation were not
+scored: these datasets do not provide suitable mixed-recording
+annotations for those layers.
+
+To reproduce the separated-stem measurements, set `MDB_SEPARATED` to
+directories laid out as `<root>/<track>/drums.wav` and
+`<root>/<track>/bass.wav`, separated by `:`:
+
+```text
+MDB_DRUMS="/path/to/MDB Drums" \
+MDB_SEPARATED="/path/to/charon:/path/to/stem-splitter" \
+  cargo test --release -p lineup-listen --test drum_hits -- --ignored --nocapture
+MDB_DRUMS="/path/to/MDB Drums" \
+MDB_SEPARATED="/path/to/charon:/path/to/stem-splitter" \
+  cargo test --release -p lineup-listen --test bass_notes -- --ignored --nocapture
+```
 
 ## Rough edges
 

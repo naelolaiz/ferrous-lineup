@@ -10,6 +10,11 @@
 //!     -p lineup-listen --test drum_hits -- --ignored --nocapture
 //! ```
 //!
+//! To measure drums separated from the mixes by another program (as a
+//! source-separation model), set `MDB_SEPARATED` to one or more folders,
+//! joined by `:` as in `PATH`, each holding a folder per track (named
+//! as the mix, without `_MIX.wav`) with the drums in `drums.wav`.
+//!
 //! For the drums alone and for the whole mix, it prints how well each
 //! kind of drum is heard (kick, snare, hi-hat, toms, cymbals): the
 //! *F-measure* of the hits heard within 50 ms of a written hit of the
@@ -138,7 +143,9 @@ struct Totals {
     subclasses: std::collections::BTreeMap<String, (usize, usize)>,
 }
 
-fn run(root: &Path, folder: &str, suffix: &str) -> Totals {
+/// Measures the drums heard in the audio file `audio` gives for each
+/// track's name, printed under `label`.
+fn run(root: &Path, label: &str, audio: &dyn Fn(&str) -> PathBuf) -> Totals {
     let mut totals = Totals::default();
     let mut names: Vec<String> = std::fs::read_dir(root.join("annotations/subclass"))
         .map(|entries| {
@@ -149,12 +156,19 @@ fn run(root: &Path, folder: &str, suffix: &str) -> Totals {
         })
         .unwrap_or_default();
     names.sort();
-    println!("\n{folder}");
+    println!("\n{label}");
     println!("track                         KD     SD     HH     TT     CY");
     for name in names {
-        let audio = root.join(format!("audio/{folder}/{name}_{suffix}.wav"));
-        let Ok(recording) = decode_file(&audio) else {
-            continue;
+        let path = audio(&name);
+        let recording = match decode_file(&path) {
+            Ok(recording) => recording,
+            Err(error) => {
+                eprintln!(
+                    "Skipping {name}: could not decode {}: {error}",
+                    path.display()
+                );
+                continue;
+            }
         };
         let heard = drums::hits(&recording.samples, recording.sample_rate);
         let written = written(&root.join(format!("annotations/subclass/{name}_subclass.txt")));
@@ -309,6 +323,16 @@ fn drum_hits_against_mdb_drums() {
         eprintln!("Set MDB_DRUMS to the dataset's \"MDB Drums\" folder.");
         return;
     };
-    run(&root, "drum_only", "Drum");
-    run(&root, "full_mix", "MIX");
+    let dataset = |folder: &'static str, suffix: &'static str| {
+        let root = root.clone();
+        move |name: &str| root.join(format!("audio/{folder}/{name}_{suffix}.wav"))
+    };
+    run(&root, "drum_only", &dataset("drum_only", "Drum"));
+    run(&root, "full_mix", &dataset("full_mix", "MIX"));
+    if let Some(separated) = std::env::var_os("MDB_SEPARATED") {
+        for folder in std::env::split_paths(&separated) {
+            let label = format!("separated: {}", folder.display());
+            run(&root, &label, &|name| folder.join(name).join("drums.wav"));
+        }
+    }
 }
