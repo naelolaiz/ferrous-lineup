@@ -955,7 +955,11 @@ suena una forma, las formas que conservan dos de *sus* notas aparecen
 con borde, como las teclas tonales marcan con borde los acordes que suelen
 venir después, y la ayuda dice qué se queda y qué se mueve: «conserva La
 y Do; Do♯ pasa a La♭». Para las tríadas también nombra el movimiento, P,
-L o R.
+L o R. La tríada aumentada es el único micromodo sin ninguna forma a dos
+notas: sus cuatro formas no comparten ninguna nota, así que después de
+que suena una ninguna tiene borde, y la línea dice «Ninguna otra forma
+comparte una nota con T0» (ver [El borde de las
+formas](sets.md#el-borde-de-las-formas)).
 
 En la hoja de acordes, cada compás de una tonalidad que es un micromodo
 muestra su grado y, desde el segundo compás, cuántas notas conserva del
