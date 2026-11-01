@@ -324,6 +324,7 @@ const CANDOMBE: Layout = Layout {
     turns: 2,
     closing: 2,
     closings: 2,
+    breaks: Some(Drum::Rim),
 };
 ```
 
@@ -335,10 +336,13 @@ phrases of that kind the song has played: the first phrase of an A part
 plays the first groove and the first closing, the next the second ones,
 and so on round. The second groove opens with a bar of clave on the
 wood and varies the piano more; the second closing starts from the
-repique's busier base, so the clave never comes just before a new part.
-A phrase too short for it all plays the opening's start and the
-closing. Such a rhythm needs no fill from the table: its closing is its
-fill.
+repique's busier base, so the clave never comes under the band just
+before a new part. It comes there alone: `breaks` names the drum that
+plays the last bar before every new part by itself, the first bar of
+its opening, while the band strikes the bar's first beat and stops
+(see [Drums by part](song-form.md#drums-by-part)). A phrase too short
+for it all plays the opening's start and the closing. Such a rhythm
+needs no fill from the table: its closing is its fill.
 
 ### A rhythm for any time signature
 
