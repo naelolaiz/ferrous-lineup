@@ -2447,6 +2447,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "conserva {} notas de la forma de la tonalidad",
     ),
     ("From {}: {}.", "Desde {}: {}."),
+    ("On the chord sheet: {}.", "En la hoja de acordes: {}."),
     ("1 common", "1 común"),
     ("{} common", "{} comunes"),
     (

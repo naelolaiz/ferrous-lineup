@@ -574,8 +574,9 @@ For C major as a set this is an old friend:
 Each step round the circle of fifths changes one note, so the notes in
 common count the fifths between two keys: the circle of fifths is the
 nearness of the forms of 7-35. **Near home** shows the forms that keep
-at least half the notes of home (for three notes, at least one), here
-the nine keys up to four fifths away; **All forms** shows the twelve.
+at least half the notes of home, rounded down (three of seven; for
+three notes, at least one), here the nine keys up to four fifths away;
+**All forms** shows the twelve.
 
 Other sets give less familiar maps. C E G B♭ as a set, 4-27, the notes
 of a dominant seventh, has 24 forms: the twelve dominant sevenths and,
@@ -587,8 +588,22 @@ six keep none.
 
 In the app, a key never calls a set's form by the chord or scale it
 sounds like. Its key shows the degree, the notes in normal form, and
-underneath the form as the chord sheet writes it: T2I of C E G B♭ is
-D E G B♭, **4-27 T2**. A form of more than five notes that is the
+underneath the set every form of the key is, 4-27. The form's own name
+as the chord sheet writes it, T2I of C E G B♭ being D E G B♭, **4-27
+T2**, is in the key's tooltip, not on the key: the sheet's T*n* counts
+from the class's prime form on C and the degree from the key, so on a
+key that is not the prime form on C the two disagree. Webern's
+trichords with its 6-20 as the key showed it: T0, the key's own form,
+is 6-20 T3. `form_footer` gives the set (or the micromode, or a chord
+micromode's triad); `describe_form` adds "On the chord sheet: 6-20
+T3." to the detailed tooltip.
+
+The keys of a row are as wide as their widest notes need:
+`keys_width` measures each key's notes at the key's font size and
+gives every key of the row the widest, at least the usual 76 points,
+so six notes in solfège, "Mib Mi Sol Lab Si Do", are written whole
+instead of running into the next key. A row too long for the window
+wraps onto a second line. A form of more than five notes that is the
 key's own scale moved is still spelled as that scale (7-35 moved up a
 fifth from C major is written G A B C D E F♯, with F♯, not G♭), but not
 called G major. Only Kröpfl's three chord micromodes (Acorde

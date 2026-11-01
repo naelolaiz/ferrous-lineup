@@ -90,9 +90,21 @@ play two things, chosen at the left:
   set of three notes always shows its forms.
 
 The forms come home first, then by how many notes they keep of home,
-brighter the more they keep. Each key shows the form's notes in their
-most compact order and, under them, the form as the chord sheet writes
-it. A set is music without a key, so neither the keys nor the chords
+brighter the more they keep. That counts notes, not intervals: every
+form is the same set moved or turned over, so all have the same
+intervals, and the notes they share with home, in any octave, are what
+tells them apart. Forms that keep as many go by degree, the ones the
+right way up first, counting up, then the ones upside down. In a key
+of C that is the set G A♭ A B C E♭ E (7-21), T4, T8, T3I, T7I and T11I
+keep six notes; T0I, T4I and T8I keep five; T1, T3, T5, T7, T9, T11
+and T6I keep four. Each key shows the form's notes in their most
+compact order and, under them, the set, 4-27 or 6-20, the same on every
+key. The keys widen when the notes need it, so six notes in solfège are
+written whole. Point at a key to read the form's name as
+the chord sheet writes it, "4-27 T2": that name counts from the set's
+prime form on C, while the key's degree counts from the key, so the
+two numbers differ unless the key is the prime form on C. A set is
+music without a key, so neither the keys nor the chords
 stacked from the set are named as the chords and scales of tonal music
 they may sound like. In a key that is C E G B♭ as a set (4-27), T2I is
 D E G B♭, the only form that keeps three of its notes (to a tonal ear,
@@ -102,9 +114,18 @@ are still spelled as G major spells them, with F♯. Only Kröpfl's three
 chord micromodes (Acorde disminuido, menor-mayor and aumentado), which
 are triads by name, show the triad each form is (see [A micromode as
 the key](#a-micromode-as-the-key)). **Near home** shows the forms that
-keep at least half the notes of home, **All forms** shows them all.
+keep at least half the notes of home, rounded down: two of four for
+4-27, three of seven for 7-21. When fewer than four forms are that
+near, it shows them all. **All forms** shows them all, the farthest
+last.
 
-![The harmony keys in a key that is the set C E G B♭, set 4-27 in the Key menu, with Forms on, after T2I was played: T0 (E G B♭ C), T2I (D E G B♭), then T3, T6, T9 and the turned forms that keep two notes, each with its name as the chord sheet writes it underneath (4-27 T0I, 4-27 T2…); T0 is outlined because it keeps three notes of T2I](images/set-forms-keys.png)
+After you play a form, the forms that keep all of its notes but one are
+outlined: they are the smoothest ways on, one note moving. The line
+under the keys names the form they are counted from. In that key of
+7-21, after T4 (B C C♯ E♭ E G A♭), the outlined keys are T0, T8, T3I,
+T7I and T11I, each keeping six of its seven notes.
+
+![The harmony keys in a key that is the set C E G B♭, set 4-27 in the Key menu, with Forms on, after T2I was played: T0 (E G B♭ C), T2I (D E G B♭), then T3, T6, T9 and the turned forms that keep two notes, each with 4-27 underneath; T0 is outlined because it keeps three notes of T2I](images/set-forms-keys.png)
 
 **A progression of forms.** In a set key, the chord sheet's
 **Progression** button offers ways to chain the set's forms, in place
@@ -473,14 +494,16 @@ Move the whole song to D and every form keeps its degree, as ii stays
 ii in any major key. Home is always T0. With the triads, the parallel
 chord is T7I: C minor in C major, and C major in C minor.
 
-![The harmony keys in a key of Menor 3 on C after T1I was played: T0, T1I, T4I and T5I, then the forms that keep one note of home, each with its notes and its name; T0, T8 and T9 are outlined because they keep two notes of A C C♯, and the hint below says so](images/micromode-keys.png)
+![The harmony keys in a key of Menor 3 on C after T1I was played: T0, T1I, T4I and T5I, then the forms that keep one note of home, each with its notes and Menor 3 underneath; T0, T8 and T9 are outlined because they keep two notes of A C C♯, and the hint below says so](images/micromode-keys.png)
 
 The **harmony keys** show the key's forms, home first, then the forms
 that keep two of its notes, then the ones that keep one; the more a
-form keeps of home, the brighter its key. **Near home** leaves out the
+form keeps of home, the brighter its key. Forms that keep as many go by
+degree, the ones the right way up first. **Near home** leaves out the
 forms that keep no note of home, and **All forms** shows them all (24
 for Menor 3). After you play a form, the forms that keep two of *its*
 notes are outlined: they are the smoothest ways on, one note moving.
+The line under the keys names the form they are counted from.
 Hover a key to read what stays and what moves, such as "keeps A and C;
 C♯ goes to A♭"; for the major and minor triads it also names the move
 (P, L or R).

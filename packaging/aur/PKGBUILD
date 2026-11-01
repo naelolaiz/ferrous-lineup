@@ -1,6 +1,6 @@
 # Maintainer: naelolaiz <naelolaiz@users.noreply.github.com>
 pkgname=ferrous-lineup
-pkgver=0.4.1
+pkgver=0.5.0
 pkgrel=1
 pkgdesc="Play songs with a backing band and learn harmony"
 arch=('x86_64' 'aarch64')
@@ -20,7 +20,7 @@ makedepends=('rust')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
 # Run `updpkgsums` once the v$pkgver tag exists; GitHub's archive of a
 # tag is not the same file as the working tree.
-sha256sums=('1eee99a5a30bb21db443b7f5aae2d1412d4d3fe03f4b3adaee8417781d125ae5')
+sha256sums=('SKIP')
 
 build() {
   cd "$pkgname-$pkgver"
