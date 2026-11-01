@@ -612,6 +612,33 @@ the triad each form is, spelled from its root (see [A micromode as the
 key: degrees](micromodes.md#a-micromode-as-the-key-degrees)); the same
 three notes named as a set, 3-11, do not.
 
+### The outline on the forms
+
+After a form plays, the forms that keep the most of its notes are
+outlined: the smoothest ways on. `degree::nearest_links` finds them and
+says how many notes they keep. For most sets that is all of the form's
+notes but one, the forms `degree::smooth_links` gives. But the more
+symmetric a set, the fewer its forms, and some have none one note away.
+6-20, the hexatonic set, has four forms, and each keeps three notes of
+two others and none of the third: after T0 (E♭ E G A♭ B C), T1 (C C♯ E
+F A♭ A) and T3 (D E♭ F♯ G B♭ B) keep three each. The augmented triad,
+the diminished seventh and the whole-tone scale go further: their
+forms share no note at all, so nothing is outlined. Of the 220 set
+classes of two to ten notes, 69 have no form one note away.
+
+`forms_hint` writes the line under the keys from that count, so it
+never speaks of an outline that is not on screen: "Outlined: they keep
+all but one note of T4", "Outlined: they keep 3 notes of T0; no form
+keeps more", or "No other form shares a note with T0". A form outlined
+after one played may be far from home and left out by **Near home**:
+`HarmonyKeys::show_far_forms` keeps the last form and its outlined
+forms, and `keys::form_keys_with` shows them after the near ones, in
+their order of nearness. The near keys keep their places, and the far
+ones only change when no far key is held, so no key moves under the
+pointer. A test takes every form of every set class as the last one
+played, with Near home and with All forms, and checks that each outlined form has a key and
+that the line says how many notes the outlined forms keep.
+
 ### Progressions of forms
 
 In a key that is a set, the chord sheet's **Progression** button does

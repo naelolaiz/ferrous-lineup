@@ -125,6 +125,17 @@ under the keys names the form they are counted from. In that key of
 7-21, after T4 (B C C♯ E♭ E G A♭), the outlined keys are T0, T8, T3I,
 T7I and T11I, each keeping six of its seven notes.
 
+Some sets have no form one note away, and then the forms that keep the
+most notes are outlined, and the line says how many. 6-20, the first
+half of Webern's row (E♭ E G A♭ B C as the key), has only four forms:
+after T0, T1 and T3 are outlined, each keeping three of its six notes,
+and the line says "Outlined: they keep 3 notes of T0; no form keeps
+more". Where no other form shares a note at all, as in the diminished
+seventh or the whole-tone scale, nothing is outlined and the line says
+"No other form shares a note with T0". An outlined form that is far
+from home joins the end of the row under **Near home**, so every
+outline is on a key you can see.
+
 ![The harmony keys in a key that is the set C E G B♭, set 4-27 in the Key menu, with Forms on, after T2I was played: T0 (E G B♭ C), T2I (D E G B♭), then T3, T6, T9 and the turned forms that keep two notes, each with 4-27 underneath; T0 is outlined because it keeps three notes of T2I](images/set-forms-keys.png)
 
 **A progression of forms.** In a set key, the chord sheet's
@@ -503,7 +514,10 @@ degree, the ones the right way up first. **Near home** leaves out the
 forms that keep no note of home, and **All forms** shows them all (24
 for Menor 3). After you play a form, the forms that keep two of *its*
 notes are outlined: they are the smoothest ways on, one note moving.
-The line under the keys names the form they are counted from.
+The line under the keys names the form they are counted from, and an
+outlined form far from home joins the end of the row. The four forms of
+the augmented triad (Acorde aumentado) share no note, so none is
+outlined, and the line says "No other form shares a note with T0".
 Hover a key to read what stays and what moves, such as "keeps A and C;
 C♯ goes to A♭"; for the major and minor triads it also names the move
 (P, L or R).

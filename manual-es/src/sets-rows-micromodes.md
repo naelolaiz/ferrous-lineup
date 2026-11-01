@@ -138,6 +138,18 @@ forma desde la que se cuentan. En esa tonalidad de 7-21, después de T4
 (Si Do Do♯ Mi♭ Mi Sol La♭), las teclas con borde son T0, T8, T3I, T7I y
 T11I, que conservan seis de sus siete notas.
 
+Algunos conjuntos no tienen ninguna forma a una nota de distancia, y
+entonces aparecen con borde las formas que más notas conservan, y la
+línea dice cuántas. 6-20, la primera mitad de la serie de Webern (Mi♭
+Mi Sol La♭ Si Do como tonalidad), tiene solo cuatro formas: después de
+T0, T1 y T3 aparecen con borde, porque conservan tres de sus seis
+notas, y la línea dice «Con borde: conservan 3 notas de T0; ninguna
+forma conserva más». Donde ninguna otra forma comparte una sola nota,
+como en la séptima disminuida o la escala de tonos enteros, ninguna
+tiene borde y la línea dice «Ninguna otra forma comparte una nota con
+T0». Una forma con borde lejana de casa se suma al final de la fila con
+**Cercanas**, así que todo borde está en una tecla que se ve.
+
 ![Las teclas de armonía en una tonalidad que es el conjunto Do Mi Sol Si♭, conjunto 4-27 en el menú Tonalidad, con Formas activado, después de tocar T2I: T0 (Mi Sol Si♭ Do), T2I (Re Mi Sol Si♭), después T3, T6, T9 y las formas dadas vuelta que conservan dos notas, cada una con 4-27 debajo; T0 aparece con borde porque conserva tres notas de T2I](images/set-forms-keys.png)
 
 **Una progresión de formas.** En una tonalidad que es un conjunto, el
@@ -551,7 +563,11 @@ nota de casa, y **Todas las formas** las muestra todas (24 para Menor
 3). Después de tocar una forma, las formas que conservan dos de *sus*
 notas aparecen con borde: son las maneras más suaves de seguir, con una
 sola nota que se mueve. La línea debajo de las teclas nombra la forma
-desde la que se cuentan. Pasa el puntero sobre una tecla para leer qué se
+desde la que se cuentan, y una forma con borde lejana de casa se suma
+al final de la fila. Las cuatro formas de la tríada aumentada (Acorde
+aumentado) no comparten ninguna nota, así que ninguna tiene borde, y la
+línea dice «Ninguna otra forma comparte una nota con T0». Pasa el
+puntero sobre una tecla para leer qué se
 queda y qué se mueve, como «conserva La y Do; Do♯ pasa a La♭»; para las
 tríadas mayores y menores también nombra el movimiento (P, L o R).
 
