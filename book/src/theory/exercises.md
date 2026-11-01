@@ -135,12 +135,12 @@ III](numerals.md#minor-keys-biii-or-iii)).
 
 ### 8. The Neapolitan comes next (lineup-core, medium)
 
-After a chord, the harmony keys outline the chords that often follow
-it, from the tables in `harmony/progression.rs` (see [What comes next:
+While a chord sounds, the harmony keys outline the chords that often
+follow it, from the tables in `harmony/progression.rs` (see [What comes next:
 knowledge as data](numerals.md#what-comes-next-knowledge-as-data)).
 The chord sheet already names the **Neapolitan**, ♭II, a major chord
 on the lowered second degree (D♭ in C), but `next_chords` has no slot
-for it, so after a D♭ chord nothing lights up.
+for it, so while a D♭ chord sounds nothing lights up.
 
 A Neapolitan usually goes to V, or to I⁶₄ and then V. Add a `Slot`
 with root 1 and `ChordFamily::Major`, with a move to V and a reason, to

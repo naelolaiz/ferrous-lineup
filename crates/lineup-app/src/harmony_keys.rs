@@ -5,8 +5,10 @@
 //! what the chord does (home, away, tension; in a mode, which has no such
 //! jobs, all one colour); hold one down to play its chord. The chord
 //! sounding now is lit up and framed in white, so it is the first thing
-//! the eye finds; the chords that often come next only get a thin yellow
-//! outline, the most usual one a little brighter. The
+//! the eye finds; while a chord sounds, held down or playing in the
+//! music, the chords that often come next after it get a thin yellow
+//! outline, the most usual one a little brighter. Nothing sounding,
+//! nothing is outlined: the keys show what is playing. The
 //! hint line below can explain in sentences, in a few words, or not at
 //! all (see [`HintLevel`]). On the right, a keyboard showing the notes of
 //! the scale and the notes playing.
@@ -21,11 +23,15 @@
 //! In a key of three notes, one of Kröpfl's micromodes, the keys are the
 //! micromode's own forms instead, each called by its degree (T0 for the
 //! key's own form, T2, T5I...), home first and the nearest next; the
-//! forms that keep two notes of the last one played get the outline,
-//! since keeping two notes and moving one is the smoothest way on. A key
-//! that is any other set can show its forms the same way; where no form
-//! keeps all but one note of the last, as for 6-20, the forms that keep
-//! the most get the outline.
+//! forms that keep two notes of the one sounding get the outline, since
+//! keeping two notes and moving one is the smoothest way on. A key that
+//! is any other set can show its forms the same way; where no form keeps
+//! all but one note of the one sounding, as for 6-20, the forms that keep
+//! the most get the outline. In the music, a form lights up for as long
+//! as it is being played, read over time as the chord sheet reads it
+//! (see [`lineup_core::chord_sheet::notation::forms_in_song`]): Webern
+//! plays each half of his row as two chords of three notes, and the
+//! half, a form of 6-20, lights up as a whole.
 //!
 //! Under it, the experimental Find the key option shows the key the
 //! music sounds like it is in, and the next best keys, fainter, when it
@@ -42,11 +48,13 @@ use lineup_core::harmony::colour_finding::{Colour, ColourGuess, Colours};
 use lineup_core::harmony::degree::{self, Degree};
 use lineup_core::harmony::key_finding::{KeyGuess, read_chord};
 use lineup_core::harmony::keys::{self, ChordKey, ChordSize, Function, GroupKey};
+use lineup_core::harmony::voice_leading::{self, FormStatement};
 use lineup_core::harmony::{
     Harmony, Hearing, HintLevel, Micromode, Suggestion, analyze, next_chords_over, with_figures,
 };
 use lineup_core::{
-    Chord, HarmonyName, Note, PitchClass, PitchSet, Project, Scale, ScaleKind, TimeSignature,
+    Chord, HarmonyName, KeyMap, Note, NoteEvent, Pattern, PitchClass, PitchSet, Project, Scale,
+    ScaleKind, TimeSignature,
 };
 
 use crate::i18n::{tr, trc, trf};
@@ -268,6 +276,43 @@ struct Down {
     key: usize,
     holder: Holder,
     notes: Vec<Note>,
+    /// The chord it plays, with its lowest note, for a key of a key.
+    chord: Option<(Chord, PitchClass)>,
+    /// The form it plays, for a key of a set or a micromode.
+    form: Option<PitchSet>,
+}
+
+/// Where the music is playing, for the forms of the key read in it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Playhead {
+    /// At this step of the song's timeline (as for
+    /// [`Project::chord_notes_in_song`]).
+    Song(usize),
+    /// At step `step` of pattern `pattern`, played on its own.
+    Pattern { pattern: usize, step: usize },
+}
+
+/// The forms of the key read in the music, kept until what they were
+/// read from changes.
+struct FormsRead {
+    from: FormsFrom,
+    forms: Vec<FormStatement>,
+}
+
+/// What forms were read from: the song's notes and keys, or a pattern's.
+#[derive(PartialEq)]
+enum FormsFrom {
+    Song {
+        notes: Vec<(usize, NoteEvent)>,
+        keys: KeyMap,
+    },
+    Pattern {
+        pattern: usize,
+        notes: Pattern,
+        time: TimeSignature,
+        /// The key on each beat.
+        keys: Vec<Scale>,
+    },
 }
 
 /// The number keys that play the harmony keys, I to vii.
@@ -291,8 +336,8 @@ pub struct HarmonyKeys {
     /// The notes of the last chord played (without the bass), so the next
     /// one moves as little as possible from it.
     last_voicing: Option<Vec<Note>>,
-    /// The last chord played, here or on a MIDI keyboard, for the
-    /// suggestions of what could come next.
+    /// The last chord played, here, on a MIDI keyboard or in the music,
+    /// for Find the key to say what it is in each key it finds.
     last_chord: Option<Chord>,
     /// The lowest note under the last chord: E when it was C/E, its first
     /// inversion.
@@ -307,12 +352,12 @@ pub struct HarmonyKeys {
     /// set of three notes is its one chord, so its keys are always its
     /// forms.
     forms: bool,
-    /// The last form of the key's set played, here or in the music, for
-    /// the outline on the forms that keep the most of its notes.
-    last_form: Option<PitchSet>,
-    /// The forms shown beyond Near home: the last form and the forms
-    /// outlined after it (see [`HarmonyKeys::show_far_forms`]).
+    /// The forms shown beyond Near home: the last form that sounded and
+    /// the forms outlined while it did (see
+    /// [`HarmonyKeys::show_far_forms`]).
     far_forms: Vec<PitchSet>,
+    /// The forms of the key read in the music last time.
+    forms_read: Option<FormsRead>,
 }
 
 impl HarmonyKeys {
@@ -346,8 +391,8 @@ impl HarmonyKeys {
             find_key: false,
             all_forms: false,
             forms: false,
-            last_form: None,
             far_forms: Vec::new(),
+            forms_read: None,
         }
     }
 
@@ -357,7 +402,6 @@ impl HarmonyKeys {
         self.last_voicing = None;
         self.last_chord = None;
         self.last_bass = None;
-        self.last_form = None;
         self.far_forms.clear();
     }
 
@@ -377,9 +421,11 @@ impl HarmonyKeys {
     /// notes held down on any keyboard,
     /// harmony keys included, and `heard` the chord notes playing in the
     /// pattern or the song, with `hearing`, how the song's beat at the
-    /// playhead is heard, if there is one; `digits` says whether the
-    /// number keys may play the harmony keys (not while they play notes
-    /// on the typing keyboard, or a text field has the keyboard).
+    /// playhead is heard, if there is one, and `playhead` where the music
+    /// is playing, for the forms of a set read over time; `digits` says
+    /// whether the number keys may play the harmony keys (not while they
+    /// play notes on the typing keyboard, or a text field has the
+    /// keyboard).
     #[allow(clippy::too_many_arguments)]
     pub fn show(
         &mut self,
@@ -390,6 +436,7 @@ impl HarmonyKeys {
         held: &[Note],
         heard: &[Note],
         hearing: Option<&Hearing>,
+        playhead: Option<Playhead>,
         digits: bool,
         key_heard: Option<&KeyHeard>,
         parts: &mut lineup_core::library::apply::StyleParts,
@@ -400,8 +447,9 @@ impl HarmonyKeys {
             && let Some(forms) = keys::form_keys_with(scale, self.all_forms, &self.far_forms)
         {
             let near = keys::form_keys(scale, self.all_forms).map_or(0, |near| near.len());
-            let mut actions =
-                self.show_forms(ui, project, here, &forms, near, held, heard, digits, parts);
+            let mut actions = self.show_forms(
+                ui, project, here, &forms, near, held, heard, playhead, digits, parts,
+            );
             self.find_key_line(ui, key_heard, &mut actions);
             return actions;
         }
@@ -443,6 +491,10 @@ impl HarmonyKeys {
             self.last_chord = Some(chord);
             self.last_bass = Some(bass);
         }
+        // The suggestions follow the chord sounding now: a harmony key
+        // held down, a chord held on a keyboard, or the music's. Let go,
+        // with the music stopped, and nothing is outlined.
+        let sounding = self.down.as_ref().and_then(|down| down.chord).or(played);
         let playing = played.and_then(|(chord, _)| keys::key_for(&chord_keys, chord));
         // Both chords of two at once light up; a reading that fits nearly
         // as well lights its key faintly.
@@ -468,9 +520,8 @@ impl HarmonyKeys {
             })
             .unwrap_or_default();
         // What follows depends on the inversion too: C/G, I⁶₄, goes to V.
-        let suggestions = self
-            .last_chord
-            .map(|chord| next_chords_over(tonal, chord, self.last_bass.unwrap_or(chord.root)))
+        let suggestions = sounding
+            .map(|(chord, bass)| next_chords_over(tonal, chord, bass))
             .unwrap_or_default();
 
         ui.add_space(4.0);
@@ -526,9 +577,7 @@ impl HarmonyKeys {
 
         let suggests = keys::has_functions(tonal.kind);
         let outside = suggests
-            && self
-                .last_chord
-                .is_some_and(|chord| keys::key_for(&chord_keys, chord).is_none());
+            && sounding.is_some_and(|(chord, _)| keys::key_for(&chord_keys, chord).is_none());
         ui.horizontal_wrapped(|ui| {
             self.hints_menu(ui);
             if let Some((best, others)) = music.and_then(|hearing| heard_line(hearing, tonal)) {
@@ -540,8 +589,7 @@ impl HarmonyKeys {
             let hint = hint_line(
                 self.hints,
                 tonal,
-                self.last_chord
-                    .map(|chord| (chord, self.last_bass.unwrap_or(chord.root))),
+                sounding,
                 &suggestions,
                 suggests,
                 outside,
@@ -570,13 +618,15 @@ impl HarmonyKeys {
 
     /// The bar for a key that is a set or a micromode: a key for each of
     /// its forms (see [`keys::form_keys`]), the brighter the more notes it
-    /// keeps from home. The form playing, held on a keyboard or heard in
-    /// the music, is lit, and the forms that keep the most of its notes
-    /// (or of the last one played) are outlined: the smoothest ways on,
-    /// all its notes but one where any form keeps that many (see
+    /// keeps from home. The forms sounding are lit: a key held down, a
+    /// form held on a keyboard, and in the music the forms being played
+    /// at `playhead`, read over time as the chord sheet reads them, or
+    /// else a whole form sounding at once. While one sounds, the forms
+    /// that keep the most of its notes are outlined: the smoothest ways
+    /// on, all its notes but one where any form keeps that many (see
     /// [`degree::nearest_links`]). The line under the keys says how many
     /// the outlined ones keep, so it never promises an outline that is
-    /// not there.
+    /// not there. Nothing sounding, nothing is outlined.
     #[allow(clippy::too_many_arguments)]
     fn show_forms(
         &mut self,
@@ -587,25 +637,30 @@ impl HarmonyKeys {
         near: usize,
         held: &[Note],
         heard: &[Note],
+        playhead: Option<Playhead>,
         digits: bool,
         parts: &mut lineup_core::library::apply::StyleParts,
     ) -> Vec<HarmonyAction> {
         let mut actions = Vec::new();
         let scale = here;
         let key = scale.pitch_set();
-        let set_of =
-            |notes: &[Note]| -> PitchSet { notes.iter().map(|n| n.pitch_class()).collect() };
-        let playing = [set_of(held), set_of(heard)]
-            .into_iter()
-            .find(|&set| set.len() == key.len() && Degree::of(scale, set).is_some());
-        if playing.is_some() {
-            self.last_form = playing;
-        }
-        // A form of another key's micromode means nothing here.
-        let last = self
-            .last_form
-            .filter(|&form| Degree::of(scale, form).is_some());
-        let (next, keeps) = last.map(degree::nearest_links).unwrap_or_default();
+        // A form of another key's set means nothing here.
+        let of_key = |set: &PitchSet| Degree::of(scale, *set).is_some();
+        let whole = |notes: &[Note]| -> Option<PitchSet> {
+            let set: PitchSet = notes.iter().map(|n| n.pitch_class()).collect();
+            Some(set).filter(|set| set.len() == key.len() && of_key(set))
+        };
+        let held_form = whole(held);
+        let mut in_music: Vec<PitchSet> = self.forms_at(project, playhead);
+        in_music.retain(of_key);
+        in_music.extend(whole(heard).filter(|set| !in_music.contains(set)));
+        let sounding = self
+            .down
+            .as_ref()
+            .and_then(|down| down.form)
+            .or(held_form)
+            .or(in_music.first().copied());
+        let (next, keeps) = sounding.map(degree::nearest_links).unwrap_or_default();
         let mut pressed = None;
         let width = keys_width(ui, forms);
         ui.add_space(4.0);
@@ -614,11 +669,12 @@ impl HarmonyKeys {
             ui.separator();
             for (index, form) in forms.iter().enumerate() {
                 let set = form.pitch_set();
-                let lit =
-                    self.down.as_ref().is_some_and(|d| d.key == index) || playing == Some(set);
+                let lit = self.down.as_ref().is_some_and(|d| d.key == index)
+                    || held_form == Some(set)
+                    || in_music.contains(&set);
                 let outlined = !lit && next.contains(&set);
                 let response = form_key(ui, form, width, scale, lit, outlined);
-                let hover = describe_form(form, index, self.hints, scale, last);
+                let hover = describe_form(form, index, self.hints, scale, sounding);
                 let response = crate::theme::hint(response, hover);
                 if response.is_pointer_button_down_on() {
                     pressed = Some(index);
@@ -630,7 +686,7 @@ impl HarmonyKeys {
         ui.horizontal_wrapped(|ui| {
             self.hints_menu(ui);
             let keys = trf("1 to {}", &[&forms.len().min(7)]);
-            let outline = last
+            let outline = sounding
                 .and_then(|form| Degree::of(scale, form))
                 .map(|degree| Outline {
                     from: degree.to_string(),
@@ -651,33 +707,94 @@ impl HarmonyKeys {
             .collect();
         self.follow_mouse(pressed, &plays, &mut actions);
         self.follow_digits(ui, digits, &plays, &mut actions);
-        self.show_far_forms(ui, scale, near);
+        self.show_far_forms(ui, sounding, near);
         actions
     }
 
     /// Picks the forms beyond Near home that the next frame shows: the
-    /// last form played and the forms outlined after it (see
+    /// form `sounding` and the forms outlined while it does (see
     /// [`keys::form_keys_with`]), so the outline is always on a key that
-    /// is there. Not while a key that came in this way is held, so the
-    /// keys do not move under the pointer; the near keys, `near` of them,
+    /// is there. They stay when it stops, so a way on can still be
+    /// played; not while a key that came in this way is held, so the
+    /// keys do not move under the pointer. The near keys, `near` of them,
     /// come first and never move.
-    fn show_far_forms(&mut self, ui: &Ui, scale: Scale, near: usize) {
+    fn show_far_forms(&mut self, ui: &Ui, sounding: Option<PitchSet>, near: usize) {
         if self.down.as_ref().is_some_and(|down| down.key >= near) {
             return;
         }
-        let far: Vec<PitchSet> = self
-            .last_form
-            .filter(|&form| Degree::of(scale, form).is_some())
-            .map(|form| {
-                let mut far = degree::nearest_links(form).0;
-                far.push(form);
-                far
-            })
-            .unwrap_or_default();
+        let Some(form) = sounding else {
+            return;
+        };
+        let mut far = degree::nearest_links(form).0;
+        far.push(form);
         if far != self.far_forms {
             self.far_forms = far;
             ui.ctx().request_repaint();
         }
+    }
+
+    /// The forms of the key being played at `playhead`, read over time
+    /// as the chord sheet's mixed grouping reads the song (see
+    /// [`lineup_core::chord_sheet::notation::forms_in_song`]), or, for a
+    /// pattern played on its own, as the piano roll's Forms lane reads
+    /// it. Read again only when the notes or the keys change.
+    fn forms_at(&mut self, project: &Project, playhead: Option<Playhead>) -> Vec<PitchSet> {
+        let Some(playhead) = playhead else {
+            return Vec::new();
+        };
+        let (from, step) = match playhead {
+            Playhead::Song(step) => (
+                FormsFrom::Song {
+                    notes: project.melodic_parts(),
+                    keys: project.key_map(),
+                },
+                step,
+            ),
+            Playhead::Pattern { pattern, step } => {
+                let Some(notes) = project.pattern(pattern) else {
+                    return Vec::new();
+                };
+                let time = project.pattern_time(pattern);
+                let keys = voice_leading::beats(time, notes.length())
+                    .iter()
+                    .map(|&(start, _)| project.pattern_key_at(pattern, start))
+                    .collect();
+                let notes = notes.clone();
+                (
+                    FormsFrom::Pattern {
+                        pattern,
+                        notes,
+                        time,
+                        keys,
+                    },
+                    step,
+                )
+            }
+        };
+        if self
+            .forms_read
+            .as_ref()
+            .is_none_or(|read| read.from != from)
+        {
+            let forms = match &from {
+                FormsFrom::Song { .. } => {
+                    lineup_core::chord_sheet::notation::forms_in_song(project, None)
+                }
+                FormsFrom::Pattern { pattern, .. } => {
+                    let channels: Vec<usize> = (0..project.channels().len()).collect();
+                    project.voice_leading(*pattern, &channels).forms
+                }
+            };
+            self.forms_read = Some(FormsRead { from, forms });
+        }
+        let mut found: Vec<PitchSet> = Vec::new();
+        for statement in self.forms_read.iter().flat_map(|read| &read.forms) {
+            if (statement.start..statement.end).contains(&step) && !found.contains(&statement.form)
+            {
+                found.push(statement.form);
+            }
+        }
+        found
     }
 
     /// The bar for a twelve-tone row or a pitch-class set: a key for each
@@ -1131,19 +1248,19 @@ impl HarmonyKeys {
             return;
         };
         let notes = play.notes.clone();
-        if play.form.is_some() {
-            self.last_form = play.form;
-        }
+        let bass = play.notes.iter().min().map(|note| note.pitch_class());
         if let Some(chord) = play.chord {
             self.last_voicing = Some(play.voicing.clone());
             self.last_chord = Some(chord);
-            self.last_bass = play.notes.iter().min().map(|note| note.pitch_class());
+            self.last_bass = bass;
         }
         actions.push(HarmonyAction::NoteOn(notes.clone()));
         self.down = Some(Down {
             key: index,
             holder,
             notes,
+            chord: play.chord.map(|chord| (chord, bass.unwrap_or(chord.root))),
+            form: play.form,
         });
     }
 }
