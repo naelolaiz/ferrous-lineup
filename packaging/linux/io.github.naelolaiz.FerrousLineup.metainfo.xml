@@ -102,6 +102,28 @@
   <content_rating type="oars-1.1"/>
 
   <releases>
+    <release version="0.5.0" date="2026-11-01">
+      <description>
+        <p>Gives music without a key (pitch-class sets, micromodes and twelve-tone rows) the tools tonal harmony has, adds forty styles, records singing or whistling into a song, and trims clips on the playlist.</p>
+        <p xml:lang="es">Da a la música sin tonalidad (conjuntos de clases de alturas, micromodos y series dodecafónicas) las herramientas de la armonía tonal, añade cuarenta estilos, graba canto o silbido en una canción y recorta clips en la lista de reproducción.</p>
+        <ul>
+          <li>Pitch-class sets, micromodes and rows as keys: their forms with degrees (Tn, TnI) on the harmony keys, progressions of forms, any set picked by size from the key menu, and a change of set that keeps each form's degree.</li>
+          <li xml:lang="es">Conjuntos de clases de alturas, micromodos y series como tonalidad: sus formas con grados (Tn, TnI) en las teclas de armonía, progresiones de formas, cualquier conjunto elegido por tamaño en el menú de tonalidad, y un cambio de conjunto que conserva el grado de cada forma.</li>
+          <li>Micromode and twelve-tone styles: the band plays the forms or the row forms written on the chord sheet, and the Row window takes a plan of forms.</li>
+          <li xml:lang="es">Estilos de micromodos y dodecafónicos: la banda toca las formas, o las formas de la serie, escritas en la hoja de acordes, y la ventana de la serie acepta un plan de formas.</li>
+          <li>Voice leading checks the colour of a set or micromode, Find the key names the colour of a passage, the chord sheet ranks the most used sets, and Ear training has micromodes, forms of a set and forms of a row.</li>
+          <li xml:lang="es">La conducción de voces revisa el color de un conjunto o micromodo, Buscar la tonalidad nombra el color de un pasaje, la hoja de acordes ordena los conjuntos más usados, y el Entrenamiento auditivo tiene micromodos, formas de un conjunto y formas de una serie.</li>
+          <li>Forty new styles in the Library (217 in all), grouped by genre, with a Swing filter and a search by instrument.</li>
+          <li xml:lang="es">Cuarenta estilos nuevos en la Biblioteca (217 en total), agrupados por género, con un filtro de swing y búsqueda por instrumento.</li>
+          <li>The band's drums follow the song's sections, which are heard in the notes when the song names none, and a style applied to a MIDI file gives the file's players its sounds.</li>
+          <li xml:lang="es">La batería de la banda sigue las secciones de la canción, que se oyen en las notas cuando la canción no las nombra, y un estilo aplicado a un archivo MIDI da sus sonidos a los instrumentos del archivo.</li>
+          <li>Takes: sing or whistle a part while the song plays, and the app writes what it heard as notes.</li>
+          <li xml:lang="es">Tomas: canta o silba una parte mientras suena la canción, y la aplicación escribe como notas lo que oyó.</li>
+          <li>Clips on the playlist are trimmed by dragging their edges, pattern clips and recordings alike, and the windows open as they were left.</li>
+          <li xml:lang="es">Los clips de la lista de reproducción se recortan arrastrando sus bordes, tanto los de patrones como las grabaciones, y las ventanas se abren como se dejaron.</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.4.1" date="2026-10-30">
       <description>
         <p>Adds a user manual, offers real instrument sounds as the app opens, and fixes and improves the band, the chord sheet and importing.</p>
