@@ -950,8 +950,8 @@ and with the version of the compiler. So after an update of the app, or
 a build with a newer Rust, or a field added to the type, `get_persisted`
 looks under a new number and finds nothing: the setting is back to its
 default, and the old value sits unread in `app.ron`. The SoundFont
-showed it: with the same `app.ron`, version 0.4.0 played from
-GeneralUser GS and a build numbered 0.4.1 had it off.
+showed it: with the same `app.ron`, one version played from GeneralUser
+GS and the next build had it off.
 
 eframe has a storage of its own, the same `app.ron`, which finds values
 by a name: a `&str` that stays the same whatever the version. eframe

@@ -9,9 +9,11 @@ name: Release
 #   and a macOS .dmg.
 # - Pushing a tag that starts with `v` (v0.2.0) also publishes them on a
 #   GitHub Release for that tag.
-# - A manual run on main with a tag filled in (v0.4.1) does the same, and
+# - A manual run on main with a tag filled in (v0.5.0) does the same, and
 #   makes the tag itself, on the commit it built: a release for whoever
-#   can run workflows but not push tags.
+#   can run workflows but not push tags. With "draft" ticked it makes the
+#   tag and leaves the release as a draft, to be checked and published
+#   by hand.
 # - Notes in packaging/release-notes/<tag>.md, when there are any, open
 #   the release's description, before GitHub's list of changes.
 on:
@@ -22,9 +24,14 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Publish a release with this tag (v0.4.1), made on the commit built. Empty: only build."
+        description: "Publish a release with this tag (v0.5.0), made on the commit built. Empty: only build."
         required: false
         default: ""
+      draft:
+        description: "With a tag: make the tag, but leave the release as a draft, to check and publish by hand."
+        type: boolean
+        required: false
+        default: false
 
 # Only reading the code is allowed by default. The job that publishes the
 # release asks for more below.
@@ -368,11 +375,14 @@ jobs:
       # pushed must exist already (--verify-tag); a tag asked for in a
       # manual run is made here, on the commit this run built. A tag made
       # with the workflow's own token starts no other workflow, so this
-      # run is the only one that publishes it.
+      # run is the only one that publishes it. A draft gets no tag until
+      # it is published, so for a draft the tag is made first; publishing
+      # it later then makes no new tag and starts no other run.
       - name: Create the release and upload the packages
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ env.RELEASE_TAG }}
+          DRAFT: ${{ inputs.draft }}
         run: |
           if gh release view "$TAG" > /dev/null 2>&1; then
             gh release upload "$TAG" release/* --clobber
@@ -381,6 +391,12 @@ jobs:
             if [[ "$TAG" == *-* ]]; then flags+=(--prerelease); fi
             if [[ "$GITHUB_REF_TYPE" == tag ]]; then
               flags+=(--verify-tag)
+            elif [[ "$DRAFT" == true ]]; then
+              if ! gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$TAG" > /dev/null 2>&1; then
+                gh api "repos/$GITHUB_REPOSITORY/git/refs" \
+                  -f ref="refs/tags/$TAG" -f sha="$GITHUB_SHA" > /dev/null
+              fi
+              flags+=(--draft --verify-tag)
             else
               flags+=(--target "$GITHUB_SHA")
             fi

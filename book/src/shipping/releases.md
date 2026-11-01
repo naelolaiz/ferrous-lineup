@@ -17,7 +17,7 @@ packs seven downloads:
 | `ferrous-lineup-…-macos-arm64.dmg` | Macs with Apple Silicon (M1 and later) |
 | `ferrous-lineup-…-macos-x86_64.dmg` | Macs with an Intel processor |
 
-The `…` is the version for a release (`v0.4.1`), or the first seven
+The `…` is the version for a release (`v0.5.0`), or the first seven
 characters of the commit for any other build (`1a2b3c4`), so a download
 always says what it is. How to open each one on its system is in the
 manual's [Installing
@@ -70,7 +70,10 @@ git push origin v0.5.0
 Or, on GitHub, open **Actions > Release > Run workflow**, keep the
 branch on `main`, write `v0.5.0` in the **tag** field and run it. This
 needs only the right to run workflows, not to push to the repository,
-and the workflow makes the tag itself, on the commit it built.
+and the workflow makes the tag itself, on the commit it built. Tick
+**draft** too, and the release is made as a **draft**: the tag and every
+download are there, but only people who can edit the repository see it,
+until one of them checks it and clicks **Publish release**.
 
 Either way, when all the build jobs have passed, the release appears,
 called "Ferrous Lineup v0.5.0". Its notes are the release-notes file, if
@@ -416,10 +419,19 @@ shows comes from the trigger at the top of the file:
 workflow_dispatch:
   inputs:
     tag:
-      description: "Publish a release with this tag (v0.4.1), made on the commit built. Empty: only build."
+      description: "Publish a release with this tag (v0.5.0), made on the commit built. Empty: only build."
       required: false
       default: ""
+    draft:
+      description: "With a tag: make the tag, but leave the release as a draft, to check and publish by hand."
+      type: boolean
+      required: false
+      default: false
 ```
+
+A `boolean` input shows as a tick box, and reaches the steps as the
+text `true` or `false`; in a run that isn't by hand, `inputs.draft` is
+empty.
 
 `needs: build` waits for every line of the matrix. If one build fails,
 there is no release at all, rather than a release missing Windows.
@@ -448,6 +460,25 @@ else
   commit. For a run by hand it adds `--target "$GITHUB_SHA"`, and GitHub
   makes the tag on exactly the commit the packages were built from, even
   if main has moved on since.
+- For a run by hand with **draft** ticked it adds `--draft`. A draft
+  has no tag of its own: GitHub makes the tag when the draft is
+  published. Published from the website, the tag would be made with that
+  person's login, and the push of a new `v` tag would start this
+  workflow again, building every package once more and replacing the
+  files that were checked. So the job makes the tag first, with the
+  run's own token, and only then the draft, with `--verify-tag`:
+
+  ```bash
+  if ! gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$TAG" > /dev/null 2>&1; then
+    gh api "repos/$GITHUB_REPOSITORY/git/refs" \
+      -f ref="refs/tags/$TAG" -f sha="$GITHUB_SHA" > /dev/null
+  fi
+  flags+=(--draft --verify-tag)
+  ```
+
+  `gh api` calls GitHub's REST API: the first call looks the tag up, the
+  second makes it (`-f` sends a field of the request). Publishing the
+  draft then finds the tag already there and starts nothing.
 - `--notes-file packaging/release-notes/<tag>.md` is added when that file
   exists; `gh` puts its text before the generated notes.
 - `--prerelease` is added when the tag has a dash.

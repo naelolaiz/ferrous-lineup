@@ -17,7 +17,7 @@ computadora y prepara siete descargas:
 | `ferrous-lineup-…-macos-arm64.dmg` | Mac con Apple Silicon (M1 y posteriores) |
 | `ferrous-lineup-…-macos-x86_64.dmg` | Mac con procesador Intel |
 
-Los `…` son la versión en una publicación (`v0.4.1`), o los siete
+Los `…` son la versión en una publicación (`v0.5.0`), o los siete
 primeros caracteres del commit en cualquier otra compilación
 (`1a2b3c4`), así una descarga siempre dice qué es. Cómo abrir cada una en
 su sistema está en [Instalarlo](https://naelolaiz.github.io/ferrous-lineup/es/manual/installing.html),
@@ -73,7 +73,10 @@ O, en GitHub, se abre **Actions > Release > Run workflow**, se deja la
 rama en `main`, se escribe `v0.5.0` en el campo **tag** y se ejecuta.
 Esto solo necesita el permiso de ejecutar flujos de trabajo, no el de
 hacer push al repositorio, y el flujo de trabajo crea la etiqueta él
-mismo, en el commit que compiló.
+mismo, en el commit que compiló. Si además se marca **draft**, la
+publicación se hace como **borrador**: la etiqueta y todas las descargas
+están, pero solo la ven quienes pueden editar el repositorio, hasta que
+uno de ellos la revisa y pulsa **Publish release**.
 
 De cualquiera de las dos maneras, cuando todos los trabajos de
 compilación pasaron, aparece la publicación, llamada «Ferrous Lineup
@@ -442,10 +445,19 @@ archivo:
 workflow_dispatch:
   inputs:
     tag:
-      description: "Publish a release with this tag (v0.4.1), made on the commit built. Empty: only build."
+      description: "Publish a release with this tag (v0.5.0), made on the commit built. Empty: only build."
       required: false
       default: ""
+    draft:
+      description: "With a tag: make the tag, but leave the release as a draft, to check and publish by hand."
+      type: boolean
+      required: false
+      default: false
 ```
+
+Una entrada `boolean` se muestra como una casilla, y llega a los pasos
+como el texto `true` o `false`; en una ejecución que no es a mano,
+`inputs.draft` está vacío.
 
 `needs: build` espera a cada línea de la matriz. Si una compilación
 falla, no hay publicación en absoluto, en lugar de una publicación sin
@@ -478,6 +490,27 @@ else
   agrega `--target "$GITHUB_SHA"`, y GitHub crea la etiqueta justo en el
   commit con que se compilaron los paquetes, aunque main haya avanzado
   desde entonces.
+- Para una ejecución a mano con **draft** marcado agrega `--draft`. Un
+  borrador no tiene etiqueta propia: GitHub crea la etiqueta cuando se
+  publica el borrador. Publicado desde el sitio web, la etiqueta se
+  crearía con la cuenta de esa persona, y el push de una etiqueta `v`
+  nueva pondría otra vez en marcha este flujo de trabajo, que compilaría
+  todos los paquetes de nuevo y reemplazaría los archivos ya revisados.
+  Por eso el trabajo crea primero la etiqueta, con el propio token de la
+  ejecución, y solo después el borrador, con `--verify-tag`:
+
+  ```bash
+  if ! gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$TAG" > /dev/null 2>&1; then
+    gh api "repos/$GITHUB_REPOSITORY/git/refs" \
+      -f ref="refs/tags/$TAG" -f sha="$GITHUB_SHA" > /dev/null
+  fi
+  flags+=(--draft --verify-tag)
+  ```
+
+  `gh api` llama a la API REST de GitHub: la primera llamada busca la
+  etiqueta, la segunda la crea (`-f` envía un campo de la petición).
+  Publicar el borrador encuentra entonces la etiqueta ya hecha y no pone
+  nada en marcha.
 - `--notes-file packaging/release-notes/<etiqueta>.md` se agrega cuando
   ese archivo existe; `gh` pone su texto antes de las notas generadas.
 - `--prerelease` se agrega cuando la etiqueta tiene un guion.

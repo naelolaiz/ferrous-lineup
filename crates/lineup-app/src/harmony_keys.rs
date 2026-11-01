@@ -593,6 +593,7 @@ impl HarmonyKeys {
             .filter(|&form| Degree::of(scale, form).is_some());
         let next = last.map(degree::smooth_links).unwrap_or_default();
         let mut pressed = None;
+        let width = keys_width(ui, forms);
         ui.add_space(4.0);
         ui.horizontal_wrapped(|ui| {
             ui.vertical(|ui| self.settings(ui, project, here, parts, &mut actions));
@@ -602,7 +603,7 @@ impl HarmonyKeys {
                 let lit =
                     self.down.as_ref().is_some_and(|d| d.key == index) || playing == Some(set);
                 let outlined = !lit && next.contains(&set);
-                let response = form_key(ui, form, scale, lit, outlined);
+                let response = form_key(ui, form, width, scale, lit, outlined);
                 let hover = describe_form(form, index, self.hints, scale, last);
                 let response = crate::theme::hint(response, hover);
                 if response.is_pointer_button_down_on() {
@@ -711,6 +712,7 @@ impl HarmonyKeys {
         let scale = here;
         let heard_set: PitchSet = heard.iter().map(|note| note.pitch_class()).collect();
         let mut pressed = None;
+        let width = keys_width(ui, groups);
         ui.add_space(4.0);
         ui.horizontal_wrapped(|ui| {
             ui.vertical(|ui| self.settings(ui, project, here, parts, &mut actions));
@@ -718,7 +720,7 @@ impl HarmonyKeys {
             for (index, group) in groups.iter().enumerate() {
                 let lit = self.down.as_ref().is_some_and(|d| d.key == index)
                     || (heard_set.len() >= 2 && group.pitch_set() == heard_set);
-                let response = group_key(ui, group, lit);
+                let response = group_key(ui, group, width, lit);
                 let response =
                     crate::theme::hint(response, describe_group(group, index, self.hints));
                 if response.is_pointer_button_down_on() {
@@ -1382,15 +1384,33 @@ fn chord_label(chord: Chord, bass: PitchClass, scale: Scale) -> String {
         .unwrap_or_else(|| scale.chord_name(chord))
 }
 
+/// How wide `text` is, written at `size`.
+fn text_width(ui: &Ui, text: &str, size: f32) -> f32 {
+    ui.painter()
+        .layout_no_wrap(text.to_string(), FontId::proportional(size), KEY_TEXT)
+        .size()
+        .x
+}
+
+/// The width of every key in a row of `keys`: the usual width, or wider
+/// when a key's notes need it, so that they are written whole at the
+/// usual size. Six notes in solfège, "Mib Mi Sol Lab Si Do", need
+/// almost twice the usual width; all keys of a row get the same, so the
+/// row stays even.
+fn keys_width(ui: &Ui, keys: &[GroupKey]) -> f32 {
+    keys.iter()
+        .map(|key| {
+            let names: Vec<String> = key.names.iter().map(ToString::to_string).collect();
+            text_width(ui, &names.join(" "), 12.0) + 8.0
+        })
+        .fold(KEY_SIZE.x, f32::max)
+}
+
 /// The font size, at most `size`, at which `text` fits in `width`: a
 /// long chord name such as Cm(maj7)/Eb is written smaller instead of
 /// running over the edges of its key.
 fn fitting_size(ui: &Ui, text: &str, size: f32, width: f32) -> f32 {
-    let wide = ui
-        .painter()
-        .layout_no_wrap(text.to_string(), FontId::proportional(size), KEY_TEXT)
-        .size()
-        .x;
+    let wide = text_width(ui, text, size);
     if wide <= width {
         size
     } else {
@@ -1398,13 +1418,12 @@ fn fitting_size(ui: &Ui, text: &str, size: f32, width: f32) -> f32 {
     }
 }
 
-/// A harmony key of a row or a set: its label (which notes of the row it
-/// plays, or for a set the set they make), the notes, and underneath
-/// what the label does not already say (see [`group_footer`]).
-fn group_key(ui: &mut Ui, group: &GroupKey, lit: bool) -> Response {
+/// A harmony key of a row or a set, `width` wide (see [`keys_width`]):
+/// its label (which notes of the row it plays, or for a set the set they
+/// make), the notes, and underneath what the label does not already say
+/// (see [`group_footer`]).
+fn group_key(ui: &mut Ui, group: &GroupKey, width: f32, lit: bool) -> Response {
     let names: Vec<String> = group.names.iter().map(ToString::to_string).collect();
-    // Hexachords need a wider key for their six names.
-    let width = (names.len() as f32 * 15.0 + 12.0).max(KEY_SIZE.x);
     let (rect, response) = ui.allocate_exact_size(vec2(width, KEY_SIZE.y), Sense::click());
     ui.add_space(KEY_GAP - ui.spacing().item_spacing.x);
     if !ui.is_rect_visible(rect) {
@@ -1431,29 +1450,39 @@ fn group_key(ui: &mut Ui, group: &GroupKey, lit: bool) -> Response {
         FontId::proportional(fitting_size(ui, &group.label, 17.0, width - 8.0)),
         KEY_TEXT,
     );
+    let names = names.join(" ");
     painter.text(
         rect.center() + vec2(0.0, 9.0),
         Align2::CENTER_CENTER,
-        names.join(" "),
-        FontId::proportional(12.0),
+        &names,
+        FontId::proportional(fitting_size(ui, &names, 12.0, width - 6.0)),
         KEY_TEXT,
     );
+    let footer = group_footer(group);
     painter.text(
         rect.center_bottom() - vec2(0.0, 9.0),
         Align2::CENTER_CENTER,
-        group_footer(group),
-        FontId::proportional(10.0),
+        &footer,
+        FontId::proportional(fitting_size(ui, &footer, 10.0, width - 6.0)),
         KEY_TEXT_DIM,
     );
     response
 }
 
-/// A key of a micromode's form: its degree, its notes, and the
-/// micromode's own name for the form (or the triad it is) at the bottom.
-/// The more notes it keeps from home the brighter it is, so home and the
-/// forms next to it stand out; `outlined` marks a smooth way on.
-fn form_key(ui: &mut Ui, form: &GroupKey, scale: Scale, lit: bool, outlined: bool) -> Response {
-    let (rect, response) = ui.allocate_exact_size(KEY_SIZE, Sense::click());
+/// A key of a form of the set or micromode the key is, `width` wide (see
+/// [`keys_width`]): its degree, its notes, and at the bottom what it is
+/// (see [`form_footer`]). The more notes it keeps from home the brighter
+/// it is, so home and the forms next to it stand out; `outlined` marks a
+/// smooth way on.
+fn form_key(
+    ui: &mut Ui,
+    form: &GroupKey,
+    width: f32,
+    scale: Scale,
+    lit: bool,
+    outlined: bool,
+) -> Response {
+    let (rect, response) = ui.allocate_exact_size(vec2(width, KEY_SIZE.y), Sense::click());
     ui.add_space(KEY_GAP - ui.spacing().item_spacing.x);
     if !ui.is_rect_visible(rect) {
         return response;
@@ -1506,20 +1535,30 @@ fn form_key(ui: &mut Ui, form: &GroupKey, scale: Scale, lit: bool, outlined: boo
 }
 
 /// What a form's key says under its notes: for a chord micromode, the
-/// triad it is ("Ab"); otherwise the form's own name, as the chord sheet
-/// writes it, named as the key `scale` is ("Menor 3 T4", or "3-3 T4" in
-/// a key of three notes named as a set; "6-1 T2"), never the chord or
-/// scale of tonal music it may sound like.
+/// triad it is ("Ab"); otherwise what every form of the key is, the
+/// micromode or the set class, named as the key `scale` is ("Menor 3",
+/// "3-3" in a key of three notes named as a set, "6-20"), never the
+/// chord or scale of tonal music it may sound like.
+///
+/// Not the form's own name as the chord sheet writes it, "6-20 T3": that
+/// counts moves from the class's prime form on C, while the key's label
+/// counts them from the key's own form, so in a key that is not the
+/// prime form on C, the key T0 would say "6-20 T3" under it. The tooltip
+/// gives the sheet's name.
 fn form_footer(form: &GroupKey, scale: Scale) -> String {
-    match &form.chord {
-        Some(chord) => chord.clone(),
-        None => HarmonyName::form_in(form.pitch_set(), scale).to_string(),
+    if let Some(chord) = &form.chord {
+        return chord.clone();
+    }
+    match scale.micromode() {
+        Some(micromode) => micromode.name.to_string(),
+        None => form.pitch_set().set_class().name(),
     }
 }
 
-/// The tooltip of a micromode's key: "T2: E F G# · Menor 3 T4. Keeps 1
-/// note of home." and, from the last form played, how it would go on to
-/// this one: "From T0: keeps C# and E; C goes to D."
+/// The tooltip of a micromode's key: "T2: E F G# · Menor 3, keeps 1 note
+/// of home." and, from the last form played, how it would go on to this
+/// one: "From T0: keeps C# and E; C goes to D." In detail, also how the
+/// chord sheet writes the form: "On the chord sheet: Menor 3 T4."
 fn describe_form(
     form: &GroupKey,
     index: usize,
@@ -1558,14 +1597,18 @@ fn describe_form(
         }
         text += &format!(" {}", trf("From {}: {}.", &[&from, &link]));
     }
-    if level == HintLevel::Detailed && index < 7 {
-        text += &format!(
-            " {}",
-            trf(
-                "Hold to play; key {} on the computer keyboard too.",
-                &[&(index + 1)]
-            )
-        );
+    if level == HintLevel::Detailed {
+        let written = HarmonyName::form_in(set, scale).to_string();
+        text += &format!(" {}", trf("On the chord sheet: {}.", &[&written]));
+        if index < 7 {
+            text += &format!(
+                " {}",
+                trf(
+                    "Hold to play; key {} on the computer keyboard too.",
+                    &[&(index + 1)]
+                )
+            );
+        }
     }
     text
 }
