@@ -18,9 +18,15 @@ depends=(
   'wayland'
   'xdg-desktop-portal'
 )
-makedepends=('git' 'rust')
+makedepends=('git' 'git-lfs' 'rust')
 source=("git+$url.git")
 sha256sums=('SKIP')
+
+prepare() {
+  cd ferrous-lineup
+  git lfs install --local
+  git lfs pull
+}
 
 pkgver() {
   cd ferrous-lineup

@@ -32,6 +32,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v5
+        with:
+          lfs: true
 
       # macOS and Windows come with their audio and window libraries.
       # Linux needs the development files for ALSA, xkbcommon and Wayland.

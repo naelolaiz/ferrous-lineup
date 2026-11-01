@@ -35,6 +35,15 @@ makepkg --printsrcinfo > .SRCINFO
 
 and goes to the `ferrous-lineup-git` AUR repository.
 
+The development package needs `git-lfs` and downloads the LFS images
+and bundled fonts in `prepare()` before building.
+
+The existing 0.5.0 tag and its archive checksum are unchanged. Before
+updating the stable package to a release that uses LFS, enable
+**Include Git LFS objects in archives** in the GitHub repository's
+Settings > General > Archives, and verify that the downloaded archive
+contains the actual fonts and icons before running `updpkgsums`.
+
 ## Building locally
 
 ```sh

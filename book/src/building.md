@@ -72,13 +72,21 @@ in PowerShell or the Command Prompt.
 ## 3. Get the code and run it
 
 Clone the repository (Git comes with the build tools on macOS and Linux;
-on Windows, install it from <https://git-scm.com>) and build:
+on Windows, install it from <https://git-scm.com>). Install
+[Git LFS](https://git-lfs.com/) too: it downloads the images and bundled
+fonts, which the app and books need. Then build:
 
 ```sh
+git lfs install
 git clone https://github.com/naelolaiz/ferrous-lineup
 cd ferrous-lineup
+git lfs pull
 cargo run --release
 ```
+
+For an existing clone, install Git LFS and run `git lfs pull` before
+building. Use a clone rather than a source archive, which can contain
+only LFS pointers instead of the assets.
 
 The first build takes a few minutes, because Cargo compiles every
 dependency; later builds compile only what changed. `--release` turns on

@@ -104,6 +104,25 @@ tools:
 - **Windows**: the Visual Studio Build Tools, which `rustup-init.exe`
   offers to install
 
+Install [Git LFS](https://git-lfs.com/) before cloning the repository:
+
+```sh
+git lfs install
+git clone https://github.com/naelolaiz/ferrous-lineup
+cd ferrous-lineup
+git lfs pull
+```
+
+Images and bundled fonts are stored in LFS; the SVG icon stays in Git.
+For an existing clone, install Git LFS and run `git lfs pull` before
+building the app or books. PNG screenshots use at most 256 colors;
+keep native icons and fonts in their original formats. If a new image
+loses important detail with 256 colors, keep its full-color version in
+LFS instead.
+
+Use a Git clone to build current source: a source archive can contain
+LFS pointers unless LFS objects are included in the archive.
+
 ```sh
 cargo run --release
 ```

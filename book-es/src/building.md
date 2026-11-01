@@ -74,14 +74,21 @@ comandos de abajo en PowerShell o en el Símbolo del sistema.
 ## 3. Conseguir el código y ejecutarlo
 
 Clona el repositorio (Git viene con las herramientas de compilación en
-macOS y Linux; en Windows, instálalo desde <https://git-scm.com>) y
-compila:
+macOS y Linux; en Windows, instálalo desde <https://git-scm.com>).
+Instala también [Git LFS](https://git-lfs.com/): descarga las imágenes
+y las fuentes que necesitan el programa y los libros. Luego compila:
 
 ```sh
+git lfs install
 git clone https://github.com/naelolaiz/ferrous-lineup
 cd ferrous-lineup
+git lfs pull
 cargo run --release
 ```
+
+Si ya tienes un clon, instala Git LFS y ejecuta `git lfs pull` antes
+de compilar. Usa un clon en vez de un archivo del código fuente, que
+puede contener solo punteros de LFS en lugar de los archivos.
 
 La primera compilación tarda unos minutos, porque Cargo compila cada
 dependencia; las siguientes compilan solo lo que cambió. `--release`

@@ -32,6 +32,13 @@ flatpak run io.github.naelolaiz.FerrousLineup
 
 ## Updating
 
+The manifest still pins the unchanged 0.5.0 release, whose assets are
+ordinary Git files. Before moving it to a release that uses Git LFS,
+provide the bundled fonts and raw window icon as checksum-pinned file
+sources at their existing paths, or use an archive verified to include
+the LFS objects. Flatpak Builder's Git source does not fetch LFS files;
+do not rely on a network download during the offline build.
+
 After a dependency change:
 
 ```sh
