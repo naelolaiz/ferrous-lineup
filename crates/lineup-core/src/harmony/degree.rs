@@ -203,6 +203,31 @@ pub fn smooth_links(form: PitchSet) -> Vec<PitchSet> {
     links
 }
 
+/// The forms of `form`'s set that keep the most of its notes, and how
+/// many they keep: the smoothest ways on there are. Where some form keeps
+/// all but one note, these are the [`smooth_links`]; a set as symmetric
+/// as 6-20 has none, and its nearest forms keep three of its six notes.
+/// No form at all where no other form shares a note with `form`, as for
+/// the augmented triad or the whole-tone scale: then the count is 0.
+pub fn nearest_links(form: PitchSet) -> (Vec<PitchSet>, usize) {
+    let others: Vec<(PitchSet, usize)> = all_forms(form)
+        .into_iter()
+        .filter(|&other| other != form)
+        .map(|other| (other, kept(form, other)))
+        .collect();
+    let most = others.iter().map(|&(_, kept)| kept).max().unwrap_or(0);
+    if most == 0 {
+        return (Vec::new(), 0);
+    }
+    let mut links: Vec<PitchSet> = others
+        .into_iter()
+        .filter(|&(_, kept)| kept == most)
+        .map(|(other, _)| other)
+        .collect();
+    links.sort_by_key(|set| set.bits());
+    (links, most)
+}
+
 /// The three moves between major and minor triads that keep two notes,
 /// as neo-Riemannian theory names them.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -415,6 +440,58 @@ mod tests {
             assert!(links.contains(&form), "{form:?}");
         }
         assert_eq!(links.len(), 3);
+    }
+
+    #[test]
+    fn the_nearest_forms_keep_the_most_notes_of_any_set() {
+        // 6-20, the first half of Webern's row: only four forms, and the
+        // nearest keep three of the six notes, never five.
+        let hexachord = set(&[3, 4, 7, 8, 11, 0]);
+        assert_eq!(all_forms(hexachord).len(), 4);
+        assert!(smooth_links(hexachord).is_empty());
+        let (links, keeps) = nearest_links(hexachord);
+        assert_eq!(keeps, 3);
+        assert_eq!(links, {
+            let mut both = vec![set(&[0, 1, 4, 5, 8, 9]), set(&[2, 3, 6, 7, 10, 11])];
+            both.sort_by_key(|s| s.bits());
+            both
+        });
+        // The augmented triad, the diminished seventh and the whole-tone
+        // scale share no note with their other forms.
+        for apart in [
+            set(&[0, 4, 8]),
+            set(&[0, 3, 6, 9]),
+            set(&[0, 2, 4, 6, 8, 10]),
+        ] {
+            assert_eq!(nearest_links(apart), (Vec::new(), 0), "{apart:?}");
+        }
+        // Every set class: where some form keeps all but one note, those
+        // are the nearest; otherwise the nearest keep fewer, and no form
+        // keeps more than they do.
+        for class in crate::harmony::SetClass::all() {
+            let form = class.prime;
+            if !(2..12).contains(&form.len()) {
+                continue;
+            }
+            let (links, keeps) = nearest_links(form);
+            let smooth = smooth_links(form);
+            if smooth.is_empty() {
+                assert!(keeps + 1 < form.len(), "{}", class.name());
+            } else {
+                assert_eq!(
+                    (&links, keeps),
+                    (&smooth, form.len() - 1),
+                    "{}",
+                    class.name()
+                );
+            }
+            assert_eq!(links.is_empty(), keeps == 0, "{}", class.name());
+            for other in all_forms(form).into_iter().filter(|&f| f != form) {
+                let shared = kept(form, other);
+                assert!(shared <= keeps, "{}", class.name());
+                assert_eq!(links.contains(&other), keeps > 0 && shared == keeps);
+            }
+        }
     }
 
     #[test]

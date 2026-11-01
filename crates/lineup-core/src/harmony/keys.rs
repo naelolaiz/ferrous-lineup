@@ -470,6 +470,15 @@ pub fn group_keys(scale: Scale, size: ChordSize) -> Option<Vec<GroupKey>> {
 /// leave fewer than four keys: the augmented triad's four forms share
 /// no notes at all, so all four are its keys.
 pub fn form_keys(scale: Scale, all: bool) -> Option<Vec<GroupKey>> {
+    form_keys_with(scale, all, &[])
+}
+
+/// [`form_keys`], with the forms in `also` among them even when they are
+/// far from home: the forms outlined after one was played, which may
+/// keep few notes of home, so the outline is never on a key that is not
+/// there. Being far, they come after the near ones, in their place in
+/// the order of nearness.
+pub fn form_keys_with(scale: Scale, all: bool, also: &[PitchSet]) -> Option<Vec<GroupKey>> {
     let ScaleKind::Set(_) = scale.kind else {
         return None;
     };
@@ -487,8 +496,9 @@ pub fn form_keys(scale: Scale, all: bool) -> Option<Vec<GroupKey>> {
     Some(
         forms
             .into_iter()
-            .take(shown)
-            .map(|(form, degree)| GroupKey::form(scale, form, degree))
+            .enumerate()
+            .filter(|(index, (form, _))| *index < shown || also.contains(form))
+            .map(|(_, (form, degree))| GroupKey::form(scale, form, degree))
             .collect(),
     )
 }

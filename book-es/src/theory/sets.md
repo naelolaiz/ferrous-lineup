@@ -650,6 +650,38 @@ muestran la tríada que es cada forma, deletreada desde su fundamental
 grados](micromodes.md#un-micromodo-como-tonalidad-grados)); las mismas
 tres notas nombradas como conjunto, 3-11, no.
 
+### El borde de las formas
+
+Después de que suena una forma, aparecen con borde las formas que más
+notas conservan de ella: los enlaces más suaves. `degree::nearest_links`
+las encuentra y dice cuántas notas conservan. Para la mayoría de los
+conjuntos son todas las notas de la forma menos una, las formas que da
+`degree::smooth_links`. Pero cuanto más simétrico es un conjunto, menos
+formas tiene, y algunos no tienen ninguna a una nota de distancia.
+6-20, el conjunto hexatónico, tiene cuatro formas, y cada una conserva
+tres notas de otras dos y ninguna de la tercera: después de T0 (Mi♭ Mi
+Sol La♭ Si Do), T1 (Do Do♯ Mi Fa La♭ La) y T3 (Re Mi♭ Fa♯ Sol Si♭ Si)
+conservan tres cada una. La tríada aumentada, la séptima disminuida y
+la escala de tonos enteros van más lejos: sus formas no comparten
+ninguna nota, así que ninguna tiene borde. De las 220 clases de
+conjuntos de dos a diez notas, 69 no tienen ninguna forma a una nota de
+distancia.
+
+`forms_hint` escribe la línea debajo de las teclas a partir de esa
+cuenta, así que nunca habla de un borde que no está en pantalla: «Con
+borde: conservan todas las notas de T4 menos una», «Con borde:
+conservan 3 notas de T0; ninguna forma conserva más» o «Ninguna otra
+forma comparte una nota con T0». Una forma con borde después de otra
+puede estar lejos de casa y quedar fuera con **Cercanas**:
+`HarmonyKeys::show_far_forms` guarda la última forma y sus formas con
+borde, y `keys::form_keys_with` las muestra después de las cercanas, en
+su orden de cercanía. Las teclas cercanas no cambian de lugar, y las
+lejanas solo cambian cuando no se mantiene ninguna tecla lejana, así
+que ninguna tecla se mueve bajo el puntero. Una prueba toma cada forma
+de cada clase de conjuntos como la última tocada, con Cercanas y con Todas las formas, y
+comprueba que cada forma con borde tiene su tecla y que la línea dice
+cuántas notas conservan las formas con borde.
+
 ### Progresiones de formas
 
 En una tonalidad que es un conjunto, el botón **Progresión** de la hoja

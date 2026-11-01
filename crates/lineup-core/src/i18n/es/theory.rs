@@ -2334,14 +2334,6 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Todas las formas del micromodo, transportadas y dadas vuelta",
     ),
     (
-        "The micromode's forms, nearest home first. Outlined: they keep two notes of {}.",
-        "Las formas del micromodo, primero las más cercanas a la de la tonalidad. Con borde: conservan dos notas de {}.",
-    ),
-    (
-        "The micromode's forms, nearest home first. Hold a key or press {}.",
-        "Las formas del micromodo, primero las más cercanas a la de la tonalidad. Mantén una tecla o pulsa {}.",
-    ),
-    (
         " The outlined forms keep two notes of {} and move one: the smoothest ways on.",
         " Las formas con borde conservan dos notas de {} y mueven una: los enlaces más suaves.",
     ),
@@ -2427,12 +2419,37 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Todas las formas del conjunto, transportadas y dadas vuelta",
     ),
     (
-        "The set's forms, nearest home first. Outlined: they keep all but one note of {}.",
-        "Las formas del conjunto, primero las más cercanas a la de la tonalidad. Con borde: conservan todas las notas de {} menos una.",
+        "The micromode's forms, nearest home first.",
+        "Las formas del micromodo, primero las más cercanas a la de la tonalidad.",
     ),
     (
-        "The set's forms, nearest home first. Hold a key or press {}.",
-        "Las formas del conjunto, primero las más cercanas a la de la tonalidad. Mantén una tecla o pulsa {}.",
+        "The set's forms, nearest home first.",
+        "Las formas del conjunto, primero las más cercanas a la de la tonalidad.",
+    ),
+    ("Hold a key or press {}.", "Mantén una tecla o pulsa {}."),
+    (
+        "No other form shares a note with {}.",
+        "Ninguna otra forma comparte una nota con {}.",
+    ),
+    (
+        "Outlined: they keep two notes of {}.",
+        "Con borde: conservan dos notas de {}.",
+    ),
+    (
+        "Outlined: they keep all but one note of {}.",
+        "Con borde: conservan todas las notas de {} menos una.",
+    ),
+    (
+        "Outlined: they keep {} notes of {}; no form keeps more.",
+        "Con borde: conservan {} notas de {}; ninguna forma conserva más.",
+    ),
+    (
+        " No other form shares a note with {}, so none is outlined.",
+        " Ninguna otra forma comparte una nota con {}, así que ninguna tiene borde.",
+    ),
+    (
+        " No form keeps all but one note of {}: the outlined forms keep {} of its notes, and no form keeps more, so they are the smoothest ways on.",
+        " Ninguna forma conserva todas las notas de {} menos una: las formas con borde conservan {} de sus notas, y ninguna conserva más, así que son los enlaces más suaves.",
     ),
     (
         " The outlined forms keep all but one note of {}: the smoothest ways on.",
