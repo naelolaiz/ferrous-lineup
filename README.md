@@ -136,16 +136,25 @@ On macOS the program is inside the app bundle:
 
 ## Validating migrated releases
 
-The **Validate release tags** workflow is run by hand from **main**.
-Choose one release tag or **all** to test and build all seven migrated
+The rewritten history is staged on `migration/lfs-history`, with
+temporary `migration/v*` tags. Published `main` and `v*` tags stay
+unchanged until staging validation succeeds. Pushing the staging branch
+runs **Validate release tags** automatically against all temporary tags;
+this works before the new workflow exists on the default branch.
+
+Once registered on the default branch, the workflow can also be run by
+hand from **main** or **migration/lfs-history**. Choose the **migration**
+or **official** namespace and one release tag or **all** to test all migrated
 releases on Linux, macOS and Windows. It checks out each tag with LFS
-enabled, using the workflow from main rather than the older workflow
+enabled, using the staging/main workflow rather than the older workflow
 stored in that tag. Its binaries are run artifacts only: it never
 changes published release assets or notes.
 
-Upload the LFS objects before publishing rewritten Git refs. Update
+Upload the LFS objects and temporary tags before publishing the staging
+branch. After validation, update
 all rewritten branches and release tags in one atomic, lease-protected push,
-then dispatch this workflow from main. Do not rely on tag-push triggers
+then dispatch this workflow from main with the **official** namespace.
+Do not rely on tag-push triggers
 for the rebuilds: GitHub does not create those events when more than
 three tags are pushed together. Rerunning an old workflow run also uses
 its old commit, not the rewritten tag.

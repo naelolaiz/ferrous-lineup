@@ -1,8 +1,18 @@
 name: Validate release tags
 
 on:
+  push:
+    branches: [migration/lfs-history]
   workflow_dispatch:
     inputs:
+      namespace:
+        description: "Temporary migration tags or official release tags"
+        type: choice
+        required: true
+        default: migration
+        options:
+          - migration
+          - official
       tag:
         description: "Release to validate, or all seven migrated releases"
         type: choice
@@ -27,15 +37,25 @@ env:
 jobs:
   select:
     name: Select release tags
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/migration/lfs-history'
     runs-on: ubuntu-latest
     outputs:
       tags: ${{ steps.tags.outputs.tags }}
+      prefix: ${{ steps.tags.outputs.prefix }}
     steps:
       - id: tags
         env:
-          TAG: ${{ inputs.tag }}
+          TAG: ${{ inputs.tag || 'all' }}
+          NAMESPACE: ${{ inputs.namespace || 'migration' }}
         run: |
+          case "$NAMESPACE" in
+            migration) prefix='migration/' ;;
+            official) prefix='' ;;
+            *)
+              echo "::error::Unsupported tag namespace: $NAMESPACE"
+              exit 1
+              ;;
+          esac
           case "$TAG" in
             all)
               tags='["v0.1.1","v0.1.2","v0.2.0","v0.3.0","v0.4.0","v0.4.1","v0.5.0"]'
@@ -49,6 +69,7 @@ jobs:
               ;;
           esac
           echo "tags=$tags" >> "$GITHUB_OUTPUT"
+          echo "prefix=$prefix" >> "$GITHUB_OUTPUT"
 
   build:
     name: Validate ${{ matrix.tag }} (${{ matrix.platform.name }})
@@ -69,10 +90,10 @@ jobs:
             binary: target/release/ferrous-lineup.exe
     runs-on: ${{ matrix.platform.os }}
     steps:
-      # Use the workflow from main, not a historical tag's pre-LFS workflow.
+      # Use the staging/main workflow, not a historical pre-LFS workflow.
       - uses: actions/checkout@v5
         with:
-          ref: refs/tags/${{ matrix.tag }}
+          ref: refs/tags/${{ needs.select.outputs.prefix }}${{ matrix.tag }}
           lfs: true
 
       - name: Verify LFS assets
