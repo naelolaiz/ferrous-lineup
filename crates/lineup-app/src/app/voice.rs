@@ -6,13 +6,14 @@
 //! records, the transport shows how loud the voice is and the note it
 //! hears, with how far off it is.
 //!
-//! When the take stops, a thread of its own hears its notes, their pitch,
-//! start, end and loudness (see `lineup_listen::voice`), and the "Your
-//! take" window asks where they go: into the channel that plays the tune
-//! (the Lead), another channel, a new one, or nowhere. The recording
-//! itself is kept on a track of the playlist, where it plays with the song
-//! as a reference. Writing it in is one step of undo (see
-//! `lineup_core::take`).
+//! When the take stops, a thread of its own hears the melody, bass line,
+//! drums and chords (see `lineup_listen`), and the "Your take" window
+//! asks which to write in. Melody notes can go into the channel that
+//! plays the tune (the Lead), another channel, a new one, or nowhere;
+//! bass notes go to a Bass channel, and drums and chords to their own
+//! places. The recording itself is kept on a track of the playlist,
+//! where it plays with the song as a reference. Writing it in is one step
+//! of undo (see `lineup_core::take`).
 //!
 //! A recording made before, in an audio file, becomes a take the same
 //! way, laid on the playlist (see [`Take::laid`]): dropped on the
@@ -32,7 +33,8 @@ use lineup_audio::PlayMode;
 use lineup_audio::input::{Microphone, Recorder, Recording};
 use lineup_core::general_midi::FLUTE;
 use lineup_core::take::{
-    Along, Keep, Pitches, SungNote, Take, Target, Transcription, transcribe_with, tune_channel,
+    Along, BassNote, DrumHit, HeardChord, Keep, Pitches, SungNote, Take, Target, Transcription,
+    transcribe_bass, transcribe_chords, transcribe_drums, transcribe_with, tune_channel,
 };
 use lineup_core::{MAX_TRACKS, Meter, Project};
 use lineup_listen::voice;
@@ -45,6 +47,10 @@ use crate::{icons, theme};
 /// negative), in milliseconds, for a sound card whose delays are not what
 /// it says.
 const NUDGE: &str = "take timing";
+const MELODY: &str = "take melody";
+const DRUMS: &str = "take drums";
+const BASS: &str = "take bass";
+const CHORDS: &str = "take chords";
 
 /// The furthest a take can be moved, in milliseconds.
 const MOST_NUDGE: f64 = 500.0;
@@ -109,6 +115,9 @@ struct Heard {
     along: Along,
     notes: Vec<SungNote>,
     tuning: f32,
+    drums: Vec<DrumHit>,
+    bass: Vec<BassNote>,
+    chords: Vec<HeardChord>,
     /// The name of a recording added from a file: the file's, without
     /// its extension. `None` for a take recorded here.
     name: Option<String>,
@@ -116,7 +125,16 @@ struct Heard {
 
 /// What reading an audio file gives: its sound, the notes heard in it
 /// and how sharp they were sung, or why it could not be read.
-type Loaded = Result<(lineup_listen::Recording, Vec<SungNote>, f32), String>;
+type Loaded = Result<(lineup_listen::Recording, Analysis), String>;
+
+/// All the layers heard in one recording, ready to choose in the review.
+struct Analysis {
+    notes: Vec<SungNote>,
+    tuning: f32,
+    drums: Vec<DrumHit>,
+    bass: Vec<BassNote>,
+    chords: Vec<HeardChord>,
+}
 
 /// A recording added from a file, being read and heard, to lay on the
 /// playlist from step `step` on.
@@ -154,6 +172,10 @@ struct Review {
     destination: Destination,
     grid: usize,
     pitches: Pitches,
+    melody: bool,
+    drums: bool,
+    bass: bool,
+    chords: bool,
     keep: bool,
     track: usize,
     transcription: Transcription,
@@ -163,7 +185,7 @@ struct Review {
 }
 
 impl Review {
-    fn new(project: &Project, heard: Heard, track: Option<usize>) -> Self {
+    fn new(project: &Project, heard: Heard, track: Option<usize>, ctx: &egui::Context) -> Self {
         let take = Take {
             sample_rate: heard.recording.sample_rate,
             frames: heard.recording.samples.len(),
@@ -172,8 +194,27 @@ impl Review {
         };
         let grid = 1;
         let pitches = Pitches::AsSung;
-        let transcription =
+        let melody = preferences::get(ctx, MELODY).unwrap_or(true);
+        let drums = preferences::get(ctx, DRUMS).unwrap_or(false);
+        let bass = preferences::get(ctx, BASS).unwrap_or(false);
+        let chords = preferences::get(ctx, CHORDS).unwrap_or(false);
+        let mut transcription =
             transcribe_with(project, &take, &heard.notes, grid, heard.tuning, pitches);
+        transcription.drums = transcribe_drums(&take, &heard.drums, grid);
+        transcription.bass = transcribe_bass(&take, &heard.bass, grid);
+        transcription.chords = transcribe_chords(project, &take, &heard.chords);
+        if !melody {
+            transcription.notes.clear();
+        }
+        if !drums {
+            transcription.drums.clear();
+        }
+        if !bass {
+            transcription.bass.clear();
+        }
+        if !chords {
+            transcription.chords = None;
+        }
         let destination = tune_channel(project).map_or(Destination::New, Destination::Channel);
         let tracks = project.playlist().tracks().len();
         let track = track
@@ -185,6 +226,10 @@ impl Review {
             destination,
             grid,
             pitches,
+            melody,
+            drums,
+            bass,
+            chords,
             keep: true,
             track,
             transcription,
@@ -195,8 +240,8 @@ impl Review {
     /// The review of a take's recording already in the song, `again`:
     /// nothing to keep, and the notes go where they went before, the
     /// channel whose notes are on the take's notes track if it has one.
-    fn again(project: &Project, heard: Heard, again: Again) -> Self {
-        let mut review = Review::new(project, heard, Some(again.track));
+    fn again(project: &Project, heard: Heard, again: Again, ctx: &egui::Context) -> Self {
+        let mut review = Review::new(project, heard, Some(again.track), ctx);
         let notes = format!("{} notes", again.name);
         let below = again.track + 1;
         let written = project
@@ -238,14 +283,40 @@ impl Review {
 
     /// The notes of the take as the song is now.
     fn transcribe(&self, project: &Project) -> Transcription {
-        transcribe_with(
+        let mut transcription = transcribe_with(
             project,
             &self.take,
             &self.heard.notes,
             self.grid,
             self.heard.tuning,
             self.pitches,
-        )
+        );
+        if self.melody {
+            transcription.drums = transcribe_drums(&self.take, &self.heard.drums, self.grid);
+            transcription.bass = transcribe_bass(&self.take, &self.heard.bass, self.grid);
+            transcription.chords = transcribe_chords(project, &self.take, &self.heard.chords);
+        } else {
+            transcription.notes.clear();
+            if self.drums {
+                transcription.drums = transcribe_drums(&self.take, &self.heard.drums, self.grid);
+            }
+            if self.bass {
+                transcription.bass = transcribe_bass(&self.take, &self.heard.bass, self.grid);
+            }
+            if self.chords {
+                transcription.chords = transcribe_chords(project, &self.take, &self.heard.chords);
+            }
+        }
+        if !self.drums {
+            transcription.drums.clear();
+        }
+        if !self.bass {
+            transcription.bass.clear();
+        }
+        if !self.chords {
+            transcription.chords = None;
+        }
+        transcription
     }
 }
 
@@ -323,13 +394,28 @@ fn free_file(folder: &Path, name: &str) -> PathBuf {
 
 /// Hears the notes of a take: run on a thread of its own.
 fn hear(recording: Recording, along: Along) -> Heard {
-    let (notes, tuning) = notes_in(&recording.samples, recording.sample_rate);
+    let analysis = analyze(&recording.samples, recording.sample_rate);
     Heard {
         recording,
         along,
+        notes: analysis.notes,
+        tuning: analysis.tuning,
+        drums: analysis.drums,
+        bass: analysis.bass,
+        chords: analysis.chords,
+        name: None,
+    }
+}
+
+/// Hears all four layers of a recording on its worker thread.
+fn analyze(samples: &[f32], sample_rate: u32) -> Analysis {
+    let (notes, tuning) = notes_in(samples, sample_rate);
+    Analysis {
         notes,
         tuning,
-        name: None,
+        drums: lineup_listen::drums::hits(samples, sample_rate),
+        bass: lineup_listen::bass::notes(samples, sample_rate),
+        chords: lineup_listen::chords::heard(samples, sample_rate),
     }
 }
 
@@ -345,8 +431,8 @@ fn notes_in(samples: &[f32], sample_rate: u32) -> (Vec<SungNote>, f32) {
 /// of its own.
 fn load(path: &Path) -> Loaded {
     let recording = lineup_listen::decode_file(path).map_err(|err| err.to_string())?;
-    let (notes, tuning) = notes_in(&recording.samples, recording.sample_rate);
-    Ok((recording, notes, tuning))
+    let analysis = analyze(&recording.samples, recording.sample_rate);
+    Ok((recording, analysis))
 }
 
 /// The note `pitch` (a MIDI number with its fraction) as a name and how
@@ -638,7 +724,9 @@ impl LineupApp {
         if let Some(hearing) = self.voice.hearing.take() {
             self.notice = None;
             match hearing.join() {
-                Ok(heard) => self.voice.review = Some(Review::new(&self.project, heard, None)),
+                Ok(heard) => {
+                    self.voice.review = Some(Review::new(&self.project, heard, None, ctx));
+                }
                 Err(_) => self.message = Some(tr("Listening to the take failed.").to_string()),
             }
         }
@@ -659,7 +747,7 @@ impl LineupApp {
         };
         self.notice = None;
         match loading.worker.join() {
-            Ok(Ok((recording, notes, tuning))) => {
+            Ok(Ok((recording, analysis))) => {
                 let take = Take::laid(
                     &self.project,
                     loading.step,
@@ -674,13 +762,16 @@ impl LineupApp {
                         lost: 0,
                     },
                     along: take.along,
-                    notes,
-                    tuning,
+                    notes: analysis.notes,
+                    tuning: analysis.tuning,
+                    drums: analysis.drums,
+                    bass: analysis.bass,
+                    chords: analysis.chords,
                     name: Some(loading.name),
                 };
                 self.voice.review = Some(match loading.again {
-                    Some(again) => Review::again(&self.project, heard, again),
-                    None => Review::new(&self.project, heard, loading.track),
+                    Some(again) => Review::again(&self.project, heard, again, ctx),
+                    None => Review::new(&self.project, heard, loading.track, ctx),
                 });
             }
             Ok(Err(err)) => {
@@ -713,28 +804,54 @@ impl LineupApp {
                     .num_columns(2)
                     .spacing(vec2(12.0, 8.0))
                     .show(ui, |ui| {
+                        ui.label(tr("Extract"));
+                        ui.horizontal(|ui| {
+                            let mut changed = false;
+                            changed |= ui.checkbox(&mut review.melody, tr("Melody")).changed();
+                            changed |= ui.checkbox(&mut review.drums, tr("Drums")).changed();
+                            changed |= ui.checkbox(&mut review.bass, tr("Bass line")).changed();
+                            ui.add_enabled_ui(matches!(review.take.along, Along::Song(_)), |ui| {
+                                changed |=
+                                    ui.checkbox(&mut review.chords, tr("Chords")).changed();
+                            });
+                            if changed {
+                                preferences::set(ui.ctx(), MELODY, &review.melody);
+                                preferences::set(ui.ctx(), DRUMS, &review.drums);
+                                preferences::set(ui.ctx(), BASS, &review.bass);
+                                preferences::set(ui.ctx(), CHORDS, &review.chords);
+                                review.transcription = review.transcribe(project);
+                            }
+                        });
+                        ui.end_row();
+
                         ui.label(tr("Notes go to"));
-                        destination_combo(ui, project, &mut review.destination);
+                        ui.add_enabled_ui(review.melody, |ui| {
+                            destination_combo(ui, project, &mut review.destination);
+                        });
                         ui.end_row();
 
                         ui.label(tr("On the grid of"));
-                        ui.horizontal(|ui| {
-                            let mut grid = review.grid;
-                            for (steps, name) in GRIDS {
-                                ui.selectable_value(&mut grid, steps, tr(name));
-                            }
-                            review.snap(project, grid, review.pitches);
+                        ui.add_enabled_ui(review.melody, |ui| {
+                            ui.horizontal(|ui| {
+                                let mut grid = review.grid;
+                                for (steps, name) in GRIDS {
+                                    ui.selectable_value(&mut grid, steps, tr(name));
+                                }
+                                review.snap(project, grid, review.pitches);
+                            });
                         });
                         ui.end_row();
 
                         ui.label(tr("Pitches"));
-                        ui.horizontal(|ui| {
-                            let mut pitches = review.pitches;
-                            for (way, name, hover) in PITCHES {
-                                ui.selectable_value(&mut pitches, way, tr(name))
-                                    .on_hover_text(tr(hover));
-                            }
-                            review.snap(project, review.grid, pitches);
+                        ui.add_enabled_ui(review.melody, |ui| {
+                            ui.horizontal(|ui| {
+                                let mut pitches = review.pitches;
+                                for (way, name, hover) in PITCHES {
+                                    ui.selectable_value(&mut pitches, way, tr(name))
+                                        .on_hover_text(tr(hover));
+                                }
+                                review.snap(project, review.grid, pitches);
+                            });
                         });
                         ui.end_row();
 
@@ -774,7 +891,11 @@ impl LineupApp {
                 }
                 ui.add_space(4.0);
                 ui.horizontal(|ui| {
-                    let nothing = review.destination == Destination::Nowhere && !review.keep;
+                    let nothing = !review.keep
+                        && (!review.melody || review.destination == Destination::Nowhere)
+                        && !review.drums
+                        && !review.bass
+                        && !review.chords;
                     if ui
                         .add_enabled(!nothing, egui::Button::new(tr("Write it in")))
                         .clicked()
@@ -834,13 +955,13 @@ impl LineupApp {
                 recordings.push(path);
             }
         }
-        let target = match review.destination {
-            Destination::Channel(channel) => Target::Channel(channel),
-            Destination::New => Target::New {
+        let target = match (review.melody, review.destination) {
+            (true, Destination::Channel(channel)) => Target::Channel(channel),
+            (true, Destination::New) => Target::New {
                 name: "Sung notes".to_string(),
                 program: FLUTE,
             },
-            Destination::Nowhere => Target::Nowhere,
+            _ => Target::Nowhere,
         };
         let keep = Keep {
             notes: format!("{name} notes"),
@@ -869,6 +990,27 @@ impl LineupApp {
             }
             None => String::new(),
         };
+        if added.drum_hits > 0 {
+            if !said.is_empty() {
+                said.push(' ');
+            }
+            said.push_str(&trf("Wrote {} drum hits.", &[&added.drum_hits]));
+        }
+        if added.bass_notes > 0 {
+            if !said.is_empty() {
+                said.push(' ');
+            }
+            said.push_str(&trf("Wrote {} bass notes.", &[&added.bass_notes]));
+        }
+        if added.chords > 0 {
+            if !said.is_empty() {
+                said.push(' ');
+            }
+            said.push_str(&trf(
+                "Wrote {} chords on the chord sheet.",
+                &[&added.chords],
+            ));
+        }
         if !added.recordings.is_empty() {
             if !said.is_empty() {
                 said.push(' ');
@@ -1007,7 +1149,8 @@ fn review_summary(ui: &mut egui::Ui, project: &Project, review: &Review) {
                 (count, false) => trf("{} notes, from bar {} to bar {}.", &[&count, &first, &last]),
             }
         }
-        (_, Some(_)) => tr("No notes were heard: only the recording can be kept.").to_string(),
+        (_, Some(_)) if !review.melody => tr("Melody is not selected.").to_string(),
+        (_, Some(_)) => tr("No melody notes were heard.").to_string(),
         _ => tr("The take was not sung while the song played.").to_string(),
     };
     ui.label(text);
@@ -1023,6 +1166,28 @@ fn review_summary(ui: &mut egui::Ui, project: &Project, review: &Review) {
             ""
         };
         ui.label(RichText::new(format!("{}{more}", names.join(" "))).monospace());
+    }
+    if review.drums {
+        ui.label(trf("{} drum hits.", &[&transcription.drums.len()]));
+    }
+    if review.bass {
+        ui.label(trf("{} bass notes.", &[&transcription.bass.len()]));
+        if !transcription.bass.is_empty() {
+            let names: Vec<String> = transcription
+                .bass
+                .iter()
+                .take(NAMED_NOTES)
+                .map(|note| note.pitch.to_string())
+                .collect();
+            ui.label(RichText::new(names.join(" ")).monospace());
+        }
+    }
+    if review.chords {
+        let count = transcription
+            .chords
+            .as_ref()
+            .map_or(0, |chords| chords.markers.len());
+        ui.label(trf("{} chords.", &[&count]));
     }
     let cents = (transcription.tuning * 100.0).round() as i32;
     if cents.abs() >= 10 {
@@ -1137,10 +1302,18 @@ impl LineupApp {
             along: Along::Song(self.project.playback_arrangement()),
             notes,
             tuning: 0.0,
+            drums: Vec::new(),
+            bass: Vec::new(),
+            chords: Vec::new(),
             name: None,
         };
         self.voice.folder = Some(folder);
-        self.voice.review = Some(Review::new(&self.project, heard, None));
+        self.voice.review = Some(Review::new(
+            &self.project,
+            heard,
+            None,
+            &egui::Context::default(),
+        ));
     }
 }
 

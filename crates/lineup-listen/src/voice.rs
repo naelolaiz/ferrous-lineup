@@ -37,6 +37,8 @@ pub use lineup_core::take::SungNote;
 use realfft::num_complex::Complex;
 use realfft::{ComplexToReal, RealFftPlanner, RealToComplex};
 
+use crate::spectrum::decimated;
+
 /// The lowest pitch looked for: about B1, below a bass singer's range.
 const LOWEST_HZ: f32 = 60.0;
 
@@ -79,8 +81,30 @@ pub struct PitchFrame {
 
 /// The pitch of a take, frame by frame, [`HOP_SECONDS`] apart.
 pub fn pitch_track(samples: &[f32], sample_rate: u32) -> Vec<PitchFrame> {
-    let (signal, rate) = prepare(samples, sample_rate);
-    let mut yin = Yin::new(rate);
+    pitch_track_with(
+        samples,
+        sample_rate,
+        LOWEST_HZ,
+        HIGHEST_HZ,
+        WINDOW_SECONDS,
+        40.0,
+        None,
+    )
+}
+
+/// [`pitch_track`] with a pitch range, window, high-pass and optional
+/// low-pass filter chosen for another kind of source (the bass line).
+pub(crate) fn pitch_track_with(
+    samples: &[f32],
+    sample_rate: u32,
+    lowest_hz: f32,
+    highest_hz: f32,
+    window_seconds: f64,
+    high_pass_hz: f32,
+    low_pass_hz: Option<f32>,
+) -> Vec<PitchFrame> {
+    let (signal, rate) = prepare_with_filters(samples, sample_rate, high_pass_hz, low_pass_hz);
+    let mut yin = Yin::new(rate, lowest_hz, highest_hz, window_seconds);
     let hop = (f64::from(rate) * HOP_SECONDS).round() as usize;
     let mut frames = Vec::new();
     let mut candidates = Vec::new();
@@ -113,7 +137,7 @@ pub fn pitch_track(samples: &[f32], sample_rate: u32) -> Vec<PitchFrame> {
 /// `None` for silence or no clear pitch.
 pub fn pitch_now(samples: &[f32], sample_rate: u32) -> Option<f32> {
     let (signal, rate) = prepare(samples, sample_rate);
-    let mut yin = Yin::new(rate);
+    let mut yin = Yin::new(rate, LOWEST_HZ, HIGHEST_HZ, WINDOW_SECONDS);
     let frame = signal.get(signal.len().checked_sub(yin.span)?..)?;
     let analysed = yin.analyse(frame);
     if analysed.loudness < SILENCE_DB + 15.0 {
@@ -183,8 +207,24 @@ pub fn tuning(notes: &[SungNote]) -> f32 {
 /// microphone's hum and offset, and at a lower rate (see
 /// [`ANALYSIS_RATE`]).
 fn prepare(samples: &[f32], sample_rate: u32) -> (Vec<f32>, u32) {
+    prepare_with_filters(samples, sample_rate, 40.0, None)
+}
+
+/// `samples` at a lower rate, with source-specific frequency filtering.
+fn prepare_with_filters(
+    samples: &[f32],
+    sample_rate: u32,
+    high_pass_hz: f32,
+    low_pass_hz: Option<f32>,
+) -> (Vec<f32>, u32) {
+    if sample_rate == 0 {
+        return (Vec::new(), 0);
+    }
     let factor = (sample_rate / ANALYSIS_RATE).max(1) as usize;
-    let mut signal = high_passed(samples, sample_rate);
+    let mut signal = high_passed(samples, sample_rate, high_pass_hz);
+    if let Some(cutoff) = low_pass_hz {
+        signal = low_passed(&signal, sample_rate, cutoff);
+    }
     if factor > 1 {
         signal = decimated(&signal, factor);
     }
@@ -193,10 +233,10 @@ fn prepare(samples: &[f32], sample_rate: u32) -> (Vec<f32>, u32) {
 
 /// `samples` without what is below about 40 Hz: a microphone's offset
 /// from zero and the rumble of the room. A two-pole filter run forwards.
-fn high_passed(samples: &[f32], sample_rate: u32) -> Vec<f32> {
+fn high_passed(samples: &[f32], sample_rate: u32, cutoff_hz: f32) -> Vec<f32> {
     // A Butterworth high-pass "biquad", the classic recipe from Robert
     // Bristow-Johnson's audio EQ cookbook.
-    let w = std::f32::consts::TAU * 40.0 / sample_rate as f32;
+    let w = std::f32::consts::TAU * cutoff_hz / sample_rate as f32;
     let alpha = w.sin() / std::f32::consts::SQRT_2;
     let cos = w.cos();
     let a0 = 1.0 + alpha;
@@ -216,34 +256,25 @@ fn high_passed(samples: &[f32], sample_rate: u32) -> Vec<f32> {
         .collect()
 }
 
-/// Every `factor`-th sample of `samples`, after taking out what the lower
-/// rate could not hold (it would fold back as false pitches): a low-pass
-/// filter made of a windowed sinc.
-fn decimated(samples: &[f32], factor: usize) -> Vec<f32> {
-    let half = 8 * factor;
-    let cutoff = 0.9 / factor as f32; // of the old Nyquist frequency
-    let taps: Vec<f32> = (0..=2 * half)
-        .map(|i| {
-            let n = i as f32 - half as f32;
-            let sinc = if n == 0.0 {
-                cutoff
-            } else {
-                (std::f32::consts::PI * cutoff * n).sin() / (std::f32::consts::PI * n)
-            };
-            let hann = 0.5 - 0.5 * (std::f32::consts::TAU * i as f32 / (2 * half) as f32).cos();
-            sinc * hann
-        })
-        .collect();
-    (0..samples.len() / factor)
-        .map(|out| {
-            let centre = out * factor;
-            taps.iter()
-                .enumerate()
-                .map(|(i, tap)| {
-                    let at = (centre + i).checked_sub(half);
-                    at.and_then(|at| samples.get(at)).map_or(0.0, |s| s * tap)
-                })
-                .sum()
+/// `samples` without frequencies above `cutoff_hz`: a two-pole
+/// Butterworth low-pass biquad.
+fn low_passed(samples: &[f32], sample_rate: u32, cutoff_hz: f32) -> Vec<f32> {
+    let w = std::f32::consts::TAU * cutoff_hz / sample_rate as f32;
+    let alpha = w.sin() / std::f32::consts::SQRT_2;
+    let cos = w.cos();
+    let a0 = 1.0 + alpha;
+    let b0 = (1.0 - cos) / 2.0 / a0;
+    let b1 = (1.0 - cos) / a0;
+    let b2 = b0;
+    let a1 = -2.0 * cos / a0;
+    let a2 = (1.0 - alpha) / a0;
+    let (mut x1, mut x2, mut y1, mut y2) = (0.0, 0.0, 0.0, 0.0);
+    samples
+        .iter()
+        .map(|&x| {
+            let y = b0 * x + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2;
+            (x2, x1, y2, y1) = (x1, x, y1, y);
+            y
         })
         .collect()
 }
@@ -282,10 +313,10 @@ struct Yin {
 }
 
 impl Yin {
-    fn new(rate: u32) -> Self {
-        let window = (f64::from(rate) * WINDOW_SECONDS).round() as usize;
-        let longest = (rate as f32 / LOWEST_HZ).ceil() as usize;
-        let shortest = ((rate as f32 / HIGHEST_HZ).floor() as usize).max(2);
+    fn new(rate: u32, lowest_hz: f32, highest_hz: f32, window_seconds: f64) -> Self {
+        let window = (f64::from(rate) * window_seconds).round() as usize;
+        let longest = (rate as f32 / lowest_hz).ceil() as usize;
+        let shortest = ((rate as f32 / highest_hz).floor() as usize).max(2);
         let span = window + longest + 1;
         let mut planner = RealFftPlanner::<f32>::new();
         let size = span.next_power_of_two();

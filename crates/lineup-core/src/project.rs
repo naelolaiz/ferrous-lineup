@@ -2533,7 +2533,7 @@ fn heard_name(harmony: Harmony, key: Scale) -> Option<HarmonyName> {
 }
 
 /// `chord` over `bass` as a chord symbol spelled in `key`.
-fn spelled(chord: Chord, bass: PitchClass, key: Scale) -> ChordSymbol {
+pub(crate) fn spelled(chord: Chord, bass: PitchClass, key: Scale) -> ChordSymbol {
     let root = key.spell_root(chord);
     let symbol = ChordSymbol::new(root, chord.quality);
     if bass == chord.root {

@@ -361,6 +361,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("Bossa nova", "Bossa nova"),
     ("both notes at once", "las dos notas a la vez"),
     ("BPM", "BPM"),
+    ("Bass line", "Línea de bajo"),
     ("Built-in drum", "Percusión incorporada"),
     (
         "Cancelled: \"{}\" stays open as it is.",
@@ -450,6 +451,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ),
     ("Chords in {}", "Acordes en {}"),
     ("Chords of {}", "Acordes de {}"),
+    ("Chords", "Acordes"),
     (
         "Chords of {} notes of the set",
         "Acordes de {} notas del conjunto",
@@ -775,6 +777,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("Exported {}", "Se exportó {}"),
     ("Exporting {}", "Exportando {}"),
     ("Exporting {} failed", "Falló la exportación de {}"),
+    ("Extract", "Extraer"),
     ("extend pattern", "alargar patrón"),
     ("F instruments", "Instrumentos en Fa"),
     ("Famous and example rows", "Series famosas y de ejemplo"),
@@ -1255,6 +1258,14 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     (
         "No notes were heard: only the recording can be kept.",
         "No se oyeron notas: solo se puede conservar la grabación.",
+    ),
+    (
+        "No melody notes were heard.",
+        "No se oyeron notas de melodía.",
+    ),
+    (
+        "Melody is not selected.",
+        "La melodía no está seleccionada.",
     ),
     (
         "No other channel plays melodies or chords yet.",
@@ -2682,6 +2693,9 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Escribe cada nota tocada en un archivo de texto, para revisar la reproducción leyéndolo.",
     ),
     ("Writing to {}", "Escribiendo en {}"),
+    ("{} bass notes.", "{} notas de bajo."),
+    ("{} chords.", "{} acordes."),
+    ("{} drum hits.", "{} golpes de batería."),
     (
         "Wrote 1 chord on the chord sheet",
         "Se escribió 1 acorde en la hoja de acordes",
@@ -2691,6 +2705,15 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Wrote {} chords on the chord sheet",
         "Se escribieron {} acordes en la hoja de acordes",
     ),
+    (
+        "Wrote {} chords on the chord sheet.",
+        "Se escribieron {} acordes en la hoja de acordes.",
+    ),
+    (
+        "Wrote {} drum hits.",
+        "Se escribieron {} golpes de batería.",
+    ),
+    ("Wrote {} bass notes.", "Se escribieron {} notas de bajo."),
     ("Wrote {} from bar {}", "Se escribió {} desde el compás {}"),
     ("Wrote {} notes on {}.", "Se escribieron {} notas en {}."),
     (

@@ -51,6 +51,11 @@ mp3lame-encoder = "0.2"
 [profile.dev.package.rustysynth]
 opt-level = 3
 
+# Listening to a take does FFTs and factorizes its spectra; without
+# optimization the debug build takes much longer to hear one.
+[profile.dev.package.lineup-listen]
+opt-level = 3
+
 # The same for a video: every picture is painted pixel by pixel, then
 # compressed, thousands of times.
 [profile.dev.package.lineup-video]

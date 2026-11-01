@@ -6541,6 +6541,30 @@ mod takes {
     }
 
     #[test]
+    fn a_take_can_select_any_combination_of_layers() {
+        let mut screen = ode_to_joy();
+        let folder = folder("take-layers");
+        screen.app.heard_take(16.0, 1.0, Vec::new(), folder.clone());
+        screen.draw(vec![]);
+        let output = screen.draw(vec![]);
+        for label in ["Extract", "Melody", "Drums", "Bass line", "Chords"] {
+            assert!(text_rect(&output, tr(label)).is_some(), "{label}");
+        }
+        assert!(text_rect(&output, tr("No melody notes were heard.")).is_some());
+
+        screen.click(tr("Drums"));
+        screen.click(tr("Bass line"));
+        screen.click(tr("Chords"));
+        screen.click(tr("Melody"));
+        let output = screen.draw(vec![]);
+        assert!(text_rect(&output, tr("Melody is not selected.")).is_some());
+        assert!(text_rect(&output, tr("0 drum hits.")).is_some());
+        assert!(text_rect(&output, tr("0 bass notes.")).is_some());
+        assert!(text_rect(&output, tr("0 chords.")).is_some());
+        std::fs::remove_dir_all(folder).unwrap();
+    }
+
+    #[test]
     fn a_take_sung_out_of_tune_can_keep_to_the_key() {
         // Ode to Joy is in D major; a D♯ sung a quarter of a semitone
         // sharp, in bar 2.

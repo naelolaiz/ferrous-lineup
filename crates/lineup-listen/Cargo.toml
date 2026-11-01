@@ -1,6 +1,6 @@
 [package]
 name = "lineup-listen"
-description = "Listening to recordings for Ferrous Lineup: decoding audio files and hearing the notes sung or whistled in them"
+description = "Listening to recordings for Ferrous Lineup: decoding audio and extracting melody, bass, drums and chords"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

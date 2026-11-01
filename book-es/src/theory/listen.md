@@ -1,6 +1,9 @@
 # Tomas: oír una melodía cantada
 
 Archivos: [`crates/lineup-listen/src/voice.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-listen/src/voice.rs),
+[`crates/lineup-listen/src/bass.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-listen/src/bass.rs),
+[`crates/lineup-listen/src/drums.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-listen/src/drums.rs),
+[`crates/lineup-listen/src/chords.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-listen/src/chords.rs),
 [`crates/lineup-audio/src/input.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-audio/src/input.rs),
 [`crates/lineup-core/src/take.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/take.rs)
 y [`crates/lineup-app/src/app/voice.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/voice.rs)
@@ -25,9 +28,17 @@ en el manual.
 Para eso hay que responder tres preguntas, y cada una se responde en un
 crate distinto:
 
-1. **¿Qué notas?** `lineup-listen` oye la altura de la voz, instante a
-   instante, y la corta en notas, en segundos desde el principio de la
-   grabación. No sabe nada de canciones.
+1. **¿Qué capas?** `lineup-listen` oye la melodía y el bajo como
+   alturas a lo largo del tiempo y los corta en notas, en segundos desde
+   el principio de la grabación. Encuentra golpes de batería mediante
+   separación armónico-percusiva, plantillas NMF y detección espectral
+   de ataques; encuentra cambios de acordes con espectros de notas NNLS
+   y un decodificador de Viterbi. No sabe nada de canciones. Son
+   extractores DSP aplicados a la mezcla, no separación de fuentes: la
+   batería cubre bombo, caja y hi-hat, y el bajo es una estimación
+   monofónica que aún no se ha evaluado con un conjunto de referencia.
+   Las casillas **Extraer** de **Tu toma** eligen qué resultados
+   escribir; los acordes solo están disponibles en modo canción.
 2. **¿Cuándo se cantaron?** `lineup-audio` sabe cuándo tocó la tarjeta
    de sonido cada trozo de la canción y cuándo oyó el micrófono cada
    trozo de la voz, y anota, cada pocos milisegundos, dónde se oía la

@@ -1,15 +1,14 @@
 # Takes: singing or whistling a part
 
-Sing or whistle a tune while the song plays, and Ferrous Lineup writes
-its notes into the song: each note's pitch, where it starts and ends,
-and how loud you sang it. It is the quickest way to put in a melody you
-have in your head, or to fix a wrong note in a demo's melody: sing the
-bar again as it should go. What you sang is kept too, as a **take** on
-a track of its own, so you can hear it next to the notes.
+Sing or whistle while the song plays, and Ferrous Lineup can write the
+melody, bass line, drums and chords it hears into the song. Choose any
+combination in **Your take**. The melody is selected by default; the
+other choices are off by default and remembered. What you sang or
+played is kept too, as a **take** on a track of its own, so you can hear
+it next to the song.
 
-A recording made before, such as a melody sung into a phone, works the
-same way: see [Adding a recording made
-before](#adding-a-recording-made-before).
+A recording made before, whether a voice or a band, works the same way:
+see [Adding a recording made before](#adding-a-recording-made-before).
 
 ## What you need
 
@@ -50,12 +49,22 @@ throughout, it says so; the notes are written as you meant them.
 
 ![The Your take window: 18 notes, from bar 1 to bar 6, F#5 F#5 G5 A5 A5 G5 F#5 E5 D5 D5 E5 F#5; Notes go to Lead; On the grid of sixteenth notes; Pitches as sung; The recording: Keep it, on a new track; Write it in and Throw it away](images/take-review.png)
 
+The grid, destination and pitch choices below apply to **Melody**. The
+other layers go to the drum channels, a Bass channel and the chord sheet.
+
 | Choice | What it does |
 |---|---|
 | **Notes go to** | The channel that plays the tune, the **Lead**, is chosen first. The notes take the place of what that channel played where you sang, and only there. You can also choose any other channel, **A new channel** (named "Sung notes", played by a flute), or **Nowhere: keep only the recording**. |
 | **On the grid of** | Where the starts and ends of the notes snap to: **Sixteenth notes**, **Eighth notes** or **Quarter notes**. A coarser grid tidies a loose rhythm. |
 | **Pitches** | Which notes the pitches you sang are written as. **As sung**: the nearest semitone. **In the key**: the nearest note of the key, so a note sung out of tune does not come out as a wrong note. **Key and chords**: the nearest note of the key as the chord on the chord sheet there colours it; over D7 in C major, F♯ is written instead of F. Bars with no chord keep to the key. The notes listed at the top change as you choose. |
 | **The recording** | **Keep it** keeps what you sang, on a track: **A new track** at the bottom, or one you choose. Untick it to keep only the notes. |
+
+In **Extract**, choose **Melody**, **Drums**, **Bass line** and/or
+**Chords**. Drums recognizes kick, snare and hi-hat; bass extraction
+follows one low-pitched line, and can mistake another low instrument
+for bass in a dense mix. Chords are available in song mode. These
+extractors analyze the recording as a mix; they do not separate
+instruments into isolated tracks.
 
 **Write it in** does it, as one step: **Ctrl+Z** takes the whole take
 away again. **Throw it away**, or closing the window, keeps nothing.
@@ -67,7 +76,7 @@ pattern does, so a melody fixed once is fixed everywhere it repeats.
 
 ![The playlist after writing the take in: a new track "Take 1" with the recording's waveform in a pink clip from bar 1 to bar 6, under the Song and Drums tracks, and the status bar saying "Wrote 18 notes on Lead. The recording plays as Take 1. Theme plays 3 times: your notes play each time."](images/take-written.png)
 
-## How your singing is heard
+## How the melody is heard
 
 - **Pitch**: each note is rounded to the nearest semitone, after taking
   out how sharp or flat the whole take was. A note sung right between
@@ -78,7 +87,8 @@ pattern does, so a melody fixed once is fixed everywhere it repeats.
 - **Loudness**: how hard each note is played. A note as loud as most of
   the take plays as usual; louder notes are played harder, softer ones
   softer.
-- **One note at a time**: a take is one voice.
+- **One note at a time**: melody extraction follows one voice. A chord
+  or a voice over loud backing can confuse it.
 
 Some tips:
 

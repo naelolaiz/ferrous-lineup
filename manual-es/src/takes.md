@@ -1,16 +1,14 @@
 # Tomas: cantar o silbar una parte
 
-Canta o silba una melodía mientras suena la canción, y Ferrous Lineup
-escribe sus notas en la canción: la altura de cada nota, dónde empieza
-y dónde termina, y con qué fuerza la cantaste. Es la manera más rápida
-de poner una melodía que tienes en la cabeza, o de corregir una nota
-equivocada en la melodía de una demostración: canta otra vez el compás
-como debería ir. Lo que cantaste también se conserva, como una
-**toma** en una pista propia, para que puedas oírlo junto a las notas.
+Canta o silba mientras suena la canción, y Ferrous Lineup puede escribir
+en ella la melodía, la línea de bajo, la batería y los acordes que oye.
+Elige cualquier combinación en **Tu toma**. La melodía está seleccionada
+de forma predeterminada; las demás opciones no y se recuerdan. Lo que
+cantaste o tocaste también se conserva como una **toma** en una pista
+propia, para que puedas oírlo junto a la canción.
 
-Una grabación hecha antes, como una melodía cantada en un teléfono,
-funciona igual: ver [Añadir una grabación hecha
-antes](#añadir-una-grabación-hecha-antes).
+Una grabación hecha antes, de una voz o de una banda, funciona igual:
+ver [Añadir una grabación hecha antes](#añadir-una-grabación-hecha-antes).
 
 ## Qué necesitas
 
@@ -53,12 +51,24 @@ cantar.
 
 ![La ventana Tu toma: 19 notas, del compás 1 al compás 6, Fa#5 Fa#5 Sol5 La5 La5 Sol5 Fa#5 Mi5 Re5 Re5 Mi5 Fa#5; Las notas van a Melodía; En la cuadrícula de semicorcheas; Alturas como se cantó; La grabación: Conservarla, en Una pista nueva; Escribirla y Descartarla](images/take-review.png)
 
+La cuadrícula, el destino y las opciones de altura de abajo se aplican a
+**Melodía**. Las demás capas van a los canales de batería, a un canal de
+bajo y a la hoja de acordes.
+
 | Opción | Qué hace |
 |---|---|
 | **Las notas van a** | Primero se elige el canal que toca la melodía, la **Melodía**. Las notas reemplazan lo que ese canal tocaba donde cantaste, y solo ahí. También puedes elegir cualquier otro canal, **Un canal nuevo** (llamado «Notas cantadas», tocado por una flauta), o **A ninguna parte: conservar solo la grabación**. |
 | **En la cuadrícula de** | Adónde se ajustan los comienzos y los finales de las notas: **semicorcheas**, **corcheas** o **negras**. Una cuadrícula más gruesa ordena un ritmo suelto. |
 | **Alturas** | Como qué notas se escriben las alturas que cantaste. **Como se cantó**: el semitono más cercano. **En la tonalidad**: la nota de la tonalidad más cercana, para que una nota desafinada no salga como una nota equivocada. **Tonalidad y acordes**: la nota de la tonalidad más cercana tal como la colorea el acorde de la hoja de acordes en ese lugar; sobre D7 en do mayor se escribe fa♯ en lugar de fa. Los compases sin acorde se quedan en la tonalidad. Las notas de arriba cambian a medida que eliges. |
 | **La grabación** | **Conservarla** guarda lo que cantaste, en una pista: **Una pista nueva** abajo, o una que elijas. Desmárcalo para quedarte solo con las notas. |
+
+En **Extraer**, elige **Melodía**, **Batería**, **Línea de bajo** y/o
+**Acordes**. La batería reconoce bombo, caja y platillos hi-hat; la
+extracción del bajo sigue una sola línea grave y, en una mezcla densa,
+puede confundir otro instrumento grave con el bajo. Los acordes solo
+están disponibles en modo canción. Estos extractores analizan la
+grabación como una mezcla; no separan los instrumentos en pistas
+aisladas.
 
 **Escribirla** lo hace, como un solo paso: **Ctrl+Z** quita toda la
 toma otra vez. **Descartarla**, o cerrar la ventana, no conserva nada.
@@ -71,7 +81,7 @@ vez queda corregida en todos los lugares donde se repite.
 
 ![La lista de reproducción después de escribir la toma: una pista nueva «Toma 1» con la forma de onda de la grabación en un clip rosa del compás 1 al 6, debajo de las pistas Canción y Batería, y la barra de estado que dice «Se escribieron 19 notas en Melodía. La grabación suena como Toma 1. Tema suena 3 veces: tus notas suenan cada vez.»](images/take-written.png)
 
-## Cómo se oye lo que cantas
+## Cómo se oye la melodía
 
 - **Altura**: cada nota se redondea al semitono más cercano, después de
   quitar cuánto más alta o más baja se cantó toda la toma. Una nota
@@ -84,7 +94,8 @@ vez queda corregida en todos los lugares donde se repite.
 - **Intensidad**: con qué fuerza se toca cada nota. Una nota tan fuerte
   como la mayor parte de la toma suena como siempre; las notas más
   fuertes se tocan con más fuerza, las más suaves con menos.
-- **Una nota a la vez**: una toma es una sola voz.
+- **Una nota a la vez**: la extracción de melodía sigue una sola voz.
+  Un acorde o una voz sobre un acompañamiento fuerte puede confundirla.
 
 Algunos consejos:
 

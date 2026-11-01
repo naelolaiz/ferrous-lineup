@@ -1,12 +1,15 @@
 //! Takes: a voice recorded while the song plays, kept on a track of the
-//! playlist, and the notes it sang written into the song.
+//! playlist, and the notes it sang written into the song; or the drums,
+//! or the chords, a recording played.
 //!
 //! You sing or whistle along with the song; the app records the
 //! microphone, and `lineup_listen::voice` hears the notes in the
 //! recording, in seconds from its start. This module works out where in
 //! the song each of those seconds was, writes the notes there, on the
 //! grid, and keeps the recording on a track, where it plays with the song
-//! like any other part.
+//! like any other part. In the same way the drum hits heard in a take
+//! (`lineup_listen::drums`) go on the drum channels, and the chords heard
+//! (`lineup_listen::chords`) on the chord sheet.
 //!
 //! **When was each moment sung?** While recording, the app writes down a
 //! [`Mark`] every few milliseconds: at this sample of the recording, the
@@ -30,17 +33,30 @@
 //! to the nearest point of the grid. How loud it was sung sets how hard
 //! it is played (its *velocity*): a note as loud as most of the take is
 //! played at 100, louder ones harder, softer ones softer.
+//!
+//! **Which drums?** Each hit goes to the nearest point of the grid, on
+//! the channel of its drum, as hard as it was hit against that drum's
+//! other hits. They take the place of the kick, snare and hi-hats there
+//! were, from the first hit to the last; the drums a take does not hear
+//! (toms, cymbals, percussion) stay as they were.
+//!
+//! **Which chords?** Each beat gets the chord heard longest in it, spelled
+//! in the key there; a marker goes where the chord changes. They take the
+//! place of the chord sheet from the beat of the first chord to the end
+//! of the beat of the last, and the chord that played on after that still
+//! does. The chord sheet is the song's, so only a take sung along with
+//! the song, not with a pattern, writes chords.
 
 use std::ops::Range;
 use std::path::PathBuf;
 
 use crate::arrangement::{Arrangement, Pass};
-use crate::chord_sheet::HarmonyName;
-use crate::harmony::{PitchSet, chord_scale};
+use crate::chord_sheet::{ChordMarker, HarmonyName};
+use crate::harmony::{Chord, PitchSet, chord_scale};
 use crate::pattern::{MAX_STEPS, NoteEvent, Pattern, STEP_NOTE};
 use crate::pitch::{Note, PitchClass};
 use crate::playlist::{Clip, MAX_SONG_STEPS};
-use crate::project::{Channel, ChannelKind, Project, SampleSource};
+use crate::project::{Channel, ChannelKind, Drum, Project, SampleSource};
 
 /// One note heard in a take.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -59,6 +75,47 @@ impl SungNote {
     pub fn seconds(&self) -> f64 {
         self.end - self.start
     }
+}
+
+/// One drum hit heard in a take.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct DrumHit {
+    /// When it was hit, in seconds from the start of the take.
+    pub time: f64,
+    pub drum: Drum,
+    /// How loud it was, in dB: only how the hits of one drum compare
+    /// counts.
+    pub loudness: f32,
+}
+
+/// One bass note heard in a take.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct BassNote {
+    /// When it starts and ends, in seconds from the start of the take.
+    pub start: f64,
+    pub end: f64,
+    /// Its pitch, as a fractional MIDI note number: 28.0 is E1.
+    pub pitch: f32,
+    /// Its loudest moment, in dB below full scale.
+    pub loudness: f32,
+}
+
+impl BassNote {
+    pub fn seconds(&self) -> f64 {
+        self.end - self.start
+    }
+}
+
+/// A chord heard in a take, from `start` to `end` seconds from its start.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct HeardChord {
+    pub start: f64,
+    pub end: f64,
+    /// The chord, or `None` where no chord sounds (silence, or drums
+    /// alone).
+    pub chord: Option<Chord>,
+    /// The lowest note, when it is not the chord's root: C/E.
+    pub bass: Option<PitchClass>,
 }
 
 /// Where the song was heard at one moment of a take.
@@ -139,6 +196,27 @@ impl Placed {
     }
 }
 
+/// A drum hit of a take on the grid: on step `step` of the playlist (or
+/// of the pattern).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct PlacedHit {
+    pub step: usize,
+    pub drum: Drum,
+    pub velocity: u8,
+}
+
+/// The drums a take's hits take the place of: the ones a recording is
+/// heard for (see `lineup_listen::drums`).
+pub const HEARD_DRUMS: [Drum; 4] = [Drum::Kick, Drum::Snare, Drum::HiHat, Drum::OpenHat];
+
+/// The chords of a take, for the chord sheet: its markers, and the steps
+/// whose chords they take the place of.
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub struct SheetChords {
+    pub markers: Vec<ChordMarker>,
+    pub steps: Range<usize>,
+}
+
 /// What a take sang, ready to write into the song.
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Transcription {
@@ -146,8 +224,14 @@ pub struct Transcription {
     pub pieces: Vec<Piece>,
     /// The notes, in order, one at a time.
     pub notes: Vec<Placed>,
+    /// The bass line, in order.
+    pub bass: Vec<Placed>,
     /// How sharp the take was sung, in semitones (see `lineup_listen::voice::tuning`).
     pub tuning: f32,
+    /// The drum hits, in order (see [`transcribe_drums`]).
+    pub drums: Vec<PlacedHit>,
+    /// The chords, in song mode (see [`transcribe_chords`]).
+    pub chords: Option<SheetChords>,
 }
 
 impl Transcription {
@@ -156,6 +240,21 @@ impl Transcription {
     pub fn range(&self) -> Option<Range<usize>> {
         let start = self.notes.first()?.start;
         let end = self.notes.iter().map(Placed::end).max()?;
+        Some(start..end)
+    }
+
+    /// The steps from the first drum hit to the last: where the kick,
+    /// snare and hi-hats there were are replaced.
+    pub fn drum_range(&self) -> Option<Range<usize>> {
+        let first = self.drums.iter().map(|hit| hit.step).min()?;
+        let last = self.drums.iter().map(|hit| hit.step).max()?;
+        Some(first..last + 1)
+    }
+
+    /// The steps from the first bass note to the last.
+    pub fn bass_range(&self) -> Option<Range<usize>> {
+        let start = self.bass.iter().map(|note| note.start).min()?;
+        let end = self.bass.iter().map(Placed::end).max()?;
         Some(start..end)
     }
 
@@ -536,6 +635,58 @@ fn straight_on() -> Arrangement {
 /// kept, from where the song starts: 150 ms.
 const EARLY_SECONDS: f64 = 0.15;
 
+/// Where a sound heard from sample `first` of `take` to sample `after`
+/// starts in the playlist (or the pattern), if in a part of the take that
+/// is kept: the run it starts in, its first sample there and its place. A
+/// sound that starts a moment before the song is heard (a pitch or an
+/// onset can be heard a frame or two early) starts with it.
+fn kept_start(
+    take: &Take,
+    runs: &[Run],
+    kept: &[Vec<(f64, f64)>],
+    first: usize,
+    after: usize,
+) -> Option<(usize, usize, f64)> {
+    let early = (EARLY_SECONDS * f64::from(take.sample_rate.max(1))) as usize;
+    let (index, first) = match runs.iter().position(|run| run.frames.contains(&first)) {
+        Some(index) => (index, first),
+        None => {
+            let index = runs.iter().position(|run| {
+                run.frames.start > first
+                    && run.frames.start < after
+                    && run.frames.start - first <= early
+            })?;
+            (index, runs[index].frames.start)
+        }
+    };
+    let start = take.place(first)?;
+    kept[index]
+        .iter()
+        .any(|&(from, to)| start >= from - 0.5 && start < to)
+        .then_some((index, first, start))
+}
+
+/// The stretches of `take` to keep, in the order they play.
+fn pieces(take: &Take, runs: &[Run], kept: &[Vec<(f64, f64)>]) -> Vec<Piece> {
+    let mut pieces = Vec::new();
+    for (run, parts) in runs.iter().zip(kept) {
+        for &(from, to) in parts {
+            // The recording starts on the first whole step inside.
+            let step = (from - 1e-6).ceil();
+            if to - step < 1.0 {
+                continue;
+            }
+            pieces.push(Piece {
+                frames: take.frame_at(run, step)..take.frame_at(run, to),
+                step: step as usize,
+                steps: (to - step).ceil() as usize,
+            });
+        }
+    }
+    pieces.sort_by_key(|piece| piece.step);
+    pieces
+}
+
 /// Works out where in the song `take` was sung, and which notes:
 /// `sung` are the notes heard in it, `grid` how many steps the notes
 /// snap to (1 for every step, 2 for eighth notes, 4 for beats) and
@@ -563,56 +714,17 @@ pub fn transcribe_with(
     let runs = take.runs();
     let kept = kept(&runs);
     let rate = f64::from(take.sample_rate.max(1));
-
-    let mut pieces = Vec::new();
-    for (run, parts) in runs.iter().zip(&kept) {
-        for &(from, to) in parts {
-            // The recording starts on the first whole step inside.
-            let step = (from - 1e-6).ceil();
-            if to - step < 1.0 {
-                continue;
-            }
-            pieces.push(Piece {
-                frames: take.frame_at(run, step)..take.frame_at(run, to),
-                step: step as usize,
-                steps: (to - step).ceil() as usize,
-            });
-        }
-    }
-    pieces.sort_by_key(|piece| piece.step);
+    let pieces = pieces(take, &runs, &kept);
 
     // Each note's place, if it was sung in a part that is kept.
     let mut heard: Vec<(f64, f64, f32, f32, f64)> = Vec::new(); // start, end, pitch, loudness, seconds
-    // A note that starts a moment before the song is heard (the pitch
-    // finder can hear its start a frame or two early) starts with it.
-    let early = (EARLY_SECONDS * rate) as usize;
     for note in sung {
-        let mut first = (note.start.max(0.0) * rate) as usize;
+        let first = (note.start.max(0.0) * rate) as usize;
         let after = (note.end * rate) as usize;
-        let index = match runs.iter().position(|run| run.frames.contains(&first)) {
-            Some(index) => index,
-            None => {
-                let Some(index) = runs.iter().position(|run| {
-                    run.frames.start > first
-                        && run.frames.start < after
-                        && run.frames.start - first <= early
-                }) else {
-                    continue;
-                };
-                first = runs[index].frames.start;
-                index
-            }
+        let Some((index, first, start)) = kept_start(take, &runs, &kept, first, after) else {
+            continue;
         };
         let run = &runs[index];
-        let Some(start) = take.place(first) else {
-            continue;
-        };
-        if !kept[index]
-            .iter()
-            .any(|&(from, to)| start >= from - 0.5 && start < to)
-        {
-            continue;
-        }
         let last = ((note.end * rate) as usize).clamp(first, run.frames.end - 1);
         let end = take.place(last).unwrap_or(start).max(start);
         heard.push((start, end, note.pitch, note.loudness, note.seconds()));
@@ -671,7 +783,225 @@ pub fn transcribe_with(
         pieces,
         notes: placed,
         tuning,
+        ..Transcription::default()
     }
+}
+
+/// Works out where in the song (or pattern) each of the bass `notes`
+/// heard in `take` was played, on a grid of `grid` steps. Of two notes
+/// on one step, the longer stays; one note ends where the next starts.
+/// Bass pitches stay as heard, including chromatic notes outside the key.
+pub fn transcribe_bass(take: &Take, notes: &[BassNote], grid: usize) -> Vec<Placed> {
+    let grid = grid.max(1) as f64;
+    let runs = take.runs();
+    let kept = kept(&runs);
+    let rate = f64::from(take.sample_rate.max(1));
+    let mut heard = Vec::new();
+    for note in notes {
+        let first = (note.start.max(0.0) * rate) as usize;
+        let after = (note.end * rate) as usize;
+        let Some((index, first, start)) = kept_start(take, &runs, &kept, first, after) else {
+            continue;
+        };
+        let run = &runs[index];
+        let last = ((note.end * rate) as usize).clamp(first, run.frames.end - 1);
+        let end = take.place(last).unwrap_or(start).max(start);
+        heard.push((start, end, note.pitch, note.loudness, note.seconds()));
+    }
+    if heard.is_empty() {
+        return Vec::new();
+    }
+    let mut levels: Vec<f32> = heard.iter().map(|note| note.3).collect();
+    levels.sort_by(f32::total_cmp);
+    let usual = levels[levels.len() / 2];
+    let snap = |place: f64| ((place / grid).round() * grid).max(0.0) as usize;
+    let mut placed: Vec<(Placed, f64)> = heard
+        .iter()
+        .map(|&(start, end, pitch, loudness, seconds)| {
+            let begin = snap(start);
+            let finish = snap(end).max(begin + grid as usize);
+            (
+                Placed {
+                    start: begin,
+                    length: finish - begin,
+                    pitch: Note::new(pitch.round().clamp(0.0, 127.0) as u8),
+                    velocity: velocity(loudness, usual),
+                },
+                seconds,
+            )
+        })
+        .collect();
+    placed.sort_by(|a, b| a.0.start.cmp(&b.0.start).then(b.1.total_cmp(&a.1)));
+    placed.dedup_by(|later, earlier| later.0.start == earlier.0.start);
+    let mut placed: Vec<Placed> = placed.into_iter().map(|(note, _)| note).collect();
+    for index in 1..placed.len() {
+        let next = placed[index].start;
+        let note = &mut placed[index - 1];
+        if note.end() > next {
+            note.length = next - note.start;
+        }
+    }
+    if let Along::Pattern { length, .. } = take.along {
+        placed.retain(|note| note.start < length);
+        for note in &mut placed {
+            note.length = note.length.min(length - note.start);
+        }
+    }
+    placed
+}
+
+/// Works out where in the song (or the pattern) each of the drum `hits`
+/// heard in `take` was played, on a grid of `grid` steps. Each is played
+/// as hard as it was hit against the other hits of its drum; of two hits
+/// of a drum on one step, the harder stays.
+pub fn transcribe_drums(take: &Take, hits: &[DrumHit], grid: usize) -> Vec<PlacedHit> {
+    let grid = grid.max(1) as f64;
+    let runs = take.runs();
+    let kept = kept(&runs);
+    let rate = f64::from(take.sample_rate.max(1));
+    // Each drum's usual loudness: its middle hit's.
+    let usual = |drum: Drum| {
+        let mut levels: Vec<f32> = hits
+            .iter()
+            .filter(|hit| hit.drum == drum)
+            .map(|hit| hit.loudness)
+            .collect();
+        levels.sort_by(f32::total_cmp);
+        levels.get(levels.len() / 2).copied().unwrap_or(0.0)
+    };
+    let usual: Vec<(Drum, f32)> = Drum::ALL.iter().map(|&drum| (drum, usual(drum))).collect();
+    let length = match take.along {
+        Along::Pattern { length, .. } => Some(length.max(1)),
+        Along::Song(_) => None,
+    };
+    let mut placed: Vec<PlacedHit> = Vec::new();
+    for hit in hits {
+        let first = (hit.time.max(0.0) * rate) as usize;
+        let early = (EARLY_SECONDS * rate) as usize;
+        let Some((_, _, place)) = kept_start(take, &runs, &kept, first, first + early + 1) else {
+            continue;
+        };
+        let mut step = ((place / grid).round() * grid).max(0.0) as usize;
+        // On the last step of a pattern's round, a hit snapped on is the
+        // first of the next.
+        if let Some(length) = length {
+            step %= length;
+        }
+        let usual = usual
+            .iter()
+            .find(|(drum, _)| *drum == hit.drum)
+            .map_or(0.0, |(_, level)| *level);
+        placed.push(PlacedHit {
+            step,
+            drum: hit.drum,
+            velocity: velocity(hit.loudness, usual),
+        });
+    }
+    placed.sort_by(|a, b| a.step.cmp(&b.step).then(b.velocity.cmp(&a.velocity)));
+    let mut kept_hits: Vec<PlacedHit> = Vec::new();
+    for hit in placed {
+        let twice = kept_hits
+            .iter()
+            .rev()
+            .take_while(|other| other.step == hit.step)
+            .any(|other| other.drum == hit.drum);
+        if !twice {
+            kept_hits.push(hit);
+        }
+    }
+    kept_hits
+}
+
+/// How often the chord heard is looked at, to name each beat's: every
+/// 10 ms.
+const CHORD_LOOK_SECONDS: f64 = 0.01;
+
+/// Works out the chords of a take sung along with the song, for the
+/// chord sheet: each beat whose time was heard for at least half gets
+/// the chord heard there longest, spelled in the key there; a marker goes
+/// where it changes. Silence before the first chord and after the last
+/// changes nothing; in between it is "no chord". `None` for a take sung
+/// along with a pattern, or where no chord was heard.
+pub fn transcribe_chords(
+    project: &Project,
+    take: &Take,
+    chords: &[HeardChord],
+) -> Option<SheetChords> {
+    if !matches!(take.along, Along::Song(_)) {
+        return None;
+    }
+    type Heard = (Option<Chord>, Option<PitchClass>);
+    let runs = take.runs();
+    let kept = kept(&runs);
+    let rate = f64::from(take.sample_rate.max(1));
+    let look = ((CHORD_LOOK_SECONDS * rate) as usize).max(1);
+    let meter = project.meter();
+    // For each beat, by its first step: how often each harmony was heard
+    // there, and which of its steps were heard (a bit each).
+    let mut beats: std::collections::BTreeMap<usize, (Vec<(Heard, usize)>, u64)> =
+        std::collections::BTreeMap::new();
+    for (run, parts) in runs.iter().zip(&kept) {
+        for frame in run.frames.clone().step_by(look) {
+            let Some(place) = take.place(frame) else {
+                continue;
+            };
+            if !parts.iter().any(|&(from, to)| place >= from && place < to) {
+                continue;
+            }
+            let seconds = frame as f64 / rate;
+            let Some(chord) = chords
+                .partition_point(|chord| chord.start <= seconds)
+                .checked_sub(1)
+                .map(|index| chords[index])
+                .filter(|chord| seconds < chord.end)
+            else {
+                continue;
+            };
+            let step = place.floor() as usize;
+            let beat = meter.floor_to_beat(step);
+            let (votes, steps) = beats.entry(beat).or_default();
+            *steps |= 1 << (step - beat).min(63);
+            let heard = (chord.chord, chord.bass);
+            match votes.iter_mut().find(|(other, _)| *other == heard) {
+                Some((_, count)) => *count += 1,
+                None => votes.push((heard, 1)),
+            }
+        }
+    }
+    let mut named: Vec<(usize, usize, Option<HarmonyName>)> = Vec::new();
+    for (&beat, (votes, steps)) in &beats {
+        let end = meter.beat_end(beat);
+        if (steps.count_ones() as usize) * 2 < end - beat {
+            continue;
+        }
+        let Some(&((chord, bass), _)) = votes.iter().max_by_key(|(_, count)| *count) else {
+            continue;
+        };
+        let harmony = chord.map(|chord| {
+            let bass = bass.unwrap_or(chord.root);
+            HarmonyName::Chord(crate::project::spelled(chord, bass, project.key_at(beat)))
+        });
+        named.push((beat, end, harmony));
+    }
+    let first = named.iter().position(|(_, _, harmony)| harmony.is_some())?;
+    let last = named
+        .iter()
+        .rposition(|(_, _, harmony)| harmony.is_some())?;
+    let named = &named[first..=last];
+    let mut markers: Vec<ChordMarker> = Vec::new();
+    for &(beat, _, harmony) in named {
+        let harmony = harmony.unwrap_or(HarmonyName::NoChord);
+        if markers
+            .last()
+            .is_none_or(|marker| marker.harmony != harmony)
+        {
+            markers.push(ChordMarker::new(beat, harmony));
+        }
+    }
+    Some(SheetChords {
+        markers,
+        steps: named[0].0..named[named.len() - 1].1,
+    })
 }
 
 /// The channel that sings the tune, if any: the first whose name says
@@ -730,6 +1060,12 @@ pub struct Added {
     pub shared: Vec<(usize, usize)>,
     /// The channels made for the recordings.
     pub recordings: Vec<usize>,
+    /// How many drum hits were written.
+    pub drum_hits: usize,
+    /// How many bass notes were written.
+    pub bass_notes: usize,
+    /// How many chords were written on the chord sheet.
+    pub chords: usize,
 }
 
 impl Project {
@@ -743,7 +1079,9 @@ impl Project {
     /// once is corrected wherever its pattern plays. Where no pattern
     /// holds them, they go into clips of their own, on a track of their
     /// own right under the recording's ([`Keep::notes`]): the recording's
-    /// clips only ever hold the recording.
+    /// clips only ever hold the recording. Its drum hits go on the drum
+    /// channels the same way, in place of the kick, snare and hi-hats
+    /// there were, and in song mode its chords on the chord sheet.
     pub fn add_take(
         &mut self,
         along: &Along,
@@ -775,6 +1113,10 @@ impl Project {
             }
         }
         added.recordings.clone_from(&recordings);
+        let drums = self.drum_lines(transcription);
+        let drum_range = transcription.drum_range();
+        let bass = self.bass_line(transcription);
+        let bass_range = transcription.bass_range();
 
         match along {
             Along::Pattern { pattern, .. } => {
@@ -783,6 +1125,15 @@ impl Project {
                     added.notes =
                         self.replace_in_pattern(pattern, channel, range, 0, &transcription.notes);
                 }
+                if let Some(range) = drum_range {
+                    for (channel, hits) in &drums {
+                        added.drum_hits +=
+                            self.replace_in_pattern(pattern, *channel, range.clone(), 0, hits);
+                    }
+                }
+                if let (Some((channel, notes)), Some(range)) = (&bass, bass_range) {
+                    added.bass_notes += self.replace_in_pattern(pattern, *channel, range, 0, notes);
+                }
                 for (piece, &take) in transcription.pieces.iter().zip(&recordings) {
                     if let Some(pattern) = self.pattern_mut(pattern) {
                         pattern.set_notes(take, [NoteEvent::new(STEP_NOTE, piece.step, 1)]);
@@ -790,13 +1141,33 @@ impl Project {
                 }
             }
             Along::Song(_) => {
-                added.notes = self.write_take_in_song(
+                let mut lines = Vec::new();
+                if let (Some(channel), Some(range)) = (channel, transcription.range()) {
+                    lines.push((channel, transcription.notes.clone(), range));
+                }
+                let melody = lines.len();
+                if let Some(range) = drum_range {
+                    for (channel, hits) in drums {
+                        lines.push((channel, hits, range.clone()));
+                    }
+                }
+                let drum_end = lines.len();
+                if let (Some((channel, notes)), Some(range)) = (bass, bass_range) {
+                    lines.push((channel, notes, range));
+                }
+                let written = self.write_take_in_song(
                     transcription,
-                    channel,
+                    &lines,
                     &recordings,
                     keep,
                     &mut added.shared,
                 );
+                added.notes = written[..melody].iter().sum();
+                added.drum_hits = written[melody..drum_end].iter().sum();
+                added.bass_notes = written[drum_end..].iter().sum();
+                if let Some(chords) = &transcription.chords {
+                    added.chords = self.write_take_chords(chords);
+                }
             }
         }
         added
@@ -852,105 +1223,34 @@ impl Project {
         written
     }
 
-    /// [`Project::add_take`] in song mode.
+    /// [`Project::add_take`] in song mode: each of `lines` (a channel,
+    /// its notes, and the steps where they take the place of that
+    /// channel's) goes into the patterns that hold the channel's notes
+    /// there, or into clips of their own under the recording's. Returns
+    /// how many notes of each line were written.
     fn write_take_in_song(
         &mut self,
         transcription: &Transcription,
-        channel: Option<usize>,
+        lines: &[(usize, Vec<Placed>, Range<usize>)],
         recordings: &[usize],
         keep: &Keep,
         shared: &mut Vec<(usize, usize)>,
-    ) -> usize {
-        let range = transcription.range();
-        // The clips that hold the channel's notes where the take was sung.
-        let homes: Vec<Clip> = match (channel, &range) {
-            (Some(channel), Some(range)) => self
-                .playlist()
-                .clips()
-                .iter()
-                .copied()
-                .filter(|clip| {
-                    let end = clip.start + self.clip_length(clip);
-                    clip.start < range.end
-                        && end > range.start
-                        && self
-                            .pattern(clip.pattern)
-                            .is_some_and(|p| !p.notes(channel).is_empty())
-                })
-                .collect(),
-            _ => Vec::new(),
-        };
-
-        // The notes that find a home, by clip; the rest go into clips of
-        // their own.
-        let mut homeless: Vec<Placed> = Vec::new();
-        let mut written = 0;
-        if let (Some(channel), Some(range)) = (channel, &range) {
-            let mut done: Vec<usize> = Vec::new();
-            for clip in &homes {
-                if done.contains(&clip.pattern) {
-                    continue;
-                }
-                done.push(clip.pattern);
-                let length = self.pattern(clip.pattern).map_or(0, Pattern::length);
-                if length == 0 {
-                    continue;
-                }
-                // Every place this clip plays the pattern inside the range,
-                // and where the pattern's first step is that time round. A
-                // clip trimmed at an edge leaves the steps it hides alone.
-                let rounds: Vec<(usize, Range<usize>)> = clip
-                    .rounds(length)
-                    .filter_map(|round| {
-                        let offset = round.at.checked_sub(round.steps.start)?;
-                        Some((offset, round.at..round.end()))
-                    })
-                    .collect();
-                for (offset, heard) in rounds {
-                    let here = range.start.max(heard.start)..range.end.min(heard.end);
-                    if here.start < here.end {
-                        let notes: Vec<Placed> = transcription
-                            .notes
-                            .iter()
-                            .copied()
-                            .filter(|note| {
-                                here.contains(&note.start)
-                                    && first_home(&homes, note.start, self) == Some(*clip)
-                            })
-                            .collect();
-                        written +=
-                            self.replace_in_pattern(clip.pattern, channel, here, offset, &notes);
-                    }
-                }
-                let uses = self
-                    .playlist()
-                    .clips()
-                    .iter()
-                    .filter(|other| other.pattern == clip.pattern)
-                    .map(|other| other.repeats)
-                    .sum::<usize>();
-                if uses > 1 {
-                    shared.push((clip.pattern, uses));
-                }
-            }
-            homeless = transcription
-                .notes
-                .iter()
-                .copied()
-                .filter(|note| first_home(&homes, note.start, self).is_none())
-                .collect();
+    ) -> Vec<usize> {
+        let mut written = vec![0; lines.len()];
+        let mut homeless: Vec<Vec<Placed>> = Vec::with_capacity(lines.len());
+        for (index, (channel, notes, range)) in lines.iter().enumerate() {
+            let (count, left) = self.write_in_homes(*channel, notes, range.clone(), shared);
+            written[index] = count;
+            homeless.push(left);
         }
 
         // The recording's clips, on the take's track; the notes with no
         // home on a track of their own, right under it.
-        let notes_span = homeless.first().map(|first| {
-            first.start
-                ..homeless
-                    .iter()
-                    .map(Placed::end)
-                    .max()
-                    .unwrap_or(first.end())
-        });
+        let notes_span = homeless
+            .iter()
+            .flatten()
+            .map(|note| note.start..note.end())
+            .reduce(|a, b| a.start.min(b.start)..a.end.max(b.end));
         let recorded = transcription.recorded().filter(|_| !recordings.is_empty());
         let mut recording_track = keep.under;
         if let Some(span) = recorded {
@@ -972,18 +1272,180 @@ impl Project {
             }
             _ => None,
         };
-        if let (Some(channel), Some(span)) = (channel, notes_span) {
+        if let Some(span) = notes_span {
             let track = notes_track.unwrap_or_else(|| self.take_track(keep.track, &keep.notes));
             for (pattern, start, end) in self.bar_clips(span, track, &keep.notes) {
-                let notes: Vec<Placed> = homeless
-                    .iter()
-                    .copied()
-                    .filter(|note| (start..end).contains(&note.start))
-                    .collect();
-                written += self.replace_in_pattern(pattern, channel, start..end, start, &notes);
+                for (index, (channel, _, _)) in lines.iter().enumerate() {
+                    let notes: Vec<Placed> = homeless[index]
+                        .iter()
+                        .copied()
+                        .filter(|note| (start..end).contains(&note.start))
+                        .collect();
+                    if !notes.is_empty() {
+                        written[index] +=
+                            self.replace_in_pattern(pattern, *channel, start..end, start, &notes);
+                    }
+                }
             }
         }
         written
+    }
+
+    /// `notes` written on `channel` into the patterns that already hold
+    /// that channel's notes in `range`, in place of those: a pattern
+    /// corrected once is corrected wherever it plays (the patterns that
+    /// play more than once are added to `shared`). Returns how many were
+    /// written, and the notes no pattern holds.
+    fn write_in_homes(
+        &mut self,
+        channel: usize,
+        notes: &[Placed],
+        range: Range<usize>,
+        shared: &mut Vec<(usize, usize)>,
+    ) -> (usize, Vec<Placed>) {
+        // The clips that hold the channel's notes where the take was sung.
+        let homes: Vec<Clip> = self
+            .playlist()
+            .clips()
+            .iter()
+            .copied()
+            .filter(|clip| {
+                let end = clip.start + self.clip_length(clip);
+                clip.start < range.end
+                    && end > range.start
+                    && self
+                        .pattern(clip.pattern)
+                        .is_some_and(|p| !p.notes(channel).is_empty())
+            })
+            .collect();
+
+        // The notes that find a home, by clip.
+        let mut written = 0;
+        let mut done: Vec<usize> = Vec::new();
+        for clip in &homes {
+            if done.contains(&clip.pattern) {
+                continue;
+            }
+            done.push(clip.pattern);
+            let length = self.pattern(clip.pattern).map_or(0, Pattern::length);
+            if length == 0 {
+                continue;
+            }
+            // Every place this clip plays the pattern inside the range,
+            // and where the pattern's first step is that time round. A
+            // clip trimmed at an edge leaves the steps it hides alone.
+            let rounds: Vec<(usize, Range<usize>)> = clip
+                .rounds(length)
+                .filter_map(|round| {
+                    let offset = round.at.checked_sub(round.steps.start)?;
+                    Some((offset, round.at..round.end()))
+                })
+                .collect();
+            for (offset, heard) in rounds {
+                let here = range.start.max(heard.start)..range.end.min(heard.end);
+                if here.start < here.end {
+                    let notes: Vec<Placed> = notes
+                        .iter()
+                        .copied()
+                        .filter(|note| {
+                            here.contains(&note.start)
+                                && first_home(&homes, note.start, self) == Some(*clip)
+                        })
+                        .collect();
+                    written += self.replace_in_pattern(clip.pattern, channel, here, offset, &notes);
+                }
+            }
+            let uses = self
+                .playlist()
+                .clips()
+                .iter()
+                .filter(|other| other.pattern == clip.pattern)
+                .map(|other| other.repeats)
+                .sum::<usize>();
+            if uses > 1 && !shared.iter().any(|(pattern, _)| *pattern == clip.pattern) {
+                shared.push((clip.pattern, uses));
+            }
+        }
+        let homeless = notes
+            .iter()
+            .copied()
+            .filter(|note| first_home(&homes, note.start, self).is_none())
+            .collect();
+        (written, homeless)
+    }
+
+    /// The drum hits of `transcription`, as notes on the channel of each
+    /// drum a take is heard for: one for each drum hit, made if the song
+    /// has none, and one for each drum not hit whose channel the song
+    /// has, so its notes there go.
+    fn drum_lines(&mut self, transcription: &Transcription) -> Vec<(usize, Vec<Placed>)> {
+        let mut lines = Vec::new();
+        for drum in HEARD_DRUMS {
+            let notes: Vec<Placed> = transcription
+                .drums
+                .iter()
+                .filter(|hit| hit.drum == drum)
+                .map(|hit| Placed {
+                    start: hit.step,
+                    length: 1,
+                    pitch: STEP_NOTE,
+                    velocity: hit.velocity,
+                })
+                .collect();
+            let existing = self.channels().iter().position(|channel| {
+                channel.kind == ChannelKind::Sampler(SampleSource::Builtin(drum))
+            });
+            let channel = match existing {
+                Some(channel) => Some(channel),
+                None if !notes.is_empty() => crate::library::apply::drum_channel(self, drum),
+                None => None,
+            };
+            if let Some(channel) = channel {
+                lines.push((channel, notes));
+            }
+        }
+        lines
+    }
+
+    /// The bass line as notes on the song's bass channel, or a new
+    /// acoustic-bass channel when the song has none.
+    fn bass_line(&mut self, transcription: &Transcription) -> Option<(usize, Vec<Placed>)> {
+        if transcription.bass.is_empty() {
+            return None;
+        }
+        let channel = self
+            .channels()
+            .iter()
+            .position(crate::library::apply::plays_the_bass)
+            .or_else(|| {
+                self.add_channel(Channel {
+                    name: "Bass".to_string(),
+                    program: Some(crate::general_midi::ACOUSTIC_BASS),
+                    ..Channel::synth()
+                })
+            })?;
+        Some((channel, transcription.bass.clone()))
+    }
+
+    /// Writes `chords` on the chord sheet, in place of the chords there
+    /// were on their steps; the chord that played on after them still
+    /// does. Returns how many markers were written.
+    fn write_take_chords(&mut self, chords: &SheetChords) -> usize {
+        let Range { start, end } = chords.steps;
+        let mut markers = chords.markers.clone();
+        let mut until = end;
+        if let Some(after) = self.chord_at(end)
+            && after.start < end
+            && end < self.song_length()
+        {
+            markers.push(ChordMarker::new(end, after.harmony));
+            until = end + 1;
+        }
+        if self.set_chords(start, until, &markers) {
+            chords.markers.len()
+        } else {
+            0
+        }
     }
 
     /// New empty clips on `track` covering `span`: from the bar where it
@@ -1216,6 +1678,79 @@ mod tests {
         assert_eq!(heard.pieces[0].step, 16);
         assert_eq!(heard.pieces[0].steps, 32);
         assert!(heard.pieces[0].frames.start <= 1, "{:?}", heard.pieces);
+    }
+
+    #[test]
+    fn bass_notes_land_on_the_grid_and_keep_chromatic_pitches() {
+        let project = song();
+        let take = take(Along::Song(project.playback_arrangement()), 16.0, 2.0);
+        let placed = transcribe_bass(
+            &take,
+            &[
+                BassNote {
+                    start: 0.0,
+                    end: 0.45,
+                    pitch: 28.0,
+                    loudness: -12.0,
+                },
+                BassNote {
+                    start: 0.5,
+                    end: 0.95,
+                    pitch: 29.0,
+                    loudness: -12.0,
+                },
+            ],
+            1,
+        );
+        assert_eq!(
+            placed
+                .iter()
+                .map(|note| (note.start, note.length, note.pitch.midi(), note.velocity))
+                .collect::<Vec<_>>(),
+            [(16, 4, 28, 100), (20, 4, 29, 100)]
+        );
+    }
+
+    #[test]
+    fn a_take_writes_its_bass_notes_into_the_bass_channel() {
+        let mut project = song();
+        let bass = project
+            .add_channel(Channel {
+                name: "Bass".into(),
+                program: Some(crate::general_midi::ACOUSTIC_BASS),
+                ..Channel::synth()
+            })
+            .unwrap();
+        project
+            .pattern_mut(0)
+            .unwrap()
+            .set_notes(bass, [NoteEvent::new(Note::new(36), 0, 4)]);
+        let along = Along::Song(project.playback_arrangement());
+        let transcription = Transcription {
+            bass: [Placed {
+                start: 16,
+                length: 4,
+                pitch: Note::new(33),
+                velocity: 100,
+            }]
+            .into(),
+            ..Transcription::default()
+        };
+        let keep = Keep {
+            recordings: Vec::new(),
+            ..keep(&project, 0)
+        };
+        let added = project.add_take(&along, &transcription, &Target::Nowhere, &keep);
+        assert_eq!(added.bass_notes, 1);
+        assert_eq!(
+            project.patterns()[0]
+                .notes(bass)
+                .iter()
+                .find(|note| note.start == 16)
+                .map(|note| (note.pitch.midi(), note.velocity)),
+            Some((33, 100))
+        );
+        assert!(project.channels()[bass].name == "Bass");
     }
 
     #[test]

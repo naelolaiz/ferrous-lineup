@@ -1,6 +1,9 @@
 # Takes: hearing a sung tune
 
 Files: [`crates/lineup-listen/src/voice.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-listen/src/voice.rs),
+[`crates/lineup-listen/src/bass.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-listen/src/bass.rs),
+[`crates/lineup-listen/src/drums.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-listen/src/drums.rs),
+[`crates/lineup-listen/src/chords.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-listen/src/chords.rs),
 [`crates/lineup-audio/src/input.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-audio/src/input.rs),
 [`crates/lineup-core/src/take.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-core/src/take.rs)
 and [`crates/lineup-app/src/app/voice.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/voice.rs)
@@ -22,9 +25,16 @@ to use it is in the manual's
 Three questions have to be answered for that, and each is answered in a
 different crate:
 
-1. **Which notes?** `lineup-listen` hears the pitch of the voice,
-   moment by moment, and cuts it into notes, in seconds from the start
-   of the recording. It knows nothing of songs.
+1. **Which layers?** `lineup-listen` hears the melody and bass as
+   pitches over time and cuts them into notes, in seconds from the
+   recording's start. It finds drum hits with harmonic-percussive
+   separation, NMF templates and spectral onset picking; it finds chord
+   changes with NNLS note spectra and a Viterbi decoder. It knows
+   nothing of songs. These are DSP extractors applied to the mix, not
+   source separation: drums cover kick, snare and hi-hat, and bass is a
+   monophonic estimate that has not yet been benchmarked on a reference
+   dataset. The **Extract** checkboxes in **Your take** choose which
+   results to write; chords are available only in song mode.
 2. **When were they sung?** `lineup-audio` knows when the sound card
    played each bit of the song and when the microphone heard each bit
    of the voice, and writes down, every few milliseconds, where the
