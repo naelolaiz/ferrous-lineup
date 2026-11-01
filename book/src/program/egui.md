@@ -916,6 +916,36 @@ release that belong to it. The value lives in egui's temporary memory,
 a handy place for a little state shared between widgets that do not
 know each other.
 
+**A quick click on a harmony key.** A harmony key sounds while the
+button is down on it, so the bar asks `is_pointer_button_down_on()`.
+A click whose press and release come in the same frame, as a real mouse
+often does when a frame takes a while (a debug build, a busy song), is
+never seen down: the key played nothing, and the forms row never knew
+a form was played, so its outline stayed off. `touch` tells the two
+apart:
+
+```rust
+fn touch(response: &Response) -> Option<Touch> {
+    if response.is_pointer_button_down_on() {
+        Some(Touch::Down)
+    } else if response.clicked() {
+        Some(Touch::Tap)
+    } else {
+        None
+    }
+}
+```
+
+A key held down sounds until the button is let go, as before. A tap
+plays the key with `Holder::Tap` and lets it go by itself after
+`TAP_SECONDS`, 0.3 seconds, like a short touch on a piano key;
+`request_repaint_after` wakes the app then, as no input may come to
+draw another frame. The end of an ordinary click, whose press was seen
+in an earlier frame, is a tap too, so `follow_mouse` only lets that key
+go instead of playing it again. A UX test clicks a form within one
+frame, the way the old test helper, pressing in one frame and letting
+go in the next, never did.
+
 ## Remembering between runs
 
 egui keeps some state of its own between frames in its *memory*: the zoom

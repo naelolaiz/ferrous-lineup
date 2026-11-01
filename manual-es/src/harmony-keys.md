@@ -29,7 +29,7 @@ funciones.
 **Mantén pulsada una tecla** con el ratón, o pulsa de **1** a **7** en
 el teclado del equipo, para tocar su acorde en el canal seleccionado en
 el rack de canales (*Mantén una tecla o pulsa de 1 a 7 para tocar en
-«Lineup Osc»*). Mientras suena:
+«Lineup Osc»*). Un clic rápido lo toca un momento. Mientras suena:
 
 - sus notas se encienden en el pequeño teclado de la derecha;
 - la línea de pistas de arriba de la ventana lo deletrea: «IV: Fa

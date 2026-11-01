@@ -25,7 +25,8 @@ the numerals and the three functions.
 
 **Hold a key** with the mouse, or press **1** to **7** on the computer
 keyboard, to play its chord on the channel selected in the channel rack
-("Hold a key or press 1 to 7 to play on "Lineup Osc""). While it sounds:
+("Hold a key or press 1 to 7 to play on "Lineup Osc""). A quick click
+plays it for a moment. While it sounds:
 
 - its notes light up on the small keyboard at the right;
 - the line of hints at the top of the window spells it out: "IV: F

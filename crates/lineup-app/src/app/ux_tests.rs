@@ -5304,6 +5304,58 @@ fn webern_in_set(semitones: &[u8]) -> Screen {
     screen
 }
 
+/// A click so quick that the press and the release come in the same
+/// frame, as a real mouse often does when a frame takes long: the key
+/// was never seen down, and before, nothing happened at all.
+fn quick_click(screen: &mut Screen, label: &str) {
+    screen.draw(Vec::new());
+    let output = screen.draw(Vec::new());
+    let pos = text_rect(&output, label)
+        .unwrap_or_else(|| panic!("Missing control: {label}"))
+        .center();
+    screen.draw(vec![
+        Event::PointerMoved(pos),
+        Event::PointerButton {
+            pos,
+            button: PointerButton::Primary,
+            pressed: true,
+            modifiers: Modifiers::NONE,
+        },
+        Event::PointerButton {
+            pos,
+            button: PointerButton::Primary,
+            pressed: false,
+            modifiers: Modifiers::NONE,
+        },
+    ]);
+}
+
+/// A quick click on a form plays it, so it counts as the last form
+/// played: on 6-20, T1 and T3 get the outline. Before, a click whose
+/// press and release came in one frame did nothing, and the line kept
+/// saying "Hold a key or press 1 to 4".
+#[test]
+fn a_quick_click_on_a_form_plays_it_and_moves_the_outline() {
+    let mut screen = webern_in_set(&[3, 4, 7, 8, 11, 0]);
+    quick_click(&mut screen, "T0");
+    // The form sounds for a moment, then lets go by itself.
+    assert!(screen.app.harmony_keys.is_down());
+    let output = screen.draw(Vec::new());
+    let line = "The set's forms, nearest home first. Outlined: they keep 3 notes of T0; no \
+                form keeps more.";
+    assert!(text_rect(&output, line).is_some());
+    assert!(form_outlined(&output, "T1") && form_outlined(&output, "T3"));
+    for _ in 0..3 {
+        screen.draw(Vec::new());
+    }
+    assert!(!screen.app.harmony_keys.is_down());
+    // A quick click on another key moves the outline on from it.
+    quick_click(&mut screen, "T2");
+    screen.draw(Vec::new());
+    let output = screen.draw(Vec::new());
+    assert!(text_rect(&output, "The set's forms, nearest home first. Outlined: they keep 3 notes of T2; no form keeps more.").is_some());
+}
+
 /// 6-20, the first half of Webern's row, has four forms and none keeps
 /// five of its six notes: after T0 plays, T1 and T3, which keep three,
 /// are outlined, and the line under the keys says so. Before, nothing

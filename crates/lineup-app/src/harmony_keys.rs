@@ -258,8 +258,23 @@ struct Play {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Holder {
     Mouse,
+    /// A click so quick that the key was never seen down: it sounds for
+    /// [`TAP_SECONDS`], then lets go by itself.
+    Tap,
     /// A number key on the computer keyboard, 1 to 7.
     Digit(Key),
+}
+
+/// How long a tapped harmony key sounds (see [`Holder::Tap`]).
+const TAP_SECONDS: f64 = 0.3;
+
+/// How the pointer touches a harmony key in a frame.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Touch {
+    /// The button is down on it.
+    Down,
+    /// It was clicked: pressed and let go, maybe within this one frame.
+    Tap,
 }
 
 /// The harmony key that is down, and the notes it started.
@@ -268,6 +283,8 @@ struct Down {
     key: usize,
     holder: Holder,
     notes: Vec<Note>,
+    /// When it was pressed, in the time of the app's input.
+    since: f64,
 }
 
 /// The number keys that play the harmony keys, I to vii.
@@ -363,6 +380,12 @@ impl HarmonyKeys {
 
     /// Lets go of the key that is down, if any. Called when the bar is
     /// closed, so no chord keeps playing.
+    /// Whether a harmony key is down, sounding.
+    #[cfg(test)]
+    pub(crate) fn is_down(&self) -> bool {
+        self.down.is_some()
+    }
+
     pub fn release(&mut self) -> Vec<HarmonyAction> {
         self.down
             .take()
@@ -516,8 +539,8 @@ impl HarmonyKeys {
                     };
                 }
                 let response = crate::theme::hint(response, hover);
-                if response.is_pointer_button_down_on() {
-                    pressed = Some(index);
+                if let Some(touch) = touch(&response) {
+                    pressed = Some((index, touch));
                 }
             }
             ui.separator();
@@ -563,7 +586,7 @@ impl HarmonyKeys {
                 }
             })
             .collect();
-        self.follow_mouse(pressed, &plays, &mut actions);
+        self.follow_mouse(ui, pressed, &plays, &mut actions);
         self.follow_digits(ui, digits, &plays, &mut actions);
         actions
     }
@@ -620,8 +643,8 @@ impl HarmonyKeys {
                 let response = form_key(ui, form, width, scale, lit, outlined);
                 let hover = describe_form(form, index, self.hints, scale, last);
                 let response = crate::theme::hint(response, hover);
-                if response.is_pointer_button_down_on() {
-                    pressed = Some(index);
+                if let Some(touch) = touch(&response) {
+                    pressed = Some((index, touch));
                 }
             }
             ui.separator();
@@ -649,7 +672,7 @@ impl HarmonyKeys {
                 form: Some(form.pitch_set()),
             })
             .collect();
-        self.follow_mouse(pressed, &plays, &mut actions);
+        self.follow_mouse(ui, pressed, &plays, &mut actions);
         self.follow_digits(ui, digits, &plays, &mut actions);
         self.show_far_forms(ui, scale, near);
         actions
@@ -711,8 +734,8 @@ impl HarmonyKeys {
                 let response = group_key(ui, group, width, lit);
                 let response =
                     crate::theme::hint(response, describe_group(group, index, self.hints));
-                if response.is_pointer_button_down_on() {
-                    pressed = Some(index);
+                if let Some(touch) = touch(&response) {
+                    pressed = Some((index, touch));
                 }
             }
             ui.separator();
@@ -756,7 +779,7 @@ impl HarmonyKeys {
                 form: None,
             })
             .collect();
-        self.follow_mouse(pressed, &plays, &mut actions);
+        self.follow_mouse(ui, pressed, &plays, &mut actions);
         self.follow_digits(ui, digits, &plays, &mut actions);
         actions
     }
@@ -1047,25 +1070,50 @@ impl HarmonyKeys {
     }
 
     /// Presses or releases keys with the mouse. `pressed` is the key the
-    /// mouse button is down on, if any.
+    /// mouse touches this frame, if any, and how (see [`touch`]). A key
+    /// held down sounds until the button is let go; a click so quick that
+    /// the key was never seen down sounds for [`TAP_SECONDS`], so it is
+    /// heard and counts as played (the outline on the forms follows it).
     fn follow_mouse(
         &mut self,
-        pressed: Option<usize>,
+        ui: &Ui,
+        pressed: Option<(usize, Touch)>,
         plays: &[Play],
         actions: &mut Vec<HarmonyAction>,
     ) {
+        let now = ui.input(|input| input.time);
+        if let Some(down) = self.down.as_ref().filter(|d| d.holder == Holder::Tap) {
+            let left = TAP_SECONDS - (now - down.since);
+            if left <= 0.0 || pressed.is_some() {
+                actions.extend(self.release());
+            } else {
+                ui.ctx()
+                    .request_repaint_after(std::time::Duration::from_secs_f64(left));
+            }
+        }
         let by_mouse = self
             .down
             .as_ref()
             .filter(|d| d.holder == Holder::Mouse)
             .map(|d| d.key);
-        if by_mouse.is_some() && by_mouse != pressed {
+        let held = pressed
+            .filter(|&(_, touch)| touch == Touch::Down)
+            .map(|(index, _)| index);
+        if by_mouse.is_some() && by_mouse != held {
             actions.extend(self.release());
         }
-        if let Some(index) = pressed
-            && self.down.is_none()
-        {
-            self.press(index, Holder::Mouse, plays, actions);
+        match pressed {
+            Some((index, Touch::Down)) if self.down.is_none() => {
+                self.press(index, Holder::Mouse, now, plays, actions);
+            }
+            // The end of a click whose press was seen: let go, done above.
+            Some((index, Touch::Tap)) if by_mouse == Some(index) => {}
+            Some((index, Touch::Tap)) if self.down.is_none() => {
+                self.press(index, Holder::Tap, now, plays, actions);
+                ui.ctx()
+                    .request_repaint_after(std::time::Duration::from_secs_f64(TAP_SECONDS));
+            }
+            _ => {}
         }
     }
 
@@ -1113,7 +1161,8 @@ impl HarmonyKeys {
             let index = DIGITS.iter().position(|&digit| digit == key).unwrap_or(0);
             if pressed {
                 actions.extend(self.release());
-                self.press(index, holder, plays, actions);
+                let now = ui.input(|input| input.time);
+                self.press(index, holder, now, plays, actions);
             } else if self.down.as_ref().is_some_and(|d| d.holder == holder) {
                 actions.extend(self.release());
             }
@@ -1124,6 +1173,7 @@ impl HarmonyKeys {
         &mut self,
         index: usize,
         holder: Holder,
+        since: f64,
         plays: &[Play],
         actions: &mut Vec<HarmonyAction>,
     ) {
@@ -1144,6 +1194,7 @@ impl HarmonyKeys {
             key: index,
             holder,
             notes,
+            since,
         });
     }
 }
@@ -1520,6 +1571,21 @@ fn form_key(
         KEY_TEXT_DIM,
     );
     response
+}
+
+/// How the pointer touches a harmony key this frame, if it does: held
+/// down, or clicked. A quick click in a busy frame (a slow computer, a
+/// debug build, a tap on a touchpad) brings the press and the release
+/// in the same frame, so the button is never seen down; it is still a
+/// click, and plays the key (see [`HarmonyKeys::follow_mouse`]).
+fn touch(response: &Response) -> Option<Touch> {
+    if response.is_pointer_button_down_on() {
+        Some(Touch::Down)
+    } else if response.clicked() {
+        Some(Touch::Tap)
+    } else {
+        None
+    }
 }
 
 /// The outline on the forms row: from which form, named by its degree,

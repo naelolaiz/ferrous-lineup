@@ -959,6 +959,38 @@ arrastre y la soltada que le pertenecen. El valor vive en la memoria
 temporal de egui, un lugar cómodo para un poco de estado compartido
 entre widgets que no se conocen entre sí.
 
+**Un clic rápido en una tecla de armonía.** Una tecla de armonía suena
+mientras el botón está apretado sobre ella, así que la barra pregunta
+`is_pointer_button_down_on()`. Un clic cuya pulsación y suelta llegan en
+el mismo frame, como hace a menudo un ratón de verdad cuando un frame
+tarda (una compilación de depuración, una canción cargada), nunca se ve
+apretado: la tecla no tocaba nada, y la fila de formas nunca sabía que
+se había tocado una forma, así que su borde no aparecía. `touch`
+distingue los dos casos:
+
+```rust
+fn touch(response: &Response) -> Option<Touch> {
+    if response.is_pointer_button_down_on() {
+        Some(Touch::Down)
+    } else if response.clicked() {
+        Some(Touch::Tap)
+    } else {
+        None
+    }
+}
+```
+
+Una tecla mantenida suena hasta que se suelta el botón, como antes. Un
+toque rápido toca la tecla con `Holder::Tap` y la suelta sola después de
+`TAP_SECONDS`, 0,3 segundos, como un toque corto en una tecla de piano;
+`request_repaint_after` despierta la aplicación entonces, porque puede
+que ninguna entrada pida dibujar otro frame. El final de un clic normal,
+cuya pulsación se vio en un frame anterior, también es un toque, así que
+`follow_mouse` solo suelta esa tecla en lugar de tocarla de nuevo. Una
+prueba de interfaz hace clic en una forma dentro de un solo frame, cosa
+que la ayuda de prueba anterior, que pulsaba en un frame y soltaba en el
+siguiente, nunca hacía.
+
 ## Recordar entre ejecuciones
 
 egui guarda algo de estado propio entre frames en su *memoria*: el
