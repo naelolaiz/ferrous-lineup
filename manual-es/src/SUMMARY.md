@@ -12,11 +12,11 @@
 # Parte 2: Canciones con la banda
 
 - [La hoja de acordes](chord-sheet.md)
-- [Los estilos y la Biblioteca](styles.md)
+- [Los estilos de la Biblioteca](styles.md)
 - [Forma de la canción y secciones](song-form.md)
 - [Golpes, sostenidos, silencios y anticipaciones](stops.md)
-- [Swing y sensación](swing.md)
-- [Una banda más grande y los vientos](bigger-band.md)
+- [Swing y soltura](swing.md)
+- [Una banda más grande: guitarra, cuerdas, órgano y vientos](bigger-band.md)
 - [Bloquear una pista y tocar tu parte](locks.md)
 - [El solista (experimental)](soloist.md)
 - [Tus propios estilos](style-editor.md)
@@ -46,7 +46,7 @@
 - [Los acordes y sus nombres](chords.md)
 - [Qué hacen los acordes: números romanos y funciones](chord-functions.md)
 - [Acordes de fuera de la tonalidad](outside-the-key.md)
-- [La conducción de voces y cómo se mueven las partes](voice-leading.md)
+- [La conducción de voces: cómo se mueven las partes](voice-leading.md)
 - [Ritmo y métrica](rhythm-and-meter.md)
 - [Más allá de las tonalidades: conjuntos, series y micromodos](sets-rows-micromodes.md)
 - [Practicar](practising.md)
@@ -55,11 +55,11 @@
 # Parte 6: Las demostraciones, guía de escucha
 
 - [Encontrar una demostración](finding-a-demo.md)
-- [El folclore sudamericano y la Misa Criolla](folk-and-misa-criolla.md)
-- [El tango y Latinoamérica](tango-and-latin-america.md)
+- [El folclore latinoamericano](folk-and-misa-criolla.md)
+- [El tango, la música latina y el flamenco](tango-and-latin-america.md)
 - [Jazz, blues, gospel y pop](jazz-and-pop.md)
 - [La sala de conciertos](concert-hall.md)
-- [Métricas irregulares y los Balcanes](odd-meters-and-balkans.md)
+- [Métricas irregulares: bailes balcánicos y turcos, y más](odd-meters-and-balkans.md)
 
 # Referencia
 

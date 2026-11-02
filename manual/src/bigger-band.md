@@ -1,4 +1,4 @@
-# A bigger band and the horns
+# A bigger band: guitar, strings, organ and horns
 
 A piano, a bass and drums are a jazz trio, and the rhythm section of
 most bands. But a rock band without its guitar, or a tango without its
@@ -10,7 +10,7 @@ uses it, and any style can add a **horn section**.
 
 **🎷 Band**, at the top left of the chord sheet, chooses who plays and
 with which sounds. What they play, the drums and the chord and bass
-parts, comes from the Library (see [Styles and the
+parts, comes from the Library (see [Styles in the
 Library](styles.md)); this menu leaves it alone.
 
 ![The Band menu of a bossa nova: Instrument lineup, then Piano, Bass, Drums and Guitar ticked with their instruments, Horn section, Soloist (experimental), Another solo, and No band](images/band-menu.png)

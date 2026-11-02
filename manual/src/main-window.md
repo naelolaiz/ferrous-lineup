@@ -57,7 +57,7 @@ The panel on the left has two tabs:
 
 - **Library**, in front when the app starts: the styles, rhythms and
   fills the band can play, and your own styles. Click one to try it in
-  your song. See [Styles and the Library](styles.md).
+  your song. See [Styles in the Library](styles.md).
 - **Patterns**: the song's patterns, the blocks the playlist is made of.
   Click one to select it. See [Patterns and the
   playlist](patterns-and-playlist.md).

@@ -62,7 +62,7 @@ piano and the bass do with each chord. To try another one:
 
 Pick styles while the song plays, and the band carries on in each new
 one.
-**Ctrl+Z** goes back to the style before. [Styles and the
+**Ctrl+Z** goes back to the style before. [Styles in the
 Library](styles.md) describes the Library and every option of that
 window.
 

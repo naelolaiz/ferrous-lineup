@@ -1,4 +1,4 @@
-# Swing and feel
+# Swing and loose timing
 
 Clap along to a jazz or blues record and say "da-da da-da" with the
 eighth notes. It won't fit: the band plays "doo-ba doo-ba", a long note
@@ -44,7 +44,7 @@ Each style brings its own swing: **Swing**, **Jazz ballad**, **Jazz
 waltz** and **Shuffle** at 100%, **Rock and roll** at 50%, most others
 straight. Change it, and the style remembers: the next time you pick it,
 in any song, it plays with your amount. The Library's **Swing** option
-(see [Styles and the Library](styles.md)) says whether a style brings its
+(see [Styles in the Library](styles.md)) says whether a style brings its
 swing to the song. The swing is the whole song's, so it swings the
 melody too, as a jazz singer swings the tune.
 

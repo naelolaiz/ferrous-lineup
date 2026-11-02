@@ -93,7 +93,7 @@ also for the next time; **Done** closes the window.
 ### Library
 
 The style list, the choices each style's window starts with, and the
-folder of your own styles: see [Styles and the
+folder of your own styles: see [Styles in the
 Library](styles.md#the-library-settings).
 
 ### Audio

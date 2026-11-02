@@ -1180,6 +1180,61 @@ pub(super) const JESUSITA_EN_CHIHUAHUA: Song = Song {
             strain runs up the D7 scale before each return.",
 };
 
+const CIELITO_REFRAIN: &str = "E5:12 | D5:8 C5:4 | A4:12 | _:12 | D5:12 | D5:8 C5:2 C5:2 | \
+                               E5:4 C5:8 | _:8 G4:4 | A4:8 G4:4 | A4:4 A4:4 G4:2 G4:2 | \
+                               F5:4 F5:4 D5:4 | _:4 B4:4 G4:4 | A4:4 A4:4 G4:4 | _:4 F4:4 G4:4 | \
+                               E4:2 D4:2 C4:8 | _:12";
+
+const CIELITO_REFRAIN_CHORDS: &str =
+    "I | I | IV | IV | ii | V7 | I | I | I | I | IV | V7 | V7 | V7 | I | I";
+
+// Source: https://github.com/syntithenai/abc2book/blob/master/abcresources/jc/abc_tune_jc_201262323.abc
+// (John Chambers' ABC of 2015 with the Spanish words), checked against the
+// Wikifonia lead sheet, whose chord before G7 in the refrain, D minor, is
+// used here: https://github.com/oriolcolomefont/The-Sound-of-AI-workshop/blob/138a0d35ab47782acc1da8abce4ad83057904961/wikifonia-dataset/original-abc/MexicanfolksongCielitoLindo.abc
+pub(super) const CIELITO_LINDO: Song = Song {
+    name: "Cielito lindo",
+    origin: "Quirino Mendoza y Cortés, 1882",
+    feel: "Ranchera",
+    genre: Genre::Folklore,
+    tonic: C,
+    mode: Major,
+    time: THREE_FOUR,
+    tempo: 150.0,
+    comping: Comping::Waltz,
+    bass: Bass::Waltz,
+    rhythm: "Ranchera",
+    band: MARIACHI,
+    style: "Ranchera",
+    parts: &[
+        Part::new(
+            "Verse",
+            "C5:4 C5:4 A4:4 | _:4 B4:4 G4:4 | C5:4 C5:4 A4:4 | _:4 B4:4 G4:4 | \
+             C5:4 C5:4 A4:4 | _:4 B4:4 G4:4 | F4:4 D4:8 | _:12 | \
+             B4:4 B4:4 B4:4 | B4:4 A4:4 G4:4 | F4:4 D4:4 D4:4 | _:4 E4:4 F4:4 | \
+             G4:4 G4:4 G4:4 | _:4 G4:6 F4:2 | E4:2 D4:2 C4:8 | _:12",
+            "I | V7 | I | V7 | I | I | ii | ii | V | V | V7 | V7 | V7 | V7 | I | I",
+        ),
+        Part::new("Refrain", CIELITO_REFRAIN, CIELITO_REFRAIN_CHORDS),
+        Part::new("Last refrain", CIELITO_REFRAIN, CIELITO_REFRAIN_CHORDS)
+            .with_tempo(&[glide(144, 116, 24), fermata(172, 20)]),
+    ],
+    form: &[
+        "Verse",
+        "Refrain",
+        "Refrain",
+        "Verse",
+        "Refrain",
+        "Last refrain",
+    ],
+    drums_from: 0,
+    about: "\"De la Sierra Morena, cielito lindo...\": written in 1882 and sung all over \
+            Mexico as if it were a folk song, here as a mariachi waltz. The verse rocks \
+            between C and G7 and sinks to D minor; the refrain, \"Ay, ay, ay, ay, canta y no \
+            llores\" (sing and don't cry), starts on a long high E. The last time the \
+            mariachi slows down and holds the final note.",
+};
+
 /// The chorus, "Y por eso los grandes amores", with the pickup back into it.
 const DE_COLORES_CHORUS_TUNE: &str = "D5:2 D5 D5 D5 E5:3 D5:1 | D5:2 C5:3 C5:1 C5:2 D5 C5 | \
                                       C5 Bb4 C5 D5 C5 Bb4 | A4:6 -:2 Bb4 C5";

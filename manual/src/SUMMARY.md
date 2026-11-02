@@ -12,11 +12,11 @@
 # Part 2: Songs with the band
 
 - [The chord sheet](chord-sheet.md)
-- [Styles and the Library](styles.md)
+- [Styles in the Library](styles.md)
 - [Song form and sections](song-form.md)
 - [Shots, holds, rests and pushes](stops.md)
-- [Swing and feel](swing.md)
-- [A bigger band and the horns](bigger-band.md)
+- [Swing and loose timing](swing.md)
+- [A bigger band: guitar, strings, organ and horns](bigger-band.md)
 - [Locking a track, and playing your part](locks.md)
 - [The soloist (experimental)](soloist.md)
 - [Your own styles](style-editor.md)
@@ -46,7 +46,7 @@
 - [Chords and their names](chords.md)
 - [What chords do: numerals and functions](chord-functions.md)
 - [Chords from outside the key](outside-the-key.md)
-- [Voice leading and how parts move](voice-leading.md)
+- [Voice leading: how parts move](voice-leading.md)
 - [Rhythm and meter](rhythm-and-meter.md)
 - [Beyond keys: sets, rows and micromodes](sets-rows-micromodes.md)
 - [Practising](practising.md)
@@ -55,11 +55,11 @@
 # Part 6: The demos, a listening guide
 
 - [Finding a demo](finding-a-demo.md)
-- [Folk music of South America, and the Misa Criolla](folk-and-misa-criolla.md)
-- [Tango and Latin America](tango-and-latin-america.md)
+- [Latin American folklore](folk-and-misa-criolla.md)
+- [Tango, Latin music and flamenco](tango-and-latin-america.md)
 - [Jazz, blues, gospel and pop](jazz-and-pop.md)
 - [The concert hall](concert-hall.md)
-- [Odd meters and the Balkans](odd-meters-and-balkans.md)
+- [Odd meters: Balkan and Turkish dances and more](odd-meters-and-balkans.md)
 
 # Reference
 

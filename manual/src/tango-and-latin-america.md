@@ -1,4 +1,4 @@
-# Tango and Latin America
+# Tango, Latin music and flamenco
 
 One rhythm runs through this chapter. The Cuban **habanera** goes long,
 short, long, long. Tie its two middle notes together and it becomes the

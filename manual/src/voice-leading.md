@@ -1,4 +1,4 @@
-# Voice leading and how parts move
+# Voice leading: how parts move
 
 The chord names say which notes sound together. **Voice leading** is
 how each part gets from its note in one chord to its note in the next.

@@ -28,9 +28,9 @@ se explica en el manual de usuario: [Ritmo y
 métrica](https://naelolaiz.github.io/ferrous-lineup/es/manual/rhythm-and-meter.html),
 [Tempo, compases y cambios de
 tonalidad](https://naelolaiz.github.io/ferrous-lineup/es/manual/tempo-meter-key.html),
-[Swing y sensación](https://naelolaiz.github.io/ferrous-lineup/es/manual/swing.html)
-y [Métricas irregulares y los
-Balcanes](https://naelolaiz.github.io/ferrous-lineup/es/manual/odd-meters-and-balkans.html).
+[Swing y soltura](https://naelolaiz.github.io/ferrous-lineup/es/manual/swing.html)
+y [Métricas irregulares: bailes balcánicos
+y turcos, y más](https://naelolaiz.github.io/ferrous-lineup/es/manual/odd-meters-and-balkans.html).
 Este capítulo trata del código.
 
 ## `TimeSignature`: dos números y una agrupación

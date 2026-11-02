@@ -27,9 +27,9 @@ what a ritardando and a swing are) is explained in the user manual:
 meter](https://naelolaiz.github.io/ferrous-lineup/manual/rhythm-and-meter.html),
 [Tempo, time signatures and key
 changes](https://naelolaiz.github.io/ferrous-lineup/manual/tempo-meter-key.html),
-[Swing and feel](https://naelolaiz.github.io/ferrous-lineup/manual/swing.html)
-and [Odd meters and the
-Balkans](https://naelolaiz.github.io/ferrous-lineup/manual/odd-meters-and-balkans.html).
+[Swing and loose timing](https://naelolaiz.github.io/ferrous-lineup/manual/swing.html)
+and [Odd meters: Balkan and
+Turkish dances and more](https://naelolaiz.github.io/ferrous-lineup/manual/odd-meters-and-balkans.html).
 This chapter is about the code.
 
 ## `TimeSignature`: two numbers and a grouping

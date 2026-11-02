@@ -58,7 +58,7 @@ El panel de la izquierda tiene dos pestañas:
 
 - **Biblioteca**, delante al arrancar la aplicación: los estilos, ritmos
   y rellenos que la banda puede tocar, y tus propios estilos. Haz clic
-  en uno para probarlo en tu canción. Ver [Los estilos y la
+  en uno para probarlo en tu canción. Ver [Los estilos de la
   Biblioteca](styles.md).
 - **Patrones**: los patrones de la canción, los bloques de los que está
   hecha la lista de reproducción. Haz clic en uno para seleccionarlo.

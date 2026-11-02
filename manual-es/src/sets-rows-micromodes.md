@@ -618,8 +618,8 @@ conjunto, como la música tonal toma su sonido de su tonalidad: sus notas
 salen de formas del conjunto, una forma tras otra. Así que cuando la
 tonalidad es un micromodo o cualquier otro conjunto de clases de
 alturas, la casilla **Conducción de voces** del piano roll revisa el
-color en lugar de las reglas clásicas (ver [Conducción de voces y
-movimiento de las partes](voice-leading.md)).
+color en lugar de las reglas clásicas (ver [La conducción de voces:
+cómo se mueven las partes](voice-leading.md)).
 
 1. Abre una canción cuya tonalidad sea un conjunto o un micromodo, como
    **Archivo > Demostraciones > Micromodos > Color Menor 3**.

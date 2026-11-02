@@ -35,7 +35,7 @@ Along the top: **Start from…**, **Save style**, **Save as…**, **Undo**,
 | **BPM** | its usual tempo |
 | time signature | its meter |
 | **Bars** | how long the pattern is, 1 to 16 bars |
-| **Swing** | its swing (see [Swing and feel](swing.md)) |
+| **Swing** | its swing (see [Swing and loose timing](swing.md)) |
 | **Progression** | a chord progression it brings, as Roman numerals or chord names, bars separated by `|`: `I | vi | ii7 | V7`. Leave it empty for a style that plays your chords |
 | **Description** | a sentence, shown when you point at the style in the Library |
 | **Part assignments** | which player each lane is: drums, piano, bass, guitar and so on |
@@ -77,7 +77,7 @@ Your saved styles join the Library's list, next to the built-in ones,
 in a group of their own, **User styles** (or among the others in the
 alphabetical list). Applying one works as for any style: **Drums**
 brings its drum lanes, **Chord and bass parts** its other lanes,
-**Voices / instruments** their sounds, and so on (see [Styles and the
+**Voices / instruments** their sounds, and so on (see [Styles in the
 Library](styles.md)). A style of your own plays in the band, so its
 drums and its sounds come only with its chord and bass parts: with
 those unticked, the Library says to tick them.

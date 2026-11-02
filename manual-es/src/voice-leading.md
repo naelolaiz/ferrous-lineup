@@ -1,4 +1,4 @@
-# La conducción de voces y cómo se mueven las partes
+# La conducción de voces: cómo se mueven las partes
 
 Los nombres de los acordes dicen qué notas suenan juntas. La
 **conducción de voces** es cómo pasa cada parte de su nota en un acorde a

@@ -1,4 +1,4 @@
-# El tango y Latinoamérica
+# El tango, la música latina y el flamenco
 
 Un ritmo recorre este capítulo. La **habanera** cubana va larga, corta,
 larga, larga. Liga sus dos notas del medio y se vuelve el **tresillo**,

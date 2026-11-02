@@ -33,8 +33,8 @@ locks](song-form.md); breaks in the band's playing in
 [Shots, holds, rests and pushes](stops.md). How to use the
 band is in the manual's [Your first
 song](https://naelolaiz.github.io/ferrous-lineup/manual/first-song.html)
-and [A bigger band and the
-horns](https://naelolaiz.github.io/ferrous-lineup/manual/bigger-band.html).
+and [A bigger band: guitar, strings,
+organ and horns](https://naelolaiz.github.io/ferrous-lineup/manual/bigger-band.html).
 
 ## The music, briefly
 

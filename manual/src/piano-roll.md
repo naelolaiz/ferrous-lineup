@@ -147,7 +147,7 @@ velocity of the notes on that step, or of the selected ones there.
   this one's, so you can write a bass line that fits the chords, and
   names the chords they all make together.
 - **Voice leading** draws how each voice moves from one chord to the
-  next (see [Voice leading and how parts move](voice-leading.md)).
+  next (see [Voice leading: how parts move](voice-leading.md)).
 
 ## The key and the windows of sets
 
