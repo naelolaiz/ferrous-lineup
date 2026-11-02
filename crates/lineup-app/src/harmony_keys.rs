@@ -356,6 +356,11 @@ pub struct HarmonyKeys {
     /// the forms outlined while it did (see
     /// [`HarmonyKeys::show_far_forms`]).
     far_forms: Vec<PitchSet>,
+    /// The time signature where the music is (the playhead, or where
+    /// Play will start), set before each [`HarmonyKeys::show`]: when it
+    /// is not the one the song starts in, it is written under the Time
+    /// menu, as the key is under the Key menus.
+    pub time_here: Option<lineup_core::meter::TimeSignature>,
     /// The forms of the key read in the music last time.
     forms_read: Option<FormsRead>,
 }
@@ -392,6 +397,7 @@ impl HarmonyKeys {
             all_forms: false,
             forms: false,
             far_forms: Vec::new(),
+            time_here: None,
             forms_read: None,
         }
     }
@@ -1035,6 +1041,20 @@ impl HarmonyKeys {
             }
             ui.weak(trf("{} steps a bar", &[&time.steps_per_bar()]));
         });
+        if let Some(now) = self.time_here.filter(|&now| now != project.time_signature) {
+            ui.label(
+                egui::RichText::new(trf(
+                    "Now in {} ({} steps a bar)",
+                    &[&now, &now.steps_per_bar()],
+                ))
+                .color(SUGGESTED),
+            )
+            .on_hover_text(tr(
+                "The music here is in another time signature than the song's start (see the \
+                     time markers on the playlist), so its bars are this long. The menu above \
+                     is the time the song starts in",
+            ));
+        }
         let scale = here;
         let set = scale.pitch_set();
         let trichord = set.len() == 3;

@@ -2004,6 +2004,16 @@ impl LineupApp {
         }
     }
 
+    /// The time signature where the music is, as `key_here` is
+    /// its key: at the playhead, or where Play will start, in the song;
+    /// the pattern's own in a pattern played alone.
+    fn time_here(&self) -> lineup_core::TimeSignature {
+        match self.song_position() {
+            Some((step, _)) => self.project.meter().time_at(step),
+            None => self.project.pattern_time(self.pattern),
+        }
+    }
+
     fn song_position(&self) -> Option<(usize, Pass)> {
         if self.mode != PlayMode::Song {
             return None;
@@ -2178,6 +2188,7 @@ impl LineupApp {
             && !self.chord_sheet.has_keyboard()
             && !widgets::modal_open(ctx);
         let here = self.key_here();
+        self.harmony_keys.time_here = Some(self.time_here());
         egui::Panel::bottom("harmony-keys")
             .frame(panel_frame(theme::PANEL).inner_margin(egui::Margin::symmetric(8, 4)))
             .show(ui, |ui| {
