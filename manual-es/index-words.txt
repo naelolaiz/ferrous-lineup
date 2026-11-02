@@ -205,7 +205,7 @@ Muestra: channel-rack.md#tus-propios-sonidos
 Nombres de los acordes: chords.md#escribir-los-nombres-de-los-acordes
 Nomenclatura de notas: settings.md#armonía
 Nota de paso: soloist.md#notas-entre-los-pulsos
-Nota pedal: tango-and-latin-america.md#el-flamenco, odd-meters-and-balkans.md#cinco-pulsos-en-la-sala-de-conciertos-y-en-el-jazz
+Nota pedal: tango-and-latin-america.md#el-flamenco, odd-meters-and-balkans.md#cinco-negras-por-compás
 Notas blue: jazz-and-pop.md#el-blues
 Notas del acorde: soloist.md#notas-del-acorde-en-el-pulso
 Notas extrañas: soloist.md#notas-entre-los-pulsos

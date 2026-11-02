@@ -195,7 +195,7 @@ Passing note: soloist.md#notes-between-the-beats
 Pattern mode: patterns-and-playlist.md#pattern-mode-and-song-mode
 Patterns: patterns-and-playlist.md#patterns
 PDF: lead-sheets.md#the-lead-sheet-window
-Pedal point: tango-and-latin-america.md#flamenco, odd-meters-and-balkans.md#five-beats-in-the-concert-hall-and-in-jazz
+Pedal point: tango-and-latin-america.md#flamenco, odd-meters-and-balkans.md#five-quarter-notes-to-the-bar
 Pentatonic scale: jazz-and-pop.md#spirituals-and-gospel, folk-and-misa-criolla.md#the-andes
 Phrygian mode: keys-and-modes.md#the-modes, tango-and-latin-america.md#flamenco, odd-meters-and-balkans.md#makam-hicaz
 Piano roll: main-window.md#the-windows, notes-and-scales.md#seeing-and-hearing-it-in-the-app, piano-roll.md

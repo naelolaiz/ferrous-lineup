@@ -89,7 +89,7 @@ repeat every bar or two, like the **clave** of Cuban music and the
 
 **Swing** is the other great rhythmic idea of jazz: the eighth notes of
 each beat played long-short, closer to the first and third notes of a
-triplet than to two equal halves. See [Swing and feel](swing.md).
+triplet than to two equal halves. See [Swing and loose timing](swing.md).
 
 ## Odd meters
 

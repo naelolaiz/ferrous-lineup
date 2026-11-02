@@ -1,4 +1,4 @@
-# Odd meters and the Balkans
+# Odd meters: Balkan and Turkish dances and more
 
 The dances of Bulgaria, Greece, Macedonia, Serbia, Romania and Turkey
 count their beats in groups of two and three eighths mixed, long and
@@ -43,7 +43,7 @@ second**, B♭ up to C♯, gives it its eastern colour. Listen for it in:
 In the Turkish songs, singers and players go in unison over a drum, and
 the chords in the demos are added from the notes the tune leans on.
 
-## Five beats in the concert hall and in jazz
+## Five quarter notes to the bar
 
 | Demo | Meter | Listen for |
 |---|---|---|

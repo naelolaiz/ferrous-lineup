@@ -157,7 +157,7 @@ seleccionadas ahí.
   detrás de las de este, para que puedas escribir una línea de bajo que
   encaje con los acordes, y nombra los acordes que forman todos juntos.
 - **Conducción de voces** dibuja cómo se mueve cada voz de un acorde al
-  siguiente (ver [La conducción de voces y cómo se mueven las
+  siguiente (ver [La conducción de voces: cómo se mueven las
   partes](voice-leading.md)).
 
 ## La tonalidad y las ventanas de conjuntos

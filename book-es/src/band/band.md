@@ -36,8 +36,8 @@ en lo que toca la banda, en [Golpes, sostenidos, silencios y
 anticipaciones](stops.md). Cómo se usa la banda está en los
 capítulos del manual [Tu primera
 canción](https://naelolaiz.github.io/ferrous-lineup/es/manual/first-song.html)
-y [Una banda más grande y los
-vientos](https://naelolaiz.github.io/ferrous-lineup/es/manual/bigger-band.html).
+y [Una banda más grande: guitarra, cuerdas,
+órgano y vientos](https://naelolaiz.github.io/ferrous-lineup/es/manual/bigger-band.html).
 
 ## La música, en pocas palabras
 

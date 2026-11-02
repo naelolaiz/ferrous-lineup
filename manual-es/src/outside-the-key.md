@@ -133,10 +133,10 @@ se ponen en los números de compás de la lista de reproducción: ver
 
 ## Oírlos en las demostraciones
 
-Las demostraciones de **Archivo > Demostraciones > Estilos > Clásica**
+Las demostraciones de **Archivo > Demostraciones > Estilos > Clásica y de cine**
 incluyen progresiones cortas que muestran estos acordes: **Plagal
 menor** (iv a I), **Tercera de picardía**, **Napolitano** y **Mediantes
 cromáticas** (acordes mayores a una tercera de distancia, como en la
 música de cine). Las canciones también están llenas de ellos. Abre la
-hoja de acordes de un estándar de jazz como *Rhythm changes* y busca los
+hoja de acordes de un estándar de jazz como *I Got Rhythm* y busca los
 números amarillos.

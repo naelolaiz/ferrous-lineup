@@ -1,4 +1,4 @@
-//! Latin: bossa nova, samba, choro, maxixe, marchinha, son, bolero and the Mexican ranchera.
+//! Latin: bossa nova, samba, choro, maxixe, marchinha, son and bolero.
 
 use super::*;
 
@@ -243,61 +243,6 @@ pub(super) const EL_MANISERO: Song = Song {
             the world. The clave takes two bars, the bar of two hits first, as the tune does. \
             The bass plays no note on the first beat: it plays on the \"and\" of 2 and on 4, \
             where it already plays the root of the next chord.",
-};
-
-const CIELITO_REFRAIN: &str = "E5:12 | D5:8 C5:4 | A4:12 | _:12 | D5:12 | D5:8 C5:2 C5:2 | \
-                               E5:4 C5:8 | _:8 G4:4 | A4:8 G4:4 | A4:4 A4:4 G4:2 G4:2 | \
-                               F5:4 F5:4 D5:4 | _:4 B4:4 G4:4 | A4:4 A4:4 G4:4 | _:4 F4:4 G4:4 | \
-                               E4:2 D4:2 C4:8 | _:12";
-
-const CIELITO_REFRAIN_CHORDS: &str =
-    "I | I | IV | IV | ii | V7 | I | I | I | I | IV | V7 | V7 | V7 | I | I";
-
-// Source: https://github.com/syntithenai/abc2book/blob/master/abcresources/jc/abc_tune_jc_201262323.abc
-// (John Chambers' ABC of 2015 with the Spanish words), checked against the
-// Wikifonia lead sheet, whose chord before G7 in the refrain, D minor, is
-// used here: https://github.com/oriolcolomefont/The-Sound-of-AI-workshop/blob/138a0d35ab47782acc1da8abce4ad83057904961/wikifonia-dataset/original-abc/MexicanfolksongCielitoLindo.abc
-pub(super) const CIELITO_LINDO: Song = Song {
-    name: "Cielito lindo",
-    origin: "Quirino Mendoza y Cortés, 1882",
-    feel: "Ranchera",
-    genre: Genre::Latin,
-    tonic: C,
-    mode: Major,
-    time: THREE_FOUR,
-    tempo: 150.0,
-    comping: Comping::Waltz,
-    bass: Bass::Waltz,
-    rhythm: "Ranchera",
-    band: MARIACHI,
-    style: "Ranchera",
-    parts: &[
-        Part::new(
-            "Verse",
-            "C5:4 C5:4 A4:4 | _:4 B4:4 G4:4 | C5:4 C5:4 A4:4 | _:4 B4:4 G4:4 | \
-             C5:4 C5:4 A4:4 | _:4 B4:4 G4:4 | F4:4 D4:8 | _:12 | \
-             B4:4 B4:4 B4:4 | B4:4 A4:4 G4:4 | F4:4 D4:4 D4:4 | _:4 E4:4 F4:4 | \
-             G4:4 G4:4 G4:4 | _:4 G4:6 F4:2 | E4:2 D4:2 C4:8 | _:12",
-            "I | V7 | I | V7 | I | I | ii | ii | V | V | V7 | V7 | V7 | V7 | I | I",
-        ),
-        Part::new("Refrain", CIELITO_REFRAIN, CIELITO_REFRAIN_CHORDS),
-        Part::new("Last refrain", CIELITO_REFRAIN, CIELITO_REFRAIN_CHORDS)
-            .with_tempo(&[glide(144, 116, 24), fermata(172, 20)]),
-    ],
-    form: &[
-        "Verse",
-        "Refrain",
-        "Refrain",
-        "Verse",
-        "Refrain",
-        "Last refrain",
-    ],
-    drums_from: 0,
-    about: "\"De la Sierra Morena, cielito lindo...\": written in 1882 and sung all over \
-            Mexico as if it were a folk song, here as a mariachi waltz. The verse rocks \
-            between C and G7 and sinks to D minor; the refrain, \"Ay, ay, ay, ay, canta y no \
-            llores\" (sing and don't cry), starts on a long high E. The last time the \
-            mariachi slows down and holds the final note.",
 };
 
 // Source: https://raw.githubusercontent.com/oriolcolomefont/The-Sound-of-AI-workshop/138a0d35ab47782acc1da8abce4ad83057904961/wikifonia-dataset/original-abc/GonzaloRoigQuieremeMuchoYours.abc

@@ -43,7 +43,7 @@ qué se pasó a otra octava, cuando hubo que acortar una obra.
 | *En la gruta del rey de la montaña*, Grieg | los trolls que suben a hurtadillas por la escala de Si menor sobre un bajo en Si, cada vez más rápido: mira la franja de tempo de la lista de reproducción |
 | *Danza macabra*, Saint-Saëns | la Muerte afinando su violín en un tritono, La contra Mi♭ |
 | *Largo del Nuevo Mundo*, Dvořák | la melodía del corno inglés, toda en pentatónica mayor, como un espiritual |
-| *Dies irae*, del *Réquiem* de Mozart | Re menor en octavas, sin acordes; luego tonalidades nuevas, cada una alcanzada por un acorde de séptima disminuida |
+| *Dies irae (Mozart)*, de su *Réquiem* | Re menor en octavas, sin acordes; luego tonalidades nuevas, cada una alcanzada por un acorde de séptima disminuida |
 | *Himno de Júpiter*, Holst | cada línea empieza en IV, no en I |
 | *Himno Nacional Argentino* | una estrofa que pasa a Si♭ menor y llega a Fa por séptimas disminuidas y una sexta alemana |
 
@@ -95,5 +95,5 @@ tonalidades](sets-rows-micromodes.md#una-armonía-cuatro-nombres)).
 
 La *Promenade* de *Cuadros de una exposición*, de Músorgski, y el
 segundo movimiento de la *Sinfonía Patética* de Chaikovski, un vals en
-cinco, están en [Métricas irregulares y los
-Balcanes](odd-meters-and-balkans.md).
+cinco, están en [Métricas irregulares: bailes balcánicos y turcos, y
+más](odd-meters-and-balkans.md).

@@ -39,7 +39,7 @@ Debajo:
 | **BPM** | su tempo habitual |
 | compás | su métrica |
 | **Compases** | cuánto dura el patrón, de 1 a 16 compases |
-| **Swing** | su swing (ver [Swing y sensación](swing.md)) |
+| **Swing** | su swing (ver [Swing y soltura](swing.md)) |
 | **Progresión** | una progresión de acordes que trae, en números romanos o nombres de acordes, con los compases separados por `|`: `I | vi | ii7 | V7`. Déjala vacía para un estilo que toque tus acordes |
 | **Descripción** | una frase, que aparece al señalar el estilo en la Biblioteca |
 | **Asignación de partes** | qué músico es cada canal: batería, piano, bajo, guitarra, etc. |
@@ -85,7 +85,7 @@ de la aplicación, en un grupo propio, **Estilos de usuario** (o entre
 los demás en la lista alfabética). Aplicar uno funciona como con
 cualquier estilo: **Batería** trae sus carriles de batería, **Partes
 de acordes y bajo** sus otros carriles, **Voces / instrumentos** sus
-sonidos, etc. (ver [Los estilos y la Biblioteca](styles.md)). Un
+sonidos, etc. (ver [Los estilos de la Biblioteca](styles.md)). Un
 estilo tuyo toca en la banda, así que su batería y sus sonidos solo
 llegan con sus partes de acordes y bajo: si están sin marcar, la
 Biblioteca te dice que las marques.

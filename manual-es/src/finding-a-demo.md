@@ -18,7 +18,7 @@ banda que la toca. Esta parte del manual es una guía para escucharlas.
   cine**, **Balcánica y turca**, **Country y folk** y más.
 - **Estilos**: cada uno de los 217 estilos de armonía de la Biblioteca
   como una canción corta, para oír lo que hace un estilo antes de usarlo
-  (ver [Los estilos y la Biblioteca](styles.md)).
+  (ver [Los estilos de la Biblioteca](styles.md)).
 - **Dodecafónico**: cada estilo de serie como una pieza corta, que toca
   la serie hacia adelante, hacia atrás, invertida y de las dos maneras
   (ver [Más allá de las tonalidades: conjuntos, series y
@@ -89,7 +89,7 @@ Una demostración es una lección que suena. Algunas maneras de usarla:
   parte](locks.md#tocas-tú)).
 - **Cambia su estilo.** Haz clic en un estilo de la Biblioteca y la
   banda toca los mismos acordes de otra manera: un tango como bossa
-  nova, una canción folclórica como vals de jazz (ver [Los estilos y la
+  nova, una canción folclórica como vals de jazz (ver [Los estilos de la
   Biblioteca](styles.md)).
 
 ## La guía de escucha
@@ -97,14 +97,15 @@ Una demostración es una lección que suena. Algunas maneras de usarla:
 Los capítulos siguientes eligen demostraciones que vale la pena oír, un
 género a la vez, y dicen qué escuchar:
 
-- [El folclore sudamericano y la Misa
-  Criolla](folk-and-misa-criolla.md): zambas, chacareras, huaynos y una
-  misa.
-- [El tango y Latinoamérica](tango-and-latin-america.md): de la habanera
-  al tango, el choro y la bossa nova.
+- [El folclore latinoamericano](folk-and-misa-criolla.md): zambas,
+  chacareras, huaynos, la Misa Criolla y canciones de México a Brasil.
+- [El tango, la música latina y el
+  flamenco](tango-and-latin-america.md): de la habanera al tango, el
+  choro, la bossa nova y el flamenco.
 - [Jazz, blues, gospel y pop](jazz-and-pop.md): el ragtime, los
   estándares, las big bands y el blues.
 - [La sala de conciertos](concert-hall.md): Bach, Beethoven, el
   *Boléro* de Ravel, Debussy y Stravinsky.
-- [Métricas irregulares y los Balcanes](odd-meters-and-balkans.md):
-  bailes en cinco, siete, nueve y más.
+- [Métricas irregulares: bailes balcánicos y turcos, y
+  más](odd-meters-and-balkans.md): bailes en cinco, siete, nueve y más,
+  y métricas que cambian.

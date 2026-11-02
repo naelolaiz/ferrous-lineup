@@ -1,4 +1,4 @@
-# Una banda más grande y los vientos
+# Una banda más grande: guitarra, cuerdas, órgano y vientos
 
 Un piano, un bajo y una batería son un trío de jazz, y la base rítmica
 de la mayoría de las bandas. Pero una banda de rock sin su guitarra, o
@@ -11,7 +11,7 @@ vientos**.
 
 **🎷 Banda**, arriba a la izquierda de la hoja de acordes, elige quién
 toca y con qué sonidos. Lo que tocan, la batería y las partes de
-acordes y bajo, viene de la Biblioteca (ver [Los estilos y la
+acordes y bajo, viene de la Biblioteca (ver [Los estilos de la
 Biblioteca](styles.md)); este menú no lo toca.
 
 ![El menú Banda de una bossa nova: Formación de instrumentos, luego Piano, Bajo, Batería y Guitarra marcados con sus instrumentos, Sección de vientos, Solista (experimental), Otro solo y Sin banda](images/band-menu.png)

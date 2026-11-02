@@ -1,7 +1,10 @@
-# Folk music of South America, and the Misa Criolla
+# Latin American folklore
 
-The folk music of the Andes and the Pampas is in **Songs > Latin
-American folklore**. Much of it moves in 6/8 and 3/4 at once, the
+**Songs > Latin American folklore** holds the folk music of Latin
+America, from Mexico to the River Plate. This chapter starts in the
+Andes and the Pampas, with their dances and the Misa Criolla, a Mass
+set to them, and then goes elsewhere in Latin America. Much of the music
+of the Andes and the Pampas moves in 6/8 and 3/4 at once, the
 **hemiola** explained in [Rhythm and meter](rhythm-and-meter.md#two-and-three):
 listen for the bars where the tune stops going in two and goes in three.
 
@@ -42,7 +45,7 @@ are short and plain:
 | *Bambuco del páramo* | bambuco, Colombia | nearly every phrase starts an eighth note after the downbeat |
 
 Each dance is also a style in the Library, so the band can play it
-under your own chords (see [Styles and the Library](styles.md)).
+under your own chords (see [Styles in the Library](styles.md)).
 
 ## The Andes
 

@@ -99,7 +99,7 @@ enseguida, también para la próxima vez; **Listo** cierra la ventana.
 ### Biblioteca
 
 La lista de estilos, las opciones con las que empieza la ventana de cada
-estilo, y la carpeta de tus propios estilos: ver [Los estilos y la
+estilo, y la carpeta de tus propios estilos: ver [Los estilos de la
 Biblioteca](styles.md#los-ajustes-de-la-biblioteca).
 
 ### Audio

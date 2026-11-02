@@ -1,4 +1,4 @@
-# Los estilos y la Biblioteca
+# Los estilos de la Biblioteca
 
 Un **estilo** es una manera de tocar de la banda: el ritmo de la
 batería, el ritmo con que el piano toca los acordes (los músicos lo
@@ -79,7 +79,7 @@ suya:
 | **Progresión de acordes** | la progresión del estilo, en lugar de los acordes de la canción; la melodía se queda | no |
 | **Compás** | el compás del estilo: un vals pone la canción en 3/4 | sí |
 | **Tempo** | el tempo habitual del estilo | sí |
-| **Swing** | el swing del estilo (ver [Swing y sensación](swing.md)) | sí |
+| **Swing** | el swing del estilo (ver [Swing y soltura](swing.md)) | sí |
 
 Junto a cada opción, **ahora:** dice lo que tiene la canción y de dónde
 vino, así ves qué reemplazaría la opción. Pulsa **Aplicar**, o

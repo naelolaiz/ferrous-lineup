@@ -18,7 +18,7 @@ written](../songs/demos.md). This chapter goes through the notations,
 then follows a style from the table into a song: which channel plays
 what, how a whole song changes style, how each part of the song
 remembers where it came from, and the Library tab that lists it all.
-How to use the Library is in the manual's [Styles and the
+How to use the Library is in the manual's [Styles in the
 Library](https://naelolaiz.github.io/ferrous-lineup/manual/styles.html).
 
 ## Chord charts: chords by the bar

@@ -1,4 +1,4 @@
-# Styles and the Library
+# Styles in the Library
 
 A **style** is a way for the band to play: the drum groove, the rhythm
 the piano strikes the chords in (musicians call that **comping**), what
@@ -73,7 +73,7 @@ brings one part of the style; unticked, the song keeps its own:
 | **Chord progression** | the style's progression, in place of the song's chords; the melody stays | no |
 | **Time signature** | the style's time signature: a waltz puts the song in 3/4 | yes |
 | **Tempo** | the style's usual tempo | yes |
-| **Swing** | the style's swing (see [Swing and feel](swing.md)) | yes |
+| **Swing** | the style's swing (see [Swing and loose timing](swing.md)) | yes |
 
 Next to each option, **now:** says what the song has and where it came
 from, so you can see what the option would replace. Press **Apply**, or

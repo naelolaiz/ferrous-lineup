@@ -1,4 +1,4 @@
-# Métricas irregulares y los Balcanes
+# Métricas irregulares: bailes balcánicos y turcos, y más
 
 Los bailes de Bulgaria, Grecia, Macedonia, Serbia, Rumania y Turquía
 cuentan sus pulsos en grupos de dos y de tres corcheas mezclados, largos
@@ -45,7 +45,7 @@ En las canciones turcas, cantantes e instrumentistas van al unísono
 sobre un tambor, y los acordes de las demostraciones se agregaron a
 partir de las notas en que se apoya la melodía.
 
-## Cinco pulsos en la sala de conciertos y en el jazz
+## Cinco negras por compás
 
 | Demostración | Métrica | Qué escuchar |
 |---|---|---|

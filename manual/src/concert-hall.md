@@ -43,7 +43,7 @@ had to be shortened.
 | *In the Hall of the Mountain King*, Grieg | the trolls creeping up the B minor scale over a bass on B, faster and faster: watch the tempo strip of the playlist |
 | *Danse macabre*, Saint-Saëns | Death tuning his fiddle to a tritone, A against E♭ |
 | *New World Largo*, Dvořák | the cor anglais tune, all major pentatonic, like a spiritual |
-| *Dies irae*, from Mozart's *Requiem* | D minor in bare octaves; then new keys, each reached through a diminished seventh chord |
+| *Dies irae (Mozart)*, from his *Requiem* | D minor in bare octaves; then new keys, each reached through a diminished seventh chord |
 | *Jupiter Hymn*, Holst | every line starts on IV, not I |
 | *Himno Nacional Argentino* | a verse that turns to B♭ minor and reaches F through diminished sevenths and a German sixth |
 
@@ -92,4 +92,5 @@ behind, and the chord sheet's other views come into their own (see
 
 Mussorgsky's *Promenade*, from *Pictures at an Exhibition*, and the
 second movement of Tchaikovsky's *Pathétique Symphony*, a waltz in
-five, are in [Odd meters and the Balkans](odd-meters-and-balkans.md).
+five, are in [Odd meters: Balkan and Turkish dances and
+more](odd-meters-and-balkans.md).

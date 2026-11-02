@@ -74,8 +74,8 @@ compases. Después escucha cómo jugaron con él los compositores:
 
 Las demostraciones de big band tienen una sección de vientos detrás de
 la melodía del saxo, una sección de metales que golpea los acordes con
-el ritmo del Charleston (ver [Una banda más grande y los
-vientos](bigger-band.md#la-sección-de-vientos)). Para tus propios
+el ritmo del Charleston (ver [Una banda más grande: guitarra, cuerdas,
+órgano y vientos](bigger-band.md#la-sección-de-vientos)). Para tus propios
 acordes, el estilo **Big band** de la Biblioteca trae la banda entera:
 un walking bass, la guitarra a cuatro por compás y los vientos haciendo
 riffs juntos sobre un blues de jazz. **Balada de big band** sostiene los
@@ -140,5 +140,5 @@ para oír una idea a la vez:
 | *Desarma y sangra*, de Charly García | una balada en Mi♭ que toma prestado Re♭, ♭VII, de Mi♭ menor |
 
 Las demostraciones de jazz en métricas irregulares, *Take Five* y el
-*Tema de Misión: Imposible*, están en [Métricas irregulares y los
-Balcanes](odd-meters-and-balkans.md).
+*Tema de Misión: Imposible*, están en [Métricas irregulares: bailes
+balcánicos y turcos, y más](odd-meters-and-balkans.md).

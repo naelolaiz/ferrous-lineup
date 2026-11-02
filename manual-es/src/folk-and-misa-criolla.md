@@ -1,7 +1,10 @@
-# El folclore sudamericano y la Misa Criolla
+# El folclore latinoamericano
 
-La música folclórica de los Andes y de la llanura pampeana está en
-**Canciones > Folclore latinoamericano**. Mucha de ella va en 6/8 y en
+**Canciones > Folclore latinoamericano** tiene la música folclórica de
+América Latina, de México al Río de la Plata. Este capítulo empieza en
+los Andes y la llanura pampeana, con sus danzas y la Misa Criolla, una
+misa escrita sobre ellas, y luego va a otras partes de América Latina.
+Mucha de la música de los Andes y de la llanura pampeana va en 6/8 y en
 3/4 a la vez, la **hemiola** que se explica en [Ritmo y
 métrica](rhythm-and-meter.md#dos-y-tres): escucha los compases donde la
 melodía deja de ir en dos y va en tres.
@@ -44,7 +47,7 @@ estudiar, porque son cortas y sencillas:
 | *Bambuco del páramo* | bambuco, Colombia | casi cada frase empieza una corchea después del primer pulso |
 
 Cada baile es también un estilo de la Biblioteca, así que la banda puede
-tocarlo debajo de tus propios acordes (ver [Los estilos y la
+tocarlo debajo de tus propios acordes (ver [Los estilos de la
 Biblioteca](styles.md)).
 
 ## Los Andes

@@ -1,4 +1,4 @@
-# Swing y sensación
+# Swing y soltura
 
 Da palmas con un disco de jazz o de blues y di «da-da da-da» con las
 corcheas. No encaja: la banda toca «duu-ba duu-ba», una nota larga y una
@@ -46,7 +46,7 @@ Cada estilo trae su propio swing: **Swing**, **Balada de jazz**, **Vals
 de jazz** y **Shuffle** al 100%, **Rock and roll** al 50%, la mayoría de
 los demás sin swing. Cámbialo, y el estilo lo recuerda: la próxima vez
 que lo elijas, en cualquier canción, toca con tu cantidad. La opción
-**Swing** de la Biblioteca (ver [Los estilos y la Biblioteca](styles.md))
+**Swing** de la Biblioteca (ver [Los estilos de la Biblioteca](styles.md))
 dice si un estilo trae su swing a la canción. El swing es de toda la
 canción, así que también le da swing a la melodía, como un cantante de
 jazz le da swing a la melodía.

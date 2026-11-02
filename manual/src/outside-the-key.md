@@ -127,9 +127,9 @@ modes](keys-and-modes.md#key-changes-in-a-song).
 
 ## Hearing them in the demos
 
-The demos under **File > Demos > Styles > Classical** include short
-progressions that show these chords: **Minor plagal** (iv to I), **Picardy third**,
-**Neapolitan** and **Chromatic mediants** (major chords a third apart,
-as in film music). Songs are full of them too. Open the chord sheet of
-a jazz standard such as *Rhythm changes* and look for the yellow
-numerals.
+The demos under **File > Demos > Styles > Classical and film** include
+short progressions that show these chords: **Minor plagal** (iv to I),
+**Picardy third**, **Neapolitan** and **Chromatic mediants** (major
+chords a third apart, as in film music). Songs are full of them too.
+Open the chord sheet of a jazz standard such as *I Got Rhythm* and look
+for the yellow numerals.

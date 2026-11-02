@@ -20,7 +20,7 @@ las notaciones y después sigue un estilo desde la tabla hasta una
 canción: qué canal toca qué, cómo cambia de estilo una canción entera,
 cómo cada parte de la canción recuerda de dónde vino, y la pestaña
 Biblioteca que lo lista todo. Cómo se usa la Biblioteca está en el
-capítulo del manual [Los estilos y la
+capítulo del manual [Los estilos de la
 Biblioteca](https://naelolaiz.github.io/ferrous-lineup/es/manual/styles.html).
 
 ## Cifrados: acordes compás por compás

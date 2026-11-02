@@ -69,7 +69,7 @@ que hacen el piano y el bajo con cada acorde. Para probar otro:
    nova.
 
 Elige estilos mientras la canción suena, y la banda sigue en cada estilo
-nuevo. **Ctrl+Z** vuelve al estilo anterior. [Los estilos y la
+nuevo. **Ctrl+Z** vuelve al estilo anterior. [Los estilos de la
 Biblioteca](styles.md) describe la Biblioteca y cada opción de esa
 ventana.
 

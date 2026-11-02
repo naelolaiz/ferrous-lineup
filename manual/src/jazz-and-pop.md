@@ -69,13 +69,14 @@ bars. Then hear how the songwriters played with it:
 
 The big-band demos have a horn section behind the saxophone's tune, a
 brass section punching the chords in the Charleston rhythm (see [A
-bigger band and the horns](bigger-band.md#the-horn-section)). For your
-own chords, the Library's **Big band** style brings the whole band: a
-walking bass, the guitar four to the bar, and the horns riffing together
-over a jazz blues. **Big band ballad** holds the chords on the
-saxophones. **Foxtrot** is the dance band's slow two-beat for the
-ballroom: the bass on 1 and 3, the chord and the brushes on 2 and 4, the
-guitar four to the bar.
+bigger band: guitar, strings, organ and
+horns](bigger-band.md#the-horn-section)). For your own chords, the
+Library's **Big band** style brings the whole band: a walking bass, the
+guitar four to the bar, and the horns riffing together over a jazz
+blues. **Big band ballad** holds the chords on the saxophones.
+**Foxtrot** is the dance band's slow two-beat for the ballroom: the bass
+on 1 and 3, the chord and the brushes on 2 and 4, the guitar four to the
+bar.
 
 ## The blues
 
@@ -132,4 +133,5 @@ idea at a time:
 | *Desarma y sangra*, by Charly García | a ballad in E♭ that borrows D♭, ♭VII, from E♭ minor |
 
 The jazz demos in odd meters, *Take Five* and the *Mission: Impossible*
-theme, are in [Odd meters and the Balkans](odd-meters-and-balkans.md).
+theme, are in [Odd meters: Balkan and Turkish dances and
+more](odd-meters-and-balkans.md).

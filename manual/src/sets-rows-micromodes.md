@@ -567,7 +567,7 @@ as tonal music takes its sound from its key: its notes come from forms
 of the set, one form after another. So when the key is a micromode or
 any other pitch-class set, the **Voice leading** tick box in the piano
 roll checks the colour instead of the classical rules (see [Voice
-leading and part motion](voice-leading.md)).
+leading: how parts move](voice-leading.md)).
 
 1. Open a song whose key is a set or a micromode, such as **File >
    Demos > Micromodes > Menor 3 colour**.

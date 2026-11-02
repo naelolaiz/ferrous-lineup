@@ -93,7 +93,7 @@ como 3 + 3 + 2.
 
 El **swing** es la otra gran idea rítmica del jazz: las corcheas de cada
 pulso tocadas larga-corta, más cerca de la primera y la tercera nota de
-un tresillo que de dos mitades iguales. Ver [Swing y sensación](swing.md).
+un tresillo que de dos mitades iguales. Ver [Swing y soltura](swing.md).
 
 ## Métricas irregulares
 

@@ -16,7 +16,7 @@ This part of the manual is a guide to listening to them.
   **Latin American folklore**, **Tango**, **Jazz**, **Classical and
   film**, **Balkan and Turkish**, **Country and folk** and more.
 - **Styles**: each of the Library's 217 harmony styles as a short song,
-  to hear what a style does before you use it (see [Styles and the
+  to hear what a style does before you use it (see [Styles in the
   Library](styles.md)).
 - **Twelve-tone**: each row style as a short piece, playing the row
   forward, backwards, upside down and both (see [Beyond keys: sets,
@@ -84,21 +84,22 @@ A demo is a lesson that plays. Some ways to use one:
   part](locks.md#you-play)).
 - **Change its style.** Click a style in the Library and the band plays
   the same chords another way: a tango as a bossa nova, a folk song as
-  a jazz waltz (see [Styles and the Library](styles.md)).
+  a jazz waltz (see [Styles in the Library](styles.md)).
 
 ## The listening guide
 
 The next chapters pick out demos worth hearing, a genre at a time, and
 say what to listen for:
 
-- [Folk music of South America, and the Misa
-  Criolla](folk-and-misa-criolla.md): zambas, chacareras, huaynos and a
-  Mass.
-- [Tango and Latin America](tango-and-latin-america.md): from the
-  habanera to the tango, the choro and the bossa nova.
+- [Latin American folklore](folk-and-misa-criolla.md): zambas,
+  chacareras, huaynos, the Misa Criolla, and songs from Mexico to
+  Brazil.
+- [Tango, Latin music and flamenco](tango-and-latin-america.md): from
+  the habanera to the tango, the choro, the bossa nova and flamenco.
 - [Jazz, blues, gospel and pop](jazz-and-pop.md): ragtime, the
   standards, the big bands and the blues.
 - [The concert hall](concert-hall.md): Bach, Beethoven, Ravel's
   *Boléro*, Debussy and Stravinsky.
-- [Odd meters and the Balkans](odd-meters-and-balkans.md): dances in
-  five, seven, nine and more.
+- [Odd meters: Balkan and Turkish dances and
+  more](odd-meters-and-balkans.md): dances in five, seven, nine and more,
+  and meters that change.
