@@ -1357,6 +1357,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "Todavía no hay nada que escuchar.",
     ),
     ("Now in {}", "Ahora en {}"),
+    (
+        "Now in {} ({} steps a bar)",
+        "Ahora en {} ({} pasos por compás)",
+    ),
     ("now: {}", "ahora: {}"),
     (
         "Nowhere: keep only the recording",
@@ -2273,6 +2277,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     (
         "The song changes key here (see the key names on the playlist's bar numbers), so the chord keys are this key's. The menus above are the key the song starts in",
         "La canción cambia de tonalidad aquí (mira los nombres de las tonalidades en los números de compás de la lista de reproducción), así que las teclas de acordes son las de esta tonalidad. Los menús de arriba son la tonalidad con la que empieza la canción",
+    ),
+    (
+        "The music here is in another time signature than the song's start (see the time markers on the playlist), so its bars are this long. The menu above is the time the song starts in",
+        "La música aquí está en otro compás que el del comienzo de la canción (mira las marcas de compás en la lista de reproducción), así que sus compases duran esto. El menú de arriba es el compás con el que empieza la canción",
     ),
     (
         "The song changes key where this pattern plays (see the key names on the playlist's bar numbers), so it is highlighted in that key. The menus are the key the song starts in",

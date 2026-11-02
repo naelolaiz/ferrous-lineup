@@ -602,6 +602,7 @@ impl Views {
                 .fill(theme::PANEL)
                 .inner_margin(egui::Margin::symmetric(8, 4))
                 .stroke(egui::Stroke::new(1.0, theme::OUTLINE));
+            self.harmony_keys.time_here = step.map(|step| self.project.meter().time_at(step));
             egui::CentralPanel::default().frame(frame).show(ui, |ui| {
                 self.harmony_keys.show(
                     ui,

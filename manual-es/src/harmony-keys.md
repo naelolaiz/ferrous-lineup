@@ -55,6 +55,8 @@ teclas siempre muestran lo que está sonando.
   *Ahora en La mayor*, y las teclas son los acordes de esa tonalidad.
 - **Compás**: el compás de la canción (ver [Tempo, compases y cambios
   de tonalidad](tempo-meter-key.md)), y cuántos pasos tiene un compás.
+  Mientras el cursor de reproducción está después de un cambio de
+  compás, aparece debajo *Ahora en 7/8 (14 pasos por compás)*.
 - **Tríadas**, **Séptimas** y **Novenas**: acordes de tres notas (una
   nota de la escala sí y otra no), de cuatro (con la séptima) o de cinco
   (con la novena). En Do mayor, V es Sol con tríadas, Sol7 con séptimas

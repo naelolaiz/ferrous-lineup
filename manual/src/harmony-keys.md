@@ -49,6 +49,8 @@ what is playing.
   under it, and the keys are that key's chords.
 - **Time**: the song's time signature (see [Tempo, time signatures and
   key changes](tempo-meter-key.md)), and how many steps a bar has.
+  While the playhead is past a time change, *Now in 7/8 (14 steps a
+  bar)* appears under it.
 - **Triads**, **7ths** and **9ths**: chords of three notes (every other
   note of the scale), four (with the seventh) or five (with the ninth).
   In C major, V is G with triads, G7 with sevenths and G9 with ninths.
