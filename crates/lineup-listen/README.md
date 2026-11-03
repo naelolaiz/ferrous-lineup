@@ -17,6 +17,7 @@ four layers to write into the song.
 | `bass` | Bass notes: start, end, pitch and loudness | pYIN in the bass register (28–300 Hz), with 75 ms frames and a 20 Hz high-pass / 500 Hz low-pass |
 | `drums` | Kick, snare and closed/open hi-hat hits | Harmonic-percussive separation, semi-adaptive NMF templates and spectral onset picking |
 | `chords` | Chord changes and bass inversions | Chordino-style NNLS note spectra and a Viterbi chord-state decoder |
+| `separation` | Optional local source-separation helpers before DSP extraction | Default-build subprocess adapters for charon_audio, stem-splitter-core and demucs-rs; no model/runtime linked into the app |
 | `wav` | Saving a take as a WAV file, kept next to the song | [hound](https://crates.io/crates/hound), 32-bit float mono |
 
 Lining the layers up with the song (which step each note or hit starts
@@ -99,9 +100,9 @@ about 78 minutes to process 21.8 minutes of audio and peaked at 1.6 GB
 RSS. stem-splitter-core peaked at 5.0 GB RSS on its three-track run.
 demucs-rs's CPU backend took 9.4 minutes for one 13-second track; its
 Vulkan backend lost the Radeon driver's device context. These costs are
-why source separation is not an app dependency. The comparison does
-suggest it could be worthwhile as an optional, explicitly downloaded
-model for bass-heavy extraction. Melody and chord separation were not
+why source separation is optional and disabled by default, rather than a
+linked model/runtime dependency. It is most promising for bass-heavy
+extraction. Melody and chord separation were not
 scored: these datasets do not provide suitable mixed-recording
 annotations for those layers.
 
@@ -117,6 +118,51 @@ MDB_DRUMS="/path/to/MDB Drums" \
 MDB_SEPARATED="/path/to/charon:/path/to/stem-splitter" \
   cargo test --release -p lineup-listen --test bass_notes -- --ignored --nocapture
 ```
+
+### Trying the backends in the app
+
+Every build includes all subprocess adapters; the `separation*` features
+are compatibility aliases. Choose a backend in **Settings > Audio >
+Source separation**, below the SoundFont controls; **Off** preserves
+the DSP-on-mix behavior. Executables installed beside the app are found
+automatically, followed by executable names on `PATH`. An invalid
+configuration or helper failure is reported rather than silently replaced.
+
+[The helper installer](../../scripts/install-separators.sh) builds the
+three pinned upstream CLIs independently and installs them beside a
+release build. This is intentional: charon_audio currently pins `ort`
+rc.13 while stem-splitter-core pins rc.11, with the same native-library
+link name. They cannot coexist unchanged in one Cargo dependency graph.
+The adapter passes arguments without a shell and uses Charon's
+`--no-server` mode, so a resident server cannot override the chosen model.
+
+The original stereo file is passed to the helper; microphone samples
+are written to a temporary WAV. All four stems must decode successfully
+and match the input duration within 50 ms. Their own sample rates are
+used by the extractors. The original recording is kept separately for
+playback. Errors are shown, never silently replaced with analysis of the
+mix. Cancellation stops and reaps the helper. Temporary audio and logs
+are removed on completion; model caches are retained.
+
+`tests/separation.rs` is an ignored, real-helper smoke test with its
+environment-variable instructions at the top. Ordinary default-build
+tests use local fixtures, without model downloads. The app maps vocals
+to melody, drums to hits, bass to bass notes and `other` to chords; the
+vocal stem is not a general instrumental-melody stem.
+
+```sh
+cargo test -p lineup-listen --no-default-features --lib separation
+cargo test -p lineup-app separation
+```
+
+The Unix fake helpers assert complete argument lists and generate the
+expected output layout for all three adapters. They test literal paths,
+stereo input, stem decoding, invalid input/output, failures, cancellation
+and cleanup. The app test checks that each stem is analyzed at its own
+rate, not the original recording's rate. These checks test the application's
+contracts, not the correctness of the upstream command-line interfaces
+or model quality. Upstream pins and real models were not independently
+revalidated during this local repair.
 
 ## Rough edges
 

@@ -49,8 +49,9 @@ throughout, it says so; the notes are written as you meant them.
 
 ![The Your take window: 18 notes, from bar 1 to bar 6, F#5 F#5 G5 A5 A5 G5 F#5 E5 D5 D5 E5 F#5; Notes go to Lead; On the grid of sixteenth notes; Pitches as sung; The recording: Keep it, on a new track; Write it in and Throw it away](images/take-review.png)
 
-The grid, destination and pitch choices below apply to **Melody**. The
-other layers go to the drum channels, a Bass channel and the chord sheet.
+The destination and pitch choices below apply to **Melody**. The grid
+also applies to drums and bass. The other layers go to the drum channels,
+a Bass channel and the chord sheet.
 
 | Choice | What it does |
 |---|---|
@@ -62,9 +63,9 @@ other layers go to the drum channels, a Bass channel and the chord sheet.
 In **Extract**, choose **Melody**, **Drums**, **Bass line** and/or
 **Chords**. Drums recognizes kick, snare and hi-hat; bass extraction
 follows one low-pitched line, and can mistake another low instrument
-for bass in a dense mix. Chords are available in song mode. These
-extractors analyze the recording as a mix; they do not separate
-instruments into isolated tracks.
+for bass in a dense mix. Chords are available in song mode. By default,
+the extractors analyze the recording as a mix. An installed local
+source-separation helper can analyze separated stems instead.
 
 The grid also applies to drum hits and bass notes. Chords are placed on
 beat boundaries. A transcribed chord stops at the end of the heard
@@ -89,6 +90,36 @@ than once in the song, it says that too: your notes play each time the
 pattern does, so a melody fixed once is fixed everywhere it repeats.
 
 ![The playlist after writing the take in: a new track "Take 1" with the recording's waveform in a pink clip from bar 1 to bar 6, under the Song and Drums tracks, and the status bar saying "Wrote 18 notes on Lead. The recording plays as Take 1. Theme plays 3 times: your notes play each time."](images/take-written.png)
+
+## Optional source separation
+
+**Settings > Audio > Source separation**, below the SoundFont controls,
+selects a local helper before the app hears a recording in any build. **Off** keeps
+the usual behavior. With a helper, melody is heard from **vocals**, drums
+and bass from their own stems, and chords from **other**. A vocal stem
+is not an instrumental melody: leave this option off for whistling or a
+solo instrument. The review identifies the separator used; **Keep it**
+still keeps the original recording, not the separated audio.
+
+Separation can take minutes and several gigabytes of memory. **Cancel
+analysis** in the status bar stops the helper. If a microphone take
+fails or is cancelled, the app keeps it in a failure window: **Retry
+analysis**, **Analyze without separation**, or **Throw it away**. There
+is no automatic fallback to the mix. Imported files are never changed.
+Changing Settings and choosing **Transcribe again** lets you compare
+backends on the same take.
+
+No feature flags are required. Install a helper and select its executable
+path (and Charon's ONNX model) before using **➕ Recording** with your
+file. An executable on `PATH` can be entered by name. For source builds,
+the [installer](https://github.com/naelolaiz/ferrous-lineup/blob/main/scripts/install-separators.sh)
+places pinned helpers beside the release app; run
+`cargo run --release -p lineup-app` afterward. Installation and model
+downloads are optional and may be large. The installer and real upstream
+CLI contracts have not been independently rechecked during the local
+repair; the opt-in smoke test described in `crates/lineup-listen/tests/separation.rs`
+checks your actual helper/model on your own file. Default synthetic
+tests run without them and do not measure real separation quality.
 
 ## How the melody is heard
 

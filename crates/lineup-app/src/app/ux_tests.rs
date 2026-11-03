@@ -6561,6 +6561,12 @@ mod takes {
         assert!(text_rect(&output, tr("0 drum hits.")).is_some());
         assert!(text_rect(&output, tr("0 bass notes.")).is_some());
         assert!(text_rect(&output, tr("0 chords.")).is_some());
+        screen.click(tr("Quarter notes"));
+        assert_eq!(
+            screen.app.take_grid(),
+            Some(4),
+            "drums and bass can change grid without melody"
+        );
         std::fs::remove_dir_all(folder).unwrap();
     }
 

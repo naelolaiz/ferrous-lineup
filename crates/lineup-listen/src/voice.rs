@@ -320,7 +320,7 @@ struct Yin {
 
 impl Yin {
     fn new(rate: u32, lowest_hz: f32, highest_hz: f32, window_seconds: f64) -> Self {
-        let window = (f64::from(rate) * window_seconds).round() as usize;
+        let window = ((f64::from(rate) * window_seconds).round() as usize).max(1);
         let longest = (rate as f32 / lowest_hz).ceil() as usize;
         let shortest = ((rate as f32 / highest_hz).floor() as usize).max(2);
         let span = window + longest + 1;

@@ -8,12 +8,14 @@
 //! - [`bass`] hears the bass line: each note's start, end, pitch and loudness.
 //! - [`drums`] hears the drums: when each drum is hit, and how hard.
 //! - [`chords`] hears the chords: which, and from when to when.
+//! - [`separation`] optionally separates instruments with local helper programs.
 //! - [`wav`] saves samples as a WAV file, to keep a take.
 
 pub mod bass;
 pub mod chords;
 pub mod decode;
 pub mod drums;
+pub mod separation;
 mod spectrum;
 pub mod voice;
 pub mod wav;

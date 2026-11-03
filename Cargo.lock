@@ -2023,6 +2023,7 @@ dependencies = [
  "rfd",
  "ron",
  "serde",
+ "tempfile",
  "ttf-parser",
  "ureq",
  "winresource",
@@ -2055,6 +2056,7 @@ dependencies = [
  "lineup-core",
  "realfft",
  "symphonia",
+ "tempfile",
 ]
 
 [[package]]

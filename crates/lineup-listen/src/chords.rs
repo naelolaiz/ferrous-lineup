@@ -392,7 +392,7 @@ impl Dictionary {
         for _ in 0..sweeps {
             let mut biggest = 0.0_f32;
             let mut moved = 0.0_f32;
-            for (note, strength) in strengths.iter_mut().enumerate() {
+            for (note, strength) in strengths[..NOTES].iter_mut().enumerate() {
                 let own = self.gram[note * NOTES + note];
                 let best = (*strength - work.slope[note] / own).max(0.0);
                 let change = best - *strength;

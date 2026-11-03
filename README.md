@@ -134,6 +134,61 @@ of your own with the band. `cargo test` runs the tests, and
 On macOS the program is inside the app bundle:
 `"/Applications/Ferrous Lineup.app/Contents/MacOS/ferrous-lineup" --trace song.lineup`.
 
+### Optional source separation
+
+Source-separation adapters are available in **every build**. Separation
+is **off until selected in Settings**; no helper or model is downloaded
+by building or testing the app. The old `separation*` Cargo features
+remain compatibility aliases and no longer gate adapters.
+
+| Backend | Local helper |
+|---|---|
+| Charon | `charon` from charon_audio |
+| Stem Splitter | `stem-splitter` from stem-splitter-core |
+| Demucs | `demucs` from demucs-rs |
+
+```sh
+# Installs pinned helpers separately and downloads Charon's 316 MB model.
+# Pass charon, stem-splitter and/or demucs to install only those helpers.
+bash scripts/install-separators.sh charon
+cargo run --release -p lineup-app -- "/path/to/recording.wav"
+
+# Deterministic adapter tests: fake helpers, no models or downloads.
+cargo test -p lineup-listen --lib separation
+cargo test -p lineup-app separation
+```
+
+In **Edit > Settings > Audio > Source separation**, choose **Off** or a
+backend (scroll below SoundFont instruments). The choice and each backend's executable/model paths
+are remembered. The installer places helpers in
+`target/release/separators/bin` and the Charon model in its parent; a
+release build finds them there automatically. Use `SEPARATOR_DIR` to
+install elsewhere, then choose the paths in Settings. An executable
+name can also be found on `PATH`. Windows users can run the installer
+from Git Bash, or install the corresponding upstream CLI and choose it.
+
+The adapters launch local executables, not shell commands. This avoids
+linking the two backends' incompatible ONNX Runtime versions into the
+app and isolates backend crashes. No audio is uploaded. demucs-rs and
+stem-splitter may download model weights on first use; the installer
+builds the CPU demucs-rs variant because the tested Vulkan driver
+failed. A separately built GPU executable can be selected in Settings.
+
+Separation runs before extraction for new recordings, microphone takes,
+and **Transcribe again**. Melody uses vocals, drums and bass use their
+own stems, and chords use `other`; leave separation off for whistles or
+instrumental melodies. The original recording is retained for playback.
+The status bar can cancel analysis; a failed microphone take stays
+available to retry or explicitly analyze without separation.
+See the [measurements and limitations](crates/lineup-listen/README.md#source-separation-comparison).
+
+The adapter tests validate this application's argument/output contracts,
+failure handling and cancellation; they do not run real inference.
+The pinned upstream CLI contracts and installer were not independently
+rechecked during these local repairs. Use the opt-in real-helper smoke
+test in [`tests/separation.rs`](crates/lineup-listen/tests/separation.rs)
+to verify an installed helper/model on your own audio before relying on it.
+
 ## Validating migrated releases
 
 The rewritten history is staged on `migration/lfs-history`, with

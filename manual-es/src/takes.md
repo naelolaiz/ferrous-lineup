@@ -51,9 +51,9 @@ cantar.
 
 ![La ventana Tu toma: 19 notas, del compás 1 al compás 6, Fa#5 Fa#5 Sol5 La5 La5 Sol5 Fa#5 Mi5 Re5 Re5 Mi5 Fa#5; Las notas van a Melodía; En la cuadrícula de semicorcheas; Alturas como se cantó; La grabación: Conservarla, en Una pista nueva; Escribirla y Descartarla](images/take-review.png)
 
-La cuadrícula, el destino y las opciones de altura de abajo se aplican a
-**Melodía**. Las demás capas van a los canales de batería, a un canal de
-bajo y a la hoja de acordes.
+El destino y las opciones de altura de abajo se aplican a **Melodía**.
+La cuadrícula también se aplica a la batería y el bajo. Las demás capas
+van a los canales de batería, a un canal de bajo y a la hoja de acordes.
 
 | Opción | Qué hace |
 |---|---|
@@ -66,9 +66,9 @@ En **Extraer**, elige **Melodía**, **Batería**, **Línea de bajo** y/o
 **Acordes**. La batería reconoce bombo, caja y platillos hi-hat; la
 extracción del bajo sigue una sola línea grave y, en una mezcla densa,
 puede confundir otro instrumento grave con el bajo. Los acordes solo
-están disponibles en modo canción. Estos extractores analizan la
-grabación como una mezcla; no separan los instrumentos en pistas
-aisladas.
+están disponibles en modo canción. De forma predeterminada, los
+extractores analizan la grabación como una mezcla. Un separador local
+instalado puede analizar pistas separadas.
 
 La cuadrícula también se aplica a los golpes de batería y las notas de
 bajo. Los acordes se colocan en los límites de los pulsos. Un acorde
@@ -95,6 +95,39 @@ suenan cada vez que suena el patrón, así que una melodía corregida una
 vez queda corregida en todos los lugares donde se repite.
 
 ![La lista de reproducción después de escribir la toma: una pista nueva «Toma 1» con la forma de onda de la grabación en un clip rosa del compás 1 al 6, debajo de las pistas Canción y Batería, y la barra de estado que dice «Se escribieron 19 notas en Melodía. La grabación suena como Toma 1. Tema suena 3 veces: tus notas suenan cada vez.»](images/take-written.png)
+
+## Separación de fuentes opcional
+
+**Ajustes > Audio > Separación de fuentes**, debajo de los controles
+del SoundFont, elige un programa local en cualquier compilación antes de escuchar una
+grabación. **Desactivada** conserva el comportamiento habitual. Con un
+separador, la melodía se oye de **vocals**, la batería y el bajo de sus
+propias pistas, y los acordes de **other**. Una pista vocal no es una
+melodía instrumental: desactiva esta opción para silbar o para un
+instrumento solo. La revisión identifica el separador usado;
+**Conservarla** sigue guardando la grabación original, no el audio
+separado.
+
+La separación puede tardar minutos y usar varios gigabytes de memoria.
+**Cancelar análisis** en la barra de estado detiene el programa. Si una
+toma del micrófono falla o se cancela, la aplicación la conserva en una
+ventana de error: **Reintentar análisis**, **Analizar sin separación** o
+**Descartarla**. No se vuelve automáticamente a analizar la mezcla. Los
+archivos importados no se modifican. Cambiar los Ajustes y elegir
+**Transcribir otra vez** permite comparar motores con la misma toma.
+
+No hacen falta opciones de compilación. Instala un separador y elige
+su ejecutable (y el modelo ONNX de Charon) antes de usar **➕ Grabación**
+con tu archivo. Un ejecutable en `PATH` puede indicarse por su nombre.
+El [instalador](https://github.com/naelolaiz/ferrous-lineup/blob/main/scripts/install-separators.sh)
+coloca versiones fijadas junto a la aplicación de lanzamiento; después
+ejecuta `cargo run --release -p lineup-app`. La instalación y las descargas
+de modelos son opcionales y pueden ser grandes. El instalador y las
+interfaces de línea de comandos originales no se han vuelto a verificar
+independientemente durante la reparación local. La prueba opcional en
+`crates/lineup-listen/tests/separation.rs` comprueba tu separador y modelo
+reales con tu archivo. Las pruebas sintéticas predeterminadas no los
+necesitan ni miden la calidad de la separación real.
 
 ## Cómo se oye la melodía
 

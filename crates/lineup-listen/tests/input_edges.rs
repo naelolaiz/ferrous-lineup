@@ -16,11 +16,13 @@ fn empty_and_zero_rate_recordings_have_no_events() {
 #[test]
 fn very_low_sample_rates_do_not_stall_the_pitch_tracker() {
     for rate in [1, 25, 49, 100, 8_000, 48_000] {
-        let samples = vec![0.0; rate as usize];
+        let samples = vec![0.0; 3 * rate as usize];
         assert!(
             voice::pitch_track(&samples, rate)
                 .iter()
-                .all(|frame| frame.pitch.is_none())
+                .all(|frame| frame.pitch.is_none()
+                    && frame.time.is_finite()
+                    && frame.loudness.is_finite())
         );
         assert!(bass::notes(&samples, rate).is_empty());
         assert!(drums::hits(&samples, rate).is_empty());

@@ -60,6 +60,10 @@ jobs:
       - name: Test
         run: cargo test --workspace
 
+      - name: Check separation without feature flags
+        if: runner.os == 'Linux'
+        run: cargo test -p lineup-listen --no-default-features --lib separation
+
       - name: Build release
         run: cargo build --release
 
