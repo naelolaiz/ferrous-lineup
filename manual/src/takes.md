@@ -66,6 +66,20 @@ for bass in a dense mix. Chords are available in song mode. These
 extractors analyze the recording as a mix; they do not separate
 instruments into isolated tracks.
 
+The grid also applies to drum hits and bass notes. Chords are placed on
+beat boundaries. A transcribed chord stops at the end of the heard
+passage; the previous harmony (or no chord) resumes after it.
+
+To try your own file from a source checkout, run
+`cargo run -p lineup-app -- "/path/to/recording.wav"`, or use
+**➕ Recording** even for a short WAV (dropping a short WAV elsewhere
+can load it as a sampler sound instead). Set the song's tempo to match
+the recording before adding it. In **Your take**, select one layer at a
+time, write it in and mute the kept recording to hear the extracted
+part. **Ctrl+Z** undoes the import; **Transcribe again…** lets you try
+different layer/grid choices. Save and reopen the project to check the
+result with the recording kept beside it.
+
 **Write it in** does it, as one step: **Ctrl+Z** takes the whole take
 away again. **Throw it away**, or closing the window, keeps nothing.
 

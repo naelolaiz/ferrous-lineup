@@ -46,6 +46,13 @@ different crate:
 The app ties them together, on threads of their own, so the window
 never waits.
 
+The default test suite generates its own melody, bass, drum and chord
+signals; no downloaded dataset is needed. The app regression
+`an_audio_file_produces_all_four_layers_and_a_reloadable_project` writes
+a synthetic WAV, decodes and analyzes it, places all four layers in a
+take and reloads the saved project. Dataset benchmarks are separate,
+ignored tests and are not a prerequisite for these regressions.
+
 ## Reading a recording
 
 A recording added from a file is first turned into samples.

@@ -70,6 +70,21 @@ están disponibles en modo canción. Estos extractores analizan la
 grabación como una mezcla; no separan los instrumentos en pistas
 aisladas.
 
+La cuadrícula también se aplica a los golpes de batería y las notas de
+bajo. Los acordes se colocan en los límites de los pulsos. Un acorde
+transcrito termina al final del pasaje oído; después vuelve la armonía
+anterior (o ningún acorde).
+
+Para probar tu archivo desde el código fuente, ejecuta
+`cargo run -p lineup-app -- "/ruta/a/grabacion.wav"`, o usa
+**➕ Grabación** incluso con un WAV corto (soltarlo en otro lugar puede
+cargarlo como sonido de un sampler). Ajusta el tempo de la canción al
+de la grabación antes de añadirla. En **Tu toma**, selecciona una capa
+a la vez, escríbela y silencia la grabación conservada para oír la parte
+extraída. **Ctrl+Z** deshace la importación; **Transcribir otra vez…**
+permite probar otras capas y cuadrículas. Guarda y vuelve a abrir el
+proyecto para comprobar el resultado con la grabación a su lado.
+
 **Escribirla** lo hace, como un solo paso: **Ctrl+Z** quita toda la
 toma otra vez. **Descartarla**, o cerrar la ventana, no conserva nada.
 

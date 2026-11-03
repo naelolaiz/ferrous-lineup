@@ -25,6 +25,21 @@ on, the key and meter, and where chords belong on the sheet) is done in
 
 ## How well it works
 
+The default suite includes deterministic synthetic DSP regressions:
+
+```sh
+cargo test -p lineup-listen
+cargo test -p lineup-core take::tests
+cargo test -p lineup-app an_audio_file_produces_all_four_layers
+```
+
+The app test checks a generated WAV through decoding, extraction of all
+four layers, take placement and project save/reload. Input-edge tests
+cover empty audio, zero sample rates and unusually low WAV rates. These
+tests do not establish quality on real music. The dataset scores below
+were reported by the original implementation and have not been
+independently reproduced by these synthetic regressions.
+
 The melody was measured on the vocadito dataset (40 solo singers, pitch
 and notes written down by hand; see `tests/sung_notes.rs` for how to run
 it):

@@ -103,9 +103,12 @@ pub(crate) fn pitch_track_with(
     high_pass_hz: f32,
     low_pass_hz: Option<f32>,
 ) -> Vec<PitchFrame> {
+    if samples.is_empty() || sample_rate == 0 {
+        return Vec::new();
+    }
     let (signal, rate) = prepare_with_filters(samples, sample_rate, high_pass_hz, low_pass_hz);
     let mut yin = Yin::new(rate, lowest_hz, highest_hz, window_seconds);
-    let hop = (f64::from(rate) * HOP_SECONDS).round() as usize;
+    let hop = ((f64::from(rate) * HOP_SECONDS).round() as usize).max(1);
     let mut frames = Vec::new();
     let mut candidates = Vec::new();
     let mut start = 0;
@@ -136,6 +139,9 @@ pub(crate) fn pitch_track_with(
 /// recording: the pitch of the most likely candidate of one frame, or
 /// `None` for silence or no clear pitch.
 pub fn pitch_now(samples: &[f32], sample_rate: u32) -> Option<f32> {
+    if samples.is_empty() || sample_rate == 0 {
+        return None;
+    }
     let (signal, rate) = prepare(samples, sample_rate);
     let mut yin = Yin::new(rate, LOWEST_HZ, HIGHEST_HZ, WINDOW_SECONDS);
     let frame = signal.get(signal.len().checked_sub(yin.span)?..)?;

@@ -50,6 +50,13 @@ crate distinto:
 La aplicación los une, en hilos propios, para que la ventana nunca
 espere.
 
+Las pruebas predeterminadas generan señales de melodía, bajo, batería
+y acordes sin descargar conjuntos de datos. La prueba de la aplicación
+`an_audio_file_produces_all_four_layers_and_a_reloadable_project` escribe
+un WAV sintético, lo decodifica y analiza, coloca las cuatro capas en
+una toma y vuelve a leer el proyecto guardado. Las evaluaciones con
+conjuntos de datos son pruebas separadas y omitidas por defecto.
+
 ## Leer una grabación
 
 Una grabación añadida desde un archivo se convierte primero en

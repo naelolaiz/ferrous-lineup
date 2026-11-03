@@ -451,7 +451,6 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ),
     ("Chords in {}", "Acordes en {}"),
     ("Chords of {}", "Acordes de {}"),
-    ("Chords", "Acordes"),
     (
         "Chords of {} notes of the set",
         "Acordes de {} notas del conjunto",

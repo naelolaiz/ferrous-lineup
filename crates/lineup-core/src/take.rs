@@ -1434,11 +1434,11 @@ impl Project {
         let Range { start, end } = chords.steps;
         let mut markers = chords.markers.clone();
         let mut until = end;
-        if let Some(after) = self.chord_at(end)
-            && after.start < end
-            && end < self.song_length()
-        {
-            markers.push(ChordMarker::new(end, after.harmony));
+        if end < self.song_length() && self.chord_at(end).is_none_or(|after| after.start < end) {
+            let after = self
+                .chord_at(end)
+                .map_or(HarmonyName::NoChord, |after| after.harmony);
+            markers.push(ChordMarker::new(end, after));
             until = end + 1;
         }
         if self.set_chords(start, until, &markers) {
@@ -1709,6 +1709,23 @@ mod tests {
                 .collect::<Vec<_>>(),
             [(16, 4, 28, 100), (20, 4, 29, 100)]
         );
+    }
+
+    #[test]
+    fn transcribed_chords_do_not_fill_the_unheard_rest_of_the_song() {
+        let mut project = song();
+        let heard = HarmonyName::parse("Am").unwrap();
+        let chords = SheetChords {
+            markers: vec![ChordMarker::new(16, heard)],
+            steps: 16..32,
+        };
+        assert_eq!(project.write_take_chords(&chords), 1);
+        assert_eq!(project.chord_at(16).unwrap().harmony, heard);
+        assert_eq!(project.chord_at(32).unwrap().harmony, HarmonyName::NoChord);
+        let after = HarmonyName::parse("G7").unwrap();
+        assert!(project.set_chords(0, 64, &[ChordMarker::new(0, after)]));
+        project.write_take_chords(&chords);
+        assert_eq!(project.chord_at(32).unwrap().harmony, after);
     }
 
     #[test]

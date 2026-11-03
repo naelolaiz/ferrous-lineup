@@ -1595,4 +1595,122 @@ mod tests {
         assert_eq!(take_name(&project, None), "Take 2");
         assert_eq!(take_name(&project, Some("melody")), "melody 2");
     }
+
+    #[test]
+    fn an_audio_file_produces_all_four_layers_and_a_reloadable_project() {
+        let rate = 16_000;
+        let samples: Vec<f32> = (0..7 * rate)
+            .map(|frame| {
+                let t = frame as f32 / rate as f32;
+                let tone = |hz: f32, time: f32| (std::f32::consts::TAU * hz * time).sin();
+                if t < 1.4 {
+                    0.3 * tone(440.0, t)
+                } else if (1.6..3.0).contains(&t) {
+                    0.3 * tone(55.0, t)
+                } else if (3.2..5.5).contains(&t) {
+                    [130.81, 261.63, 329.63, 392.0]
+                        .iter()
+                        .map(|&hz| 0.12 * tone(hz, t))
+                        .sum()
+                } else {
+                    [5.8, 6.3]
+                        .iter()
+                        .map(|&start| {
+                            let time = t - start;
+                            if (0.0..0.35).contains(&time) {
+                                let phase = std::f32::consts::TAU
+                                    * (50.0 * time + 2.7 * (1.0 - (-time / 0.03).exp()));
+                                phase.sin() * (-time / 0.12).exp()
+                            } else {
+                                0.0
+                            }
+                        })
+                        .sum()
+                }
+            })
+            .collect();
+        let dir = std::env::temp_dir().join(format!("lineup-four-layers-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("synthetic take.wav");
+        lineup_listen::wav::write(&samples, rate, &path).unwrap();
+        let (recording, analysis) = load(&path).unwrap();
+        assert!(
+            analysis.notes.iter().any(|note| {
+                note.start < 0.7 && note.end > 0.7 && (note.pitch - 69.0).abs() < 0.5
+            }),
+            "{:?}",
+            analysis.notes
+        );
+        assert!(
+            analysis.bass.iter().any(|note| {
+                note.start < 2.2 && note.end > 2.2 && (note.pitch - 33.0).abs() < 0.5
+            }),
+            "{:?}",
+            analysis.bass
+        );
+        for time in [5.8, 6.3] {
+            assert!(
+                analysis.drums.iter().any(|hit| {
+                    hit.drum == lineup_core::Drum::Kick && (hit.time - time).abs() < 0.05
+                }),
+                "{:?}",
+                analysis.drums
+            );
+        }
+        assert!(
+            analysis.chords.iter().any(|heard| {
+                heard.start < 4.3
+                    && heard.end > 4.3
+                    && heard.chord
+                        == Some(lineup_core::harmony::Chord::new(
+                            lineup_core::PitchClass::from_semitone(0),
+                            lineup_core::harmony::ChordQuality::Major,
+                        ))
+            }),
+            "{:?}",
+            analysis.chords
+        );
+        let mut project = Project::empty();
+        let take = Take::laid(&project, 16, rate, recording.samples.len());
+        let mut transcription = transcribe_with(
+            &project,
+            &take,
+            &analysis.notes,
+            1,
+            analysis.tuning,
+            Pitches::AsSung,
+        );
+        transcription.drums = transcribe_drums(&take, &analysis.drums, 1);
+        transcription.bass = transcribe_bass(&take, &analysis.bass, 1);
+        transcription.chords = transcribe_chords(&project, &take, &analysis.chords);
+        let added = project.add_take(
+            &take.along,
+            &transcription,
+            &Target::New {
+                name: "Melody".into(),
+                program: FLUTE,
+            },
+            &Keep {
+                name: "Synthetic".into(),
+                notes: "Synthetic notes".into(),
+                track: 0,
+                recordings: vec![path.clone()],
+                under: None,
+            },
+        );
+        assert!(
+            added.notes > 0 && added.bass_notes > 0 && added.drum_hits >= 2 && added.chords > 0,
+            "{added:?}"
+        );
+        let text = lineup_core::file::to_text(&project).unwrap();
+        let opened = lineup_core::file::from_text(&text).unwrap();
+        assert_eq!(opened.channels(), project.channels());
+        assert_eq!(opened.patterns(), project.patterns());
+        assert_eq!(
+            opened.playlist().chord_markers(),
+            project.playlist().chord_markers()
+        );
+        std::fs::remove_file(path).unwrap();
+        std::fs::remove_dir(dir).unwrap();
+    }
 }

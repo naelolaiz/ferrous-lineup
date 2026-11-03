@@ -175,6 +175,9 @@ const SOUNDS: [Sound; 4] = [
 /// The drums hit in `samples`, at `sample_rate`, in the order they were
 /// hit.
 pub fn hits(samples: &[f32], sample_rate: u32) -> Vec<DrumHit> {
+    if samples.is_empty() || sample_rate == 0 {
+        return Vec::new();
+    }
     let rate = f64::from(sample_rate.max(1));
     let window = ((rate * WINDOW_SECONDS) as usize).next_power_of_two();
     let hop = (rate * HOP_SECONDS).round() as usize;
