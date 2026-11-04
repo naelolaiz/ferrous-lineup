@@ -94,8 +94,8 @@ pattern does, so a melody fixed once is fixed everywhere it repeats.
 ## Optional source separation
 
 **Settings > Audio > Source separation**, below the SoundFont controls,
-selects a local helper before the app hears a recording in any build. **Off** keeps
-the usual behavior. With a helper, melody is heard from **vocals**, drums
+selects a local helper that splits a recording before the app hears it.
+**Off** keeps the usual behavior. With a helper, melody is heard from **vocals**, drums
 and bass from their own stems, and chords from **other**. A vocal stem
 is not an instrumental melody: leave this option off for whistling or a
 solo instrument. The review identifies the separator used; **Keep it**
@@ -109,17 +109,14 @@ is no automatic fallback to the mix. Imported files are never changed.
 Changing Settings and choosing **Transcribe again** lets you compare
 backends on the same take.
 
-No feature flags are required. Install a helper and select its executable
-path (and Charon's ONNX model) before using **➕ Recording** with your
-file. An executable on `PATH` can be entered by name. For source builds,
-the [installer](https://github.com/naelolaiz/ferrous-lineup/blob/main/scripts/install-separators.sh)
-places pinned helpers beside the release app; run
-`cargo run --release -p lineup-app` afterward. Installation and model
-downloads are optional and may be large. The installer and real upstream
-CLI contracts have not been independently rechecked during the local
-repair; the opt-in smoke test described in `crates/lineup-listen/tests/separation.rs`
-checks your actual helper/model on your own file. Default synthetic
-tests run without them and do not measure real separation quality.
+The separators are separate programs, not part of the app. Install one
+and choose its executable (and, for Charon, its ONNX model) before using
+**➕ Recording** with your file; a program on `PATH` can be entered by
+name. When building from source, the
+[installer](https://github.com/naelolaiz/ferrous-lineup/blob/main/scripts/install-separators.sh)
+places pinned versions beside the release build; run
+`cargo run --release -p lineup-app` afterward. Installing them and
+downloading their models is optional, and the downloads can be large.
 
 ## How the melody is heard
 

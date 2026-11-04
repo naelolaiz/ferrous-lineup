@@ -11,13 +11,6 @@ rust-version.workspace = true
 name = "ferrous-lineup"
 path = "src/main.rs"
 
-[features]
-default = []
-separation = ["separation-charon", "separation-stem-splitter", "separation-demucs"]
-separation-charon = ["lineup-listen/separation-charon"]
-separation-stem-splitter = ["lineup-listen/separation-stem-splitter"]
-separation-demucs = ["lineup-listen/separation-demucs"]
-
 [dependencies]
 lineup-core.workspace = true
 lineup-audio.workspace = true

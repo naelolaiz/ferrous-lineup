@@ -112,8 +112,8 @@ Biblioteca](styles.md#los-ajustes-de-la-biblioteca).
   cuadrícula, o antes con un número negativo, en milisegundos, para una
   tarjeta de sonido cuyos retardos no son los que dice (ver
   [Tomas](takes.md#si-las-notas-caen-tarde-o-temprano)).
-- **Separación de fuentes**, debajo de los controles del SoundFont en
-  cualquier compilación: **Desactivada** (la opción predeterminada) o un motor local,
+- **Separación de fuentes**, debajo de los controles del SoundFont:
+  **Desactivada** (la opción predeterminada) o un motor local,
   **charon_audio**, **stem-splitter-core** o **demucs-rs**. Elige su
   ejecutable local y, para Charon, su modelo HTDemucs ONNX. Las rutas
   vacías buscan los programas instalados junto a la aplicación y después

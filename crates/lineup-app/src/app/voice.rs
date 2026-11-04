@@ -1733,7 +1733,7 @@ mod tests {
             lineup_listen::wav::write(samples, rate, &folder.path().join(format!("{name}.wav")))
                 .unwrap();
         }
-        let backend = Backend::available().next().unwrap();
+        let backend = Backend::ALL[0];
         let output = match backend {
             Backend::Charon => "output=$4\nprefix=",
             Backend::StemSplitter => "output=$5\nprefix=$(basename \"$3\" .wav)_",

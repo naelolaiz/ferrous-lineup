@@ -7,14 +7,6 @@ license.workspace = true
 repository.workspace = true
 rust-version.workspace = true
 
-[features]
-default = []
-separation = ["separation-charon", "separation-stem-splitter", "separation-demucs"]
-# Compatibility aliases: subprocess adapters are always available.
-separation-charon = []
-separation-stem-splitter = []
-separation-demucs = []
-
 [dependencies]
 lineup-core.workspace = true
 symphonia.workspace = true

@@ -99,8 +99,8 @@ vez queda corregida en todos los lugares donde se repite.
 ## Separación de fuentes opcional
 
 **Ajustes > Audio > Separación de fuentes**, debajo de los controles
-del SoundFont, elige un programa local en cualquier compilación antes de escuchar una
-grabación. **Desactivada** conserva el comportamiento habitual. Con un
+del SoundFont, elige un programa local que separa la grabación antes de
+que la aplicación la escuche. **Desactivada** conserva el comportamiento habitual. Con un
 separador, la melodía se oye de **vocals**, la batería y el bajo de sus
 propias pistas, y los acordes de **other**. Una pista vocal no es una
 melodía instrumental: desactiva esta opción para silbar o para un
@@ -116,18 +116,14 @@ ventana de error: **Reintentar análisis**, **Analizar sin separación** o
 archivos importados no se modifican. Cambiar los Ajustes y elegir
 **Transcribir otra vez** permite comparar motores con la misma toma.
 
-No hacen falta opciones de compilación. Instala un separador y elige
-su ejecutable (y el modelo ONNX de Charon) antes de usar **➕ Grabación**
-con tu archivo. Un ejecutable en `PATH` puede indicarse por su nombre.
-El [instalador](https://github.com/naelolaiz/ferrous-lineup/blob/main/scripts/install-separators.sh)
-coloca versiones fijadas junto a la aplicación de lanzamiento; después
-ejecuta `cargo run --release -p lineup-app`. La instalación y las descargas
-de modelos son opcionales y pueden ser grandes. El instalador y las
-interfaces de línea de comandos originales no se han vuelto a verificar
-independientemente durante la reparación local. La prueba opcional en
-`crates/lineup-listen/tests/separation.rs` comprueba tu separador y modelo
-reales con tu archivo. Las pruebas sintéticas predeterminadas no los
-necesitan ni miden la calidad de la separación real.
+Los separadores son programas aparte, no forman parte de la aplicación.
+Instala uno y elige su ejecutable (y, para Charon, su modelo ONNX) antes
+de usar **➕ Grabación** con tu archivo; un programa en `PATH` puede
+indicarse por su nombre. Si compilas desde el código fuente, el
+[instalador](https://github.com/naelolaiz/ferrous-lineup/blob/main/scripts/install-separators.sh)
+coloca versiones fijadas junto a la compilación de lanzamiento; después
+ejecuta `cargo run --release -p lineup-app`. Instalarlos y descargar sus
+modelos es opcional, y las descargas pueden ser grandes.
 
 ## Cómo se oye la melodía
 

@@ -37,13 +37,9 @@ impl Backend {
         }
     }
 
-    /// Compatibility with earlier callers; adapters no longer need Cargo features.
-    pub fn compiled(self) -> bool {
-        true
-    }
-
-    pub fn available() -> impl Iterator<Item = Self> {
-        Self::ALL.into_iter()
+    /// The backend whose [`id`](Self::id) this is, as saved in settings.
+    pub fn from_id(id: &str) -> Option<Self> {
+        Self::ALL.into_iter().find(|backend| backend.id() == id)
     }
 }
 
@@ -316,12 +312,11 @@ mod tests {
     use super::*;
 
     #[test]
-    fn every_backend_is_available_in_a_default_build() {
-        let available: Vec<_> = Backend::available().collect();
-        assert_eq!(available, Backend::ALL);
-        for backend in available {
-            assert!(backend.compiled());
+    fn every_backend_is_found_by_its_saved_id() {
+        for backend in Backend::ALL {
+            assert_eq!(Backend::from_id(backend.id()), Some(backend));
         }
+        assert_eq!(Backend::from_id("unknown"), None);
     }
 
     #[test]
@@ -449,7 +444,7 @@ mod tests {
 
         #[test]
         fn every_helper_receives_the_original_stereo_file_and_literal_paths() {
-            for backend in Backend::available() {
+            for backend in Backend::ALL {
                 let fixture = Fixture::new(backend, COPY_STEMS);
                 let stems =
                     separate(fixture.input(), &fixture.config, &Cancellation::default()).unwrap();
@@ -475,7 +470,7 @@ mod tests {
 
         #[test]
         fn a_recorded_take_is_written_for_the_helper_without_losing_its_rate() {
-            let fixture = Fixture::new(Backend::available().next().unwrap(), COPY_STEMS);
+            let fixture = Fixture::new(Backend::ALL[0], COPY_STEMS);
             let samples = vec![0.125; 1_600];
             let stems = separate(
                 Input::Samples {
@@ -493,10 +488,8 @@ mod tests {
 
         #[test]
         fn a_helper_failure_reports_its_exit_status_and_log() {
-            let fixture = Fixture::new(
-                Backend::available().next().unwrap(),
-                "echo 'fixture model failure' >&2\nexit 23",
-            );
+            let fixture =
+                Fixture::new(Backend::ALL[0], "echo 'fixture model failure' >&2\nexit 23");
             let error = separate(fixture.input(), &fixture.config, &Cancellation::default())
                 .unwrap_err()
                 .to_string();
@@ -509,14 +502,14 @@ mod tests {
 
         #[test]
         fn missing_or_short_stems_are_errors_not_successful_empty_results() {
-            let fixture = Fixture::new(Backend::available().next().unwrap(), "exit 0");
+            let fixture = Fixture::new(Backend::ALL[0], "exit 0");
             let error = separate(fixture.input(), &fixture.config, &Cancellation::default())
                 .unwrap_err()
                 .to_string();
             assert!(error.contains("vocals"), "{error}");
             fixture.assert_workspace_removed();
 
-            let fixture = Fixture::new(Backend::available().next().unwrap(), COPY_STEMS);
+            let fixture = Fixture::new(Backend::ALL[0], COPY_STEMS);
             let error = separate(
                 Input::File {
                     path: &fixture.input,
@@ -533,7 +526,7 @@ mod tests {
 
         #[test]
         fn malformed_stems_and_nonfinite_audio_are_rejected() {
-            for backend in Backend::available() {
+            for backend in Backend::ALL {
                 let fixture = Fixture::new(
                     backend,
                     "\
@@ -584,7 +577,7 @@ mod tests {
 
         #[test]
         fn an_executable_that_does_not_exist_is_reported() {
-            let mut fixture = Fixture::new(Backend::available().next().unwrap(), COPY_STEMS);
+            let mut fixture = Fixture::new(Backend::ALL[0], COPY_STEMS);
             fixture.config.program = fixture.folder.path().join("missing executable");
             let error = separate(fixture.input(), &fixture.config, &Cancellation::default())
                 .unwrap_err()
@@ -594,7 +587,7 @@ mod tests {
 
         #[test]
         fn cancelling_terminates_the_helper_and_removes_its_workspace() {
-            let fixture = Fixture::new(Backend::available().next().unwrap(), "exec sleep 30");
+            let fixture = Fixture::new(Backend::ALL[0], "exec sleep 30");
             let cancel = Cancellation::default();
             let worker_cancel = cancel.clone();
             let path = fixture.input.clone();

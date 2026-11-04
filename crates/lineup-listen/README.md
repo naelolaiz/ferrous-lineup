@@ -121,8 +121,7 @@ MDB_SEPARATED="/path/to/charon:/path/to/stem-splitter" \
 
 ### Trying the backends in the app
 
-Every build includes all subprocess adapters; the `separation*` features
-are compatibility aliases. Choose a backend in **Settings > Audio >
+Every build includes all subprocess adapters. Choose a backend in **Settings > Audio >
 Source separation**, below the SoundFont controls; **Off** preserves
 the DSP-on-mix behavior. Executables installed beside the app are found
 automatically, followed by executable names on `PATH`. An invalid
@@ -151,7 +150,7 @@ to melody, drums to hits, bass to bass notes and `other` to chords; the
 vocal stem is not a general instrumental-melody stem.
 
 ```sh
-cargo test -p lineup-listen --no-default-features --lib separation
+cargo test -p lineup-listen --lib separation
 cargo test -p lineup-app separation
 ```
 
@@ -161,8 +160,8 @@ stereo input, stem decoding, invalid input/output, failures, cancellation
 and cleanup. The app test checks that each stem is analyzed at its own
 rate, not the original recording's rate. These checks test the application's
 contracts, not the correctness of the upstream command-line interfaces
-or model quality. Upstream pins and real models were not independently
-revalidated during this local repair.
+or model quality; the ignored smoke test in `tests/separation.rs` checks
+a real helper and model.
 
 ## Rough edges
 

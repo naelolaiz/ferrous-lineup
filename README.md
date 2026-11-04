@@ -138,8 +138,7 @@ On macOS the program is inside the app bundle:
 
 Source-separation adapters are available in **every build**. Separation
 is **off until selected in Settings**; no helper or model is downloaded
-by building or testing the app. The old `separation*` Cargo features
-remain compatibility aliases and no longer gate adapters.
+by building or testing the app.
 
 | Backend | Local helper |
 |---|---|

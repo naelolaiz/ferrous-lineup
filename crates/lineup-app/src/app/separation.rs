@@ -49,10 +49,7 @@ impl Settings {
         let Some(id) = &self.selected else {
             return Ok(None);
         };
-        let backend = Backend::ALL
-            .into_iter()
-            .find(|backend| backend.id() == id)
-            .ok_or_else(|| trf("Unknown separator: {}", &[id]))?;
+        let backend = Backend::from_id(id).ok_or_else(|| trf("Unknown separator: {}", &[id]))?;
         let paths = self.helpers.get(id).cloned().unwrap_or_default();
         let config = Config {
             backend,
@@ -83,7 +80,6 @@ pub(super) fn configuration(preferences: &Preferences) -> Result<Option<Config>,
 
 pub(super) fn settings_ui(ui: &mut egui::Ui) {
     let mut settings: Settings = preferences::get(ui.ctx(), KEY).unwrap_or_default();
-    let available: Vec<_> = Backend::available().collect();
     let before = settings.clone();
     super::settings::card(
         ui,
@@ -91,17 +87,14 @@ pub(super) fn settings_ui(ui: &mut egui::Ui) {
         "Separate recordings with a local helper before extracting notes.",
         |ui| {
             ui.radio_value(&mut settings.selected, None, tr("Off"));
-            for backend in available {
+            for backend in Backend::ALL {
                 ui.radio_value(
                     &mut settings.selected,
                     Some(backend.id().to_string()),
                     backend.name(),
                 );
             }
-            if let Some(backend) = Backend::ALL
-                .into_iter()
-                .find(|backend| settings.selected.as_deref() == Some(backend.id()))
-            {
+            if let Some(backend) = settings.selected.as_deref().and_then(Backend::from_id) {
                 let paths = settings
                     .helpers
                     .entry(backend.id().to_string())

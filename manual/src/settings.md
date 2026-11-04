@@ -106,8 +106,8 @@ Library](styles.md#the-library-settings).
   earlier with a negative number, in milliseconds, for a sound card
   whose delays are not what it says (see
   [Takes](takes.md#if-the-notes-land-late-or-early)).
-- **Source separation**, below the SoundFont controls in every build:
-  **Off** (the default) or a local backend, **charon_audio**, **stem-splitter-core** or
+- **Source separation**, below the SoundFont controls: **Off** (the
+  default) or a local backend, **charon_audio**, **stem-splitter-core** or
   **demucs-rs**. Choose its local executable and, for Charon, its
   HTDemucs ONNX model. Blank paths use helpers installed beside the app,
   then executables on `PATH`. Each backend's paths and the selection are

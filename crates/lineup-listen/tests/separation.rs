@@ -18,10 +18,7 @@ use lineup_listen::separation::{Backend, Cancellation, Config, Input, separate};
 #[ignore = "needs a local helper, model and audio; see this file"]
 fn separates_with_a_real_local_helper() {
     let id = std::env::var("LINEUP_SEPARATOR").expect("set LINEUP_SEPARATOR");
-    let backend = Backend::ALL
-        .into_iter()
-        .find(|backend| backend.id() == id)
-        .expect("unknown backend");
+    let backend = Backend::from_id(&id).expect("unknown backend");
     let config = Config {
         backend,
         program: std::env::var_os("LINEUP_SEPARATOR_PROGRAM")
