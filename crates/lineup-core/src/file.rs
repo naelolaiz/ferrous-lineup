@@ -652,11 +652,24 @@ impl TryFrom<ProjectFile> for Project {
         }
         if let Some(channel) = file.channels.iter().find(|channel| {
             channel
-                .sent_on
+                .sent_over_midi()
                 .is_some_and(|midi_channel| midi_channel > 15)
+                || channel
+                    .sent_on
+                    .is_some_and(|midi_channel| midi_channel > 15)
         }) {
             return invalid(trf(
                 "channel \"{}\" is sent over a MIDI channel other than 1 to 16",
+                &[&channel.name],
+            ));
+        }
+        if let Some(channel) = file
+            .channels
+            .iter()
+            .find(|channel| channel.program.is_some_and(|program| program > 127))
+        {
+            return invalid(trf(
+                "channel \"{}\" has a MIDI instrument other than 1 to 128",
                 &[&channel.name],
             ));
         }
@@ -861,7 +874,9 @@ fn format_number(text: &str) -> Option<u32> {
 /// if the computer crashes halfway, the old file is still intact.
 pub fn save(project: &Project, path: &Path) -> Result<(), FileError> {
     let text = to_text(project)?;
-    let temporary = path.with_extension(format!("{EXTENSION}.tmp"));
+    let mut temporary = path.as_os_str().to_os_string();
+    temporary.push(".tmp");
+    let temporary = std::path::PathBuf::from(temporary);
     if let Err(err) = fs::write(&temporary, text) {
         let _ = fs::remove_file(&temporary);
         return Err(err.into());
@@ -1636,5 +1651,20 @@ mod tests {
         file.clips[0].track = file.tracks.len();
         let error = Project::try_from(file).unwrap_err();
         assert!(error.to_string().contains("does not fit"), "{error}");
+    }
+
+    #[test]
+    fn out_of_range_volume_midi_channel_and_program_are_refused() {
+        let mut bad_vol = ProjectFile::from(&plain_demo());
+        bad_vol.channels[0].volume = 1.5;
+        assert!(Project::try_from(bad_vol).is_err());
+
+        let mut bad_midi = ProjectFile::from(&plain_demo());
+        bad_midi.channels[0].kind = ChannelKind::MidiOut { channel: 16 };
+        assert!(Project::try_from(bad_midi).is_err());
+
+        let mut bad_program = ProjectFile::from(&plain_demo());
+        bad_program.channels[0].program = Some(128);
+        assert!(Project::try_from(bad_program).is_err());
     }
 }

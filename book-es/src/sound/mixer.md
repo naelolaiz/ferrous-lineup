@@ -432,13 +432,16 @@ onda, deformaría su forma y añadiría un zumbido. El `Follower` hace
 esto:
 
 ```rust
-let peak = sample.abs();
+let peak = if sample.is_finite() { sample.abs() } else { 0.0 };
 let speed = if peak > self.level {
     self.attack
 } else {
     self.release
 };
 self.level += (peak - self.level) * speed;
+if !self.level.is_finite() || self.level < 1e-20 {
+    self.level = 0.0;
+}
 let level = (20.0 * self.level.log10()).max(FLOOR);
 let decibels = compressor.gain - compressor.reduction(level);
 10f32.powf(decibels / 20.0)
@@ -502,7 +505,12 @@ de `delay_frames` atrás siempre va detrás de la que se está escribiendo:
 let frames = line.len();
 let read = (self.written + frames - self.delay_frames) % frames;
 let echo = line.0[read];
-line.0[self.written] = sample + echo * self.settings.delay.feedback;
+let next = sample + echo * self.settings.delay.feedback;
+line.0[self.written] = if next.is_finite() && next.abs() >= 1e-20 {
+    next
+} else {
+    0.0
+};
 self.written = (self.written + 1) % frames;
 sample += echo * mix;
 ```

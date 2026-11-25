@@ -102,8 +102,10 @@ nunca se entrecorta (ver [Exportar](exporting.md#un-archivo-de-sonido)).
 - **La aplicación se cerró sin guardar.** Vuelve a abrirla: ofrece
   recuperar el trabajo sin guardar (ver [Recuperar el trabajo sin
   guardar](saving.md#recuperar-el-trabajo-sin-guardar)).
-- **En un Mac, el doble clic en un archivo .lineup no lo abre.** Usa
-  **Archivo > Abrir…** en la aplicación.
+- **En un Mac, el doble clic en un archivo .lineup no lo abre.**
+  Asegúrate de haber arrastrado Ferrous Lineup a **Aplicaciones** (sin
+  abrirlo directamente desde la imagen `.dmg`), o usa **Archivo >
+  Abrir…** en la aplicación.
 
 ## La banda y los acordes
 
@@ -150,4 +152,6 @@ que otra persona pueda ver lo mismo. Para un problema con lo que toca la
 aplicación, activa **Edición > Ajustes… > Reproducción > Escribir un
 registro mientras suena**, toca el pasaje y adjunta el archivo del
 registro: tiene cada nota que tocó la aplicación, y el ajuste dice dónde
-lo escribe.
+lo escribe. También puedes generar un registro desde la línea de órdenes
+sin abrir una ventana: `ferrous-lineup --trace cancion.lineup --out
+registro.txt` (o con el nombre de una demostración; `--demos` las lista).

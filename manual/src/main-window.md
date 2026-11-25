@@ -40,7 +40,7 @@ From left to right:
 | ⏹ | stops, and goes back to where you last put the playhead (**Space** while playing) |
 | ● | records what you play on a MIDI keyboard or the computer keyboard into the pattern (see [MIDI keyboards and synths](midi.md#recording)) |
 | microphone | records a **take**: sing or whistle along with the song, and your notes are written into a part (see [Takes](takes.md)) |
-| **Follow playhead** | keeps the bar playing in sight in the playlist, the chord sheet and the piano roll. Off, you can scroll freely while the song plays. |
+| **Follow playhead** | keeps the bar playing in sight in the playlist, the chord sheet, the piano roll and the lead sheet. Off, you can scroll freely while the song plays. |
 | **Count-in** | one bar of clicks before the music starts |
 | **Metronome** | a click on every beat |
 | **TEMPO** | the tempo in beats per minute: drag up or down to change it, double-click to type it |

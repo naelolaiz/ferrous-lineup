@@ -178,7 +178,7 @@ fn clear(guesses: &[KeyGuess]) -> bool {
 
 /// The keys worth showing beside the first of `guesses`, fainter.
 fn alternatives(guesses: &[KeyGuess]) -> &[KeyGuess] {
-    if clear(guesses) {
+    if guesses.is_empty() || clear(guesses) {
         return &[];
     }
     let best = guesses[0].share;
@@ -513,12 +513,16 @@ impl KeyListener {
     /// A listener that starts out believing `key`, such as the song's key,
     /// so that the first chords played are heard in its light.
     pub fn starting_in(key: Option<Scale>) -> Self {
-        let past = key
-            .map(|key| {
-                let profile = match key.kind {
-                    ScaleKind::Major => MAJOR_PROFILE,
-                    _ => MINOR_PROFILE,
-                };
+        let initial = key.and_then(|key| match key.kind {
+            ScaleKind::Major => Some((key, MAJOR_PROFILE)),
+            ScaleKind::NaturalMinor | ScaleKind::HarmonicMinor | ScaleKind::MelodicMinor => Some((
+                Scale::written(key.tonic_name(), ScaleKind::NaturalMinor),
+                MINOR_PROFILE,
+            )),
+            _ => None,
+        });
+        let past = initial
+            .map(|(key, profile)| {
                 let tonic = usize::from(key.root.semitone());
                 // A bar's worth of notes shaped like the key.
                 std::array::from_fn(|c| 4.0 * profile[(c + 12 - tonic) % 12])
@@ -526,7 +530,7 @@ impl KeyListener {
             .unwrap_or([0.0; 12]);
         KeyListener {
             past,
-            key: key.filter(|key| matches!(key.kind, ScaleKind::Major | ScaleKind::NaturalMinor)),
+            key: initial.map(|(key, _)| key),
             ..KeyListener::default()
         }
     }
@@ -680,6 +684,30 @@ mod tests {
     }
 
     #[test]
+    fn a_dorian_tune_is_heard_as_the_minor_on_its_tonic_or_as_its_major() {
+        // E Dorian, E F# G A B C# D: the notes of D major and B minor.
+        let dorian = [4, 6, 7, 9, 11, 1, 2];
+        let heard = |chroma: Chroma| {
+            let span = KeySpan {
+                start: 0,
+                end: 1,
+                guesses: rank_keys(&chroma),
+            };
+            assert!(span.is_clear(), "{:?}", span.guesses);
+            assert!(span.alternatives().is_empty());
+            span.key().unwrap()
+        };
+        // Leaning on E and B, its tonic and fifth: E minor.
+        let leaning: Vec<u8> = dorian.into_iter().chain([4, 4, 11]).collect();
+        assert_eq!(
+            heard(notes(&leaning)),
+            Scale::new(E, ScaleKind::NaturalMinor)
+        );
+        // All seven notes alike: D major.
+        assert_eq!(heard(notes(&dorian)), Scale::new(D, ScaleKind::Major));
+    }
+
+    #[test]
     fn a_modulation_is_found_on_its_bar() {
         // Eight bars of C major, then eight of E major.
         let mut bars = vec![cadence(0); 8];
@@ -829,5 +857,22 @@ mod tests {
             play(&mut listener, 9);
         }
         assert_eq!(listener.key(), Some(Scale::new(A, ScaleKind::Major)));
+    }
+
+    #[test]
+    fn silent_listener_has_no_alternatives_and_modes_do_not_bias_minor() {
+        let silent = KeyListener::default();
+        assert!(silent.alternatives().is_empty());
+
+        let dorian = KeyListener::starting_in(Some(Scale::new(D, ScaleKind::Dorian)));
+        assert_eq!(dorian.key(), None);
+        assert!(dorian.alternatives().is_empty());
+
+        let harmonic_minor =
+            KeyListener::starting_in(Some(Scale::new(A, ScaleKind::HarmonicMinor)));
+        assert_eq!(
+            harmonic_minor.key(),
+            Some(Scale::new(A, ScaleKind::NaturalMinor))
+        );
     }
 }

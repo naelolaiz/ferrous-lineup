@@ -162,15 +162,15 @@ fn in_spanish(text: &str) -> Option<&'static str> {
 /// `text` with its notes in braces named as the settings say, kept for
 /// the next time: there are only so many texts and two namings.
 fn named_notes(text: &'static str) -> &'static str {
-    static NAMED: LazyLock<Mutex<HashMap<(usize, NoteNaming), &'static str>>> =
-        LazyLock::new(Mutex::default);
+    type NamedKey = (usize, usize, NoteNaming);
+    static NAMED: LazyLock<Mutex<HashMap<NamedKey, &'static str>>> = LazyLock::new(Mutex::default);
     let has_notes = text
         .match_indices('{')
         .any(|(at, _)| text[at + 1..].starts_with(|c: char| ('A'..='G').contains(&c)));
     if !has_notes {
         return text;
     }
-    let key = (text.as_ptr() as usize, NoteNaming::current());
+    let key = (text.as_ptr() as usize, text.len(), NoteNaming::current());
     let mut named = NAMED
         .lock()
         .unwrap_or_else(|poisoned| poisoned.into_inner());

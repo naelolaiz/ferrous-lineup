@@ -299,7 +299,7 @@ copies the data out with `to_vec()` and `map`. It cannot fail, so it is a
 ## The version number
 
 ```rust
-pub const FORMAT_VERSION: u32 = 29;
+pub const FORMAT_VERSION: u32 = 33;
 ```
 
 `FORMAT_VERSION` is the newest layout this program can read. A file does
@@ -308,7 +308,8 @@ hold the project. A project that uses nothing new stays format 1, so an
 older Ferrous Lineup can still open it. The starting song needs format
 9, because its synth channel plays a General MIDI program; a song with a
 chord sheet needs at least format 12; one with a horn section or a
-channel effect needs 28, and a band playing another style's drums 29.
+channel effect needs 28, a band playing another style's drums 29, and
+a song with trimmed clips 33.
 The long comment above `FORMAT_VERSION` says, for every number, what it
 added and what an older program would get wrong without it; [Project
 file format](../reference/project-format.md) has the same list as a
@@ -375,10 +376,10 @@ the start (some text editors add one) is stripped first, so it cannot
 hide the `(`.
 
 The test `files_from_the_future_are_refused` reads a file one format
-newer than this version, `(format: 30, sparkles: true)` today, and
-expects `NewerFormat(30)`, and the message "this file uses format 30,
+newer than this version, `(format: 34, sparkles: true)` today, and
+expects `NewerFormat(34)`, and the message "this file uses format 34,
 made by a newer version of Ferrous Lineup (this one reads up to format
-29)".
+33)".
 
 ## Errors as an enum
 
@@ -453,7 +454,9 @@ method return an `io::Error` in one case and a `ron` error in another.
 ```rust
 pub fn save(project: &Project, path: &Path) -> Result<(), FileError> {
     let text = to_text(project)?;
-    let temporary = path.with_extension(format!("{EXTENSION}.tmp"));
+    let mut temporary = path.as_os_str().to_os_string();
+    temporary.push(".tmp");
+    let temporary = std::path::PathBuf::from(temporary);
     if let Err(err) = fs::write(&temporary, text) {
         let _ = fs::remove_file(&temporary);
         return Err(err.into());

@@ -120,31 +120,37 @@ pub fn time_picker(
         // pattern: 64/4 fits, 64/2 would not.
         draft.beats = draft.beats.min(TimeSignature::max_beats(draft.unit).max(1));
     });
+    let mut enter_pressed = false;
     ui.horizontal(|ui| {
         ui.label(tr("Beats grouped as"));
-        ui.add(
-            egui::TextEdit::singleline(&mut draft.groups)
-                .desired_width(70.0)
-                .hint_text(match draft.beats {
-                    5 => "3+2",
-                    7 => "2+2+3",
-                    8 => "3+3+2",
-                    9 => "2+2+2+3",
-                    11 => "3+3+2+3",
-                    _ => tr("e.g. 2+3"),
-                }),
-        )
-        .on_hover_text(tr(
-            "Irregular meters group their notes in twos and threes: 7/8 is often counted \
-             2+2+3, as in many Balkan dances. Leave it empty for the usual beats",
-        ));
+        let edit = ui
+            .add(
+                egui::TextEdit::singleline(&mut draft.groups)
+                    .desired_width(70.0)
+                    .hint_text(match draft.beats {
+                        5 => "3+2",
+                        7 => "2+2+3",
+                        8 => "3+3+2",
+                        9 => "2+2+2+3",
+                        11 => "3+3+2+3",
+                        _ => tr("e.g. 2+3"),
+                    }),
+            )
+            .on_hover_text(tr(
+                "Irregular meters group their notes in twos and threes: 7/8 is often counted \
+                 2+2+3, as in many Balkan dances. Leave it empty for the usual beats",
+            ));
+        if edit.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
+            enter_pressed = true;
+        }
     });
     match draft.time() {
         Ok(time) => {
-            if ui
-                .button(trf("Use {}", &[&time]))
-                .on_hover_text(describe_time(time))
-                .clicked()
+            if enter_pressed
+                || ui
+                    .button(trf("Use {}", &[&time]))
+                    .on_hover_text(describe_time(time))
+                    .clicked()
             {
                 chosen = Some(time);
             }

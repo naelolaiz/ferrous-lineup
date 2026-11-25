@@ -356,6 +356,10 @@ def title_html(book: dict) -> str:
     )
 
 
+# What mdBook's print.html runs to open the print dialog on its own.
+AUTO_PRINT = "window.setTimeout(window.print, 100);"
+
+
 def print_pdf(chrome: str, page: Path, out: Path) -> None:
     subprocess.run(
         [
@@ -466,8 +470,16 @@ def main() -> None:
     ]
 
     source = (built / "print.html").read_text(encoding="utf-8")
-    start = source.index("<main>") + len("<main>")
+    # After the chapters, print.html opens the print dialog 100 ms after it
+    # loads. Under --virtual-time-budget that timer fires before Chrome
+    # prints, and Chrome then quits without writing the PDF, so the page
+    # printed here never asks. The chapters stay as they are: a book may
+    # quote that line.
     end = source.index("</main>")
+    source = source[:end] + source[end:].replace(AUTO_PRINT, "")
+    if "window.print" in source[end:]:
+        sys.exit("print.html calls window.print() another way: has mdBook changed?")
+    start = source.index("<main>") + len("<main>")
     chunks = source[start:end].split(CHAPTER_BREAK)
     if len(chunks) != len(chapters):
         sys.exit(
@@ -510,22 +522,24 @@ def main() -> None:
         html_path = built / "print-pdf.html"
         pdf_path = Path(tmp) / "book.pdf"
         pages: dict[str, int] = {}
-        for _ in range(4):
-            write(pages, html_path)
-            print_pdf(chrome, html_path, pdf_path)
-            reader = PdfReader(pdf_path)
-            dests = destinations(reader)
-            landed = {id: page for id, (page, _) in dests.items()}
-            missing = [id for id in needed if id not in landed]
-            if missing:
-                sys.exit(f"no page for {', '.join(missing)}")
-            if all(landed[id] == pages.get(id) for id in needed):
-                break
-            pages = landed
-            print(f"printed {len(reader.pages)} pages, numbering them", file=sys.stderr)
-        else:
-            sys.exit("the page numbers keep moving")
-        html_path.unlink()
+        try:
+            for _ in range(4):
+                write(pages, html_path)
+                print_pdf(chrome, html_path, pdf_path)
+                reader = PdfReader(pdf_path)
+                dests = destinations(reader)
+                landed = {id: page for id, (page, _) in dests.items()}
+                missing = [id for id in needed if id not in landed]
+                if missing:
+                    sys.exit(f"no page for {', '.join(missing)}")
+                if all(landed[id] == pages.get(id) for id in needed):
+                    break
+                pages = landed
+                print(f"printed {len(reader.pages)} pages, numbering them", file=sys.stderr)
+            else:
+                sys.exit("the page numbers keep moving")
+        finally:
+            html_path.unlink(missing_ok=True)
 
         writer = PdfWriter(clone_from=reader)
         add_bookmarks(writer, chapters, dests)

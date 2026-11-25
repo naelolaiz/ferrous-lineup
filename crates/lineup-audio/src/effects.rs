@@ -116,6 +116,12 @@ impl ChannelEffects {
         self.delay_frames = (frames as usize).clamp(1, longest.max(1));
     }
 
+    /// Jumps smoothed effect parameters straight to their targets (before
+    /// an offline export starts).
+    pub(crate) fn settle(&mut self) {
+        self.mix.settle();
+    }
+
     /// Whether anything it does changes the sound.
     fn is_on(&self) -> bool {
         !self.settings.eq.is_flat()
@@ -145,7 +151,12 @@ impl ChannelEffects {
             let frames = line.len();
             let read = (self.written + frames - self.delay_frames) % frames;
             let echo = line.0[read];
-            line.0[self.written] = sample + echo * self.settings.delay.feedback;
+            let next = sample + echo * self.settings.delay.feedback;
+            line.0[self.written] = if next.is_finite() && next.abs() >= 1e-20 {
+                next
+            } else {
+                0.0
+            };
             self.written = (self.written + 1) % frames;
             sample += echo * mix;
         }
@@ -181,13 +192,20 @@ impl Follower {
     /// The gain to play `sample` at: turned down as `compressor` says for
     /// the level so far, and up by its make-up gain.
     fn gain(&mut self, sample: f32, compressor: &Compressor) -> f32 {
-        let peak = sample.abs();
+        let peak = if sample.is_finite() {
+            sample.abs()
+        } else {
+            0.0
+        };
         let speed = if peak > self.level {
             self.attack
         } else {
             self.release
         };
         self.level += (peak - self.level) * speed;
+        if !self.level.is_finite() || self.level < 1e-20 {
+            self.level = 0.0;
+        }
         let level = (20.0 * self.level.log10()).max(FLOOR);
         let decibels = compressor.gain - compressor.reduction(level);
         10f32.powf(decibels / 20.0)
@@ -234,6 +252,9 @@ impl Biquad {
     /// `sample_rate`. It keeps the samples it has, so it changes without
     /// a click.
     fn set(&mut self, shape: Shape, hz: f32, decibels: f32, sample_rate: f32) {
+        let sample_rate = sample_rate.max(1.0);
+        let hz = hz.clamp(1.0, (sample_rate * 0.49).max(1.0));
+        let decibels = if decibels.is_finite() { decibels } else { 0.0 };
         let gain = 10f32.powf(decibels / 40.0);
         let omega = std::f32::consts::TAU * hz / sample_rate;
         let (sin, cos) = omega.sin_cos();
@@ -279,6 +300,7 @@ impl Biquad {
     }
 
     fn process(&mut self, input: f32) -> f32 {
+        let input = if input.is_finite() { input } else { 0.0 };
         let [b0, b1, b2] = self.b;
         let [a1, a2] = self.a;
         let output = b0 * input + b1 * self.inputs[0] + b2 * self.inputs[1]
@@ -286,7 +308,11 @@ impl Biquad {
             - a2 * self.outputs[1];
         // Far too quiet to hear: dropped, so the numbers never get so
         // small (denormals) that the processor slows down on them.
-        let output = if output.abs() < 1e-20 { 0.0 } else { output };
+        let output = if !output.is_finite() || output.abs() < 1e-20 {
+            0.0
+        } else {
+            output
+        };
         self.inputs = [input, self.inputs[0]];
         self.outputs = [output, self.outputs[0]];
         output

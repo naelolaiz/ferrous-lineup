@@ -389,19 +389,28 @@ sirve; este mapa está hecho con sus primeras líneas. `lineup-core`:
 | `chord_sheet/`, `band/`, `bars.rs` | la hoja de acordes y la banda que la toca |
 | `library/` | estilos, ritmos, canciones y demostraciones, escritos como datos |
 | `lead_sheet/` | la melodía en notación |
-| `midi.rs`, `midi_file.rs`, `record.rs` | mensajes MIDI, archivos MIDI, grabación |
+| `midi.rs`, `midi_file.rs`, `record.rs`, `take.rs` | mensajes MIDI, archivos MIDI, grabación y tomas cantadas |
 | `mixer.rs`, `effects.rs`, `score_order.rs` | los ajustes del mezclador |
+| `ear_training.rs`, `remeter.rs`, `serial.rs`, `micromodal.rs` | entrenamiento auditivo, cambio de compás, series dodecafónicas y micromodos |
 | `i18n/` | el castellano de cada texto que escribe la aplicación |
 
 `lineup-audio`: `engine.rs` (la tarjeta de sonido y el hilo de audio),
 `instrument.rs`, `drums.rs`, `timbre.rs`, `sample.rs` y `soundfont.rs`
-(los instrumentos), `effects.rs` y `reverb.rs`, `levels.rs`,
-`metronome.rs`, `render.rs` (tocar sin tarjeta de sonido) y `trace.rs`.
+(los instrumentos), `dsp.rs`, `effects.rs` y `reverb.rs`, `input.rs`
+(grabación con micrófono), `levels.rs`, `metronome.rs`, `render.rs`
+(tocar sin tarjeta de sonido) y `trace.rs`.
+
+`lineup-listen`: `decode.rs` (archivos de audio), `voice.rs`
+(seguimiento de altura con pYIN) y `wav.rs`.
+
+`lineup-video`: `canvas.rs` (pintar los triángulos de egui en la CPU),
+`h264.rs`, `mp3.rs` y `mp4.rs`.
 
 `lineup-app`: `app.rs` y los módulos de `app/` (menús, archivos,
-edición, exportación, MIDI, ajustes), un módulo por ventana
+edición, exportación, video, MIDI, voz, ajustes), un módulo por ventana
 (`channel_rack.rs`, `piano_roll.rs`, `playlist.rs`, `chord_sheet.rs`,
 `harmony_keys.rs`, `library_browser.rs`, `lead_sheet.rs`,
-`twelve_tone.rs`, `micromodes.rs`, `style_editor.rs`,
-`ear_training.rs`), y las piezas compartidas: `theme.rs`, `widgets.rs`,
-`icons.rs` e `i18n.rs`.
+`twelve_tone.rs`, `micromodes.rs`, `style_editor.rs`, `ear_training.rs`),
+apertura de archivos del sistema (`open_files.rs`), y las piezas
+compartidas: `theme.rs`, `widgets.rs`, `time_picker.rs`, `icons.rs` e
+`i18n.rs`.

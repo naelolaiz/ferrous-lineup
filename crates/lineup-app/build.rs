@@ -19,9 +19,8 @@ fn main() {
     #[cfg(windows)]
     {
         let version = env!("CARGO_PKG_VERSION");
-        let mut parts = version
-            .split('.')
-            .map(|part| part.parse::<u64>().unwrap_or(0));
+        let core = version.split(['-', '+']).next().unwrap_or(version);
+        let mut parts = core.split('.').map(|part| part.parse::<u64>().unwrap_or(0));
         let major = parts.next().unwrap_or(0);
         let minor = parts.next().unwrap_or(0);
         let patch = parts.next().unwrap_or(0);

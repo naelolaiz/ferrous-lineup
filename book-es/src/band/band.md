@@ -366,10 +366,12 @@ par.
 
 ### Pulsos para cualquier compás
 
-La mayoría de los patrones de comping son una tabla fija de golpes. Dos
+La mayoría de los patrones de comping son una tabla fija de golpes. Tres
 no: los **acentos simples** (`Comping::Accents`), un acorde en cada
-pulso en que se siente el compás, y el **aksak** de los estilos
-balcánicos, los contratiempos dentro de cada pulso. En 7/8 sentido como
+pulso en que se siente el compás; el **contratiempo**
+(`Comping::Afterbeat`), el «pa» tras cada pulso de una marcha, un
+ragtime o una polca; y el **aksak** de los estilos balcánicos, los
+contratiempos dentro de cada pulso. En 7/8 sentido como
 2+2+3 caen en un lugar, en 5/4 sentido como 2+3 en otro, así que sus
 golpes se construyen a partir de los `felt_groups` del compás (ver
 [Pulsos de distinta
@@ -407,10 +409,10 @@ La función devuelve un **`Cow`**, «clonar al escribir» (*clone on
 write*; ver [El orden de
 todo](../program/sync.md#el-orden-de-todo)): los patrones fijos
 entregan sin coste un préstamo de su tabla `static`, `Cow::Borrowed`, y
-los dos construidos un `Vec` propio, `Cow::Owned`. Quien llama lee los
-dos de la misma manera. Estos dos patrones cuentan desde la barra de
+los tres construidos un `Vec` propio, `Cow::Owned`. Quien llama lee los
+dos de la misma manera. Estos tres patrones cuentan desde la barra de
 compás, empiece donde empiece el acorde (`follows_the_bar`), ya que los
-pulsos de un compás irregular están donde los pone el compás.
+pulsos de una métrica están donde los pone el compás.
 
 ### El bajo
 

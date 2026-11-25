@@ -35,7 +35,7 @@ use crate::sources::SongPart;
 use crate::tools::ArpeggioOrder;
 
 /// Every kind of slip in the voice leading.
-const SLIPS: [SlipKind; 12] = [
+const SLIPS: [SlipKind; 14] = [
     SlipKind::ParallelFifths,
     SlipKind::ParallelOctaves,
     SlipKind::ParallelUnisons,
@@ -48,6 +48,8 @@ const SLIPS: [SlipKind; 12] = [
     SlipKind::RowUnfinished,
     SlipKind::OctaveDoubling,
     SlipKind::TonalChord,
+    SlipKind::OutsideColour,
+    SlipKind::FormUnfinished,
 ];
 
 /// The texts the core shows through `tr`, for the lists and tables the

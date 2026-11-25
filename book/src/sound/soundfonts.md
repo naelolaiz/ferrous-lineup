@@ -683,12 +683,18 @@ The environment variable `FERROUS_LINEUP_SOUNDFONT_URL` gives another
 address, such as a copy on your own network. A file over a gigabyte is
 refused: no General MIDI SoundFont is that big, so it is something else.
 
-The file is written as `GeneralUser-GS.sf2.part`, then read as a
-SoundFont, which checks it is one, and only then renamed:
+The file is written to a unique `.part` path next to `GeneralUser-GS.sf2`
+(with the process ID and an atomic counter, so stopping and restarting a
+download never races on the same file), read as a SoundFont to check it
+is one, and only then renamed:
 
 ```rust
 fn download_to(url: &str, path: &Path, progress: &Progress) -> Result<Arc<SoundFont>, String> {
-    let part = path.with_extension("sf2.part");
+    static PART_COUNTER: AtomicU64 = AtomicU64::new(0);
+    let unique = PART_COUNTER.fetch_add(1, Ordering::Relaxed);
+    let mut part = path.as_os_str().to_os_string();
+    part.push(format!(".{}.{}.part", std::process::id(), unique));
+    let part = PathBuf::from(part);
     let result = download_part(url, &part, progress).and_then(|()| {
         let sound_font = soundfont::load(&part).map_err(|err| err.to_string())?;
         fs::rename(&part, path).map_err(|err| err.to_string())?;

@@ -247,7 +247,7 @@ impl Comping {
     /// starts: the beats of an odd meter are where the bar puts them.
     /// The other patterns start again with each chord.
     fn follows_the_bar(self) -> bool {
-        matches!(self, Comping::Aksak | Comping::Accents)
+        matches!(self, Comping::Aksak | Comping::Accents | Comping::Afterbeat)
     }
 
     /// How many steps the pattern lasts before it repeats, and its hits,
@@ -615,7 +615,10 @@ fn three_voices(voicing: &[Note]) -> Vec<Note> {
     let tone = |note: &Note| chord.tone_of(note.pitch_class()).unwrap_or(0);
     for drop in [5, 13, 11, 9, 1] {
         while kept.len() > 3 {
-            let Some(at) = kept.iter().rposition(|note| tone(note) == drop) else {
+            let Some(at) = kept.iter().rposition(|note| {
+                tone(note) == drop
+                    && (drop != 5 || chord.root.semitones_up_to(note.pitch_class()) == 7)
+            }) else {
                 break;
             };
             kept.remove(at);

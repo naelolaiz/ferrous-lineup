@@ -755,11 +755,15 @@ tonalidad no es clara, las siguientes cuya parte es al menos el 40% de
 la mejor son sus **alternativas**, dos como máximo, y la aplicación las
 muestra más tenues.
 
-Mi dórico tiene las mismas notas que La menor y Sol mayor, así que los
-perfiles, que solo conocen el mayor y el menor, no pueden elegir su
-nota de reposo con confianza, y la aplicación lo dice: La menor, o Mi
-menor, o La mayor. La tónica real está entre las alternativas, que es la
-respuesta honesta.
+Mi dórico tiene las mismas notas que Re mayor y Si menor, y los
+perfiles solo conocen el mayor y el menor, así que ninguna respuesta
+puede ser Mi dórico. Lo que sale depende de las notas en las que se
+apoya la melodía. Cuando Mi y Si, su tónica y su quinta, suenan más
+tiempo, la respuesta es Mi menor, la tonalidad menor sobre la misma
+tónica, aunque Mi menor tiene Do donde Mi dórico tiene Do♯. Cuando las
+siete notas suenan más o menos igual, la respuesta es Re mayor.
+Cualquiera de las dos puede salir clara, sin alternativas al lado: el
+modo lo oyes tú, por su sexta mayor, Do♯.
 
 ### Dónde cambia la tonalidad
 
@@ -845,12 +849,14 @@ pub fn end_bar(&mut self) {
 En cada compás, todo lo oído antes cuenta 0,84 veces, así que un compás
 de hace cuatro compases cuenta más o menos la mitad (0,84⁴ ≈ 0,5). Una
 tonalidad nueva toma el mando solo después de ir delante dos compases
-seguidos. El oyente tampoco empieza de cero: `KeyListener::starting_in`
-llena el pasado con música con la forma de la tonalidad de alrededor, la
-que se escucha en las notas de la canción en ese punto o la del
-proyecto, así que los primeros acordes que tocas se oyen a su luz. Toca
-C, F y G7 sobre una canción en Mi dórico y primero se oyen contra La
-menor; unos compases después el oyente se decide por Do mayor, clara.
+seguidos. El oyente tampoco empieza de cero: para una tonalidad mayor o
+menor, `KeyListener::starting_in` llena el pasado con música con la
+forma de la tonalidad de alrededor —la que se escucha en las notas de la
+canción en ese punto o la del proyecto (dejando modos, conjuntos y
+series sin sesgo)—, así que los primeros acordes que tocas se oyen a su
+luz. Toca C, F y G7 sobre una canción en La menor y primero se oyen
+contra La menor; unos compases después el oyente se decide por Do mayor,
+clara.
 
 La aplicación muestra la tonalidad de la fuente más inmediata que tiene
 (ver `key_finder.rs`): lo que tocas, si tocaste en los últimos cuatro

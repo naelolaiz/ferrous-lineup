@@ -825,10 +825,12 @@ impl LineupApp {
                 let samples = &review.heard.recording.samples[piece.frames.clone()];
                 if let Err(err) = lineup_listen::wav::write(samples, rate, &path) {
                     self.message = Some(trf("Could not save the take: {}", &[&err]));
+                    self.voice.review = Some(review);
                     return;
                 }
                 if let Err(err) = self.samples.reload(&path) {
                     self.message = Some(format!("{}: {err}", path.display()));
+                    self.voice.review = Some(review);
                     return;
                 }
                 recordings.push(path);

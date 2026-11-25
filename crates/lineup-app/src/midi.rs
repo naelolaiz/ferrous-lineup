@@ -240,7 +240,9 @@ impl Midi {
                 }
             }
         }
-        if let Some(messages) = messages {
+        if let Some(messages) = messages
+            && self.unavailable.is_none()
+        {
             // Wait for the old thread's All Notes Off, so that it cannot
             // cut off the first notes of the new engine. The old engine is
             // gone already, so this takes a millisecond or so.

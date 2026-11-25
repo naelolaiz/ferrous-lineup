@@ -66,7 +66,8 @@ Así que escribir una canción es: clic en el compás 1, luego `Do`, Tab,
 `Lam7`, Tab, `Rem7 Sol7`, Tab, `Do`, Intro.
 
 Si el teclado del equipo está tocando notas (**MIDI > Teclado del equipo
-como piano** encendido), las teclas de letras tocan en lugar de
+como piano** encendido), las teclas de letras y los dígitos de las
+teclas negras de la fila superior (`2 3 5 6 7 9 0`) tocan en lugar de
 escribir: haz doble clic en el compás o pulsa Intro primero.
 
 ### Qué puede llevar un compás
@@ -85,7 +86,7 @@ Varias armonías caben en un compás, separadas por espacios:
 | Sin acorde | la banda no toca armonía | `N.C.` |
 | Un pulso sostenido | la armonía anterior sigue un pulso más | `/` |
 | Nada | el compás sigue con lo que sonaba | un compás vacío |
-| El compás anterior otra vez | vuelve a tocar el compás anterior: después de `C G`, otra vez C G | `%` |
+| El compás anterior otra vez | vuelve a tocar el compás anterior: después de `Do Sol`, otra vez Do Sol | `%` |
 
 Los acordes se escriben en solfeo o con letras, como prefieras: `Lam7`
 y `Am7` son el mismo acorde, y `b` después de la nota es un bemol
@@ -246,10 +247,12 @@ Todo menos los compases es opcional:
 | `# una nota` | Una nota para las personas, que se salta. |
 
 En un compás va exactamente lo que escribirías en un compás de la hoja:
-`%` vuelve a tocar el compás anterior, y un compás vacío `| |` sigue
-con el acorde que sonaba; `||`, `|:` y `:|` se leen como barras
-simples. Una línea `Key:` o `Time:` entre
-compases cambia la tonalidad o el compás desde el compás siguiente.
+`%` vuelve a tocar el compás anterior, un compás vacío `| |` sigue con
+el acorde que sonaba, y una `|` sin espacios dentro de un acorde
+(`| Eb7|Fb | C |`) se conserva como poliacorde en lugar de partir el
+compás; `||`, `|:` y `:|` se leen como barras simples. Una línea `Key:`
+o `Time:` entre compases cambia la tonalidad o el compás desde el
+compás siguiente.
 
 Los números romanos se leen en la tonalidad del esquema, así que este
 esquema:

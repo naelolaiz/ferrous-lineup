@@ -14,6 +14,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     (" ({} tempo changes)", " ({} cambios de tempo)"),
     (" and an octave", " y una octava"),
     (" and two octaves", " y dos octavas"),
+    (" and {} octaves", " y {} octavas"),
     (
         " Ending a piece in minor on the major tonic chord like this is called a Picardy third.",
         " Terminar así una pieza en menor, sobre el acorde mayor de tónica, se llama tercera de picardía.",
@@ -555,6 +556,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("Carnavalito", "Carnavalito"),
     ("Chacarera", "Chacarera"),
     ("Chamamé", "Chamamé"),
+    (
+        "channel \"{}\" has a MIDI instrument other than 1 to 128",
+        "el canal «{}» tiene un instrumento MIDI que no está entre 1 y 128",
+    ),
     (
         "channel \"{}\" has an effect set outside its range",
         "el canal «{}» tiene un efecto ajustado fuera de rango",

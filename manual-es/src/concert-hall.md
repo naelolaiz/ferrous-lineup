@@ -27,7 +27,7 @@ qué se pasó a otra octava, cuando hubo que acortar una obra.
 ## El piano
 
 - *Para Elisa*, de Beethoven, el rondó entero: el tema se mece entre Mi
-  y Re♯, la sensible de La menor; el segundo episodio, tormentoso, llega
+  y Re♯, la bordadura cromática inferior de la dominante Mi; el segundo episodio, tormentoso, llega
   a Si♭ mayor, el acorde **napolitano** de La menor (ver [Acordes de
   fuera de la tonalidad](outside-the-key.md#la-sexta-napolitana)).
 - *Sonata Claro de luna*, el comienzo del Adagio, en Do♯ menor: Re

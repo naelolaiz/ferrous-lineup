@@ -401,11 +401,12 @@ hilo de audio la calcula cuando empieza la nota, y la llama **gate**:
 ```rust
 let tick = timing.step_frames / TICKS_PER_STEP as f64;
 let held = if note.length <= room {
-    note.length as f64 * timing.step_frames - f64::from(note.nudge + note.trim) * tick
+    note.length as f64 * timing.step_frames
+        - f64::from(u16::from(note.nudge) + u16::from(note.trim)) * tick
 } else {
     room as f64 * timing.step_frames - f64::from(note.nudge) * tick
 };
-let gate = held as u32;
+let gate = (held.clamp(0.0, f64::from(HELD - 1))) as u32;
 ```
 
 Una nota que se pasa del final de su patrón, o del trozo de la canción

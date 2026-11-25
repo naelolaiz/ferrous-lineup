@@ -1,9 +1,13 @@
 # Exporting
 
 To take a song out of Ferrous Lineup, the **File** menu writes it as a
-sound file, a video, a MIDI file or a text chord sheet. A song with
-nothing in the playlist has nothing to export: the items are greyed out,
-with **Put some clips in the playlist first**.
+sound file, a video, a MIDI file or a text chord sheet. The song exports
+(**Export WAV…**, **Export video…** and **Export song as MIDI…**) need
+clips in the playlist: on an empty playlist they are greyed out, with
+**Put some clips in the playlist first** (and WAV and video also wait
+with **An export is already running** while another export is in
+progress). **Export pattern as MIDI…** and **Export chord sheet…** work
+even before you arrange clips.
 
 | Item | Writes |
 |---|---|

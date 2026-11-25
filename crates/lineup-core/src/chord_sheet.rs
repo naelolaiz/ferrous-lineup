@@ -470,7 +470,7 @@ impl HarmonyName {
             }
             HarmonyName::Polychord(upper, lower) => {
                 let mut set = HarmonyName::Chord(lower).pitch_set()?;
-                for pitch_class in upper.chord().pitch_set().iter() {
+                for pitch_class in HarmonyName::Chord(upper).pitch_set()?.iter() {
                     set.insert(pitch_class);
                 }
                 Some(set)

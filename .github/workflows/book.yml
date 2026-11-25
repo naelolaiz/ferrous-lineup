@@ -33,6 +33,11 @@ on:
 permissions:
   contents: read
 
+# Cancel older book builds on the same pull request; never cancel main.
+concurrency:
+  group: book-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   build:
     name: Build the websites and the PDFs
@@ -108,24 +113,28 @@ jobs:
       # repository: working-directory only applies to `run:` steps.
       - uses: actions/upload-artifact@v7
         with:
+          name: ferrous-lineup-book.pdf
           path: book/book/ferrous-lineup-book.pdf
           archive: false
           if-no-files-found: error
 
       - uses: actions/upload-artifact@v7
         with:
+          name: ferrous-lineup-book-es.pdf
           path: book-es/book/ferrous-lineup-book-es.pdf
           archive: false
           if-no-files-found: error
 
       - uses: actions/upload-artifact@v7
         with:
+          name: ferrous-lineup-manual.pdf
           path: manual/book/ferrous-lineup-manual.pdf
           archive: false
           if-no-files-found: error
 
       - uses: actions/upload-artifact@v7
         with:
+          name: ferrous-lineup-manual-es.pdf
           path: manual-es/book/ferrous-lineup-manual-es.pdf
           archive: false
           if-no-files-found: error
@@ -134,7 +143,7 @@ jobs:
       # book under /es/, and each manual under manual/ in its language.
       - name: Assemble the site
         run: |
-          mkdir -p site
+          mkdir -p site/manual site/es/manual
           cp -r book/book/. site/
           cp -r book-es/book/. site/es/
           cp -r manual/book/. site/manual/

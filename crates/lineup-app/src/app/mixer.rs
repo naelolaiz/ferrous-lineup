@@ -175,9 +175,9 @@ impl LineupApp {
                                 pan_slider(ui, &mut channel.pan);
                                 ui.scope(|ui| {
                                     ui.spacing_mut().slider_width = 60.0;
-                                    percent_slider(ui, &mut channel.reverb_send);
+                                    percent_slider(ui, &mut channel.reverb_send)
                                 })
-                                .response
+                                .inner
                                 .on_hover_text(tr(
                                     if mix.reverb.enabled {
                                         "How much of it goes into the reverb: none plays it dry"
@@ -213,11 +213,10 @@ impl LineupApp {
         });
         self.mixer_open = open;
         let master_only = levels == self.project.channels()
-            && mix
-                == Mixer {
-                    master: self.project.mixer.master,
-                    ..mix
-                };
+            && Mixer {
+                master: self.project.mixer.master,
+                ..mix
+            } == self.project.mixer;
         if mix.master != self.project.mixer.master && master_only {
             self.set_master_volume(mix.master);
         } else if mix != self.project.mixer || levels != self.project.channels() {
@@ -495,7 +494,7 @@ fn decibel_slider(
     response
 }
 
-fn percent_slider(ui: &mut egui::Ui, value: &mut f32) {
+fn percent_slider(ui: &mut egui::Ui, value: &mut f32) -> egui::Response {
     ui.add(
         egui::Slider::new(value, 0.0..=1.0)
             .custom_formatter(|value, _| format!("{:.0}%", value * 100.0))
@@ -507,7 +506,7 @@ fn percent_slider(ui: &mut egui::Ui, value: &mut f32) {
                     .ok()
                     .map(|value| value / 100.0)
             }),
-    );
+    )
 }
 
 #[cfg(test)]

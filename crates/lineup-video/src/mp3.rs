@@ -35,6 +35,9 @@ impl SoundEncoder {
     /// An encoder for stereo sound at `sample_rate` frames a second (one
     /// of 32 000, 44 100 and 48 000).
     pub fn new(sample_rate: u32) -> Result<Self, String> {
+        if !matches!(sample_rate, 32_000 | 44_100 | 48_000) {
+            return Err(format!("unsupported MP3 sample rate: {sample_rate}"));
+        }
         let mut builder = Builder::new().ok_or("LAME could not start")?;
         builder.set_num_channels(2).map_err(|err| err.to_string())?;
         builder
@@ -66,11 +69,17 @@ impl SoundEncoder {
     /// returns the MP3 frames finished so far.
     pub fn encode(&mut self, samples: &[f32]) -> Result<Vec<Vec<u8>>, String> {
         let frames = samples.len() / 2;
+        if frames == 0 {
+            return Ok(Vec::new());
+        }
         self.pending
             .reserve(mp3lame_encoder::max_required_buffer_size(frames));
         let written = self
             .encoder
-            .encode(InterleavedPcm(samples), spare(&mut self.pending))
+            .encode(
+                InterleavedPcm(&samples[..frames * 2]),
+                spare(&mut self.pending),
+            )
             .map_err(|err| err.to_string())?;
         // SAFETY: LAME wrote `written` bytes into the spare room.
         unsafe { self.pending.set_len(self.pending.len() + written) };

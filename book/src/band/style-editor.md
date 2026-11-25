@@ -428,7 +428,9 @@ stays as the first `match` placed it.
 Saving writes a temporary file next to the real one and renames it:
 
 ```rust
-let temporary = path.with_extension(format!("{EXTENSION}.tmp"));
+let mut temporary = path.as_os_str().to_os_string();
+temporary.push(".tmp");
+let temporary = PathBuf::from(temporary);
 ```
 
 A rename replaces a file in one step, so a crash or a full disk while

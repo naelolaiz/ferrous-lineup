@@ -329,12 +329,21 @@ a value of any type:
 ```rust
 pub fn hint(response: Response, text: impl Into<String>) -> Response {
     let text = text.into();
-    if response.hovered() {
-        response
-            .ctx
-            .data_mut(|data| data.insert_temp(hint_id(), text.clone()));
+    if response.enabled() {
+        if response.hovered() {
+            response
+                .ctx
+                .data_mut(|data| data.insert_temp(hint_id(), text.clone()));
+        }
+        response.on_hover_text(text)
+    } else {
+        if response.contains_pointer() {
+            response
+                .ctx
+                .data_mut(|data| data.insert_temp(hint_id(), text.clone()));
+        }
+        response.on_disabled_hover_text(text)
     }
-    response.on_hover_text(text)
 }
 ```
 

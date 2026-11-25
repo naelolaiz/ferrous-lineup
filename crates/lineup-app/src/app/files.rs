@@ -132,6 +132,11 @@ impl FileState {
         }
     }
 
+    /// Whether the open project is a built-in demo rather than a file or import.
+    pub(super) fn is_demo(&self) -> bool {
+        self.demo.is_some()
+    }
+
     /// Remembers that the project now is `demo`, not a file.
     pub(super) fn open_demo(&mut self, demo: Demo) {
         self.path = None;
@@ -170,10 +175,29 @@ impl FileState {
     /// The name without ".lineup": "song" for "song.lineup", "Für Elise" for
     /// that demo.
     pub(super) fn stem(&self) -> String {
-        // A name such as "AC/DC" would be read as a folder.
+        // Characters forbidden in file names on Windows or Unix.
         self.song_name().map_or_else(
             || tr("Untitled").to_string(),
-            |name| name.replace(['/', '\\'], "-"),
+            |name| {
+                let clean: String = name
+                    .chars()
+                    .map(|c| {
+                        if matches!(c, '/' | '\\' | '<' | '>' | ':' | '"' | '|' | '?' | '*')
+                            || c.is_control()
+                        {
+                            '-'
+                        } else {
+                            c
+                        }
+                    })
+                    .collect();
+                let trimmed = clean.trim_matches(|c| c == ' ' || c == '.');
+                if trimmed.is_empty() {
+                    tr("Untitled").to_string()
+                } else {
+                    trimmed.to_string()
+                }
+            },
         )
     }
 
@@ -305,13 +329,18 @@ impl LineupApp {
                 ui.close();
             }
             ui.separator();
+            let export_disabled = if self.export.is_some() {
+                crate::i18n::tr("An export is already running")
+            } else {
+                crate::i18n::tr("Put some clips in the playlist first")
+            };
             let export = ui
                 .add_enabled(
                     self.can_export(),
                     egui::Button::new(crate::i18n::tr("Export WAV…")),
                 )
                 .on_hover_text(crate::i18n::tr("Save the song as a sound file"))
-                .on_disabled_hover_text(crate::i18n::tr("Put some clips in the playlist first"));
+                .on_disabled_hover_text(export_disabled);
             if export.clicked() {
                 self.export_song();
                 ui.close();
@@ -324,7 +353,7 @@ impl LineupApp {
                 .on_hover_text(crate::i18n::tr(
                     "Save the song with the chord sheet or other views playing along",
                 ))
-                .on_disabled_hover_text(crate::i18n::tr("Put some clips in the playlist first"));
+                .on_disabled_hover_text(export_disabled);
             if video.clicked() {
                 self.ask_for_video();
                 ui.close();
@@ -698,6 +727,10 @@ impl LineupApp {
             if self.style_editor.has_unsaved_changes() {
                 return;
             }
+            if self.has_unsaved_changes() {
+                ctx.request_repaint();
+                return;
+            }
         }
         if matches!(pending, Pending::Quit) && !self.has_unsaved_changes() {
             self.file.pending = None;
@@ -805,6 +838,8 @@ mod tests {
         let mut state = FileState::new(&Project::template());
         state.demo = Some("A/B");
         assert_eq!(state.export_name("mid"), "A-B.mid");
+        state.demo = Some("What?: <Song>*");
+        assert_eq!(state.export_name("wav"), "What-- -Song--.wav");
     }
 
     #[test]

@@ -232,6 +232,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "An empty bar before bar {}: {}",
         "Un compás vacío antes del compás {}: {}",
     ),
+    (
+        "An export is already running",
+        "Ya hay una exportación en curso",
+    ),
     ("Another solo", "Otro solo"),
     (
         "Any group of notes as a scale, such as the octatonic scale or a chord with no name. Notes already written stay as they are: from a key, the set is the key's own notes (C major is 7-35), from a row its first three notes, and from a micromode the same three notes (Menor 3 is 3-3), so the harmony keys still match the song.",
@@ -1166,8 +1170,8 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("Most often next.", "Lo que más a menudo sigue."),
     ("Most often next: {}.", "Lo que más a menudo sigue: {}."),
     (
-        "Move between bars (with Shift, select them)",
-        "Moverse entre compases (con Mayús, seleccionarlos)",
+        "Move between bars (Shift+Arrows select them)",
+        "Moverse entre compases (Mayús+Flechas los seleccionan)",
     ),
     ("move clip", "mover clip"),
     ("Move down", "Bajar"),
@@ -2722,6 +2726,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "En relación Z con {}: los mismos intervalos, pero otro conjunto.",
     ),
     ("Zoom", "Zoom"),
+    ("zoom", "zoom"),
     ("{:.0} BPM", "{:.0} BPM"),
     ("{:.0} dB", "{:.0} dB"),
     ("{}  (any meter)", "{}  (cualquier métrica)"),

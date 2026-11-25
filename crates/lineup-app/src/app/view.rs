@@ -621,15 +621,15 @@ pub(super) fn zoom_control(ui: &mut egui::Ui) {
                 }
             })
             .response
-            .on_hover_text(what);
+            .on_hover_text(crate::i18n::tr(what));
         if ui
             .add_enabled(area.can_step(&ctx, axis, false), small("−"))
-            .on_hover_text(what)
+            .on_hover_text(crate::i18n::tr(what))
             .clicked()
         {
             area.step_zoom(&ctx, axis, false);
         }
-        ui.label(symbol).on_hover_text(what);
+        ui.label(symbol).on_hover_text(crate::i18n::tr(what));
     }
     ui.weak(tr("Playlist zoom"));
 }

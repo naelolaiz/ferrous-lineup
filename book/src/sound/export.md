@@ -332,26 +332,37 @@ pub fn export_wav_cancellable(
     temporary.as_mut_os_string().push(".tmp");
 
     let mut writer = hound::WavWriter::create(&temporary, spec)?;
-    let mut block = vec![0.0_f32; BLOCK_FRAMES * renderer.channels()];
-    let mut done = 0;
-    while done < frames {
-        if cancel.load(Ordering::Relaxed) {
-            drop(writer);
+    let write_result = (|| -> Result<WavExport, hound::Error> {
+        let mut block = vec![0.0_f32; BLOCK_FRAMES * renderer.channels()];
+        let mut done = 0;
+        while done < frames {
+            if cancel.load(Ordering::Relaxed) {
+                return Ok(WavExport::Cancelled);
+            }
+            let count = (frames - done).min(BLOCK_FRAMES);
+            let samples = &mut block[..count * renderer.channels()];
+            renderer.render(samples);
+            for &sample in samples.iter() {
+                writer.write_sample(to_i16(sample))?;
+            }
+            done += count;
+            progress(done);
+        }
+        writer.finalize()?;
+        fs::rename(&temporary, path)?;
+        Ok(WavExport::Written)
+    })();
+    match write_result {
+        Ok(WavExport::Written) => Ok(WavExport::Written),
+        Ok(WavExport::Cancelled) => {
             let _ = fs::remove_file(&temporary);
-            return Ok(WavExport::Cancelled);
+            Ok(WavExport::Cancelled)
         }
-        let count = (frames - done).min(BLOCK_FRAMES);
-        let samples = &mut block[..count * renderer.channels()];
-        renderer.render(samples);
-        for &sample in samples.iter() {
-            writer.write_sample(to_i16(sample))?;
+        Err(err) => {
+            let _ = fs::remove_file(&temporary);
+            Err(err)
         }
-        done += count;
-        progress(done);
     }
-    writer.finalize()?;
-    fs::rename(&temporary, path)?;
-    Ok(WavExport::Written)
 }
 ```
 
@@ -962,7 +973,7 @@ and returns otherwise. `KBPS.get(...)?` returns `None` for a number past
 the end of the table, instead of panicking as `KBPS[...]` would: the
 bytes could be anything.
 
-### The only `unsafe` in the program
+### `unsafe` for LAME's buffer
 
 LAME is C, and it writes its output into memory we give it. The crate
 wants that memory as `&mut [MaybeUninit<u8>]`: bytes that may hold
@@ -971,11 +982,14 @@ and `spare_capacity_mut` hands that room over:
 
 ```rust
 let frames = samples.len() / 2;
+if frames == 0 {
+    return Ok(Vec::new());
+}
 self.pending
     .reserve(mp3lame_encoder::max_required_buffer_size(frames));
 let written = self
     .encoder
-    .encode(InterleavedPcm(samples), spare(&mut self.pending))
+    .encode(InterleavedPcm(&samples[..frames * 2]), spare(&mut self.pending))
     .map_err(|err| err.to_string())?;
 // SAFETY: LAME wrote `written` bytes into the spare room.
 unsafe { self.pending.set_len(self.pending.len() + written) };
@@ -987,9 +1001,10 @@ Then the `Vec` has to be told that it is longer now. `set_len` is
 really written, and reading bytes that were not is undefined behaviour.
 An `unsafe` block is where the programmer takes over a promise the
 compiler cannot check, and the `// SAFETY:` comment says why the promise
-holds: LAME said it wrote `written` bytes there. The two blocks in
-`mp3.rs` (here and in `finish`) are the only `unsafe` code in the whole
-program.
+holds: LAME said it wrote `written` bytes there. Outside the macOS
+Apple Event bridge in `open_files.rs` (see [Opening files on
+macOS](../shipping/releases.md)), these two blocks in `mp3.rs` (here and
+in `finish`) are the only `unsafe` code in the workspace.
 
 The other way would be a buffer of zeros, written over by LAME. That is
 safe and a little slower, since every byte is written twice. Either is
@@ -1002,7 +1017,7 @@ video *is* the chord sheet in the app, through small `video` functions
 that call the same drawing code without the menus. But egui does not
 draw pixels itself. Each frame, it turns the UI into a list of
 **triangles**, each corner with a colour and a point in a texture (the
-texture holds the font's letters). In the app, `egui_glow` sends those
+texture holds the font's letters). In the app, `egui-wgpu` sends those
 triangles to the graphics card.
 
 The export cannot count on a graphics card, and it runs on a thread of
@@ -1036,8 +1051,9 @@ inside?". The test is the **edge function**:
 ```rust
 /// Twice the area of the triangle `from`, `to`, `p`: positive when `p`
 /// is on the inside of the edge from `from` to `to`, zero on it.
-fn edge(from: (i64, i64), to: (i64, i64), p: (i64, i64)) -> i64 {
-    (to.0 - from.0) * (p.1 - from.1) - (to.1 - from.1) * (p.0 - from.0)
+fn edge(from: (i64, i64), to: (i64, i64), p: (i64, i64)) -> i128 {
+    (i128::from(to.0) - i128::from(from.0)) * (i128::from(p.1) - i128::from(from.1))
+        - (i128::from(to.1) - i128::from(from.1)) * (i128::from(p.0) - i128::from(from.0))
 }
 ```
 

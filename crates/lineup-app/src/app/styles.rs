@@ -203,6 +203,7 @@ impl LineupApp {
         let text = match style.to_text() {
             Ok(text) => text,
             Err(error) => {
+                self.style_editor.cancel_close_after_save();
                 self.style_editor.error = Some(error);
                 return;
             }
@@ -222,6 +223,7 @@ impl LineupApp {
                 .save_file()
         });
         let Some(mut path) = path else {
+            self.style_editor.cancel_close_after_save();
             return;
         };
         if path
@@ -230,17 +232,23 @@ impl LineupApp {
         {
             path.set_extension(EXTENSION);
         }
-        let temporary = path.with_extension(format!("{EXTENSION}.tmp"));
+        let mut temporary = path.as_os_str().to_os_string();
+        temporary.push(".tmp");
+        let temporary = PathBuf::from(temporary);
         if let Err(error) =
             std::fs::write(&temporary, text).and_then(|()| std::fs::rename(&temporary, &path))
         {
+            let _ = std::fs::remove_file(&temporary);
+            self.style_editor.cancel_close_after_save();
             self.style_editor.error = Some(crate::i18n::trf(
                 "Could not save {}: {}",
                 &[&path.display(), &error],
             ));
             return;
         }
-        self.style_editor.saved(path.clone());
+        if self.style_editor.saved(path.clone()) {
+            self.send(lineup_audio::Command::StopPhrase);
+        }
         // Saving one style elsewhere leaves the styles folder as it is,
         // with every other style in it; Settings changes the folder.
         self.reload_user_styles();

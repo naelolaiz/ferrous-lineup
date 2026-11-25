@@ -23,7 +23,9 @@ impl Smoothed {
     }
 
     pub fn set(&mut self, target: f32) {
-        self.target = target;
+        if target.is_finite() {
+            self.target = target;
+        }
     }
 
     pub fn target(&self) -> f32 {
@@ -99,7 +101,11 @@ impl HighPass {
     }
 
     pub fn process(&mut self, input: f32) -> f32 {
-        let output = self.coefficient * (self.previous_output + input - self.previous_input);
+        let input = if input.is_finite() { input } else { 0.0 };
+        let mut output = self.coefficient * (self.previous_output + input - self.previous_input);
+        if !output.is_finite() || output.abs() < 1e-20 {
+            output = 0.0;
+        }
         self.previous_input = input;
         self.previous_output = output;
         output
@@ -122,7 +128,11 @@ impl LowPass {
     }
 
     pub fn process(&mut self, input: f32) -> f32 {
+        let input = if input.is_finite() { input } else { 0.0 };
         self.state += (input - self.state) * self.coefficient;
+        if !self.state.is_finite() || self.state.abs() < 1e-20 {
+            self.state = 0.0;
+        }
         self.state
     }
 

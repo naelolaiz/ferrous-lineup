@@ -65,7 +65,7 @@ otra:
 - u **Otro**: el número de arriba, el de abajo (**1**, **2**, **4**,
   **8** o **16**), y **Pulsos agrupados como**, para las métricas cuyos
   pulsos son grupos de dos y tres notas, como 7/8 contado **2+2+3**.
-  **Usar 7/8** la aplica.
+  **Usar 7/8** (o **Intro** en **Pulsos agrupados como**) la aplica.
 
 Un compás nuevo para toda la canción pone las notas de cada compás en un
 compás del tipo nuevo, y **cada compás dura lo mismo que antes**: una

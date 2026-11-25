@@ -6,7 +6,7 @@ Files: [`.github/workflows/ci.yml`](https://github.com/naelolaiz/ferrous-lineup/
 and [`Cargo.toml`](https://github.com/naelolaiz/ferrous-lineup/blob/main/Cargo.toml)
 
 Ferrous Lineup runs on Linux, macOS and Windows from one code base.
-Almost none of its code knows which system it is on, and three
+Almost none of its code knows which system it is on, and four
 workflows on GitHub check every change on all three. This chapter is
 about how a Rust program stays portable, and how the checks run.
 
@@ -28,12 +28,13 @@ with egui and opens an `rfd::FileDialog`; none of that names a system.
 Each library was chosen for that: anything that worked on only one
 system would have to be replaced to reach the others.
 
-The workspace's own code names a system in four places:
+The workspace's own code names a system in five places:
 
 - `main.rs` hides the console window on Windows (below);
 - `build.rs` puts the icon and the version into the Windows `.exe`;
-- the lead sheet chooses `cmd`, `open` or `xdg-open` to show a PDF in the
-  system's viewer;
+- `open_files.rs` catches Finder "open file" Apple Events on macOS;
+- the lead sheet chooses `rundll32.exe`, `open` or `xdg-open` to show a
+  PDF in the system's viewer;
 - the sounds window shows a folder inside the home folder as `~/...`
   only on Linux and macOS, where people write paths that way.
 
@@ -180,15 +181,16 @@ take their icons from the bundles and desktop files in `packaging/` (see
 - **Sound:** cpal hands each system's audio callback the same
   `&mut [f32]`, so the audio thread never knows where it runs.
 
-## Three workflows
+## Four workflows
 
 A **workflow** is a file in `.github/workflows/` that tells GitHub what
-to run, on which machines, and when. Ferrous Lineup has three:
+to run, on which machines, and when. Ferrous Lineup has four:
 
 | Workflow | Runs on | Does |
 |---|---|---|
 | **CI** (`ci.yml`) | every pull request and every push to main | formats, lints, tests and builds on Linux, macOS and Windows |
-| **Release** (`release.yml`) | every pull request, push to main and `v` tag, and by hand | builds the downloads for every system, and publishes them for a tag, pushed or written in a run by hand (see [Release packages](releases.md)) |
+| **Release** (`release.yml`) | every pull request, push to main and `v` tag, and by hand | validates tags, builds the downloads for every system, and publishes them for a tag, pushed or written in a run by hand (see [Release packages](releases.md)) |
+| **Release validation** (`release-validation.yml`) | by hand (`workflow_dispatch`) | smoke-tests a release build across platforms |
 | **Book** (`book.yml`) | changes to the books and manuals | builds the websites and PDFs, and publishes them from main (see [How the books are built](books.md)) |
 
 A pull request shows a check for each job, green when it passed and
@@ -239,10 +241,10 @@ Each copy then runs the same steps:
    (`Swatinem/rust-cache`), so a run compiles only what changed.
 4. **Check formatting**, on Linux only: formatting is the same
    everywhere.
-5. **Lint**: `cargo clippy --workspace --all-targets -- -D warnings`.
-6. **Test**: `cargo test --workspace`, in a debug build (see [Running
+5. **Lint**: `cargo clippy --locked --workspace --all-targets -- -D warnings`.
+6. **Test**: `cargo test --locked --workspace`, in a debug build (see [Running
    them](testing.md#running-them)).
-7. **Build release**, and upload the program as the run's artifact.
+7. **Build release** (`--locked`), and upload the program as the run's artifact.
 
 The steps that only make sense on one system say so:
 

@@ -58,6 +58,7 @@ pub fn spelled_interval_name(low: NoteName, high: NoteName) -> String {
         (_, 1) => "augmented",
         (true, -1) | (false, -2) => "diminished",
         (_, 2) => "doubly augmented",
+        (_, 3..) => "triply augmented",
         _ => "doubly diminished",
     };
     format!("{quality} {}", NUMBERS[letters])
@@ -91,7 +92,7 @@ fn spell_interval(scale: Scale, low: PitchClass, high: PitchClass) -> (NoteName,
 
 /// "a" or "an", whichever goes before `word`.
 fn article(word: &str) -> &'static str {
-    if word.starts_with(['a', 'e', 'i', 'o', 'u']) {
+    if word.starts_with(['a', 'e', 'i', 'o']) {
         "an"
     } else {
         "a"
@@ -131,6 +132,8 @@ pub fn shown_interval(name: &str) -> String {
         ("diminished", true) => "disminuido",
         ("doubly augmented", false) => "doblemente aumentada",
         ("doubly augmented", true) => "doblemente aumentado",
+        ("triply augmented", false) => "triplemente aumentada",
+        ("triply augmented", true) => "triplemente aumentado",
         ("doubly diminished", false) => "doblemente disminuida",
         (_, _) => "doblemente disminuido",
     };
@@ -326,11 +329,13 @@ impl Harmony {
             Harmony::Chord { chord, bass } => {
                 let root = scale.spell_root(chord);
                 let name = chord.name_from(root);
-                match chord.spell_note(root, bass) {
-                    Some(bass) if bass.pitch_class() != chord.root => {
-                        Some(format!("{name}/{bass}"))
-                    }
-                    _ => Some(name),
+                if bass != chord.root {
+                    let bass = chord
+                        .spell_note(root, bass)
+                        .unwrap_or_else(|| scale.spell(bass));
+                    Some(format!("{name}/{bass}"))
+                } else {
+                    Some(name)
                 }
             }
             Harmony::Polychord { upper, lower, bass } => {
@@ -439,16 +444,18 @@ pub fn describe_chord(
 ) -> String {
     let key = key_name(scale);
     let mut text = format!("{root} {}", tr(chord.quality.name()));
-    if bass != chord.root
-        && let Some(bass) = chord.spell_note(root, bass)
-    {
+    if bass != chord.root {
+        let bass = chord
+            .spell_note(root, bass)
+            .unwrap_or_else(|| scale.spell(bass));
         text += &trf(" with {} in the bass", &[&bass]);
     }
     let figures = chord.inversion_figures(bass);
     text += &match numeral {
         Some(numeral) if scale.is_diatonic(chord) => trf(", chord {} of {}.", &[&numeral, &key]),
         Some(numeral) if scale.uses_raised_seventh(chord) => {
-            let leading = scale.spell(scale.root.transpose(11));
+            let leading = Scale::written(scale.tonic_name(), super::ScaleKind::HarmonicMinor)
+                .spell(scale.root.transpose(11));
             trf(
                 ", chord {} of {}, with the raised seventh ({}) of harmonic minor.",
                 &[&numeral, &key, &leading],

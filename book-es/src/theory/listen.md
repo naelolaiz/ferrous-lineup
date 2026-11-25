@@ -92,12 +92,17 @@ loop {
     };
     let channels = block.spec().channels().count().max(1);
     sample_rate = block.spec().rate();
+    if sample_rate == 0 {
+        return Err(DecodeError::Empty);
+    }
     block.copy_to_vec_interleaved(&mut interleaved);
-    samples.extend(
-        interleaved
-            .chunks(channels)
-            .map(|frame| frame.iter().sum::<f32>() / channels as f32),
-    );
+    samples.extend(interleaved.chunks(channels).map(|frame| {
+        frame
+            .iter()
+            .map(|&s| if s.is_finite() { s } else { 0.0 })
+            .sum::<f32>()
+            / frame.len() as f32
+    }));
     if too_long(samples.len(), sample_rate) {
         return Err(DecodeError::TooLong);
     }
@@ -218,13 +223,21 @@ transformas la ventana y el trozo entero, multiplicas un espectro por
 la imagen en espejo del otro (`conj`), y transformas de vuelta.
 
 ```rust
-let mut product: Vec<Complex<f32>> = a.iter().zip(&b).map(|(a, b)| a.conj() * b).collect();
+for ((out, a), b) in self
+    .product
+    .iter_mut()
+    .zip(&self.spec_a)
+    .zip(&self.spec_b)
+{
+    *out = a.conj() * b;
+}
 ```
 
-El crate `realfft` hace las transformadas. Se planifican una vez por
-frecuencia de muestreo y se guardan en la struct `Yin` como
-`Arc<dyn RealToComplex<f32>>`: un trait object compartido con conteo de
-referencias, que es como el planificador entrega sus planes.
+El crate `realfft` hace las transformadas. Tanto los planes de FFT como
+sus búferes de entrada, salida y trabajo se reservan una sola vez por
+frecuencia de muestreo y se reutilizan entre ventanas en la struct `Yin`
+(con los planes guardados como `Arc<dyn RealToComplex<f32>>`, un trait
+object con conteo de referencias que entrega el planificador).
 
 ### pYIN: cada valle, un candidato
 

@@ -123,12 +123,17 @@ pub fn decode_file(path: &Path) -> Result<Recording, DecodeError> {
         };
         let channels = block.spec().channels().count().max(1);
         sample_rate = block.spec().rate();
+        if sample_rate == 0 {
+            return Err(DecodeError::Empty);
+        }
         block.copy_to_vec_interleaved(&mut interleaved);
-        samples.extend(
-            interleaved
-                .chunks(channels)
-                .map(|frame| frame.iter().sum::<f32>() / channels as f32),
-        );
+        samples.extend(interleaved.chunks(channels).map(|frame| {
+            frame
+                .iter()
+                .map(|&s| if s.is_finite() { s } else { 0.0 })
+                .sum::<f32>()
+                / frame.len() as f32
+        }));
         if too_long(samples.len(), sample_rate) {
             return Err(DecodeError::TooLong);
         }

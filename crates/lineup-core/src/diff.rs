@@ -229,6 +229,7 @@ pub fn diff(before: &Project, after: &Project) -> Vec<Change> {
     if old_song.plays != new_song.plays
         || old_song.length != new_song.length
         || before.played_tempos(&old_song) != after.played_tempos(&new_song)
+        || before.played_clicks(&old_song) != after.played_clicks(&new_song)
     {
         changes.push(Change::Song);
     }
@@ -658,5 +659,13 @@ mod tests {
 
         // And starting from scratch, as when a file is opened.
         check_both_ways(&Project::empty(), &Project::demo());
+    }
+
+    #[test]
+    fn changing_time_signature_marks_song_changed_for_metronome_clicks() {
+        let before = Project::demo();
+        let mut after = before.clone();
+        after.time_signature = crate::TimeSignature::new(3, 4);
+        assert!(diff(&before, &after).contains(&Change::Song));
     }
 }

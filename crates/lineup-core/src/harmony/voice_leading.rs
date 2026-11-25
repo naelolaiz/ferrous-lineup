@@ -444,6 +444,11 @@ impl Slip {
                 } else {
                     (b, a)
                 };
+                let (to_high, to_low) = if high.to.pitch >= low.to.pitch {
+                    (high.to.pitch, low.to.pitch)
+                } else {
+                    (low.to.pitch, high.to.pitch)
+                };
                 let (up, down) = (a.to.pitch > a.from.pitch, b.to.pitch > b.from.pitch);
                 let way = match (up, down) {
                     (true, true) => "both up",
@@ -459,9 +464,9 @@ impl Slip {
                         &note(high.from.pitch),
                         &note(low.from.pitch),
                         &perfect_name(high.from.pitch.midi().abs_diff(low.from.pitch.midi())),
-                        &note(high.to.pitch),
-                        &note(low.to.pitch),
-                        &perfect_name(high.to.pitch.midi().abs_diff(low.to.pitch.midi())),
+                        &note(to_high),
+                        &note(to_low),
+                        &perfect_name(to_high.midi().abs_diff(to_low.midi())),
                         &tr(way),
                     ],
                 )
@@ -503,7 +508,7 @@ impl Slip {
     /// Why classical part writing avoids it.
     pub fn why(&self) -> String {
         let mut text = tr(why(self.kind)).to_string();
-        if self.doubled {
+        if self.kind == SlipKind::LeadingTone && self.doubled {
             text += tr(
                 " The leading tone is doubled here: another part has it too, and both \
                         cannot rise without moving in octaves, so classical part writing does \
@@ -572,16 +577,30 @@ fn chord_label(key: Scale, chord: Chord, bass: PitchClass) -> String {
     let name = Harmony::Chord { chord, bass }
         .label_in(key)
         .unwrap_or_else(|| key.chord_name(chord));
-    let numeral = match key.secondary_dominant_target(chord) {
-        Some(target) if key.borrowed_from(chord).is_none() => Some(with_figures(
-            &format!(
-                "V{}/{}",
-                chord.quality.numeral_suffix(),
-                key.roman_numeral(target).unwrap_or_default()
-            ),
-            chord.inversion_figures(bass),
-        )),
-        _ => key.figured_numeral(chord, bass),
+    let numeral = if key.borrowed_from(chord).is_none() {
+        if let Some(target) = key.secondary_dominant_target(chord) {
+            Some(with_figures(
+                &format!(
+                    "V{}/{}",
+                    chord.quality.numeral_suffix(),
+                    key.roman_numeral(target).unwrap_or_default()
+                ),
+                chord.inversion_figures(bass),
+            ))
+        } else if let Some(target) = key.secondary_leading_tone_target(chord) {
+            Some(with_figures(
+                &format!(
+                    "vii{}/{}",
+                    chord.quality.numeral_suffix(),
+                    key.roman_numeral(target).unwrap_or_default()
+                ),
+                chord.inversion_figures(bass),
+            ))
+        } else {
+            key.figured_numeral(chord, bass)
+        }
+    } else {
+        key.figured_numeral(chord, bass)
     };
     match numeral {
         Some(numeral) => format!("{name} ({numeral})"),
@@ -888,6 +907,14 @@ fn kind_of_move(x: Hop, y: Hop) -> Option<SlipKind> {
         (from.pitch != to.pitch && !rested).then(|| to.pitch > from.pitch)
     };
     let (up_x, up_y) = (moves(x)?, moves(y)?);
+    let (x0_pc, x1_pc) = (x.0.pitch.pitch_class(), x.1.pitch.pitch_class());
+    let (y0_pc, y1_pc) = (y.0.pitch.pitch_class(), y.1.pitch.pitch_class());
+    // Moving the same two pitch classes into another octave, or swapping
+    // them in a voice exchange, prolongs the same interval rather than
+    // moving in parallel or contrary fifths or octaves.
+    if (x0_pc == x1_pc && y0_pc == y1_pc) || (x0_pc == y1_pc && y0_pc == x1_pc) {
+        return None;
+    }
     let first = perfect(x.0.pitch.midi().abs_diff(y.0.pitch.midi()))?;
     let second = perfect(x.1.pitch.midi().abs_diff(y.1.pitch.midi()))?;
     let same_way = up_x == up_y;
@@ -1249,7 +1276,7 @@ fn resolutions(
                     falls
                         || passes_by(voice, index)
                         || passing_through
-                        || v43_to_i6(reading, low, next_low, to, up)
+                        || v43_to_i6(reading, low, next_low, to, next.pitch, up)
                         || (up == 1 && leads_on(to, next.pitch.pitch_class()))
                 };
                 if !ok {
@@ -1322,11 +1349,20 @@ fn passes_by(voice: &Voice, index: usize) -> bool {
 /// Whether a seventh rising a step (`up` semitones) is the one
 /// exception: V⁴₃ going to I⁶, the seventh rising with the bass a tenth
 /// below it, from the fifth of V to the third of I.
-fn v43_to_i6(reading: Chord, bass: Note, next_bass: Note, to: Chord, up: i32) -> bool {
+fn v43_to_i6(
+    reading: Chord,
+    bass: Note,
+    next_bass: Note,
+    to: Chord,
+    next_note: Note,
+    up: i32,
+) -> bool {
     let bass_up = i32::from(next_bass.midi()) - i32::from(bass.midi());
     reading.quality.is_dominant()
+        && reading.root == to.root.transpose(7)
         && bass.pitch_class() == reading.root.transpose(7)
         && to.tone_of(next_bass.pitch_class()) == Some(3)
+        && to.tone_of(next_note.pitch_class()) == Some(5)
         && (1..=2).contains(&bass_up)
         && (1..=2).contains(&up)
 }

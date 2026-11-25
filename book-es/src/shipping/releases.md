@@ -426,15 +426,17 @@ asociación de archivos `.lineup`.
 
 ## Publicar: un trabajo que espera a los demás
 
-El segundo trabajo, `release`, se ejecuta solo para una etiqueta subida
-con push o una ejecución a mano con etiqueta, y solo cuando todos los
-trabajos de compilación pasaron:
+Un trabajo rápido `preflight` comprueba cualquier etiqueta de versión
+contra `Cargo.toml` y `main` antes de que empiecen las cuatro
+compilaciones. El trabajo `release` se ejecuta después solo para una
+etiqueta subida con push o una ejecución a mano con etiqueta, y solo
+cuando tanto `preflight` como todos los trabajos de compilación pasaron:
 
 ```yaml
 release:
   name: Publish the release
   if: github.ref_type == 'tag' || (github.event_name == 'workflow_dispatch' && inputs.tag != '')
-  needs: build
+  needs: [preflight, build]
 ```
 
 `workflow_dispatch` es el nombre que GitHub le da a una ejecución a
@@ -459,9 +461,9 @@ Una entrada `boolean` se muestra como una casilla, y llega a los pasos
 como el texto `true` o `false`; en una ejecución que no es a mano,
 `inputs.draft` está vacío.
 
-`needs: build` espera a cada línea de la matriz. Si una compilación
-falla, no hay publicación en absoluto, en lugar de una publicación sin
-Windows.
+`needs: [preflight, build]` espera a la validación de la etiqueta y a
+cada línea de la matriz. Si una compilación falla, no hay publicación en
+absoluto, en lugar de una publicación sin Windows.
 
 Los `permissions` del trabajo se refieren al **token** que recibe cada
 ejecución, `GITHUB_TOKEN`, una contraseña que caduca cuando termina el

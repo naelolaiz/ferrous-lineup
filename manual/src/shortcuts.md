@@ -69,7 +69,7 @@ These work after you click a bar (see [The chord sheet](chord-sheet.md)).
 
 | Key | What it does |
 |---|---|
-| **Arrows**, **Tab**, **Shift+Tab** | Move between bars. With **Shift**, select the bars you pass. |
+| **Arrows**, **Tab**, **Shift+Tab** | Move between bars. With **Shift+Arrows**, select the bars you pass. |
 | **Enter** or **F2** | Type in the bar. Just starting to type does the same. |
 | **Delete** or **Backspace** | Clear the selected bars. |
 | **Ctrl+A** | Select every bar. |

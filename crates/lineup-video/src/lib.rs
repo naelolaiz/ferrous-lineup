@@ -60,22 +60,34 @@ impl VideoWriter {
     /// first, renamed at the end, so a failed export never leaves half a
     /// video in place of an older one.
     pub fn create(path: &Path, settings: VideoSettings) -> Result<Self, String> {
-        if !settings.width.is_multiple_of(2)
+        if settings.width < 2
+            || settings.height < 2
+            || !settings.width.is_multiple_of(2)
             || !settings.height.is_multiple_of(2)
             || settings.frame_rate == 0
+            || settings.frame_rate > VIDEO_TIMESCALE
         {
             return Err("the picture size must be even".into());
         }
+        let pictures = PictureEncoder::new(settings.width, settings.height, settings.frame_rate)?;
+        let sound = SoundEncoder::new(settings.sample_rate)?;
         let mut temporary = PathBuf::from(path);
         temporary.as_mut_os_string().push(".tmp");
         let file = File::create(&temporary).map_err(|err| err.to_string())?;
+        let mp4 = match Mp4Writer::create(file) {
+            Ok(mp4) => mp4,
+            Err(err) => {
+                fs::remove_file(&temporary).ok();
+                return Err(err.to_string());
+            }
+        };
         Ok(VideoWriter {
             settings,
             path: path.to_path_buf(),
-            file: Mp4Writer::create(file).map_err(|err| err.to_string())?,
+            file: mp4,
             temporary,
-            pictures: PictureEncoder::new(settings.width, settings.height, settings.frame_rate)?,
-            sound: SoundEncoder::new(settings.sample_rate)?,
+            pictures,
+            sound,
             sound_frames: 0,
         })
     }
@@ -114,7 +126,16 @@ impl VideoWriter {
     }
 
     /// Finishes the file and puts it in place.
-    pub fn finish(mut self) -> Result<(), String> {
+    pub fn finish(self) -> Result<(), String> {
+        let temporary = self.temporary.clone();
+        let result = self.finish_inner();
+        if result.is_err() {
+            fs::remove_file(&temporary).ok();
+        }
+        result
+    }
+
+    fn finish_inner(mut self) -> Result<(), String> {
         for frame in self.sound.finish()? {
             self.file
                 .add_audio(&frame, mp3::FRAME_LENGTH)
@@ -192,5 +213,21 @@ mod tests {
         };
         let path = std::env::temp_dir().join("never-written.mp4");
         assert!(VideoWriter::create(&path, settings).is_err());
+
+        let zero = VideoSettings {
+            width: 0,
+            height: 48,
+            frame_rate: 30,
+            sample_rate: 44_100,
+        };
+        assert!(VideoWriter::create(&path, zero).is_err());
+
+        let bad_rate = VideoSettings {
+            width: 64,
+            height: 48,
+            frame_rate: 30,
+            sample_rate: 22_050,
+        };
+        assert!(VideoWriter::create(&path, bad_rate).is_err());
     }
 }

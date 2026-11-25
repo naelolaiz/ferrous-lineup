@@ -21,6 +21,7 @@ use super::spelling::Clef;
 use super::transpose::Transposition;
 use super::{BarBox, LeadSheet, Mark, Options, Page, Point, TextFont, TextWidth};
 use crate::chord_sheet::HarmonyName;
+use crate::harmony::ChordSymbol;
 use crate::meter::TimeSignature;
 use crate::pitch::NoteName;
 
@@ -139,25 +140,16 @@ enum Run {
     Accidental(i8, f32),
 }
 
-/// The pieces of a chord symbol: the root large, the quality a little
-/// smaller, and real ♭ and ♯ signs for the accidentals: "B♭m7♭5/A♭".
-/// The roots are letters whatever the note naming, as printed lead
-/// sheets write them in every language.
-fn chord_runs(harmony: HarmonyName) -> Vec<Run> {
-    let HarmonyName::Chord(symbol) = harmony else {
-        // N.C., sets, micromodes and row forms are written as they are
-        // named on the chord sheet.
-        return vec![Run::Text(harmony.to_string(), CHORD_SIZE * 0.75)];
-    };
+fn symbol_runs(symbol: ChordSymbol, size: f32) -> Vec<Run> {
     let mut runs = Vec::new();
     let name = |runs: &mut Vec<Run>, name: NoteName| {
-        runs.push(Run::Text(name.letter.as_char().to_string(), CHORD_SIZE));
+        runs.push(Run::Text(name.letter.as_char().to_string(), size));
         if name.accidental != 0 {
-            runs.push(Run::Accidental(name.accidental, CHORD_SIZE));
+            runs.push(Run::Accidental(name.accidental, size));
         }
     };
     name(&mut runs, symbol.root);
-    let small = CHORD_SIZE * 0.8;
+    let small = size * 0.8;
     let quality: Vec<char> = symbol.quality.symbol().chars().collect();
     let mut letters = String::new();
     for (index, &c) in quality.iter().enumerate() {
@@ -175,10 +167,30 @@ fn chord_runs(harmony: HarmonyName) -> Vec<Run> {
         runs.push(Run::Text(letters, small));
     }
     if let Some(bass) = symbol.bass {
-        runs.push(Run::Text("/".to_string(), CHORD_SIZE));
+        runs.push(Run::Text("/".to_string(), size));
         name(&mut runs, bass);
     }
     runs
+}
+
+/// The pieces of a chord symbol: the root large, the quality a little
+/// smaller, and real ♭ and ♯ signs for the accidentals: "B♭m7♭5/A♭".
+/// The roots are letters whatever the note naming, as printed lead
+/// sheets write them in every language.
+fn chord_runs(harmony: HarmonyName) -> Vec<Run> {
+    match harmony {
+        HarmonyName::Chord(symbol) => symbol_runs(symbol, CHORD_SIZE),
+        HarmonyName::Polychord(upper, lower) => {
+            let size = CHORD_SIZE * 0.85;
+            let mut runs = symbol_runs(upper, size);
+            runs.push(Run::Text("|".to_string(), size));
+            runs.extend(symbol_runs(lower, size));
+            runs
+        }
+        // N.C., sets, micromodes and row forms are written as they are
+        // named on the chord sheet.
+        _ => vec![Run::Text(harmony.to_string(), CHORD_SIZE * 0.75)],
+    }
 }
 
 /// The words at the top left of a part for a transposing instrument,

@@ -139,23 +139,47 @@ reservó en el hilo de la interfaz, antes de enviarlo.
 La cola guarda 4096 comandos, suficientes para un proyecto grande
 entero. Si alguna vez se llena, la interfaz se adelantó al hilo de
 audio, que la vacía al principio de cada bloque. `send_wait` no suelta
-el comando: cede y vuelve a intentarlo, hasta mil veces.
+el comando de inmediato: cede hasta mil veces y luego duerme un
+milisegundo por vuelta hasta un tope de 25 ms. Si la cola sigue llena
+—una tarjeta de sonido que se quedó bloqueada sin informar de un error—
+marca `stalled` para que el resto de un lote no congele la ventana, y lo
+limpia en cuanto vuelve a entrar un comando.
 
 ```rust
 pub fn send_wait(&mut self, mut command: Command) -> bool {
-    for _ in 0..SEND_WAIT_ROUNDS {
+    match self.commands.push(command) {
+        Ok(()) => {
+            self.stalled = false;
+            return true;
+        }
+        Err(rtrb::PushError::Full(returned)) => command = returned,
+    }
+    // A stream that has reported an error or already stalled will not
+    // empty the queue, so waiting on every command would freeze the window.
+    if self.stalled || self.problems.broken.load(Ordering::Relaxed) {
+        return false;
+    }
+    let deadline = std::time::Instant::now() + std::time::Duration::from_millis(25);
+    let mut round = 0usize;
+    loop {
+        if round < SEND_WAIT_ROUNDS {
+            std::thread::yield_now();
+        } else {
+            std::thread::sleep(std::time::Duration::from_millis(1));
+        }
         match self.commands.push(command) {
-            Ok(()) => return true,
+            Ok(()) => {
+                self.stalled = false;
+                return true;
+            }
             Err(rtrb::PushError::Full(returned)) => command = returned,
         }
-        // A stream that has reported an error will not empty the
-        // queue, so waiting for room would only freeze the window.
-        if self.problems.broken.load(Ordering::Relaxed) {
+        if self.problems.broken.load(Ordering::Relaxed) || std::time::Instant::now() >= deadline {
+            self.stalled = true;
             return false;
         }
-        std::thread::yield_now();
+        round = round.saturating_add(1);
     }
-    false
 }
 ```
 

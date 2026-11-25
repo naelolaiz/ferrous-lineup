@@ -280,6 +280,11 @@ fn remeter_song(project: &mut Project, time: TimeSignature) -> bool {
     if let Some(region) = &mut playlist_mut.loop_region {
         region.start = song.step(region.start);
         region.end = song.step(region.end);
+        if region.start >= MAX_SONG_STEPS {
+            playlist_mut.loop_region = None;
+        } else if region.end <= region.start {
+            region.end = (region.start + 1).min(MAX_SONG_STEPS);
+        }
     }
     for marker in &mut playlist_mut.tempo_markers {
         let end = song.step(marker.start + marker.glide);

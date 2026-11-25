@@ -72,6 +72,9 @@ impl Transposition {
     /// [`Scale::spelling`]), so a part never has more than six sharps
     /// or flats: a song in F♯ is written in A♭ for a trumpet, not G♯.
     pub fn key(self, key: Scale) -> Scale {
+        if self == Transposition::Concert {
+            return key;
+        }
         Scale::new(key.root.transpose(i32::from(self.semitones())), key.kind)
     }
 
@@ -81,6 +84,9 @@ impl Transposition {
     /// C♯7 of a song in F♯ becomes E♭7 in A♭. Sets, micromodes and row
     /// forms move by the same number of semitones.
     pub fn harmony(self, harmony: HarmonyName, key: Scale) -> HarmonyName {
+        if self == Transposition::Concert {
+            return harmony;
+        }
         harmony.moved(key, self.key(key))
     }
 

@@ -6193,9 +6193,10 @@ fn every_window_writes_in_spanish() {
     );
 }
 
-/// A WAV file of `seconds` of silence, in a folder of its own.
-fn silent_wav(name: &str, seconds: u32) -> std::path::PathBuf {
-    let folder = std::env::temp_dir().join(format!("lineup-drop-{}", std::process::id()));
+/// A WAV file of `seconds` of silence, in a folder of its own for each
+/// `test`: tests run side by side, and each deletes its folder at the end.
+fn silent_wav(test: &str, name: &str, seconds: u32) -> std::path::PathBuf {
+    let folder = std::env::temp_dir().join(format!("lineup-drop-{test}-{}", std::process::id()));
     std::fs::create_dir_all(&folder).unwrap();
     let path = folder.join(name);
     lineup_listen::wav::write(&vec![0.0; seconds as usize * 8_000], 8_000, &path).unwrap();
@@ -6226,8 +6227,8 @@ fn a_recording_dropped_on_the_window_becomes_a_take_and_a_short_sound_goes_to_th
         };
         screen.run(raw);
     };
-    let recording = silent_wav("song.wav", 12);
-    let hit = silent_wav("hit.wav", 1);
+    let recording = silent_wav("window", "song.wav", 12);
+    let hit = silent_wav("window", "hit.wav", 1);
     for rack_open in [false, true] {
         let mut screen = Screen::new();
         screen.app.rack_open = rack_open;
@@ -6263,7 +6264,7 @@ fn a_recording_dropped_on_the_window_becomes_a_take_and_a_short_sound_goes_to_th
 
 #[test]
 fn a_recording_dropped_on_a_track_starts_at_the_bar_under_the_pointer() {
-    let recording = silent_wav("tune.wav", 12);
+    let recording = silent_wav("track", "tune.wav", 12);
     let mut screen = Screen::new();
     screen.app.chord_sheet.open = false;
     screen.app.rack_open = false;
@@ -6287,7 +6288,7 @@ fn a_recording_dropped_on_a_track_starts_at_the_bar_under_the_pointer() {
         screen.draw(vec![]);
     }
     assert_eq!(screen.app.take_place(), Some((bar_3, 1)));
-    std::fs::remove_file(&recording).ok();
+    std::fs::remove_dir_all(recording.parent().unwrap()).ok();
 }
 
 /// Right-clicks the playlist at `pos`.

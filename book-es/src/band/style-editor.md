@@ -451,7 +451,9 @@ fundamental. Si no, se queda donde la puso el primer `match`.
 Guardar escribe un archivo temporal junto al de verdad y lo renombra:
 
 ```rust
-let temporary = path.with_extension(format!("{EXTENSION}.tmp"));
+let mut temporary = path.as_os_str().to_os_string();
+temporary.push(".tmp");
+let temporary = PathBuf::from(temporary);
 ```
 
 Un renombrado reemplaza un archivo de un solo paso, así que un cierre

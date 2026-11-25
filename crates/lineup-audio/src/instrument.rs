@@ -437,7 +437,8 @@ impl SamplerVoice {
         let index = position as usize;
         if index + 1 >= frames.len() {
             self.position = None;
-            return frames.get(index).copied().unwrap_or(0.0) * self.gain;
+            let fade = self.fading.unwrap_or(1.0);
+            return frames.get(index).copied().unwrap_or(0.0) * self.gain * fade;
         }
         // Linear interpolation between the two nearest frames.
         let fraction = (position - index as f64) as f32;
@@ -697,10 +698,16 @@ impl SynthVoice {
             Stage::Decay => {
                 let sustain = envelope.sustain;
                 self.level = sustain + (self.level - sustain) * envelope.decay_factor;
+                if sustain == 0.0 && self.level < SILENT {
+                    self.level = 0.0;
+                    self.stage = Stage::Idle;
+                    return 0.0;
+                }
             }
             Stage::Release => {
                 self.level *= envelope.release_factor;
                 if self.level < SILENT {
+                    self.level = 0.0;
                     self.stage = Stage::Idle;
                     return 0.0;
                 }

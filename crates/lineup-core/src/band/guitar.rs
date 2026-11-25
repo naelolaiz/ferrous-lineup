@@ -537,14 +537,21 @@ fn boogie(bars: &[Bar], harmonies: &[Played]) -> Vec<NoteEvent> {
         };
         let root = lowest(chord.root).midi();
         let major = chord.quality.intervals().contains(&4);
+        let fifth = chord
+            .quality
+            .intervals()
+            .iter()
+            .copied()
+            .find(|i| (6..=8).contains(i))
+            .unwrap_or(7);
         for bar in bars {
             for (number, step) in bar.beat_starts().enumerate() {
                 if step < harmony.start || step >= harmony.end {
                     continue;
                 }
-                let upper = match major && number % 2 == 1 {
+                let upper = match major && fifth == 7 && number % 2 == 1 {
                     true => 9,
-                    false => 7,
+                    false => fifth,
                 };
                 // Two eighths in a beat of two; in a beat of three
                 // eighths (12/8), the long-short of the triplet itself.

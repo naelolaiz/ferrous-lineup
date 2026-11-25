@@ -39,6 +39,9 @@ impl SampleData {
     pub fn load_wav(path: &Path) -> Result<Self, SampleError> {
         let mut reader = hound::WavReader::open(path).map_err(SampleError::Wav)?;
         let spec = reader.spec();
+        if spec.sample_rate == 0 {
+            return Err(SampleError::Empty);
+        }
         let channels = spec.channels.max(1) as usize;
 
         // WAV files store samples either as floats or as integers of some
@@ -46,9 +49,13 @@ impl SampleData {
         let interleaved: Vec<f32> = match spec.sample_format {
             hound::SampleFormat::Float => reader
                 .samples::<f32>()
+                .map(|sample| sample.map(|s| if s.is_finite() { s } else { 0.0 }))
                 .collect::<Result<_, _>>()
                 .map_err(SampleError::Wav)?,
             hound::SampleFormat::Int => {
+                if !(1..=32).contains(&spec.bits_per_sample) {
+                    return Err(SampleError::Wav(hound::Error::Unsupported));
+                }
                 let full_scale = (1_i64 << (spec.bits_per_sample - 1)) as f32;
                 reader
                     .samples::<i32>()

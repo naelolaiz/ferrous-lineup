@@ -131,24 +131,48 @@ was allocated on the UI thread, before it was sent.
 
 The queue holds 4096 commands, enough for a whole large project. If it
 is ever full, the UI got ahead of the audio thread, which empties it at
-the start of every block. `send_wait` does not drop the command: it
-yields and tries again, up to a thousand times.
+the start of every block. `send_wait` does not drop the command at once:
+it yields up to a thousand times, then sleeps a millisecond at a time up
+to a 25 ms cap. If the queue is still full — a sound card that stalled
+silently without reporting an error — it sets `stalled` so the rest of a
+batch does not freeze the window, clearing it as soon as a push succeeds
+again.
 
 ```rust
 pub fn send_wait(&mut self, mut command: Command) -> bool {
-    for _ in 0..SEND_WAIT_ROUNDS {
+    match self.commands.push(command) {
+        Ok(()) => {
+            self.stalled = false;
+            return true;
+        }
+        Err(rtrb::PushError::Full(returned)) => command = returned,
+    }
+    // A stream that has reported an error or already stalled will not
+    // empty the queue, so waiting on every command would freeze the window.
+    if self.stalled || self.problems.broken.load(Ordering::Relaxed) {
+        return false;
+    }
+    let deadline = std::time::Instant::now() + std::time::Duration::from_millis(25);
+    let mut round = 0usize;
+    loop {
+        if round < SEND_WAIT_ROUNDS {
+            std::thread::yield_now();
+        } else {
+            std::thread::sleep(std::time::Duration::from_millis(1));
+        }
         match self.commands.push(command) {
-            Ok(()) => return true,
+            Ok(()) => {
+                self.stalled = false;
+                return true;
+            }
             Err(rtrb::PushError::Full(returned)) => command = returned,
         }
-        // A stream that has reported an error will not empty the
-        // queue, so waiting for room would only freeze the window.
-        if self.problems.broken.load(Ordering::Relaxed) {
+        if self.problems.broken.load(Ordering::Relaxed) || std::time::Instant::now() >= deadline {
+            self.stalled = true;
             return false;
         }
-        std::thread::yield_now();
+        round = round.saturating_add(1);
     }
-    false
 }
 ```
 

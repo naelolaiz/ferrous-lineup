@@ -51,8 +51,42 @@ env:
   RELEASE_TAG: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}
 
 jobs:
+  # Check a release tag against Cargo.toml and the branch before building
+  # for four platforms: a bad manual run fails in seconds instead of after
+  # all four release builds.
+  preflight:
+    name: Check release tag
+    if: github.ref_type == 'tag' || (github.event_name == 'workflow_dispatch' && inputs.tag != '')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Compare the tag with the version in Cargo.toml
+        run: |
+          version=$(sed -n '/^\[workspace\.package\]/,/^\[/ s/^version = "\(.*\)"/\1/p' Cargo.toml)
+          if [[ -z "$version" ]]; then
+            echo "::error::Could not read version from Cargo.toml."
+            exit 1
+          fi
+          if [[ "$GITHUB_REF_TYPE" == tag ]]; then
+            if [[ "v$version" != "$RELEASE_TAG" ]]; then
+              echo "::warning::The tag is $RELEASE_TAG, but Cargo.toml says version $version."
+            fi
+          else
+            if [[ "v$version" != "$RELEASE_TAG" ]]; then
+              echo "::error::The tag asked for is $RELEASE_TAG, but Cargo.toml says version $version."
+              exit 1
+            fi
+            if [[ "$GITHUB_REF" != refs/heads/main ]]; then
+              echo "::error::Releases are made from main, and this run is on $GITHUB_REF_NAME."
+              exit 1
+            fi
+          fi
+
   build:
     name: Build (${{ matrix.name }})
+    needs: preflight
+    if: always() && (needs.preflight.result == 'success' || needs.preflight.result == 'skipped')
     strategy:
       fail-fast: false
       matrix:
@@ -92,7 +126,9 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libasound2-dev libxkbcommon-dev libwayland-dev
+          sudo apt-get install -y --no-install-recommends \
+            libasound2-dev libxkbcommon-dev libwayland-dev \
+            libxkbcommon-x11-0 patchelf desktop-file-utils libxml2-utils dpkg-dev
 
       - uses: dtolnay/rust-toolchain@stable
         with:
@@ -159,6 +195,7 @@ jobs:
             label="${COMMIT::7}"
           fi
           version=$(sed -n '/^\[workspace\.package\]/,/^\[/ s/^version = "\(.*\)"/\1/p' Cargo.toml)
+          test -n "$version" || { echo "::error::Could not read version from Cargo.toml."; exit 1; }
           name="ferrous-lineup-$label-${{ matrix.platform }}"
           app="dist/Ferrous Lineup.app"
 
@@ -210,7 +247,6 @@ jobs:
           # appimagetool is an AppImage too; this runs it without FUSE.
           APPIMAGE_EXTRACT_AND_RUN: 1
         run: |
-          sudo apt-get install -y libxkbcommon-x11-0 patchelf
           curl -fsSL -o appimagetool "$APPIMAGETOOL_URL"
           curl -fsSL -o runtime "$RUNTIME_URL"
           echo "$APPIMAGETOOL_SHA256  appimagetool" | sha256sum --check
@@ -265,7 +301,6 @@ jobs:
       - name: Check the Linux metadata
         if: matrix.platform == 'linux-x86_64'
         run: |
-          sudo apt-get install -y desktop-file-utils libxml2-utils
           desktop-file-validate packaging/linux/io.github.naelolaiz.FerrousLineup.desktop
           xmllint --noout packaging/linux/application-x-ferrous-lineup.xml
           xmllint --noout packaging/linux/io.github.naelolaiz.FerrousLineup.metainfo.xml
@@ -282,6 +317,7 @@ jobs:
           MSYS2_ARG_CONV_EXCL: '*'
         run: |
           version=$(sed -n '/^\[workspace\.package\]/,/^\[/ s/^version = "\(.*\)"/\1/p' Cargo.toml)
+          test -n "$version" || { echo "::error::Could not read version from Cargo.toml."; exit 1; }
           iscc="/c/Program Files (x86)/Inno Setup 6/ISCC.exe"
           if [ ! -f "$iscc" ]; then
             iscc="/c/Program Files/Inno Setup 6/ISCC.exe"
@@ -303,10 +339,16 @@ jobs:
 
       # A .deb for Debian, Ubuntu and their derivatives, built from the
       # same release binary and the same desktop/icon/MIME/AppStream files.
+      - name: Cache cargo-deb
+        if: matrix.platform == 'linux-x86_64'
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/cargo-deb
+          key: ${{ runner.os }}-cargo-deb-3.8.0
+
       - name: Build the .deb
         if: matrix.platform == 'linux-x86_64'
         run: |
-          sudo apt-get install -y dpkg-dev
           if ! command -v cargo-deb >/dev/null; then
             cargo install cargo-deb --version 3.8.0 --locked
           fi
@@ -323,32 +365,12 @@ jobs:
   release:
     name: Publish the release
     if: github.ref_type == 'tag' || (github.event_name == 'workflow_dispatch' && inputs.tag != '')
-    needs: build
+    needs: [preflight, build]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v5
-
-      # A tag pushed by hand only gets a warning, since it exists already.
-      # A tag this run would make must match, and only main is released.
-      - name: Compare the tag with the version in Cargo.toml
-        run: |
-          version=$(sed -n '/^\[workspace.package\]/,/^\[/ s/^version = "\(.*\)"/\1/p' Cargo.toml)
-          if [[ "$GITHUB_REF_TYPE" == tag ]]; then
-            if [[ "v$version" != "$RELEASE_TAG" ]]; then
-              echo "::warning::The tag is $RELEASE_TAG, but Cargo.toml says version $version."
-            fi
-          else
-            if [[ "v$version" != "$RELEASE_TAG" ]]; then
-              echo "::error::The tag asked for is $RELEASE_TAG, but Cargo.toml says version $version."
-              exit 1
-            fi
-            if [[ "$GITHUB_REF" != refs/heads/main ]]; then
-              echo "::error::Releases are made from main, and this run is on $GITHUB_REF_NAME."
-              exit 1
-            fi
-          fi
 
       # Each artifact lands in a folder of its own name. `skip-decompress`
       # keeps the Windows .zip as it is instead of unpacking it. No

@@ -61,7 +61,7 @@ many steps a bar has next to it. Open it to choose another:
 - or **Any other**: the top number, the bottom one (**1**, **2**, **4**,
   **8** or **16**), and **Beats grouped as**, for meters whose beats
   are groups of two and three notes, such as 7/8 counted **2+2+3**.
-  **Use 7/8** then sets it.
+  **Use 7/8** (or **Enter** in **Beats grouped as**) then sets it.
 
 A new time signature for the whole song puts every bar's notes into a
 bar of the new kind, and **each bar lasts as long as before**: a song at

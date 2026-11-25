@@ -72,7 +72,7 @@ acordes](chord-sheet.md)).
 
 | Tecla | Qué hace |
 |---|---|
-| **Flechas**, **Tab**, **Mayús+Tab** | Se mueven entre compases. Con **Mayús**, seleccionan los compases por los que pasas. |
+| **Flechas**, **Tab**, **Mayús+Tab** | Se mueven entre compases. Con **Mayús+Flechas**, seleccionan los compases por los que pasas. |
 | **Intro** o **F2** | Escribe en el compás. Empezar a escribir hace lo mismo. |
 | **Supr** o **Retroceso** | Borra los compases seleccionados. |
 | **Ctrl+A** | Selecciona todos los compases. |

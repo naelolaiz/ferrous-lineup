@@ -60,8 +60,9 @@ So typing a song is: click bar 1, then `C`, Tab, `Am7`, Tab, `Dm7 G7`,
 Tab, `C`, Enter.
 
 If the computer keyboard is playing notes (**MIDI > Typing keyboard to
-piano** is on), the letter keys play instead of typing: double-click
-the bar or press Enter first.
+piano** is on), the letter keys and the upper-row black-key digits
+(`2 3 5 6 7 9 0`) play instead of typing: double-click the bar or press
+Enter first.
 
 ### What a bar can hold
 
@@ -219,10 +220,11 @@ Everything but the bars is optional:
 | `# a note` | A note for people, skipped. |
 
 In a bar goes exactly what you would type in a bar of the sheet: `%`
-plays the bar before again, and an empty bar `| |` goes on with the
-chord that was playing; `||`, `|:` and `:|` are read as plain bar
-lines. A `Key:` or `Time:` line between bars changes
-the key or the time from the next bar on.
+plays the bar before again, an empty bar `| |` goes on with the chord
+that was playing, and an unspaced `|` inside a chord (`| Eb7|Fb | C |`)
+is kept as a polychord rather than starting a new bar; `||`, `|:` and
+`:|` are read as plain bar lines. A `Key:` or `Time:` line between bars
+changes the key or the time from the next bar on.
 
 Roman numerals are read in the chart's key, so this chart:
 

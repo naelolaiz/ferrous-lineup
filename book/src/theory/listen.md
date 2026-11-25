@@ -87,12 +87,17 @@ loop {
     };
     let channels = block.spec().channels().count().max(1);
     sample_rate = block.spec().rate();
+    if sample_rate == 0 {
+        return Err(DecodeError::Empty);
+    }
     block.copy_to_vec_interleaved(&mut interleaved);
-    samples.extend(
-        interleaved
-            .chunks(channels)
-            .map(|frame| frame.iter().sum::<f32>() / channels as f32),
-    );
+    samples.extend(interleaved.chunks(channels).map(|frame| {
+        frame
+            .iter()
+            .map(|&s| if s.is_finite() { s } else { 0.0 })
+            .sum::<f32>()
+            / frame.len() as f32
+    }));
     if too_long(samples.len(), sample_rate) {
         return Err(DecodeError::TooLong);
     }
@@ -209,13 +214,21 @@ frame, multiply one spectrum by the other's mirror image (`conj`), and
 transform back.
 
 ```rust
-let mut product: Vec<Complex<f32>> = a.iter().zip(&b).map(|(a, b)| a.conj() * b).collect();
+for ((out, a), b) in self
+    .product
+    .iter_mut()
+    .zip(&self.spec_a)
+    .zip(&self.spec_b)
+{
+    *out = a.conj() * b;
+}
 ```
 
-The `realfft` crate does the transforms. They are planned once per
-sample rate and kept in the `Yin` struct as
-`Arc<dyn RealToComplex<f32>>`: a trait object shared by reference
-counting, which is how the planner hands its plans out.
+The `realfft` crate does the transforms. Both the FFT plans and their
+input, output and scratch buffers are allocated once per sample rate and
+reused across frames in the `Yin` struct (with plans stored as
+`Arc<dyn RealToComplex<f32>>`, a reference-counted trait object handed
+out by the planner).
 
 ### pYIN: every dip a candidate
 

@@ -75,6 +75,7 @@ pull_request:
     - "manual/**"
     - "manual-es/**"
     - ".github/workflows/book.yml"
+    - ".gitattributes"
 ```
 
 `paths` is why a change to the app's code doesn't build the books, and a
@@ -185,6 +186,32 @@ destination for an `id` some link goes to. Every heading links to itself,
 and the contents and the index link to what they list; when the index
 shows one number for two places on the same page, a hidden list of links
 (`<div hidden>`) still points at both.
+
+### Chrome without a window
+
+`print_pdf` has Chrome print the page with no window to show it in
+(`--headless`), the way the Print button would (`--print-to-pdf`).
+`--virtual-time-budget=30000` first lets the page run for 30 seconds of
+its own time, so whatever its scripts do on loading is done when Chrome
+prints. That time is *virtual*: Chrome moves the page's clock on as fast
+as the page lets it, and holds it while a file is still loading.
+
+mdBook's `print.html` has a script of its own: 100 milliseconds after
+the page loads, it opens the print dialog, for a reader who clicked the
+printer button on the website. Within the time budget that timer goes
+off before Chrome prints, and Chrome then quits without writing
+anything. So the script takes that line out of the page it prints, only
+after the chapters (`</main>`), since a chapter, like this one, may quote
+it:
+
+```python
+AUTO_PRINT = "window.setTimeout(window.print, 100);"
+
+end = source.index("</main>")
+source = source[:end] + source[end:].replace(AUTO_PRINT, "")
+if "window.print" in source[end:]:
+    sys.exit("print.html calls window.print() another way: has mdBook changed?")
+```
 
 ### The index
 

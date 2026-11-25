@@ -512,6 +512,9 @@ pub fn semitones(self) -> u8 {
 
 ```rust
 pub fn key(self, key: Scale) -> Scale {
+    if self == Transposition::Concert {
+        return key;
+    }
     Scale::new(key.root.transpose(i32::from(self.semitones())), key.kind)
 }
 ```

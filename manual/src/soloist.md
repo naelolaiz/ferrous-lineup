@@ -176,6 +176,7 @@ chromatic notes between them.
 | Latin | trumpet | B♭3 to A5 |
 | Tango | tango accordion | G3 to C6 |
 | Latin American folklore | pan flute | E4 to E6 |
+| Balkan and Turkish | clarinet | D3 to B♭5 |
 | Flamenco | nylon-string guitar | E3 to A5 |
 | Reggae and ska | trumpet | B♭3 to A5 |
 | Country and folk | fiddle | G3 to E6 |

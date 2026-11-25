@@ -351,10 +351,11 @@ two" across the pair.
 
 ### Beats for any meter
 
-Most comping patterns are a fixed table of hits. Two are not: **plain
+Most comping patterns are a fixed table of hits. Three are not: **plain
 accents** (`Comping::Accents`), a chord on each beat the bar is felt
-in, and the **aksak** of the Balkan styles, the afterbeats inside each
-beat. In 7/8 felt as
+in; the **afterbeat** (`Comping::Afterbeat`), the "pa" after each beat
+of a march, ragtime or polka; and the **aksak** of the Balkan styles,
+the afterbeats inside each beat. In 7/8 felt as
 2+2+3 they fall in one place, in 5/4 felt as 2+3 in another, so their
 hits are built from the bar's `felt_groups` (see [Beats of different
 lengths](../sound/tempo.md#beats-of-different-lengths)):
@@ -390,10 +391,10 @@ fn hits(self, time: TimeSignature) -> (usize, Cow<'static, [Hit<Voices>]>) {
 The function returns a **`Cow`**, "clone on write" (see [The order of
 everything](../program/sync.md#the-order-of-everything)): the fixed patterns hand out a
 borrow of their `static` table, `Cow::Borrowed`, at no cost, and the
-two built ones an owned `Vec`, `Cow::Owned`. The caller reads both the
-same way. These two patterns count from the bar line wherever the
-chord starts (`follows_the_bar`), since the beats of an odd meter are
-where the bar puts them.
+three built ones an owned `Vec`, `Cow::Owned`. The caller reads both the
+same way. These three patterns count from the bar line wherever the
+chord starts (`follows_the_bar`), since the beats of a meter are where
+the bar puts them.
 
 ### The bass
 

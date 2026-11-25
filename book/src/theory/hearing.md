@@ -710,10 +710,14 @@ longer one, with `..` for the rest. When the key is not clear, the next
 keys whose share is at least 40% of the best are its **alternatives**,
 two at most, and the app shows them fainter.
 
-E Dorian has the same notes as A minor and G major, so the profiles,
-which only know major and minor, cannot pick its home note with
-confidence, and the app says so: A minor, or E minor, or A major. The
-real tonic is among the alternatives, which is the honest answer.
+E Dorian has the same notes as D major and B minor, and the profiles
+only know major and minor, so no answer can be E Dorian. What comes out
+depends on which notes the tune leans on. When E and B, its tonic and
+fifth, sound longest, the answer is E minor, the minor key on the same
+tonic, although E minor has C where E Dorian has C♯. When all seven
+notes sound about alike, the answer is D major. Either answer can come
+out clear, with no alternatives beside it: the mode is yours to hear, by
+its raised sixth, C♯.
 
 ### Where the key changes
 
@@ -792,12 +796,13 @@ pub fn end_bar(&mut self) {
 Each bar, everything heard before counts 0.84 times as much, so a bar
 from four bars ago counts about half (0.84⁴ ≈ 0.5). A new key takes over
 only after it has led for two bars in a row. The listener does not
-start from nothing either: `KeyListener::starting_in` fills the past
-with music shaped like the key around it, the key heard in the song's
-notes there or the project's key, so the first chords you play are
-heard in its light. Play C, F and G7 over an E Dorian song and they are
-first heard against A minor; a few bars later the listener settles on
-C major, clear.
+start from nothing either: for a major or minor key,
+`KeyListener::starting_in` fills the past with music shaped like the key
+around it — the key heard in the song's notes there or the project's key
+(leaving modes, sets and rows unbiased) — so the first chords you play
+are heard in its light. Play C, F and G7 over an A minor song and they
+are first heard against A minor; a few bars later the listener settles
+on C major, clear.
 
 The app shows the key from the most immediate source it has (see
 `key_finder.rs`): what you play, if you played in the last four bars;

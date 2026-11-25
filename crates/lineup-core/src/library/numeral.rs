@@ -21,7 +21,7 @@
 use std::borrow::Cow;
 
 use crate::harmony::{Chord, ChordQuality, ChordSymbol, MinorNumerals, Scale, ScaleKind};
-use crate::pitch::{PitchClass, Spelling};
+use crate::pitch::{NoteName, PitchClass, Spelling};
 
 /// A chord relative to the tonic of a key: so many semitones above it,
 /// with a quality.
@@ -76,7 +76,12 @@ impl RomanChord {
     /// it as the key spells it.
     pub fn symbol_in(self, key: Scale) -> ChordSymbol {
         let chord = self.in_key(key.root);
-        let root = key.spell_root(chord);
+        let root = match self.spelling {
+            Some(spelling) if !key.has_letter_for(chord.root) => {
+                NoteName::plain(chord.root, spelling)
+            }
+            _ => key.spell_root(chord),
+        };
         let symbol = ChordSymbol::new(root, self.quality);
         match self.bass {
             Some(_) => {
@@ -104,7 +109,7 @@ const NUMERALS: [(&str, usize); 7] = [
 /// The qualities a suffix can give, for an upper-case (major) numeral
 /// and a lower-case (minor) one. `None` means that suffix does not go
 /// with that case.
-const SUFFIXES: [(&str, Option<ChordQuality>, Option<ChordQuality>); 20] = {
+const SUFFIXES: [(&str, Option<ChordQuality>, Option<ChordQuality>); 23] = {
     use ChordQuality::*;
     [
         ("", Some(Major), Some(Minor)),
@@ -121,9 +126,12 @@ const SUFFIXES: [(&str, Option<ChordQuality>, Option<ChordQuality>); 20] = {
         ("sus2", Some(Sus2), None),
         ("sus4", Some(Sus4), None),
         ("7sus4", Some(Dominant7Sus4), None),
+        ("7b5", Some(Dominant7Flat5), None),
         ("7b9", Some(Dominant7Flat9), None),
         ("7#9", Some(Dominant7Sharp9), None),
         ("+", Some(Augmented), None),
+        ("+7", Some(Augmented7), None),
+        ("+maj7", Some(AugmentedMajor7), None),
         ("°", None, Some(Diminished)),
         ("°7", None, Some(Diminished7)),
         ("ø7", None, Some(HalfDiminished7)),

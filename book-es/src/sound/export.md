@@ -349,26 +349,37 @@ pub fn export_wav_cancellable(
     temporary.as_mut_os_string().push(".tmp");
 
     let mut writer = hound::WavWriter::create(&temporary, spec)?;
-    let mut block = vec![0.0_f32; BLOCK_FRAMES * renderer.channels()];
-    let mut done = 0;
-    while done < frames {
-        if cancel.load(Ordering::Relaxed) {
-            drop(writer);
+    let write_result = (|| -> Result<WavExport, hound::Error> {
+        let mut block = vec![0.0_f32; BLOCK_FRAMES * renderer.channels()];
+        let mut done = 0;
+        while done < frames {
+            if cancel.load(Ordering::Relaxed) {
+                return Ok(WavExport::Cancelled);
+            }
+            let count = (frames - done).min(BLOCK_FRAMES);
+            let samples = &mut block[..count * renderer.channels()];
+            renderer.render(samples);
+            for &sample in samples.iter() {
+                writer.write_sample(to_i16(sample))?;
+            }
+            done += count;
+            progress(done);
+        }
+        writer.finalize()?;
+        fs::rename(&temporary, path)?;
+        Ok(WavExport::Written)
+    })();
+    match write_result {
+        Ok(WavExport::Written) => Ok(WavExport::Written),
+        Ok(WavExport::Cancelled) => {
             let _ = fs::remove_file(&temporary);
-            return Ok(WavExport::Cancelled);
+            Ok(WavExport::Cancelled)
         }
-        let count = (frames - done).min(BLOCK_FRAMES);
-        let samples = &mut block[..count * renderer.channels()];
-        renderer.render(samples);
-        for &sample in samples.iter() {
-            writer.write_sample(to_i16(sample))?;
+        Err(err) => {
+            let _ = fs::remove_file(&temporary);
+            Err(err)
         }
-        done += count;
-        progress(done);
     }
-    writer.finalize()?;
-    fs::rename(&temporary, path)?;
-    Ok(WavExport::Written)
 }
 ```
 
@@ -1008,7 +1019,7 @@ vuelve. `KBPS.get(...)?` devuelve `None` para un número más allá del
 final de la tabla, en lugar de entrar en pánico como haría `KBPS[...]`:
 los bytes podrían ser cualquier cosa.
 
-### El único `unsafe` del programa
+### `unsafe` para el búfer de LAME
 
 LAME es C, y escribe su salida en la memoria que le damos. El crate
 quiere esa memoria como `&mut [MaybeUninit<u8>]`: bytes que todavía
@@ -1018,11 +1029,14 @@ espacio:
 
 ```rust
 let frames = samples.len() / 2;
+if frames == 0 {
+    return Ok(Vec::new());
+}
 self.pending
     .reserve(mp3lame_encoder::max_required_buffer_size(frames));
 let written = self
     .encoder
-    .encode(InterleavedPcm(samples), spare(&mut self.pending))
+    .encode(InterleavedPcm(&samples[..frames * 2]), spare(&mut self.pending))
     .map_err(|err| err.to_string())?;
 // SAFETY: LAME wrote `written` bytes into the spare room.
 unsafe { self.pending.set_len(self.pending.len() + written) };
@@ -1035,8 +1049,10 @@ escribieron de verdad, y leer bytes que no se escribieron es
 comportamiento indefinido. Un bloque `unsafe` es donde el programador
 asume una promesa que el compilador no puede comprobar, y el comentario
 `// SAFETY:` dice por qué se cumple: LAME dijo que escribió `written`
-bytes allí. Los dos bloques de `mp3.rs` (este y el de `finish`) son el
-único código `unsafe` de todo el programa.
+bytes allí. Fuera del puente de eventos de macOS en `open_files.rs`
+(ver [Abrir archivos en macOS](../shipping/releases.md)), estos dos
+bloques de `mp3.rs` (este y el de `finish`) son el único código `unsafe`
+del workspace.
 
 La otra forma sería un búfer de ceros que LAME sobrescribe. Es seguro y
 un poco más lento, ya que cada byte se escribe dos veces. Cualquiera de
@@ -1050,7 +1066,7 @@ funciones `video` que llaman al mismo código de dibujo sin los menús.
 Pero egui no dibuja píxeles por sí mismo. En cada frame convierte la
 interfaz en una lista de **triángulos**, cada esquina con un color y un
 punto en una textura (la textura contiene las letras de la fuente). En
-la aplicación, `egui_glow` envía esos triángulos a la tarjeta gráfica.
+la aplicación, `egui-wgpu` envía esos triángulos a la tarjeta gráfica.
 
 La exportación no puede contar con una tarjeta gráfica, y corre en un
 hilo propio. Así que cada vista recibe un **panel**: un `egui::Context`
@@ -1085,8 +1101,9 @@ Para pintar un triángulo, se visita cada píxel cercano y se pregunta
 ```rust
 /// Twice the area of the triangle `from`, `to`, `p`: positive when `p`
 /// is on the inside of the edge from `from` to `to`, zero on it.
-fn edge(from: (i64, i64), to: (i64, i64), p: (i64, i64)) -> i64 {
-    (to.0 - from.0) * (p.1 - from.1) - (to.1 - from.1) * (p.0 - from.0)
+fn edge(from: (i64, i64), to: (i64, i64), p: (i64, i64)) -> i128 {
+    (i128::from(to.0) - i128::from(from.0)) * (i128::from(p.1) - i128::from(from.1))
+        - (i128::from(to.1) - i128::from(from.1)) * (i128::from(p.0) - i128::from(from.0))
 }
 ```
 

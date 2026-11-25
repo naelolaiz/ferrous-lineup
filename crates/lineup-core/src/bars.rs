@@ -52,7 +52,9 @@ impl Project {
         let meter = self.meter();
         let bar = meter.bar(bar);
         let at = if after { bar.end() } else { bar.start };
-        let steps = bar.length * count;
+        let Some(steps) = bar.time.steps_per_bar().checked_mul(count) else {
+            return false;
+        };
         if count == 0 || at >= MAX_SONG_STEPS {
             return false;
         }
