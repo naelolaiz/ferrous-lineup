@@ -263,7 +263,7 @@ pub fn import(file: &MidiFile, title: &str) -> Result<Imported, ImportError> {
 
     let report = Report {
         channels: project.channels().len(),
-        notes: total - left_out,
+        notes: total.saturating_sub(left_out),
         bars: meter.bar_at(length.saturating_sub(1)).number + 1,
         tempo_changes,
         time_changes,
@@ -985,7 +985,7 @@ fn place_patterns(
         let notes: Vec<Vec<NoteEvent>> = (rows[index].iter().enumerate())
             .map(|(channel, notes)| {
                 if is_drum[channel] == drums {
-                    notes.clone()
+                    crate::pattern::tidy_notes(notes.iter().copied())
                 } else {
                     Vec::new()
                 }

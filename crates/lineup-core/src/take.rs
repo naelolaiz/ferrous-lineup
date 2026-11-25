@@ -780,8 +780,14 @@ impl Project {
             Along::Pattern { pattern, .. } => {
                 let pattern = *pattern;
                 if let (Some(channel), Some(range)) = (channel, transcription.range()) {
-                    added.notes =
-                        self.replace_in_pattern(pattern, channel, range, 0, &transcription.notes);
+                    added.notes = self.replace_in_pattern(
+                        pattern,
+                        channel,
+                        range,
+                        0,
+                        0,
+                        &transcription.notes,
+                    );
                 }
                 for (piece, &take) in transcription.pieces.iter().zip(&recordings) {
                     if let Some(pattern) = self.pattern_mut(pattern) {
@@ -803,24 +809,25 @@ impl Project {
     }
 
     /// The notes of `channel` in pattern `pattern` that start in `range`
-    /// (steps of the pattern, `offset` steps before the steps `notes` are
-    /// placed on) replaced by the notes in it; a note from before the
-    /// range that sounds into it ends where it starts. Returns how many
-    /// notes were written.
+    /// (song steps, where `round_at` maps to step `pattern_start` of the
+    /// pattern) replaced by the notes in it; a note from before the range
+    /// that sounds into it ends where it starts. Returns how many notes
+    /// were written.
     fn replace_in_pattern(
         &mut self,
         pattern: usize,
         channel: usize,
         range: Range<usize>,
-        offset: usize,
+        round_at: usize,
+        pattern_start: usize,
         notes: &[Placed],
     ) -> usize {
         let Some(target) = self.pattern_mut(pattern) else {
             return 0;
         };
         let length = target.length();
-        let local =
-            range.start.saturating_sub(offset)..range.end.saturating_sub(offset).min(length);
+        let local = (pattern_start + range.start.saturating_sub(round_at))
+            ..(pattern_start + range.end.saturating_sub(round_at)).min(length);
         let mut kept: Vec<NoteEvent> = target
             .notes(channel)
             .iter()
@@ -835,9 +842,10 @@ impl Project {
             .collect();
         let mut written = 0;
         for note in notes {
-            let Some(start) = note.start.checked_sub(offset) else {
+            let Some(delta) = note.start.checked_sub(round_at) else {
                 continue;
             };
+            let start = pattern_start + delta;
             if !local.contains(&start) {
                 continue;
             }
@@ -897,16 +905,13 @@ impl Project {
                     continue;
                 }
                 // Every place this clip plays the pattern inside the range,
-                // and where the pattern's first step is that time round. A
-                // clip trimmed at an edge leaves the steps it hides alone.
-                let rounds: Vec<(usize, Range<usize>)> = clip
+                // and which step of the pattern starts there. A clip trimmed
+                // at an edge leaves the steps it hides alone.
+                let rounds: Vec<(usize, usize, Range<usize>)> = clip
                     .rounds(length)
-                    .filter_map(|round| {
-                        let offset = round.at.checked_sub(round.steps.start)?;
-                        Some((offset, round.at..round.end()))
-                    })
+                    .map(|round| (round.at, round.steps.start, round.at..round.end()))
                     .collect();
-                for (offset, heard) in rounds {
+                for (round_at, pattern_start, heard) in rounds {
                     let here = range.start.max(heard.start)..range.end.min(heard.end);
                     if here.start < here.end {
                         let notes: Vec<Placed> = transcription
@@ -918,8 +923,14 @@ impl Project {
                                     && first_home(&homes, note.start, self) == Some(*clip)
                             })
                             .collect();
-                        written +=
-                            self.replace_in_pattern(clip.pattern, channel, here, offset, &notes);
+                        written += self.replace_in_pattern(
+                            clip.pattern,
+                            channel,
+                            here,
+                            round_at,
+                            pattern_start,
+                            &notes,
+                        );
                     }
                 }
                 let uses = self
@@ -980,7 +991,7 @@ impl Project {
                     .copied()
                     .filter(|note| (start..end).contains(&note.start))
                     .collect();
-                written += self.replace_in_pattern(pattern, channel, start..end, start, &notes);
+                written += self.replace_in_pattern(pattern, channel, start..end, start, 0, &notes);
             }
         }
         written
@@ -1667,5 +1678,43 @@ mod tests {
         let mut drums = Project::template();
         drums.add_channel(Channel::take("Voice take", "t.wav".into()));
         assert_eq!(tune_channel(&drums), None);
+    }
+
+    #[test]
+    fn singing_into_a_start_trimmed_clip_writes_at_the_skipped_offset() {
+        let mut project = Project::empty();
+        let channel = project.add_channel(Channel::synth()).unwrap();
+        let pattern = 0;
+        let pat = project.pattern_mut(pattern).unwrap();
+        pat.set_length(16);
+        // Step 0 is hidden by `skip = 4` (must stay untouched); step 4 is visible at song step 0.
+        pat.add_note(channel, NoteEvent::new(Note::new(64), 0, 2));
+        pat.add_note(channel, NoteEvent::new(Note::new(67), 4, 2));
+        // Clip starts at song step 0 but skips the pattern's first 4 steps.
+        let mut clip = Clip::new(pattern, 0, 0);
+        clip.skip = 4;
+        assert!(project.add_clip(clip).is_some());
+        let along = Along::Song(project.playback_arrangement());
+        let take = take(along, 0.0, 2.0);
+        let notes = [sung(0.0, 0.45, 60.0, -12.0)];
+        let transcription = transcribe_with(&project, &take, &notes, 1, 0.0, Pitches::AsSung);
+        let keep = Keep {
+            name: "Take".into(),
+            notes: "Notes".into(),
+            track: 0,
+            recordings: Vec::new(),
+            under: None,
+        };
+        let added = project.add_take(
+            &take.along,
+            &transcription,
+            &Target::Channel(channel),
+            &keep,
+        );
+        assert_eq!(added.notes, 1);
+        let written = project.pattern(pattern).unwrap().notes(channel);
+        assert_eq!(written.len(), 2);
+        assert_eq!((written[0].start, written[0].pitch.midi()), (0, 64));
+        assert_eq!((written[1].start, written[1].pitch.midi()), (4, 60));
     }
 }

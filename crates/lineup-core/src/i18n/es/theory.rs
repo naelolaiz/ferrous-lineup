@@ -557,6 +557,10 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("Chacarera", "Chacarera"),
     ("Chamamé", "Chamamé"),
     (
+        "channel \"{}\" has a MIDI instrument other than 1 to 128",
+        "el canal «{}» tiene un instrumento MIDI que no está entre 1 y 128",
+    ),
+    (
         "channel \"{}\" has an effect set outside its range",
         "el canal «{}» tiene un efecto ajustado fuera de rango",
     ),

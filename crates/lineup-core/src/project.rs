@@ -201,9 +201,11 @@ fn is_full_send(send: &f32) -> bool {
 }
 
 impl Channel {
-    /// Whether its pan and reverb send are within their ranges.
+    /// Whether its volume, pan and reverb send are within their ranges.
     pub fn mix_is_valid(&self) -> bool {
-        (-1.0..=1.0).contains(&self.pan) && (0.0..=1.0).contains(&self.reverb_send)
+        (0.0..=1.0).contains(&self.volume)
+            && (-1.0..=1.0).contains(&self.pan)
+            && (0.0..=1.0).contains(&self.reverb_send)
     }
 
     /// Whether it sits in the middle with all of it in the reverb, as a
@@ -1020,13 +1022,21 @@ impl Project {
         let length = self.patterns.get(clip.pattern).map_or(0, Pattern::length);
         // Each edge leaves out less than a time round, and something is
         // left to play.
-        let plays = trimmed.skip.max(trimmed.cut) < length
-            && trimmed.skip + trimmed.cut < length * trimmed.repeats;
         if (clip.pattern, clip.track) != (trimmed.pattern, trimmed.track)
-            || !plays
             || !self.clip_fits(trimmed)
-            || self.clip_taken(&trimmed, Some(index))
         {
+            return false;
+        }
+        let plays = trimmed.skip.max(trimmed.cut) < length
+            && trimmed
+                .skip
+                .checked_add(trimmed.cut)
+                .is_some_and(|trimmed_steps| {
+                    length
+                        .checked_mul(trimmed.repeats)
+                        .is_some_and(|total| trimmed_steps < total)
+                });
+        if !plays || self.clip_taken(&trimmed, Some(index)) {
             return false;
         }
         self.playlist.clips[index] = trimmed;
@@ -1658,7 +1668,10 @@ impl Project {
     /// but number `except`.
     fn section_fits(&self, section: &Section, except: Option<usize>) -> bool {
         section.length > 0
-            && section.end() <= MAX_SONG_STEPS
+            && section
+                .start
+                .checked_add(section.length)
+                .is_some_and(|end| end <= MAX_SONG_STEPS)
             && (1..=MAX_REPEATS).contains(&section.repeats)
             && !self
                 .playlist
@@ -1719,7 +1732,9 @@ impl Project {
         let Some(section) = self.playlist.sections.get(index).cloned() else {
             return false;
         };
-        let room = section.length * copies;
+        let Some(room) = section.length.checked_mul(copies) else {
+            return false;
+        };
         // The time signatures inside the section, read before anything moves.
         let meter = self.meter();
         let opening = meter.time_at(section.start);
@@ -1905,38 +1920,45 @@ impl Project {
     /// nothing, if something would end up too late.
     pub(crate) fn make_room(&mut self, at: usize, steps: usize) -> bool {
         let playlist = &self.playlist;
+        let past_end = |step: usize| {
+            step.checked_add(steps)
+                .is_none_or(|moved| moved >= MAX_SONG_STEPS)
+        };
         let too_late = playlist
             .clips
             .iter()
-            .any(|clip| clip.start >= at && clip.start + steps >= MAX_SONG_STEPS)
-            || playlist
-                .sections
-                .iter()
-                .any(|section| section.start >= at && section.end() + steps > MAX_SONG_STEPS)
+            .any(|clip| clip.start >= at && past_end(clip.start))
+            || playlist.sections.iter().any(|section| {
+                section.start >= at
+                    && section
+                        .end()
+                        .checked_add(steps)
+                        .is_none_or(|end| end > MAX_SONG_STEPS)
+            })
             || playlist
                 .time_markers
                 .iter()
-                .any(|marker| marker.start >= at && marker.start + steps >= MAX_SONG_STEPS)
+                .any(|marker| marker.start >= at && past_end(marker.start))
             || playlist
                 .tempo_markers
                 .iter()
-                .any(|marker| marker.start >= at && marker.start + steps >= MAX_SONG_STEPS)
+                .any(|marker| marker.start >= at && past_end(marker.start))
             || playlist
                 .key_markers
                 .iter()
-                .any(|marker| marker.start >= at && marker.start + steps >= MAX_SONG_STEPS)
+                .any(|marker| marker.start >= at && past_end(marker.start))
             || playlist
                 .chord_markers
                 .iter()
-                .any(|marker| marker.start >= at && marker.start + steps >= MAX_SONG_STEPS)
+                .any(|marker| marker.start >= at && past_end(marker.start))
             || self
                 .variations()
                 .iter()
-                .any(|marker| marker.start >= at && marker.start + steps >= MAX_SONG_STEPS)
+                .any(|marker| marker.start >= at && past_end(marker.start))
             || self
                 .section_styles()
                 .iter()
-                .any(|marker| marker.start >= at && marker.start + steps >= MAX_SONG_STEPS);
+                .any(|marker| marker.start >= at && past_end(marker.start));
         if too_late {
             return false;
         }
