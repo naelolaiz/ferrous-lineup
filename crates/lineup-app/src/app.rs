@@ -388,6 +388,7 @@ impl LineupApp {
             }
             Err(err) => {
                 let reason = err.to_string();
+                self.playing = false;
                 self.message = Some(trf("Could not start audio: {}", &[&reason]));
                 self.audio = Audio::Unavailable(reason);
             }
@@ -2035,6 +2036,7 @@ impl LineupApp {
         let controls_active = [
             (self.settings_open, egui::Id::unique("application-settings")),
             (self.mixer_open, egui::Id::unique("mixer")),
+            (self.ear_training.open, crate::ear_training::window_id()),
         ]
         .iter()
         .any(|&(open, id)| {
@@ -2181,11 +2183,22 @@ impl LineupApp {
             (Some(_), PlayMode::Song) => self.song_position().map(|(step, _)| Playhead::Song(step)),
             (None, _) => None,
         };
-        // While the chord sheet has the keyboard, digits are sets
-        // and figures typed in a bar.
+        // While the chord sheet, a popup, or a dialog-like tool window has
+        // the keyboard, digits are not harmony-key shortcuts.
+        let other_window_active = [
+            (self.ear_training.open, crate::ear_training::window_id()),
+            (self.settings_open, egui::Id::unique("application-settings")),
+            (self.style_editor.open, crate::style_editor::window_id()),
+        ]
+        .iter()
+        .any(|&(open, id)| {
+            open && widgets::editor_active(ctx, egui::LayerId::new(egui::Order::Middle, id))
+        });
         let digits = !self.live.typing()
             && !ctx.text_edit_focused()
+            && !egui::Popup::is_any_open(ctx)
             && !self.chord_sheet.has_keyboard()
+            && !other_window_active
             && !widgets::modal_open(ctx);
         let here = self.key_here();
         self.harmony_keys.time_here = Some(self.time_here());

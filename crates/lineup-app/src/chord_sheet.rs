@@ -1740,10 +1740,19 @@ impl ChordSheet {
                 .map(|cell| cell.bar.number)
         };
         let mut moved_to = None;
-        if pressed(Key::ArrowRight) || (pressed(Key::Tab) && !ui.input(|i| i.modifiers.shift)) {
+        let mut by_tab = false;
+        let shift = ui.input(|i| i.modifiers.shift);
+        if pressed(Key::ArrowRight) {
             moved_to = Some((selected + 1).min(last));
+        } else if pressed(Key::Tab) {
+            by_tab = true;
+            moved_to = Some(if shift {
+                selected.saturating_sub(1)
+            } else {
+                (selected + 1).min(last)
+            });
         }
-        if pressed(Key::ArrowLeft) || (pressed(Key::Tab) && ui.input(|i| i.modifiers.shift)) {
+        if pressed(Key::ArrowLeft) {
             moved_to = Some(selected.saturating_sub(1));
         }
         if let Some(cell) = cell_of(selected) {
@@ -1755,8 +1764,7 @@ impl ChordSheet {
             }
         }
         if let Some(bar) = moved_to {
-            let shift = ui.input(|input| input.modifiers.shift);
-            self.select_to(bar, shift);
+            self.select_to(bar, shift && !by_tab);
             self.reveal = true;
             self.error = None;
             return;
@@ -1798,10 +1806,11 @@ impl ChordSheet {
                 .collect()
         });
         let starts = typed.chars().next().is_some_and(|c| {
-            let letter = c.is_ascii_alphabetic();
+            let piano_key =
+                c.is_ascii_alphabetic() || matches!(c, '2' | '3' | '5' | '6' | '7' | '9' | '0');
             let switches = matches!(c, 'l' | 'L')
                 && lineup_core::NoteNaming::current() == lineup_core::NoteNaming::Letters;
-            !c.is_whitespace() && !(letter && typing_keys) && !switches
+            !c.is_whitespace() && !(piano_key && typing_keys) && !switches
         });
         if starts && !ui.input(|input| input.modifiers.command) {
             self.start_editing(selected, typed, Fresh::CursorAtEnd);
@@ -2010,7 +2019,7 @@ fn progression_menu(
         forms_menu(ui, set, from, actions);
         return;
     }
-    let tonal = project.scale.kind.is_tonal();
+    let tonal = key.kind.is_tonal();
     ui.add_enabled_ui(tonal, |ui| {
         let menu = egui::containers::menu::MenuButton::new(crate::i18n::tr("Progression")).config(
             egui::containers::menu::MenuConfig::new()

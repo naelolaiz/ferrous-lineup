@@ -982,7 +982,7 @@ fn numeral_key(ui: &mut Ui, key: &ChordKey, enabled: bool) -> egui::Response {
         painter.text(
             rect.center_bottom() - vec2(0.0, 10.0),
             Align2::CENTER_CENTER,
-            function.short_feel(),
+            crate::i18n::tr(function.short_feel()),
             FontId::proportional(10.0),
             if enabled { KEY_TEXT_DIM } else { text },
         );

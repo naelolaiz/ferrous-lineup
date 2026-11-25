@@ -712,7 +712,8 @@ impl PlaylistView {
                  along the top strip to mark a section, along the bar numbers to loop.",
                 &[&tr_name(current_name)],
             );
-            ui.add(egui::Label::new(egui::RichText::new(&help).weak()).truncate());
+            ui.add(egui::Label::new(egui::RichText::new(&help).weak()).truncate())
+                .on_hover_text(&help);
         });
 
         let area = egui::ScrollArea::both()

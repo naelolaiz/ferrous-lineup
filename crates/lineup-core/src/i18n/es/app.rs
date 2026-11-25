@@ -1170,8 +1170,8 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     ("Most often next.", "Lo que más a menudo sigue."),
     ("Most often next: {}.", "Lo que más a menudo sigue: {}."),
     (
-        "Move between bars (with Shift, select them)",
-        "Moverse entre compases (con Mayús, seleccionarlos)",
+        "Move between bars (Shift+Arrows select them)",
+        "Moverse entre compases (Mayús+Flechas los seleccionan)",
     ),
     ("move clip", "mover clip"),
     ("Move down", "Bajar"),
@@ -2726,6 +2726,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
         "En relación Z con {}: los mismos intervalos, pero otro conjunto.",
     ),
     ("Zoom", "Zoom"),
+    ("zoom", "zoom"),
     ("{:.0} BPM", "{:.0} BPM"),
     ("{:.0} dB", "{:.0} dB"),
     ("{}  (any meter)", "{}  (cualquier métrica)"),

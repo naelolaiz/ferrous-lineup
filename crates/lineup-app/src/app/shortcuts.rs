@@ -122,7 +122,7 @@ pub(super) fn sections() -> Vec<Section> {
             lines: vec![
                 (
                     Written("Arrows, Tab, Shift+Tab"),
-                    "Move between bars (with Shift, select them)",
+                    "Move between bars (Shift+Arrows select them)",
                 ),
                 (
                     Any(vec![key(Key::Enter), key(Key::F2)]),

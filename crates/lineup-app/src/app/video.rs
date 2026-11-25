@@ -155,105 +155,118 @@ impl LineupApp {
         let mut close = false;
         let can_export = self.can_export();
         let dialog = &mut self.video_dialog;
+        let viewport = ctx.content_rect();
+        let modal_width = PREVIEW_WIDTH.min((viewport.width() - 48.0).max(320.0));
+        let max_body_height = (viewport.height() - 120.0).max(200.0);
         let modal = egui::Modal::new(egui::Id::unique("video-export")).show(ctx, |ui| {
-            ui.set_width(PREVIEW_WIDTH);
+            ui.set_width(modal_width);
             ui.heading(crate::i18n::tr("Export video"));
             ui.label(crate::i18n::tr(
                 "The song's sound, with the views you pick playing along.",
             ));
             ui.add_space(6.0);
-            let layout = &mut choices.layout;
-            egui::Grid::new("video-views")
-                .num_columns(2)
-                .spacing(vec2(16.0, 2.0))
+            egui::ScrollArea::vertical()
+                .max_height(max_body_height)
                 .show(ui, |ui| {
-                    for view in View::ALL {
-                        let placement = &mut layout[view];
-                        let mut name = RichText::new(crate::i18n::tr(view.name()));
-                        if dialog.selected == Some(view) && placement.shown {
-                            name = name.color(theme::ACCENT);
-                        }
-                        let shown = ui.checkbox(&mut placement.shown, name);
-                        theme::hint(shown.clone(), crate::i18n::tr(view.hint()));
-                        if shown.changed() {
-                            dialog.selected = placement.shown.then_some(view);
-                            // A view added or taken away: the views are
-                            // stacked again to share the picture.
-                            layout.stack();
-                        }
-                        let placement = &mut layout[view];
-                        ui.horizontal(|ui| {
-                            ui.add_enabled_ui(placement.shown && view.zooms(), |ui| {
-                                let zoom = ui.add(
-                                    egui::Slider::new(
-                                        &mut placement.zoom,
-                                        Placement::MIN_ZOOM..=Placement::MAX_ZOOM,
-                                    )
-                                    .custom_formatter(|zoom, _| format!("{:.0}%", zoom * 100.0))
-                                    .custom_parser(|text| {
-                                        text.trim_end_matches('%').trim().parse::<f64>().ok().map(|percent| percent / 100.0)
-                                    })
-                                    .text("zoom"),
-                                );
-                                if !view.zooms() {
-                                    zoom.on_disabled_hover_text(crate::i18n::tr(
-                                        "The lead sheet fills the width of its box: make the box wider to draw it bigger",
-                                    ));
+                    let layout = &mut choices.layout;
+                    egui::Grid::new("video-views")
+                        .num_columns(2)
+                        .spacing(vec2(16.0, 2.0))
+                        .show(ui, |ui| {
+                            for view in View::ALL {
+                                let placement = &mut layout[view];
+                                let mut name = RichText::new(crate::i18n::tr(view.name()));
+                                if dialog.selected == Some(view) && placement.shown {
+                                    name = name.color(theme::ACCENT);
                                 }
-                            });
+                                let shown = ui.checkbox(&mut placement.shown, name);
+                                theme::hint(shown.clone(), crate::i18n::tr(view.hint()));
+                                if shown.changed() {
+                                    dialog.selected = placement.shown.then_some(view);
+                                    // A view added or taken away: the views are
+                                    // stacked again to share the picture.
+                                    layout.stack();
+                                }
+                                let placement = &mut layout[view];
+                                ui.horizontal(|ui| {
+                                    ui.add_enabled_ui(placement.shown && view.zooms(), |ui| {
+                                        let zoom = ui.add(
+                                            egui::Slider::new(
+                                                &mut placement.zoom,
+                                                Placement::MIN_ZOOM..=Placement::MAX_ZOOM,
+                                            )
+                                            .custom_formatter(|zoom, _| {
+                                                format!("{:.0}%", zoom * 100.0)
+                                            })
+                                            .custom_parser(|text| {
+                                                text.trim_end_matches('%')
+                                                    .trim()
+                                                    .parse::<f64>()
+                                                    .ok()
+                                                    .map(|percent| percent / 100.0)
+                                            })
+                                            .text(crate::i18n::tr("zoom")),
+                                        );
+                                        if !view.zooms() {
+                                            zoom.on_disabled_hover_text(crate::i18n::tr(
+                                                "The lead sheet fills the width of its box: make the box wider to draw it bigger",
+                                            ));
+                                        }
+                                    });
+                                });
+                                ui.end_row();
+                            }
                         });
-                        ui.end_row();
-                    }
-                });
-            ui.add_space(6.0);
+                    ui.add_space(6.0);
 
-            if let Some(preview) = &mut dialog.preview {
-                preview.set_layout(*layout);
-                preview_picture(ui, preview, layout, &mut dialog.selected);
-                ui.horizontal(|ui| {
-                    if ui
-                        .button(crate::i18n::tr("Stack"))
-                        .on_hover_text(crate::i18n::tr(
-                            "Put the views one above the other again, sharing the picture",
+                    if let Some(preview) = &mut dialog.preview {
+                        preview.set_layout(*layout);
+                        preview_picture(ui, preview, layout, &mut dialog.selected);
+                        ui.horizontal(|ui| {
+                            if ui
+                                .button(crate::i18n::tr("Stack"))
+                                .on_hover_text(crate::i18n::tr(
+                                    "Put the views one above the other again, sharing the picture",
+                                ))
+                                .clicked()
+                            {
+                                layout.stack();
+                            }
+                            ui.separator();
+                            ui.label(crate::i18n::tr("Preview at"));
+                            let last = preview.scene.song_length().saturating_sub(1);
+                            ui.add(
+                                egui::Slider::new(&mut preview.step, 0..=last)
+                                    .show_value(false)
+                                    .step_by(1.0),
+                            );
+                            ui.label(preview.scene.place_name(preview.step));
+                        });
+                        ui.label(
+                            RichText::new(crate::i18n::tr(
+                                "Drag a view to move it, drag its corner to resize it, \
+                                 and scroll over it to zoom.",
+                            ))
+                            .small()
+                            .color(theme::TEXT_DIM),
+                        );
+                    }
+
+                    ui.add_space(6.0);
+                    ui.horizontal(|ui| {
+                        ui.label(RichText::new(crate::i18n::tr("Size")).strong());
+                        for size in Size::ALL {
+                            ui.radio_value(&mut choices.size, size, crate::i18n::tr(size.name()));
+                        }
+                    });
+                    ui.label(
+                        RichText::new(crate::i18n::tr(
+                            "An MP4 file: H.264 pictures, 30 a second, and MP3 sound.",
                         ))
-                        .clicked()
-                    {
-                        layout.stack();
-                    }
-                    ui.separator();
-                    ui.label(crate::i18n::tr("Preview at"));
-                    let last = preview.scene.song_length().saturating_sub(1);
-                    ui.add(
-                        egui::Slider::new(&mut preview.step, 0..=last)
-                            .show_value(false)
-                            .step_by(1.0),
+                        .small()
+                        .color(theme::TEXT_DIM),
                     );
-                    ui.label(preview.scene.place_name(preview.step));
                 });
-                ui.label(
-                    RichText::new(crate::i18n::tr(
-                        "Drag a view to move it, drag its corner to resize it, \
-                         and scroll over it to zoom.",
-                    ))
-                    .small()
-                    .color(theme::TEXT_DIM),
-                );
-            }
-
-            ui.add_space(6.0);
-            ui.horizontal(|ui| {
-                ui.label(RichText::new(crate::i18n::tr("Size")).strong());
-                for size in Size::ALL {
-                    ui.radio_value(&mut choices.size, size, crate::i18n::tr(size.name()));
-                }
-            });
-            ui.label(
-                RichText::new(crate::i18n::tr(
-                    "An MP4 file: H.264 pictures, 30 a second, and MP3 sound.",
-                ))
-                .small()
-                .color(theme::TEXT_DIM),
-            );
             ui.separator();
             ui.horizontal(|ui| {
                 let ready = choices.layout.any() && can_export;
@@ -383,7 +396,8 @@ fn preview_picture(
     selected: &mut Option<View>,
 ) {
     let (width, height) = preview.size.pixels();
-    let size = vec2(PREVIEW_WIDTH, PREVIEW_WIDTH * height as f32 / width as f32);
+    let preview_width = PREVIEW_WIDTH.min(ui.available_width().max(240.0));
+    let size = vec2(preview_width, preview_width * height as f32 / width as f32);
     let (rect, _) = ui.allocate_exact_size(size, Sense::hover());
     let painter = ui.painter_at(rect);
     match preview.texture(ui.ctx()) {
