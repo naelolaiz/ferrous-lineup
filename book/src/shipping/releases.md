@@ -17,7 +17,7 @@ packs seven downloads:
 | `ferrous-lineup-…-macos-arm64.dmg` | Macs with Apple Silicon (M1 and later) |
 | `ferrous-lineup-…-macos-x86_64.dmg` | Macs with an Intel processor |
 
-The `…` is the version for a release (`v0.5.0`), or the first seven
+The `…` is the version for a release (`v0.5.1`), or the first seven
 characters of the commit for any other build (`1a2b3c4`), so a download
 always says what it is. How to open each one on its system is in the
 manual's [Installing
@@ -40,7 +40,7 @@ this chapter is about how they are made.
 
 ## Cutting a release
 
-A release is a tag: a name stuck on one commit. Making version 0.5.0
+A release is a tag: a name stuck on one commit. Making version 0.5.1
 takes a pull request and a tag.
 
 **The version pull request** changes:
@@ -56,19 +56,19 @@ takes a pull request and a tag.
   `packaging/windows/ferrous-lineup.iss`;
 - the version in the AUR recipes and the tag in the Flathub manifest;
 - if the release should open with a few words of its own, a file
-  `packaging/release-notes/v0.5.0.md` holding them, in Markdown.
+  `packaging/release-notes/v0.5.1.md` holding them, in Markdown.
 
 **The tag**, once that is merged, comes one of two ways. From a clone,
 push it:
 
 ```sh
 git fetch origin
-git tag -a v0.5.0 -m "Ferrous Lineup 0.5.0" origin/main
-git push origin v0.5.0
+git tag -a v0.5.1 -m "Ferrous Lineup 0.5.1" origin/main
+git push origin v0.5.1
 ```
 
 Or, on GitHub, open **Actions > Release > Run workflow**, keep the
-branch on `main`, write `v0.5.0` in the **tag** field and run it. This
+branch on `main`, write `v0.5.1` in the **tag** field and run it. This
 needs only the right to run workflows, not to push to the repository,
 and the workflow makes the tag itself, on the commit it built. Tick
 **draft** too, and the release is made as a **draft**: the tag and every
@@ -76,16 +76,15 @@ download are there, but only people who can edit the repository see it,
 until one of them checks it and clicks **Publish release**.
 
 Either way, when all the build jobs have passed, the release appears,
-called "Ferrous Lineup v0.5.0". Its notes are the release-notes file, if
+called "Ferrous Lineup v0.5.1". Its notes are the release-notes file, if
 there is one, followed by the list of pull requests merged since the
 last release that GitHub writes; they can be edited on GitHub
 afterwards. A last small pull request pins what only exists once the tag
-does: the checksum of GitHub's archive of the tag in the AUR recipe, and
-the tag's commit in the Flathub manifest.
+does: the tag's commit in the AUR recipe and in the Flathub manifest.
 
 Three details:
 
-- A tag with a dash, such as `v0.5.0-beta.1`, makes a **pre-release**,
+- A tag with a dash, such as `v0.5.1-beta.1`, makes a **pre-release**,
   never shown as the latest. That is how [semantic
   versioning](https://semver.org) writes a version that is not final
   yet, and Cargo reads versions the same way.
@@ -421,7 +420,7 @@ shows comes from the trigger at the top of the file:
 workflow_dispatch:
   inputs:
     tag:
-      description: "Publish a release with this tag (v0.5.0), made on the commit built. Empty: only build."
+      description: "Publish a release with this tag (v0.5.1), made on the commit built. Empty: only build."
       required: false
       default: ""
     draft:
