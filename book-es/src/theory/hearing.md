@@ -755,11 +755,15 @@ tonalidad no es clara, las siguientes cuya parte es al menos el 40% de
 la mejor son sus **alternativas**, dos como máximo, y la aplicación las
 muestra más tenues.
 
-Mi dórico tiene las mismas notas que Re mayor y Si menor, así que los
-perfiles, que solo conocen el mayor y el menor, no pueden elegir su
-nota de reposo con confianza, y la aplicación lo dice: Re mayor, o Si
-menor, o Mi menor. La tónica real está entre las alternativas, que es la
-respuesta honesta.
+Mi dórico tiene las mismas notas que Re mayor y Si menor, y los
+perfiles solo conocen el mayor y el menor, así que ninguna respuesta
+puede ser Mi dórico. Lo que sale depende de las notas en las que se
+apoya la melodía. Cuando Mi y Si, su tónica y su quinta, suenan más
+tiempo, la respuesta es Mi menor, la tonalidad menor sobre la misma
+tónica, aunque Mi menor tiene Do donde Mi dórico tiene Do♯. Cuando las
+siete notas suenan más o menos igual, la respuesta es Re mayor.
+Cualquiera de las dos puede salir clara, sin alternativas al lado: el
+modo lo oyes tú, por su sexta mayor, Do♯.
 
 ### Dónde cambia la tonalidad
 

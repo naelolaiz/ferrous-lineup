@@ -710,10 +710,14 @@ longer one, with `..` for the rest. When the key is not clear, the next
 keys whose share is at least 40% of the best are its **alternatives**,
 two at most, and the app shows them fainter.
 
-E Dorian has the same notes as D major and B minor, so the profiles,
-which only know major and minor, cannot pick its home note with
-confidence, and the app says so: D major, or B minor, or E minor. The
-real tonic is among the alternatives, which is the honest answer.
+E Dorian has the same notes as D major and B minor, and the profiles
+only know major and minor, so no answer can be E Dorian. What comes out
+depends on which notes the tune leans on. When E and B, its tonic and
+fifth, sound longest, the answer is E minor, the minor key on the same
+tonic, although E minor has C where E Dorian has C♯. When all seven
+notes sound about alike, the answer is D major. Either answer can come
+out clear, with no alternatives beside it: the mode is yours to hear, by
+its raised sixth, C♯.
 
 ### Where the key changes
 

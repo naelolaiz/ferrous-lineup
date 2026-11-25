@@ -684,6 +684,30 @@ mod tests {
     }
 
     #[test]
+    fn a_dorian_tune_is_heard_as_the_minor_on_its_tonic_or_as_its_major() {
+        // E Dorian, E F# G A B C# D: the notes of D major and B minor.
+        let dorian = [4, 6, 7, 9, 11, 1, 2];
+        let heard = |chroma: Chroma| {
+            let span = KeySpan {
+                start: 0,
+                end: 1,
+                guesses: rank_keys(&chroma),
+            };
+            assert!(span.is_clear(), "{:?}", span.guesses);
+            assert!(span.alternatives().is_empty());
+            span.key().unwrap()
+        };
+        // Leaning on E and B, its tonic and fifth: E minor.
+        let leaning: Vec<u8> = dorian.into_iter().chain([4, 4, 11]).collect();
+        assert_eq!(
+            heard(notes(&leaning)),
+            Scale::new(E, ScaleKind::NaturalMinor)
+        );
+        // All seven notes alike: D major.
+        assert_eq!(heard(notes(&dorian)), Scale::new(D, ScaleKind::Major));
+    }
+
+    #[test]
     fn a_modulation_is_found_on_its_bar() {
         // Eight bars of C major, then eight of E major.
         let mut bars = vec![cadence(0); 8];
