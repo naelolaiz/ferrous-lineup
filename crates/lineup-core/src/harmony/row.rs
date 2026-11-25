@@ -369,9 +369,7 @@ impl ToneRow {
     pub fn parse(text: &str) -> Result<ToneRow, String> {
         let separators = |c: char| c.is_whitespace() || ",;|-–—".contains(c);
         let tokens: Vec<&str> = text.split(separators).filter(|t| !t.is_empty()).collect();
-        let numbers = tokens
-            .first()
-            .is_some_and(|t| t.starts_with(|c: char| c.is_ascii_digit()));
+        let numbers = tokens.iter().any(|t| t.chars().any(|c| c.is_ascii_digit()));
         // Fewer than twelve groups of digits that hold twelve characters
         // in all are compact: one character a note.
         let characters: usize = tokens.iter().map(|t| t.chars().count()).sum();
@@ -874,5 +872,13 @@ mod tests {
                 preset.name
             );
         }
+    }
+
+    #[test]
+    fn compact_rows_starting_with_ten_or_eleven_parse() {
+        let row = ToneRow::parse("ET2376845019").unwrap();
+        assert_eq!(row.semitones(), [11, 10, 2, 3, 7, 6, 8, 4, 5, 0, 1, 9]);
+        let spaced = ToneRow::parse("E T 2 3 7 6 8 4 5 0 1 9").unwrap();
+        assert_eq!(spaced, row);
     }
 }

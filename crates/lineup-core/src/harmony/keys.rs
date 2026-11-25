@@ -142,7 +142,7 @@ fn chord_on(scale: Scale, degree: usize, size: ChordSize) -> Option<Chord> {
 
 /// The seven harmony keys for `scale`, from I to vii.
 ///
-/// In a minor key the chord on V is major (with a major seventh chord,
+/// In a minor key the chord on V is major (with a dominant seventh chord,
 /// V7), as in most music in minor keys: its raised third is the "leading
 /// tone" that pulls up to the tonic. That is the harmonic minor scale's V.
 pub fn chord_keys(scale: Scale, size: ChordSize) -> Vec<ChordKey> {

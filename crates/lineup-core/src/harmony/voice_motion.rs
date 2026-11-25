@@ -132,15 +132,21 @@ impl Move {
 fn interval(key: Scale, a: Note, b: Note) -> String {
     let (low, high) = if a.midi() <= b.midi() { (a, b) } else { (b, a) };
     let span = high.midi() - low.midi();
-    let name = match span {
-        12 => "octave".to_string(),
-        24 => return tr("two octaves").to_string(),
-        _ => spelled_interval_name(key.spell(low.pitch_class()), key.spell(high.pitch_class())),
-    };
-    let more = match span {
-        13..=23 => tr(" and an octave"),
-        25.. => tr(" and two octaves"),
-        _ => "",
+    let octaves = span / 12;
+    let rem = span % 12;
+    if rem == 0 && octaves > 0 {
+        return match octaves {
+            1 => interval_with_article("octave"),
+            2 => tr("two octaves").to_string(),
+            n => trf("{} octaves", &[&n]),
+        };
+    }
+    let name = spelled_interval_name(key.spell(low.pitch_class()), key.spell(high.pitch_class()));
+    let more = match octaves {
+        0 => String::new(),
+        1 => tr(" and an octave").to_string(),
+        2 => tr(" and two octaves").to_string(),
+        n => trf(" and {} octaves", &[&n]),
     };
     format!("{}{more}", interval_with_article(&name))
 }
@@ -156,12 +162,19 @@ pub fn motion(upper: &Move, lower: &Move, key: Scale) -> Motion {
         (0, _) | (_, 0) => Motion::Oblique,
         (x, y) if x != y => Motion::Contrary,
         _ => {
-            let number = |upper: Note, lower: Note| {
-                let (upper, lower) = (
-                    key.spell(upper.pitch_class()),
-                    key.spell(lower.pitch_class()),
-                );
-                lower.letter.steps_up_to(upper.letter)
+            let crossed = (upper.from.pitch < lower.from.pitch && upper.to.pitch > lower.to.pitch)
+                || (upper.from.pitch > lower.from.pitch && upper.to.pitch < lower.to.pitch);
+            if crossed {
+                return Motion::Similar;
+            }
+            let number = |first: Note, second: Note| {
+                let (low, high) = if first <= second {
+                    (first, second)
+                } else {
+                    (second, first)
+                };
+                let (low, high) = (key.spell(low.pitch_class()), key.spell(high.pitch_class()));
+                low.letter.steps_up_to(high.letter)
             };
             if number(upper.from.pitch, lower.from.pitch) == number(upper.to.pitch, lower.to.pitch)
             {
@@ -431,5 +444,16 @@ mod tests {
             interval(a, Note::new(65), Note::new(68)),
             "an augmented second"
         );
+        // Three octaves and compound leaps beyond two octaves.
+        assert_eq!(interval(key, Note::new(36), Note::new(72)), "3 octaves");
+        assert_eq!(
+            interval(key, Note::new(36), Note::new(79)),
+            "a perfect fifth and 3 octaves"
+        );
+        // Crossed voices moving in the same direction are similar, never
+        // parallel: C4->A4 over E4->F4 crosses from a 3rd to an inverted 3rd,
+        // and E4->F4 over C4->D5 crosses from a 3rd to an inverted 6th.
+        assert_eq!(motion(&up(60, 69), &up(64, 65), key), Motion::Similar);
+        assert_eq!(motion(&up(64, 65), &up(60, 74), key), Motion::Similar);
     }
 }

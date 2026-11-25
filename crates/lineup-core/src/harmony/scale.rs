@@ -912,7 +912,7 @@ impl Scale {
             }
             _ => return None,
         };
-        Some(Scale::new(self.root, kind))
+        Some(Scale::written(self.tonic_name(), kind))
     }
 
     /// The parallel key `chord` is borrowed from, if it is not in this
@@ -1831,5 +1831,19 @@ mod tests {
             Scale::new(PitchClass::C, ScaleKind::Chromatic).key_signature(),
             None
         );
+    }
+
+    #[test]
+    fn parallel_keeps_the_tonic_spelling_when_possible() {
+        let eb_major = Scale::new(PitchClass::DSharp, ScaleKind::Major);
+        let eb_minor = eb_major.parallel().unwrap();
+        assert_eq!(eb_minor.tonic_name().to_string(), "Eb");
+        assert_eq!(eb_minor.kind, ScaleKind::NaturalMinor);
+        assert_eq!(eb_minor.parallel().unwrap().tonic_name().to_string(), "Eb");
+
+        let cs_minor = Scale::new(PitchClass::CSharp, ScaleKind::NaturalMinor);
+        let cs_major = cs_minor.parallel().unwrap();
+        assert_eq!(cs_major.tonic_name().to_string(), "C#");
+        assert_eq!(cs_major.kind, ScaleKind::Major);
     }
 }

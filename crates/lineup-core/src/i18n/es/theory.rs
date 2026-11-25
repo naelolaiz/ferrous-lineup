@@ -14,6 +14,7 @@ pub(super) const TEXTS: &[(&str, &str)] = &[
     (" ({} tempo changes)", " ({} cambios de tempo)"),
     (" and an octave", " y una octava"),
     (" and two octaves", " y dos octavas"),
+    (" and {} octaves", " y {} octavas"),
     (
         " Ending a piece in minor on the major tonic chord like this is called a Picardy third.",
         " Terminar así una pieza en menor, sobre el acorde mayor de tónica, se llama tercera de picardía.",
