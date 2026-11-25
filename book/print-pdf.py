@@ -356,6 +356,10 @@ def title_html(book: dict) -> str:
     )
 
 
+# What mdBook's print.html runs to open the print dialog on its own.
+AUTO_PRINT = "window.setTimeout(window.print, 100);"
+
+
 def print_pdf(chrome: str, page: Path, out: Path) -> None:
     subprocess.run(
         [
@@ -466,8 +470,16 @@ def main() -> None:
     ]
 
     source = (built / "print.html").read_text(encoding="utf-8")
-    start = source.index("<main>") + len("<main>")
+    # After the chapters, print.html opens the print dialog 100 ms after it
+    # loads. Under --virtual-time-budget that timer fires before Chrome
+    # prints, and Chrome then quits without writing the PDF, so the page
+    # printed here never asks. The chapters stay as they are: a book may
+    # quote that line.
     end = source.index("</main>")
+    source = source[:end] + source[end:].replace(AUTO_PRINT, "")
+    if "window.print" in source[end:]:
+        sys.exit("print.html calls window.print() another way: has mdBook changed?")
+    start = source.index("<main>") + len("<main>")
     chunks = source[start:end].split(CHAPTER_BREAK)
     if len(chunks) != len(chapters):
         sys.exit(

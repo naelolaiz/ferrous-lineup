@@ -202,6 +202,33 @@ que listan; cuando el índice alfabético muestra un solo número para dos
 lugares de la misma página, una lista oculta de enlaces (`<div hidden>`)
 sigue apuntando a los dos.
 
+### Chrome sin ventana
+
+`print_pdf` hace que Chrome imprima la página sin una ventana donde
+mostrarla (`--headless`), como lo haría el botón Imprimir
+(`--print-to-pdf`). Antes, `--virtual-time-budget=30000` deja que la
+página corra 30 segundos de su propio tiempo, para que lo que sus
+scripts hacen al cargar esté hecho cuando Chrome imprime. Ese tiempo es
+*virtual*: Chrome adelanta el reloj de la página tan rápido como la
+página lo deja, y lo detiene mientras un archivo sigue cargando.
+
+El `print.html` de mdBook tiene un script propio: 100 milisegundos
+después de que la página carga, abre el diálogo de impresión, para quien
+hizo clic en el botón de la impresora en el sitio web. Dentro del tiempo
+virtual ese temporizador salta antes de que Chrome imprima, y Chrome
+entonces se cierra sin escribir nada. Así que el script quita esa línea
+de la página que imprime, solo después de los capítulos (`</main>`),
+porque un capítulo, como este, puede citarla:
+
+```python
+AUTO_PRINT = "window.setTimeout(window.print, 100);"
+
+end = source.index("</main>")
+source = source[:end] + source[end:].replace(AUTO_PRINT, "")
+if "window.print" in source[end:]:
+    sys.exit("print.html calls window.print() another way: has mdBook changed?")
+```
+
 ### El índice alfabético
 
 Los libros ya tienen listas de palabras: sus glosarios, tablas con la
