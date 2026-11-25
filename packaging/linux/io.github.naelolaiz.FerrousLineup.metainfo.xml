@@ -61,15 +61,15 @@
 
   <screenshots>
     <screenshot type="default">
-      <image type="source">https://raw.githubusercontent.com/naelolaiz/ferrous-lineup/main/screenshots/main-window.png</image>
+      <image type="source">https://media.githubusercontent.com/media/naelolaiz/ferrous-lineup/main/screenshots/main-window.png</image>
       <caption>The playlist, the channel rack and the harmony keys, with the demo song</caption>
     </screenshot>
     <screenshot>
-      <image type="source">https://raw.githubusercontent.com/naelolaiz/ferrous-lineup/main/screenshots/piano-roll.png</image>
+      <image type="source">https://media.githubusercontent.com/media/naelolaiz/ferrous-lineup/main/screenshots/piano-roll.png</image>
       <caption>The piano roll names the chords as they play</caption>
     </screenshot>
     <screenshot>
-      <image type="source">https://raw.githubusercontent.com/naelolaiz/ferrous-lineup/main/screenshots/library.png</image>
+      <image type="source">https://media.githubusercontent.com/media/naelolaiz/ferrous-lineup/main/screenshots/library.png</image>
       <caption>The library of harmony styles and rhythms, in any key</caption>
     </screenshot>
   </screenshots>

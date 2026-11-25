@@ -31,6 +31,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: release-validation-${{ github.ref }}-${{ inputs.namespace || 'migration' }}-${{ inputs.tag || 'all' }}
+  cancel-in-progress: true
+
 env:
   CARGO_TERM_COLOR: always
 
@@ -117,7 +121,7 @@ jobs:
       - name: Build release
         run: cargo build --release --locked
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: validated-${{ matrix.tag }}-${{ matrix.platform.name }}
           path: ${{ matrix.platform.binary }}

@@ -510,22 +510,24 @@ def main() -> None:
         html_path = built / "print-pdf.html"
         pdf_path = Path(tmp) / "book.pdf"
         pages: dict[str, int] = {}
-        for _ in range(4):
-            write(pages, html_path)
-            print_pdf(chrome, html_path, pdf_path)
-            reader = PdfReader(pdf_path)
-            dests = destinations(reader)
-            landed = {id: page for id, (page, _) in dests.items()}
-            missing = [id for id in needed if id not in landed]
-            if missing:
-                sys.exit(f"no page for {', '.join(missing)}")
-            if all(landed[id] == pages.get(id) for id in needed):
-                break
-            pages = landed
-            print(f"printed {len(reader.pages)} pages, numbering them", file=sys.stderr)
-        else:
-            sys.exit("the page numbers keep moving")
-        html_path.unlink()
+        try:
+            for _ in range(4):
+                write(pages, html_path)
+                print_pdf(chrome, html_path, pdf_path)
+                reader = PdfReader(pdf_path)
+                dests = destinations(reader)
+                landed = {id: page for id, (page, _) in dests.items()}
+                missing = [id for id in needed if id not in landed]
+                if missing:
+                    sys.exit(f"no page for {', '.join(missing)}")
+                if all(landed[id] == pages.get(id) for id in needed):
+                    break
+                pages = landed
+                print(f"printed {len(reader.pages)} pages, numbering them", file=sys.stderr)
+            else:
+                sys.exit("the page numbers keep moving")
+        finally:
+            html_path.unlink(missing_ok=True)
 
         writer = PdfWriter(clone_from=reader)
         add_bookmarks(writer, chapters, dests)
