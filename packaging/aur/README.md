@@ -2,7 +2,7 @@
 
 Two packages, following the AUR's usual split:
 
-- `PKGBUILD` — the released version (0.5.0), built from the exact Git
+- `PKGBUILD` — the released version (0.5.1), built from the exact Git
   commit corresponding to its release tag.
 - `ferrous-lineup-git/PKGBUILD` — the development version, built from
   `main`.
@@ -37,10 +37,8 @@ makepkg --printsrcinfo > .SRCINFO
 and goes to the `ferrous-lineup-git` AUR repository.
 
 Both packages need `git-lfs` and download the LFS images and bundled
-fonts in `prepare()` before building. The stable package's `pkgrel` is
-2 because its source changed from the pre-migration archive to the
-rewritten Git commit. This avoids relying on GitHub's optional inclusion
-of LFS objects in source archives.
+fonts in `prepare()` before building. Fetching from Git avoids relying
+on GitHub's optional inclusion of LFS objects in source archives.
 
 After a history rewrite, publish the updated AUR recipes only after the
 rewritten tags and LFS objects are available. Existing archive checksums

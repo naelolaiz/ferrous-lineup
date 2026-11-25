@@ -102,6 +102,24 @@
   <content_rating type="oars-1.1"/>
 
   <releases>
+    <release version="0.5.1" date="2026-11-25">
+      <description>
+        <p>Shows the active time signature under the Time menu and brings a broad round of harmony, lead-sheet, audio, video, editing and documentation fixes.</p>
+        <p xml:lang="es">Muestra el compás activo bajo el menú Compás e incorpora una amplia serie de correcciones en armonía, partituras guía, audio, video, edición y documentación.</p>
+        <ul>
+          <li>The Time menu shows the current time signature at the playhead when a song starts with a pickup bar or changes meter mid-song.</li>
+          <li xml:lang="es">El menú Compás muestra el compás actual en el cursor de reproducción cuando una canción empieza con anacrusa o cambia de compás a mitad del tema.</li>
+          <li>Fixes harmony and voice-leading edge cases: slash chords with non-chord bass notes, harmonic-minor leading-tone spelling, voice-crossing motion, scale spelling, tone-row inversions and key finding.</li>
+          <li xml:lang="es">Corrige casos límite de armonía y conducción de voces: acordes con bajo ajeno al acorde, escritura de la sensible en menor armónica, movimiento con cruce de voces, escritura de escalas, inversiones de series dodecafónicas y detección de tonalidad.</li>
+          <li>Polychords survive chord-sheet text round-trips without breaking unspaced bar lines, and transposed lead sheets pick cleaner enharmonic keys and handle key changes and irregular meters cleanly.</li>
+          <li xml:lang="es">Los poliacordes se conservan al exportar e importar la hoja de acordes en texto sin romper barras de compás sin espacios, y las partituras guía transportadas eligen tonalidades enarmónicas más limpias y manejan mejor los cambios de tonalidad y los compases irregulares.</li>
+          <li>Hardens real-time audio playback, channel effects, voice takes, MP4 video export, MIDI import, the style editor and atomic project saves.</li>
+          <li xml:lang="es">Refuerza la reproducción de audio en tiempo real, los efectos de canal, las tomas de voz, la exportación de video MP4, la importación MIDI, el editor de estilos y el guardado atómico de proyectos.</li>
+          <li>Adds hover hints on disabled controls, improves keyboard navigation and Spanish translations, files Cielito lindo under Latin American folklore, and updates both manuals and companion books.</li>
+          <li xml:lang="es">Añade explicaciones al pasar el cursor por controles desactivados, mejora la navegación por teclado y las traducciones al español, ubica Cielito lindo en folclore latinoamericano y actualiza los manuales y los libros.</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.5.0" date="2026-11-01">
       <description>
         <p>Gives music without a key (pitch-class sets, micromodes and twelve-tone rows) the tools tonal harmony has, adds forty styles, records singing or whistling into a song, and trims clips on the playlist.</p>

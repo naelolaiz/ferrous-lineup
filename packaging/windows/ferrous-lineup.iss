@@ -1,7 +1,7 @@
 ; Inno Setup script for Ferrous Lineup.
 ;
 ; The release workflow calls this with:
-;   ISCC.exe /DAppVersion=0.5.0 /DBuildLabel=v0.5.0 ferrous-lineup.iss
+;   ISCC.exe /DAppVersion=0.5.1 /DBuildLabel=v0.5.1 ferrous-lineup.iss
 ;
 ; It builds an installer in ..\..\dist: a Start-menu entry, an optional
 ; desktop shortcut, an uninstaller, and the .lineup file association.
@@ -9,7 +9,7 @@
 ; not to install anything.
 
 #ifndef AppVersion
-  #define AppVersion "0.5.0"
+  #define AppVersion "0.5.1"
 #endif
 #ifndef BuildLabel
   #define BuildLabel "local"

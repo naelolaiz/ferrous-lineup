@@ -16,8 +16,8 @@ the `.deb`.
 
 ## Submitting
 
-1. Publish the release tag (`v0.5.0`) and its LFS objects. Use this
-   manifest from `main`, whose `commit:` pins the rewritten tag.
+1. Publish the release tag (`v0.5.1`) and its LFS objects. Use this
+   manifest from `main`, once its `commit:` pins the tag.
 2. Fork <https://github.com/flathub/flathub>, add a branch named
    `io.github.naelolaiz.FerrousLineup`, and copy these files into it.
 3. Open a pull request against `new-pr` and follow the Flathub review.
@@ -32,10 +32,11 @@ flatpak run io.github.naelolaiz.FerrousLineup
 
 ## Updating
 
-The manifest pins the rewritten 0.5.0 commit. Flatpak Builder's Git
-source does not fetch LFS files, so four checksum-pinned file sources
-download the bundled fonts and raw window icon at their existing paths
-before the offline build. The SVG packaging icon stays in Git.
+The manifest builds from the release tag (and its pinned commit once
+published). Flatpak Builder's Git source does not fetch LFS files, so
+four checksum-pinned file sources download the bundled fonts and raw
+window icon at their existing paths before the offline build. The SVG
+packaging icon stays in Git.
 
 For a new release, update `tag:`, `commit:`, and the commit in each
 `media.githubusercontent.com` URL together. Derive each file source's
