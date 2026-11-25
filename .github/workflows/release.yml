@@ -9,7 +9,7 @@ name: Release
 #   and a macOS .dmg.
 # - Pushing a tag that starts with `v` (v0.2.0) also publishes them on a
 #   GitHub Release for that tag.
-# - A manual run on main with a tag filled in (v0.5.0) does the same, and
+# - A manual run on main with a tag filled in (v0.5.1) does the same, and
 #   makes the tag itself, on the commit it built: a release for whoever
 #   can run workflows but not push tags. With "draft" ticked it makes the
 #   tag and leaves the release as a draft, to be checked and published
@@ -24,7 +24,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Publish a release with this tag (v0.5.0), made on the commit built. Empty: only build."
+        description: "Publish a release with this tag (v0.5.1), made on the commit built. Empty: only build."
         required: false
         default: ""
       draft:

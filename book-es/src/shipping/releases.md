@@ -17,7 +17,7 @@ computadora y prepara siete descargas:
 | `ferrous-lineup-…-macos-arm64.dmg` | Mac con Apple Silicon (M1 y posteriores) |
 | `ferrous-lineup-…-macos-x86_64.dmg` | Mac con procesador Intel |
 
-Los `…` son la versión en una publicación (`v0.5.0`), o los siete
+Los `…` son la versión en una publicación (`v0.5.1`), o los siete
 primeros caracteres del commit en cualquier otra compilación
 (`1a2b3c4`), así una descarga siempre dice qué es. Cómo abrir cada una en
 su sistema está en [Instalarlo](https://naelolaiz.github.io/ferrous-lineup/es/manual/installing.html),
@@ -42,7 +42,7 @@ en el manual; este capítulo trata de cómo se hacen.
 ## Publicar una versión
 
 Una versión es una etiqueta: un nombre pegado a un commit. Hacer la
-versión 0.5.0 lleva un pull request y una etiqueta.
+versión 0.5.1 lleva un pull request y una etiqueta.
 
 **El pull request de la versión** cambia:
 
@@ -58,19 +58,19 @@ versión 0.5.0 lleva un pull request y una etiqueta.
 - la versión en las recetas de AUR y la etiqueta en el manifiesto de
   Flathub;
 - si la publicación debe empezar con unas palabras propias, un archivo
-  `packaging/release-notes/v0.5.0.md` que las contenga, en Markdown.
+  `packaging/release-notes/v0.5.1.md` que las contenga, en Markdown.
 
 **La etiqueta**, una vez fusionado eso, llega de una de dos maneras.
 Desde un clon, con un push:
 
 ```sh
 git fetch origin
-git tag -a v0.5.0 -m "Ferrous Lineup 0.5.0" origin/main
-git push origin v0.5.0
+git tag -a v0.5.1 -m "Ferrous Lineup 0.5.1" origin/main
+git push origin v0.5.1
 ```
 
 O, en GitHub, se abre **Actions > Release > Run workflow**, se deja la
-rama en `main`, se escribe `v0.5.0` en el campo **tag** y se ejecuta.
+rama en `main`, se escribe `v0.5.1` en el campo **tag** y se ejecuta.
 Esto solo necesita el permiso de ejecutar flujos de trabajo, no el de
 hacer push al repositorio, y el flujo de trabajo crea la etiqueta él
 mismo, en el commit que compiló. Si además se marca **draft**, la
@@ -80,16 +80,15 @@ uno de ellos la revisa y pulsa **Publish release**.
 
 De cualquiera de las dos maneras, cuando todos los trabajos de
 compilación pasaron, aparece la publicación, llamada «Ferrous Lineup
-v0.5.0». Sus notas son el archivo de notas, si lo hay, seguido de la
+v0.5.1». Sus notas son el archivo de notas, si lo hay, seguido de la
 lista de pull requests fusionados desde la versión anterior que escribe
 GitHub; después se pueden editar en GitHub. Un último pull request
-pequeño fija lo que solo existe una vez que existe la etiqueta: la suma
-de comprobación del archivo de la etiqueta que hace GitHub, en la receta
-de AUR, y el commit de la etiqueta en el manifiesto de Flathub.
+pequeño fija lo que solo existe una vez que existe la etiqueta: el
+commit de la etiqueta en la receta de AUR y en el manifiesto de Flathub.
 
 Tres detalles:
 
-- Una etiqueta con un guion, como `v0.5.0-beta.1`, hace una
+- Una etiqueta con un guion, como `v0.5.1-beta.1`, hace una
   **prepublicación** (pre-release), que nunca se muestra como la última.
   Así escribe el [versionado semántico](https://semver.org) una versión
   que todavía no es definitiva, y Cargo lee las versiones de la misma
@@ -447,7 +446,7 @@ archivo:
 workflow_dispatch:
   inputs:
     tag:
-      description: "Publish a release with this tag (v0.5.0), made on the commit built. Empty: only build."
+      description: "Publish a release with this tag (v0.5.1), made on the commit built. Empty: only build."
       required: false
       default: ""
     draft:
