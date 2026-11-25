@@ -196,26 +196,37 @@ pub fn export_wav_cancellable(
     temporary.as_mut_os_string().push(".tmp");
 
     let mut writer = hound::WavWriter::create(&temporary, spec)?;
-    let mut block = vec![0.0_f32; BLOCK_FRAMES * renderer.channels()];
-    let mut done = 0;
-    while done < frames {
-        if cancel.load(Ordering::Relaxed) {
-            drop(writer);
+    let write_result = (|| -> Result<WavExport, hound::Error> {
+        let mut block = vec![0.0_f32; BLOCK_FRAMES * renderer.channels()];
+        let mut done = 0;
+        while done < frames {
+            if cancel.load(Ordering::Relaxed) {
+                return Ok(WavExport::Cancelled);
+            }
+            let count = (frames - done).min(BLOCK_FRAMES);
+            let samples = &mut block[..count * renderer.channels()];
+            renderer.render(samples);
+            for &sample in samples.iter() {
+                writer.write_sample(to_i16(sample))?;
+            }
+            done += count;
+            progress(done);
+        }
+        writer.finalize()?;
+        fs::rename(&temporary, path)?;
+        Ok(WavExport::Written)
+    })();
+    match write_result {
+        Ok(WavExport::Written) => Ok(WavExport::Written),
+        Ok(WavExport::Cancelled) => {
             let _ = fs::remove_file(&temporary);
-            return Ok(WavExport::Cancelled);
+            Ok(WavExport::Cancelled)
         }
-        let count = (frames - done).min(BLOCK_FRAMES);
-        let samples = &mut block[..count * renderer.channels()];
-        renderer.render(samples);
-        for &sample in samples.iter() {
-            writer.write_sample(to_i16(sample))?;
+        Err(err) => {
+            let _ = fs::remove_file(&temporary);
+            Err(err)
         }
-        done += count;
-        progress(done);
     }
-    writer.finalize()?;
-    fs::rename(&temporary, path)?;
-    Ok(WavExport::Written)
 }
 
 #[cfg(test)]

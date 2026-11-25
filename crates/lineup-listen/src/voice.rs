@@ -79,9 +79,12 @@ pub struct PitchFrame {
 
 /// The pitch of a take, frame by frame, [`HOP_SECONDS`] apart.
 pub fn pitch_track(samples: &[f32], sample_rate: u32) -> Vec<PitchFrame> {
+    if sample_rate < 160 {
+        return Vec::new();
+    }
     let (signal, rate) = prepare(samples, sample_rate);
     let mut yin = Yin::new(rate);
-    let hop = (f64::from(rate) * HOP_SECONDS).round() as usize;
+    let hop = ((f64::from(rate) * HOP_SECONDS).round() as usize).max(1);
     let mut frames = Vec::new();
     let mut candidates = Vec::new();
     let mut start = 0;
@@ -112,6 +115,9 @@ pub fn pitch_track(samples: &[f32], sample_rate: u32) -> Vec<PitchFrame> {
 /// recording: the pitch of the most likely candidate of one frame, or
 /// `None` for silence or no clear pitch.
 pub fn pitch_now(samples: &[f32], sample_rate: u32) -> Option<f32> {
+    if sample_rate < 160 {
+        return None;
+    }
     let (signal, rate) = prepare(samples, sample_rate);
     let mut yin = Yin::new(rate);
     let frame = signal.get(signal.len().checked_sub(yin.span)?..)?;
@@ -265,7 +271,8 @@ struct Analysed {
     loudness: f32,
 }
 
-/// The YIN pitch finder for one rate, with its FFTs planned once.
+/// The YIN pitch finder for one rate, with its FFTs and scratch buffers
+/// planned once.
 struct Yin {
     rate: u32,
     /// The stretch compared with itself, in samples.
@@ -277,26 +284,53 @@ struct Yin {
     span: usize,
     forward: Arc<dyn RealToComplex<f32>>,
     inverse: Arc<dyn ComplexToReal<f32>>,
+    /// Reusable FFT buffers so frame analysis does not allocate per frame.
+    first: Vec<f32>,
+    whole: Vec<f32>,
+    spec_a: Vec<Complex<f32>>,
+    spec_b: Vec<Complex<f32>>,
+    product: Vec<Complex<f32>>,
+    correlation: Vec<f32>,
+    forward_scratch: Vec<Complex<f32>>,
+    inverse_scratch: Vec<Complex<f32>>,
     /// The threshold weights of pYIN (see [`threshold_weights`]).
     weights: Vec<(f32, f32)>,
 }
 
 impl Yin {
     fn new(rate: u32) -> Self {
-        let window = (f64::from(rate) * WINDOW_SECONDS).round() as usize;
-        let longest = (rate as f32 / LOWEST_HZ).ceil() as usize;
+        let window = ((f64::from(rate) * WINDOW_SECONDS).round() as usize).max(1);
+        let longest = ((rate as f32 / LOWEST_HZ).ceil() as usize).max(2);
         let shortest = ((rate as f32 / HIGHEST_HZ).floor() as usize).max(2);
         let span = window + longest + 1;
         let mut planner = RealFftPlanner::<f32>::new();
-        let size = span.next_power_of_two();
+        let size = span.max(2).next_power_of_two();
+        let forward = planner.plan_fft_forward(size);
+        let inverse = planner.plan_fft_inverse(size);
+        let first = forward.make_input_vec();
+        let whole = forward.make_input_vec();
+        let spec_a = forward.make_output_vec();
+        let spec_b = forward.make_output_vec();
+        let product = forward.make_output_vec();
+        let correlation = inverse.make_output_vec();
+        let forward_scratch = forward.make_scratch_vec();
+        let inverse_scratch = inverse.make_scratch_vec();
         Yin {
             rate,
             window,
             shortest,
             longest,
             span,
-            forward: planner.plan_fft_forward(size),
-            inverse: planner.plan_fft_inverse(size),
+            forward,
+            inverse,
+            first,
+            whole,
+            spec_a,
+            spec_b,
+            product,
+            correlation,
+            forward_scratch,
+            inverse_scratch,
             weights: threshold_weights(),
         }
     }
@@ -323,7 +357,7 @@ impl Yin {
     /// YIN's *cumulative mean normalized difference* for every lag up to
     /// the longest: near 0 where the frame lines up with itself shifted
     /// by that lag, near 1 (or above) where it does not.
-    fn normalized_difference(&self, frame: &[f32]) -> Vec<f32> {
+    fn normalized_difference(&mut self, frame: &[f32]) -> Vec<f32> {
         let window = self.window;
         let size = self.forward.len();
         // The difference at lag τ is the sum over the window of
@@ -332,27 +366,36 @@ impl Yin {
         // where r(τ), the sum of x[j] · x[j + τ], is a correlation. An FFT
         // works out all the correlations at once: multiply one spectrum
         // by the other's mirror image and transform back.
-        let mut first = self.forward.make_input_vec();
-        first[..window].copy_from_slice(&frame[..window]);
-        let mut whole = self.forward.make_input_vec();
-        whole[..frame.len()].copy_from_slice(frame);
-        let mut a = self.forward.make_output_vec();
-        let mut b = self.forward.make_output_vec();
-        let ok = self.forward.process(&mut first, &mut a).is_ok()
-            && self.forward.process(&mut whole, &mut b).is_ok();
-        let mut product: Vec<Complex<f32>> = a.iter().zip(&b).map(|(a, b)| a.conj() * b).collect();
+        self.first.fill(0.0);
+        self.first[..window].copy_from_slice(&frame[..window]);
+        self.whole.fill(0.0);
+        self.whole[..frame.len()].copy_from_slice(frame);
+        let ok = self
+            .forward
+            .process_with_scratch(&mut self.first, &mut self.spec_a, &mut self.forward_scratch)
+            .is_ok()
+            && self
+                .forward
+                .process_with_scratch(&mut self.whole, &mut self.spec_b, &mut self.forward_scratch)
+                .is_ok();
+        for ((out, a), b) in self.product.iter_mut().zip(&self.spec_a).zip(&self.spec_b) {
+            *out = a.conj() * b;
+        }
         // The inverse transform needs the first and last values real.
-        if let Some(first) = product.first_mut() {
+        if let Some(first) = self.product.first_mut() {
             first.im = 0.0;
         }
-        if let Some(last) = product.last_mut() {
+        if let Some(last) = self.product.last_mut() {
             last.im = 0.0;
         }
-        let mut correlation = self.inverse.make_output_vec();
         if !ok
             || self
                 .inverse
-                .process(&mut product, &mut correlation)
+                .process_with_scratch(
+                    &mut self.product,
+                    &mut self.correlation,
+                    &mut self.inverse_scratch,
+                )
                 .is_err()
         {
             return vec![1.0; self.longest + 1];
@@ -371,11 +414,11 @@ impl Yin {
 
         let mut normalized = vec![1.0_f32; self.longest + 1];
         let mut running = 0.0_f32;
-        for lag in 1..=self.longest {
+        for (lag, slot) in normalized.iter_mut().enumerate().skip(1) {
             let difference =
-                (first_energy + energy_at(lag) - 2.0 * correlation[lag] * scale).max(0.0);
+                (first_energy + energy_at(lag) - 2.0 * self.correlation[lag] * scale).max(0.0);
             running += difference;
-            normalized[lag] = if running > 0.0 {
+            *slot = if running > 0.0 {
                 difference * lag as f32 / running
             } else {
                 1.0
@@ -984,5 +1027,7 @@ mod tests {
         let pitch = pitch_now(&take, RATE).unwrap();
         assert!((pitch - 64.0).abs() < 0.4, "{pitch}");
         assert_eq!(pitch_now(&silence(0.3), RATE), None);
+        assert!(pitch_track(&take, 0).is_empty());
+        assert_eq!(pitch_now(&take, 80), None);
     }
 }

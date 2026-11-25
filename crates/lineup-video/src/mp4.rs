@@ -162,6 +162,12 @@ impl Mp4Writer {
     /// Writes the size of the media data and the movie box, which says
     /// where everything is, and closes the file.
     pub fn finish(mut self, video: &VideoFormat, audio: &AudioFormat) -> io::Result<()> {
+        if video.sps.len() < 4 {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "H.264 SPS is too short",
+            ));
+        }
         self.file.seek(SeekFrom::Start(self.mdat_start + 8))?;
         self.file
             .write_all(&(self.position - self.mdat_start).to_be_bytes())?;

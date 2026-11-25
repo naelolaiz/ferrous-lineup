@@ -541,6 +541,10 @@ pub struct AudioEngine {
     /// The last problem the stream reported, for the UI to show, and
     /// whether it has stopped working.
     problems: Arc<StreamProblems>,
+    /// Set when `send_wait` timed out with a full queue, so subsequent commands
+    /// in a batch do not stall the UI thread waiting again until the stream
+    /// drains.
+    stalled: bool,
     info: EngineInfo,
 }
 
@@ -648,6 +652,7 @@ impl AudioEngine {
             midi_output: Some(MidiOutput(midi_consumer)),
             song_clock: Some(song_clock),
             problems,
+            stalled: false,
             info,
         })
     }
@@ -675,7 +680,11 @@ impl AudioEngine {
     ///
     /// Returns `false` if the queue was full and the command was dropped.
     pub fn send(&mut self, command: Command) -> bool {
-        self.commands.push(command).is_ok()
+        let sent = self.commands.push(command).is_ok();
+        if sent {
+            self.stalled = false;
+        }
+        sent
     }
 
     /// Sends a command, waiting if the queue is full.
@@ -685,19 +694,40 @@ impl AudioEngine {
     /// better than losing the command. Returns `false` if there is still
     /// no room after a short wait, as when the device has stopped.
     pub fn send_wait(&mut self, mut command: Command) -> bool {
-        for _ in 0..SEND_WAIT_ROUNDS {
+        match self.commands.push(command) {
+            Ok(()) => {
+                self.stalled = false;
+                return true;
+            }
+            Err(rtrb::PushError::Full(returned)) => command = returned,
+        }
+        // A stream that has reported an error or already stalled will not
+        // empty the queue, so waiting on every command would freeze the window.
+        if self.stalled || self.problems.broken.load(Ordering::Relaxed) {
+            return false;
+        }
+        let deadline = std::time::Instant::now() + std::time::Duration::from_millis(25);
+        let mut round = 0usize;
+        loop {
+            if round < SEND_WAIT_ROUNDS {
+                std::thread::yield_now();
+            } else {
+                std::thread::sleep(std::time::Duration::from_millis(1));
+            }
             match self.commands.push(command) {
-                Ok(()) => return true,
+                Ok(()) => {
+                    self.stalled = false;
+                    return true;
+                }
                 Err(rtrb::PushError::Full(returned)) => command = returned,
             }
-            // A stream that has reported an error will not empty the
-            // queue, so waiting for room would only freeze the window.
-            if self.problems.broken.load(Ordering::Relaxed) {
+            if self.problems.broken.load(Ordering::Relaxed) || std::time::Instant::now() >= deadline
+            {
+                self.stalled = true;
                 return false;
             }
-            std::thread::yield_now();
+            round = round.saturating_add(1);
         }
-        false
     }
 
     /// How loud each channel and the master have been since the last
@@ -982,7 +1012,7 @@ impl AudioThread {
     ) -> Self {
         AudioThread {
             sample_rate,
-            output_channels,
+            output_channels: output_channels.max(1),
             channels: Vec::with_capacity(MAX_CHANNELS),
             pattern_lengths: Vec::with_capacity(MAX_PATTERNS),
             plays: Vec::new(),
@@ -1663,6 +1693,11 @@ impl AudioThread {
         self.throw_away(Garbage::Tempos(old));
         let old = std::mem::take(&mut self.song_clicks);
         self.throw_away(Garbage::Clicks(old));
+        let old = std::mem::take(&mut self.pattern_clicks);
+        self.throw_away(Garbage::Clicks(old));
+        if let Some(old) = self.lap_tempos.take() {
+            self.throw_away(Garbage::Tempos(old.song));
+        }
         self.song_length = 0;
         self.pattern = 0;
         self.update_loop_length();
@@ -1767,6 +1802,7 @@ impl AudioThread {
             channel.volume.settle();
             channel.pan.settle();
             channel.reverb_send.settle();
+            channel.effects.settle();
         }
     }
 
@@ -2404,11 +2440,12 @@ fn start_pattern_notes(
             // much late, as does each note with loose timing.
             let tick = timing.step_frames / TICKS_PER_STEP as f64;
             let held = if note.length <= room {
-                note.length as f64 * timing.step_frames - f64::from(note.nudge + note.trim) * tick
+                note.length as f64 * timing.step_frames
+                    - f64::from(u16::from(note.nudge) + u16::from(note.trim)) * tick
             } else {
                 room as f64 * timing.step_frames - f64::from(note.nudge) * tick
             };
-            let gate = held as u32;
+            let gate = (held.clamp(0.0, f64::from(HELD - 1))) as u32;
             let late = (f64::from(note.nudge) * tick
                 + delay(timing.loose_frames, index, origin.song_step, note.pitch))
                 as u64;

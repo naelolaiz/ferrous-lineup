@@ -191,10 +191,10 @@ where
             .checked_sub(delay)
             .unwrap_or_else(Instant::now);
         let frames = data.len() / ends.channels;
-        let lost = ends.samples.slots() < frames;
+        let lost = ends.blocks.is_full() || ends.samples.slots() < frames;
         if !lost {
             // The channels mixed into one.
-            for frame in data.chunks(ends.channels) {
+            for frame in data.chunks_exact(ends.channels) {
                 let sum: f32 = frame
                     .iter()
                     .map(|&s| <f32 as FromSample<T>>::from_sample_(s))
@@ -397,9 +397,9 @@ fn mark_at(heard: &VecDeque<Heard>, at: Instant, frame: usize, nudge: f64) -> Op
     // A positive nudge places the take later in the song: as if the
     // microphone had heard it that much later.
     let at = if nudge >= 0.0 {
-        at + Duration::from_secs_f64(nudge)
+        at.checked_add(Duration::try_from_secs_f64(nudge).ok()?)?
     } else {
-        at.checked_sub(Duration::from_secs_f64(-nudge))?
+        at.checked_sub(Duration::try_from_secs_f64(-nudge).ok()?)?
     };
     let moment = heard.iter().rev().find(|moment| moment.at <= at)?;
     let since = at.duration_since(moment.at);

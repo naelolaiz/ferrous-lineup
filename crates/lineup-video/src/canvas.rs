@@ -36,6 +36,12 @@ impl Texture {
     /// The colour at `(u, v)`, from 0 to 1 across the texture, as egui's
     /// painter samples it: mixed from the four nearest texels.
     fn sample(&self, u: f32, v: f32) -> [f32; 4] {
+        if self.width == 0
+            || self.height == 0
+            || self.pixels.len() < self.width.saturating_mul(self.height)
+        {
+            return [0.0; 4];
+        }
         let texel = |x: isize, y: isize| {
             let x = x.clamp(0, self.width as isize - 1) as usize;
             let y = y.clamp(0, self.height as isize - 1) as usize;
@@ -75,6 +81,7 @@ pub struct Canvas {
     /// What was painted last, to notice when nothing changed.
     painted: Vec<ClippedPrimitive>,
     background: Color32,
+    pixels_per_point: f32,
 }
 
 impl Canvas {
@@ -86,6 +93,7 @@ impl Canvas {
             textures: HashMap::new(),
             painted: Vec::new(),
             background: Color32::BLACK,
+            pixels_per_point: 0.0,
         }
     }
 
@@ -148,6 +156,18 @@ impl Canvas {
                         let Some(texture) = self.textures.get_mut(&id) else {
                             continue;
                         };
+                        let fits = left.checked_add(width).is_some_and(|r| r <= texture.width)
+                            && top.checked_add(height).is_some_and(|b| b <= texture.height)
+                            && width
+                                .checked_mul(height)
+                                .is_some_and(|n| n <= image.pixels.len())
+                            && texture
+                                .width
+                                .checked_mul(texture.height)
+                                .is_some_and(|n| n <= texture.pixels.len());
+                        if !fits {
+                            continue;
+                        }
                         for row in 0..height {
                             let start = (top + row) * texture.width + left;
                             texture.pixels[start..start + width]
@@ -177,12 +197,15 @@ impl Canvas {
     ) -> bool {
         let new_textures = !textures.set.is_empty();
         self.set_textures(textures);
-        let changed =
-            new_textures || background != self.background || !same(&primitives, &self.painted);
+        let changed = new_textures
+            || background != self.background
+            || pixels_per_point != self.pixels_per_point
+            || !same(&primitives, &self.painted);
         if changed {
             self.paint_primitives(&primitives, pixels_per_point, background);
             self.painted = primitives;
             self.background = background;
+            self.pixels_per_point = pixels_per_point;
         }
         for id in textures.free.drain() {
             self.textures.remove(&id);
@@ -199,6 +222,9 @@ impl Canvas {
         background: Color32,
     ) {
         self.pixels.fill(background.to_array());
+        if self.width == 0 || self.height == 0 {
+            return;
+        }
         let width = self.width;
         let cores = thread::available_parallelism().map_or(1, |n| n.get().min(8));
         let rows_per_band = self.height.div_ceil(cores).max(1);
@@ -335,7 +361,10 @@ impl Band<'_> {
         // one, so where two triangles meet each pixel is painted once:
         // the others lose 1 (`bias`).
         let edges = [(pb, pc), (pc, pa), (pa, pb)].map(|(from, to)| {
-            let (dx, dy) = (to.0 - from.0, to.1 - from.1);
+            let (dx, dy) = (
+                i128::from(to.0) - i128::from(from.0),
+                i128::from(to.1) - i128::from(from.1),
+            );
             let bias = if dy < 0 || (dy == 0 && dx > 0) { 0 } else { -1 };
             let first = ((min_x as i64) * 256 + 128, (min_y as i64) * 256 + 128);
             EdgeStep {
@@ -437,15 +466,16 @@ impl Band<'_> {
 /// An edge's "inside" number at the start of a row, and how it changes.
 #[derive(Clone, Copy)]
 struct EdgeStep {
-    value: i64,
-    step_x: i64,
-    step_y: i64,
+    value: i128,
+    step_x: i128,
+    step_y: i128,
 }
 
 /// Twice the area of the triangle `from`, `to`, `p`: positive when `p`
 /// is on the inside of the edge from `from` to `to`, zero on it.
-fn edge(from: (i64, i64), to: (i64, i64), p: (i64, i64)) -> i64 {
-    (to.0 - from.0) * (p.1 - from.1) - (to.1 - from.1) * (p.0 - from.0)
+fn edge(from: (i64, i64), to: (i64, i64), p: (i64, i64)) -> i128 {
+    (i128::from(to.0) - i128::from(from.0)) * (i128::from(p.1) - i128::from(from.1))
+        - (i128::from(to.1) - i128::from(from.1)) * (i128::from(p.0) - i128::from(from.0))
 }
 
 /// Paints a premultiplied colour (0 to 255 a channel) over a pixel.

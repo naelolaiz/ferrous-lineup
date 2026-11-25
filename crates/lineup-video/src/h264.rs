@@ -77,6 +77,17 @@ impl PictureEncoder {
     /// Compresses one picture, given as RGBA, four bytes a pixel, row
     /// after row. `None` if the encoder made nothing for it.
     pub fn encode(&mut self, rgba: &[u8]) -> Result<Option<Picture>, String> {
+        let expected = self
+            .width
+            .checked_mul(self.height)
+            .and_then(|n| n.checked_mul(4))
+            .ok_or("picture dimensions overflow")?;
+        if rgba.len() != expected {
+            return Err(format!(
+                "expected {expected} RGBA bytes, got {}",
+                rgba.len()
+            ));
+        }
         // OpenH264's conversion uses BT.601's colour matrix, which the
         // stream says (see `new`).
         self.yuv
