@@ -289,9 +289,16 @@ impl LineupApp {
         } else if let Some(before) = before
             && self.mode == PlayMode::Song
         {
-            // The playhead counted from the loop's start; now it counts
-            // from the song's.
-            self.seek(before.start + here);
+            // The playhead counted from the loop's start; map the timeline
+            // step back into the full song's unrolled arrangement.
+            let timeline = before.start + here;
+            let song = self.project.playback_arrangement();
+            let step = song
+                .passes
+                .iter()
+                .find(|pass| (pass.from..pass.from + pass.length).contains(&timeline))
+                .map_or(0, |pass| pass.start + (timeline - pass.from));
+            self.seek(step);
         }
     }
 

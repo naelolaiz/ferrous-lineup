@@ -345,7 +345,8 @@ impl LeadSheetWindow {
                             paint(&painter, rect.min, zoom, mark);
                         }
                     }
-                    if let Some(bar) = playing_bar.map(|bar| &sheet.bars[bar])
+                    if crate::widgets::follow_playback(ui.ctx())
+                        && let Some(bar) = playing_bar.map(|bar| &sheet.bars[bar])
                         && bar.page == number
                         && self.followed != playing_bar
                     {
@@ -502,8 +503,8 @@ fn shown_name(path: &Path) -> String {
 fn open_in_viewer(path: &PathBuf) -> std::io::Result<()> {
     use std::process::Command;
     let mut command = if cfg!(target_os = "windows") {
-        let mut command = Command::new("cmd");
-        command.args(["/C", "start", ""]);
+        let mut command = Command::new("rundll32.exe");
+        command.arg("url.dll,FileProtocolHandler");
         command
     } else if cfg!(target_os = "macos") {
         Command::new("open")

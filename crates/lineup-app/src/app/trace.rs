@@ -273,8 +273,8 @@ fn open_headless(source: &OsStr) -> Result<LineupApp, String> {
             ));
         }
         app.open_path(&ctx, path.to_path_buf());
-        // A file that could not be opened leaves the starting song open.
-        let opened = app.file.song_name().as_deref() != Some(Demo::Start.name());
+        // A file that could not be opened leaves the starting demo open.
+        let opened = !app.file.is_demo();
         match app.message.take() {
             Some(message) if !opened => return Err(message),
             Some(message) => eprintln!("{message}"),

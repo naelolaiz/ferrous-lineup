@@ -130,7 +130,13 @@ fn trace(mut args: impl Iterator<Item = OsString>) -> i32 {
     let mut rate = app::TRACE_SAMPLE_RATE;
     while let Some(arg) = args.next() {
         match arg.to_str() {
-            Some("--out" | "-o") => out = args.next().map(PathBuf::from),
+            Some("--out" | "-o") => match args.next() {
+                Some(path) => out = Some(PathBuf::from(path)),
+                None => {
+                    eprintln!("--out takes a file path");
+                    return 2;
+                }
+            },
             Some("--rate") => match args.next().and_then(|hz| hz.to_str()?.parse().ok()) {
                 Some(hz) if (8_000..=192_000).contains(&hz) => rate = hz,
                 _ => {

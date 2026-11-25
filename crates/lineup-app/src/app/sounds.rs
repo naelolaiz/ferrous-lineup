@@ -270,7 +270,11 @@ impl Sounds {
 /// name `path` only once it is whole and readable, so a download that
 /// stops halfway never leaves a broken SoundFont behind.
 fn download_to(url: &str, path: &Path, progress: &Progress) -> Result<Arc<SoundFont>, String> {
-    let part = path.with_extension("sf2.part");
+    static PART_COUNTER: AtomicU64 = AtomicU64::new(0);
+    let unique = PART_COUNTER.fetch_add(1, Ordering::Relaxed);
+    let mut part = path.as_os_str().to_os_string();
+    part.push(format!(".{}.{}.part", std::process::id(), unique));
+    let part = PathBuf::from(part);
     let result = download_part(url, &part, progress).and_then(|()| {
         let sound_font = soundfont::load(&part).map_err(|err| err.to_string())?;
         fs::rename(&part, path).map_err(|err| err.to_string())?;

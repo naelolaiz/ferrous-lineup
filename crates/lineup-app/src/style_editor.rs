@@ -12,9 +12,6 @@ use lineup_core::library::{StyleLane, UserStyle};
 use lineup_core::{Channel, ChannelKind, History, MAX_STEPS, Note, Player, Project, Tempo};
 use std::path::PathBuf;
 
-/// What the editor says when it is closed with edits not saved.
-const UNSAVED: &str = "Unsaved edits. Save the style, or use Discard edits to close.";
-
 pub fn window_id() -> egui::Id {
     egui::Id::unique("style-editor")
 }
@@ -42,6 +39,8 @@ pub struct StyleEditor {
     save_requested: bool,
     save_as_requested: bool,
     preview_requested: bool,
+    confirm_close: bool,
+    close_after_save: bool,
     pending_start: Option<(UserStyle, Option<PathBuf>)>,
     /// How tall the fields over the rows were last drawn.
     header: f32,
@@ -104,6 +103,8 @@ impl StyleEditor {
             save_requested: false,
             save_as_requested: false,
             preview_requested: false,
+            confirm_close: false,
+            close_after_save: false,
             pending_start: None,
             header: 0.0,
             fitted: egui::Vec2::ZERO,
@@ -126,13 +127,37 @@ impl StyleEditor {
         self.roll.instance = Some(roll_id());
         self.preview_started = None;
         self.error = None;
+        self.confirm_close = false;
+        self.close_after_save = false;
         self.open = true;
         self.pending_start = None;
     }
-    pub fn saved(&mut self, path: PathBuf) {
+    /// Marks the style saved at `path`. Returns `true` if the editor closed
+    /// because the user chose Save from the unsaved-changes close prompt.
+    pub fn saved(&mut self, path: PathBuf) -> bool {
         self.saved = self.draft.style.clone();
         self.path = Some(path);
         self.error = None;
+        self.confirm_close = false;
+        if self.close_after_save {
+            self.close_after_save = false;
+            self.open = false;
+            self.roll.open = false;
+            return true;
+        }
+        false
+    }
+    pub fn cancel_close_after_save(&mut self) {
+        self.close_after_save = false;
+    }
+    fn clamp_roll_channel(&mut self) {
+        if self
+            .roll
+            .selected_channel()
+            .is_some_and(|ch| ch >= self.draft.project.channels().len())
+        {
+            self.roll.deselect_channel();
+        }
     }
     fn active(&self, ctx: &egui::Context) -> bool {
         self.open
@@ -167,8 +192,10 @@ impl StyleEditor {
             || pressed(Key::Y, Modifiers::COMMAND)
         {
             self.history.redo(&mut self.draft);
+            self.clamp_roll_channel();
         } else if pressed(Key::Z, Modifiers::COMMAND) {
             self.history.undo(&mut self.draft);
+            self.clamp_roll_channel();
         }
     }
     pub fn show(
@@ -275,8 +302,8 @@ impl StyleEditor {
                     });
                     if ui.button(tr("Save style")).clicked() { self.save_requested = true; }
                     if ui.button(tr("Save as…")).clicked() { events.push(EditorEvent::Save { style: self.draft.style.clone(), save_as: true }); }
-                    if ui.add_enabled(self.history.undo_label().is_some(), egui::Button::new(tr("Undo"))).clicked() { self.history.undo(&mut self.draft); history_action = true; }
-                    if ui.add_enabled(self.history.redo_label().is_some(), egui::Button::new(tr("Redo"))).clicked() { self.history.redo(&mut self.draft); history_action = true; }
+                    if ui.add_enabled(self.history.undo_label().is_some(), egui::Button::new(tr("Undo"))).clicked() { self.history.undo(&mut self.draft); self.clamp_roll_channel(); history_action = true; }
+                    if ui.add_enabled(self.history.redo_label().is_some(), egui::Button::new(tr("Redo"))).clicked() { self.history.redo(&mut self.draft); self.clamp_roll_channel(); history_action = true; }
                     if ui.button(tr("Preview ×4")).clicked() {
                         let seconds = self.draft.project.pattern(0).unwrap().length() as f64 * 60.0 / f64::from(self.draft.project.tempo.bpm()) / 4.0;
                         self.preview_started = Some((ctx.input(|input| input.time), seconds));
@@ -323,11 +350,20 @@ impl StyleEditor {
                 self.header = ui.cursor().top() - top;
                 for action in channel_rack::show(ui, &self.draft.project, 0, self.roll.selected_channel(), playhead, None, false) { self.rack_action(action, &mut events); }
             });
+        let roll_length = self.draft.project.pattern(0).map_or(0, |p| p.length());
+        let roll_playhead = self.preview_started.and_then(|(start, period)| {
+            let elapsed = ctx.input(|input| input.time) - start;
+            if elapsed < period * 4.0 && roll_length > 0 {
+                Some(((elapsed % period) / period * roll_length as f64) as usize)
+            } else {
+                None
+            }
+        });
         for action in self.roll.show(
             ctx,
             &self.draft.project,
             0,
-            None,
+            roll_playhead,
             &[],
             area,
             egui::Vec2::splat(1.0),
@@ -358,30 +394,33 @@ impl StyleEditor {
         }
         if !open {
             if self.draft.style != self.saved {
-                self.error = Some(tr(UNSAVED).into());
+                self.confirm_close = true;
             } else {
                 self.open = false;
                 self.roll.open = false;
                 events.push(EditorEvent::Stop);
             }
         }
-        if self
-            .error
-            .as_deref()
-            .is_some_and(|error| error == tr(UNSAVED))
-        {
+        if self.confirm_close {
             let modal = egui::Modal::new(egui::Id::unique("close-unsaved-style")).show(ctx, |ui| {
                 ui.heading(tr("Unsaved style"));
                 ui.label(tr("Save your style before closing?"));
                 ui.horizontal(|ui| {
                     if ui.button(tr("Save")).clicked() {
-                        self.save_requested = true;
-                        self.error = None;
+                        self.confirm_close = false;
+                        self.close_after_save = true;
+                        events.push(EditorEvent::Save {
+                            style: self.draft.style.clone(),
+                            save_as: false,
+                        });
                     }
                     if ui.button(tr("Keep editing")).clicked() {
-                        self.error = None;
+                        self.confirm_close = false;
+                        self.close_after_save = false;
                     }
                     if ui.button(tr("Discard edits")).clicked() {
+                        self.confirm_close = false;
+                        self.close_after_save = false;
                         self.open = false;
                         self.roll.open = false;
                         self.error = None;
@@ -390,7 +429,8 @@ impl StyleEditor {
                 });
             });
             if modal.should_close() {
-                self.error = None;
+                self.confirm_close = false;
+                self.close_after_save = false;
             }
         }
         events
@@ -470,9 +510,10 @@ impl StyleEditor {
                 }
             }
             RackAction::Remove(channel) => {
-                project.remove_channel(channel);
-                self.draft.roles.remove(channel);
-                self.roll.channel_removed(channel, project.channels().len());
+                if project.remove_channel(channel).is_some() {
+                    self.draft.roles.remove(channel);
+                    self.roll.channel_removed(channel, project.channels().len());
+                }
             }
             RackAction::OpenPianoRoll(channel) => self.roll.open_for(channel),
             RackAction::AddDrum(drum) => {
@@ -751,7 +792,7 @@ mod tests {
             if replace {
                 editor.start(UserStyle::blank(), None);
             } else {
-                editor.error = Some(UNSAVED.into());
+                editor.confirm_close = true;
             }
             frame(&mut editor, &ctx, vec![]);
             let before = editor.draft.clone();
@@ -785,7 +826,9 @@ mod tests {
                     modifiers: Modifiers::NONE,
                 }],
             );
-            assert!(editor.pending_start.is_none() && editor.error.is_none());
+            assert!(
+                editor.pending_start.is_none() && !editor.confirm_close && editor.error.is_none()
+            );
             assert!(editor.open && editor.draft == before);
         }
     }
