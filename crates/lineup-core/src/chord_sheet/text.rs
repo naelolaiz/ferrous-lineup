@@ -320,11 +320,44 @@ fn read_times(text: &str) -> Option<Option<usize>> {
 /// The bars of a line: what is between the "|" signs. Text before the
 /// first sign or after the last is a bar too, so "C | G" is two bars.
 fn read_bars(line: &str) -> Vec<String> {
-    let mut plain = line.replace("|:", "|").replace(":|", "|");
+    let mut plain = line.replace("|:", "| ").replace(":|", " |");
     while plain.contains("||") {
-        plain = plain.replace("||", "|");
+        plain = plain.replace("||", " | ");
     }
-    let pieces: Vec<&str> = plain.split('|').map(str::trim).collect();
+    let bytes = plain.as_bytes();
+    let has_spaced_barline = bytes.iter().enumerate().any(|(i, &b)| {
+        b == b'|'
+            && (i > 0 && bytes[i - 1].is_ascii_whitespace()
+                || i + 1 < bytes.len() && bytes[i + 1].is_ascii_whitespace())
+    });
+    let mut pieces = Vec::new();
+    let mut start = 0;
+    for (index, &byte) in bytes.iter().enumerate() {
+        if byte == b'|' {
+            // An unspaced "|" inside a single word is a polychord ("Eb7|Fb")
+            // only when the line uses spaced bar lines and the word holds one "|".
+            // Unspaced bar lines like "|C|G|Am|F|", "C|G|Am|F", or "|C G|Am F|"
+            // still split into bars.
+            let word_start = bytes[..index]
+                .iter()
+                .rposition(|b| b.is_ascii_whitespace())
+                .map_or(0, |at| at + 1);
+            let word_end = bytes[index + 1..]
+                .iter()
+                .position(|b| b.is_ascii_whitespace())
+                .map_or(bytes.len(), |at| index + 1 + at);
+            let word = &bytes[word_start..word_end];
+            let polychord = has_spaced_barline
+                && index > word_start
+                && index + 1 < word_end
+                && word.iter().filter(|&&b| b == b'|').count() == 1;
+            if !polychord {
+                pieces.push(plain[start..index].trim());
+                start = index + 1;
+            }
+        }
+    }
+    pieces.push(plain[start..].trim());
     let first = usize::from(pieces.first().is_some_and(|piece| piece.is_empty()));
     let last =
         pieces.len() - usize::from(pieces.len() > first && pieces[pieces.len() - 1].is_empty());
@@ -1067,5 +1100,18 @@ Style: Pop beat
         }
         // Only a few songs change chord between two beats.
         assert!(off_the_beat * 10 < SONGS.len(), "{off_the_beat} songs");
+    }
+
+    #[test]
+    fn polychords_survive_text_round_trip() {
+        assert_eq!(read_bars("| Eb7|Fb | C |"), ["Eb7|Fb", "C"]);
+        assert_eq!(read_bars("|C|G|Am|F|"), ["C", "G", "Am", "F"]);
+        assert_eq!(read_bars("C|G|Am|F"), ["C", "G", "Am", "F"]);
+        assert_eq!(read_bars("|C G|Am F|"), ["C G", "Am F"]);
+        assert_eq!(read_bars("C|G"), ["C", "G"]);
+        let project = imported("| Eb7|Fb | C |");
+        let written = write(&project, None);
+        let back = imported(&written);
+        assert_eq!(chords(&back), chords(&project));
     }
 }

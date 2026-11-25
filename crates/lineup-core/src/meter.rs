@@ -162,8 +162,17 @@ impl TimeSignature {
     /// How many `unit` notes each beat has, in order: `[2, 2, 3]` for
     /// 2+2+3/8, `[3, 3]` for 6/8, `[1, 1, 1]` for 3/4.
     pub fn groups(self) -> Vec<u8> {
-        let mask = self.mask();
         let beats = usize::from(self.beats);
+        if self.beats > Self::MAX_GROUPED_BEATS {
+            let every = usize::from(self.usual_groups()).max(1);
+            let mut groups = vec![every as u8; beats / every];
+            let rem = (beats % every) as u8;
+            if rem > 0 {
+                groups.push(rem);
+            }
+            return groups;
+        }
+        let mask = self.mask();
         let starts: Vec<usize> = (0..beats).filter(|&i| mask & (1 << i) != 0).collect();
         starts
             .iter()
@@ -232,7 +241,7 @@ impl TimeSignature {
     fn mask(self) -> u64 {
         let fits = self.beats <= Self::MAX_GROUPED_BEATS
             && self.groups & 1 == 1
-            && self.groups >> self.beats == 0;
+            && self.groups.checked_shr(u32::from(self.beats)).unwrap_or(0) == 0;
         if fits { self.groups } else { self.usual_mask() }
     }
 
@@ -937,5 +946,20 @@ mod tests {
     #[test]
     fn it_is_written_as_a_fraction() {
         assert_eq!(signature(6, 8).to_string(), "6/8");
+    }
+
+    #[test]
+    fn wide_beat_counts_do_not_overflow_group_masks() {
+        let sixty_four = TimeSignature::new(64, 16);
+        assert_eq!(sixty_four.groups().len(), 64);
+        let seventy = TimeSignature::new(70, 16);
+        assert_eq!(
+            seventy
+                .groups()
+                .iter()
+                .map(|&g| usize::from(g))
+                .sum::<usize>(),
+            70
+        );
     }
 }

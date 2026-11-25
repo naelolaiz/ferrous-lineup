@@ -75,7 +75,7 @@ impl Style {
         let scale = self.scale(tonic);
         self.spans()
             .iter()
-            .map(|span| scale.chord_name(span.chord.in_key(tonic)))
+            .map(|span| span.chord.symbol_in(scale).to_string())
             .collect::<Vec<_>>()
             .join(" – ")
     }
@@ -2700,7 +2700,7 @@ pub static STYLES: &[Style] = &[
         "Mazurka",
         Classical,
         HarmonicMinor,
-        "i | iv | V7 | i | VI | iv | V7 | i",
+        "i | iv | V7 | i | bVI | iv | V7 | i",
         Comping::Mazurka,
         Bass::Waltz,
         132.0,
@@ -2727,7 +2727,7 @@ pub static STYLES: &[Style] = &[
         "Siciliano",
         Classical,
         HarmonicMinor,
-        "i | iv | V7 | i | VI | bII | V7 | i",
+        "i | iv | V7 | i | bVI | bII | V7 | i",
         Comping::Siciliano,
         Bass::Held,
         76.0,

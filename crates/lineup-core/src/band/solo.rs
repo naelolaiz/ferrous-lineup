@@ -487,6 +487,7 @@ impl Line {
             if index == 0
                 && pickup
                 && pulse.start >= 2
+                && self.notes.last().is_none_or(|n| n.end() <= pulse.start - 2)
                 && let Some(over) = over_at(overs, pulse.start - 2)
             {
                 let approach = approach(target, over.scale, dice);

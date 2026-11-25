@@ -32,7 +32,7 @@ use crate::pitch::{Note, PitchClass};
 use super::comping::{Bass, BassPart, Comping, Played};
 use super::numeral::{self, RomanChord};
 use super::song::Dynamic;
-use super::voicing::{bass_line, voice_progression};
+use super::voicing::bass_line;
 
 /// One chord of a chart, with when it starts and how long it lasts.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -552,7 +552,7 @@ pub fn accompany(
     bass: Bass,
 ) -> Backing {
     let backing = play_style(spans, tonic, time, comping, bass);
-    play_breaks(spans, tonic, time, bass, backing)
+    play_breaks(spans, tonic, time, comping, bass, backing)
 }
 
 /// Plays a chart as [`accompany`] does, with no breaks.
@@ -643,7 +643,7 @@ pub fn accompany_in_bars(
         })
         .collect();
     backing.chords = comping.play_in_bars(&bars, &harmonies);
-    play_breaks(spans, tonic, time, bass, backing)
+    play_breaks(spans, tonic, time, comping, bass, backing)
 }
 
 /// Plays the shots, holds, rests and pushes marked on a chart over the
@@ -655,6 +655,7 @@ fn play_breaks(
     spans: &[ChordSpan],
     tonic: PitchClass,
     time: TimeSignature,
+    comping: Comping,
     bass: Bass,
     backing: Backing,
 ) -> Backing {
@@ -670,7 +671,7 @@ fn play_breaks(
     let line = bass_line(&basses);
     let harmonies: Vec<Played> = spans
         .iter()
-        .zip(voice_progression(&chords))
+        .zip(comping.voicings(&chords, &line))
         .enumerate()
         .map(|(index, (span, voicing))| Played {
             start: span.start,

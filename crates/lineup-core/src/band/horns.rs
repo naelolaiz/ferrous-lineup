@@ -178,7 +178,10 @@ impl Horns {
 
 /// Whether a way of comping follows the bar, whatever its meter.
 fn fits_any_bar(comping: Comping) -> bool {
-    matches!(comping, Comping::Aksak | Comping::Accents)
+    matches!(
+        comping,
+        Comping::Aksak | Comping::Accents | Comping::Afterbeat
+    )
 }
 
 /// The horns holding each of `harmonies`, softly.

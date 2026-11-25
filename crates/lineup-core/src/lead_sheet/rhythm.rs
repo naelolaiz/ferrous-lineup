@@ -188,6 +188,9 @@ fn rest_fits(time: TimeSignature, bar: usize, from: usize, to: usize) -> bool {
             && inside < start
             && (is_simple(time) || to == bar || strength(time, to) >= 2);
     }
+    if inside == 1 && start < inside {
+        return false;
+    }
     // In a dotted beat (each beat of 6/8, 9/8 and 12/8), a quarter rest
     // may only cover its first two eighths. From the second eighth on,
     // the rest is written in eighths, "♪ 𝄾 𝄾", not "♪ 𝄽", so that the
