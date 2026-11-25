@@ -707,12 +707,19 @@ del proxy de una empresa que tenga los suyos) y con el proxy de
 propia red. Un archivo de más de un gigabyte se rechaza: ningún
 SoundFont General MIDI es tan grande, así que es otra cosa.
 
-El archivo se escribe como `GeneralUser-GS.sf2.part`, luego se lee como
-SoundFont, lo que comprueba que lo es, y solo entonces se renombra:
+El archivo se escribe en una ruta `.part` única junto a
+`GeneralUser-GS.sf2` (con el identificador de proceso y un contador
+atómico, para que detener y reiniciar una descarga nunca compita por el
+mismo archivo), se lee como SoundFont para comprobar que lo es, y solo
+entonces se renombra:
 
 ```rust
 fn download_to(url: &str, path: &Path, progress: &Progress) -> Result<Arc<SoundFont>, String> {
-    let part = path.with_extension("sf2.part");
+    static PART_COUNTER: AtomicU64 = AtomicU64::new(0);
+    let unique = PART_COUNTER.fetch_add(1, Ordering::Relaxed);
+    let mut part = path.as_os_str().to_os_string();
+    part.push(format!(".{}.{}.part", std::process::id(), unique));
+    let part = PathBuf::from(part);
     let result = download_part(url, &part, progress).and_then(|()| {
         let sound_font = soundfont::load(&part).map_err(|err| err.to_string())?;
         fs::rename(&part, path).map_err(|err| err.to_string())?;

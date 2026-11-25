@@ -6,19 +6,19 @@ Archivos: el `mod tests` al final de la mayoría de los archivos de
 [`crates/lineup-listen/tests/`](https://github.com/naelolaiz/ferrous-lineup/tree/main/crates/lineup-listen/tests)
 y [`crates/lineup-app/src/app/ux_tests.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/ux_tests.rs)
 
-Ferrous Lineup tiene más de 1300 tests: unos 900 en `lineup-core`, 150
-en `lineup-audio`, 260 en `lineup-app` y unas pocas decenas en los otros
-dos crates. Cada capítulo de este libro termina con los tests de lo que
-describe. Este trata de los tipos de test, por qué existe cada uno, y
-cómo ejecutarlos.
+Ferrous Lineup tiene más de 1500 tests: más de 1000 en `lineup-core`,
+unos 150 en `lineup-audio`, más de 300 en `lineup-app` y un par de
+decenas en los otros dos crates. Cada capítulo de este libro termina con
+los tests de lo que describe. Este trata de los tipos de test, por qué
+existe cada uno, y cómo ejecutarlos.
 
 ## Ejecutarlos
 
 ```sh
-cargo test                       # every crate
-cargo test -p lineup-core        # one crate
-cargo test frequency             # only tests whose name contains "frequency"
-cargo test -- --nocapture        # show what the tests print
+cargo test                       # todos los crates
+cargo test -p lineup-core        # un solo crate
+cargo test frequency             # solo los tests cuyo nombre contiene «frequency»
+cargo test -- --nocapture        # muestra lo que imprimen los tests
 ```
 
 Un test es una función corriente marcada con `#[test]`. Pasa si

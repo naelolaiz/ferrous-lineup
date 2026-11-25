@@ -119,8 +119,8 @@ Biblioteca](styles.md#los-ajustes-de-la-biblioteca).
 ### Reproducción
 
 - **Seguir el cursor de reproducción**: mantiene a la vista la música
-  que suena en la lista de reproducción, la hoja de acordes y el piano
-  roll.
+  que suena en la lista de reproducción, la hoja de acordes, el piano
+  roll y la partitura guía.
 - **Cuenta de entrada**, **Metrónomo**, **Velocidad de práctica** y el
   **Entrenador de velocidad**: ver [Practicar](practising.md).
 - **Escribir un registro mientras suena**: escribe cada nota que suena

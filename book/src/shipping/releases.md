@@ -402,14 +402,16 @@ desktop shortcut, an uninstaller and the `.lineup` file association.
 
 ## Publishing: a job that waits for the others
 
-The second job, `release`, runs only for a pushed tag or a run by hand
-with a tag, and only once every build job has passed:
+A fast `preflight` job checks any release tag against `Cargo.toml` and
+`main` before the four builds start. The `release` job then runs only
+for a pushed tag or a run by hand with a tag, and only once both
+`preflight` and every build job have passed:
 
 ```yaml
 release:
   name: Publish the release
   if: github.ref_type == 'tag' || (github.event_name == 'workflow_dispatch' && inputs.tag != '')
-  needs: build
+  needs: [preflight, build]
 ```
 
 `workflow_dispatch` is the name GitHub gives a run by hand. The form it
@@ -433,8 +435,9 @@ A `boolean` input shows as a tick box, and reaches the steps as the
 text `true` or `false`; in a run that isn't by hand, `inputs.draft` is
 empty.
 
-`needs: build` waits for every line of the matrix. If one build fails,
-there is no release at all, rather than a release missing Windows.
+`needs: [preflight, build]` waits for tag validation and every line of
+the matrix. If one build fails, there is no release at all, rather than
+a release missing Windows.
 
 The job's `permissions` are about the **token** every run gets,
 `GITHUB_TOKEN`, a password that expires when the job ends. At the top of

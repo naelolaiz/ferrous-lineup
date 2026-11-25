@@ -806,8 +806,7 @@ It shares its code with **Duplicate**: `make_room` moves everything after
 the section later, then the clips that start inside the section are
 copied into the gap. One thing to watch: clips are copied whole. The fill
 in the picture starts inside the chorus and runs past its end, so the
-original and its copy overlap. Ferrous Lineup cannot cut a clip in two
-(a clip has no "start this far into the pattern"); one of the
-[exercises](exercises.md) of this part adds it.
+original and its copy overlap (you can trim either edge afterward, as
+described in [Trimming a clip](#trimming-a-clip)).
 
 ![Dragging along the bar numbers loops bars 3 to 6.](../images/step-8-loop.png)

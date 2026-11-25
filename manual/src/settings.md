@@ -113,7 +113,7 @@ Library](styles.md#the-library-settings).
 ### Playback
 
 - **Follow playhead**: keeps the music that plays in sight in the
-  playlist, the chord sheet and the piano roll.
+  playlist, the chord sheet, the piano roll and the lead sheet.
 - **Count-in**, **Metronome**, **Practice speed** and the **Speed
   trainer**: see [Practising](practising.md).
 - **Write a trace while playing**: writes every note played to a text

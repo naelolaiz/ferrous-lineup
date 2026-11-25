@@ -2,10 +2,13 @@
 
 Para llevar una canción fuera de Ferrous Lineup, el menú **Archivo** la
 escribe como archivo de sonido, como video, como archivo MIDI o como
-hoja de acordes en texto. Una canción sin nada en la lista de
-reproducción no tiene nada que exportar: los elementos aparecen
-atenuados, con **Coloca primero algunos clips en la lista de
-reproducción**.
+hoja de acordes en texto. Las exportaciones de canción (**Exportar
+WAV…**, **Exportar video…** y **Exportar canción como MIDI…**) necesitan
+clips en la lista de reproducción: si está vacía aparecen atenuadas con
+**Coloca primero algunos clips en la lista de reproducción** (y WAV y
+video también esperan con **Ya hay una exportación en curso** mientras
+hay otra activa). **Exportar patrón como MIDI…** y **Exportar hoja de
+acordes…** funcionan incluso antes de armar clips.
 
 | Elemento | Escribe |
 |---|---|

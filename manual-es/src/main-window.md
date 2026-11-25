@@ -41,7 +41,7 @@ De izquierda a derecha:
 | ⏹ | detiene, y vuelve a donde pusiste el cursor de reproducción por última vez (**Espacio** mientras suena) |
 | ● | graba en el patrón lo que tocas en un teclado MIDI o en el teclado del equipo (ver [Teclados y sintetizadores MIDI](midi.md#grabar)) |
 | micrófono | graba una **toma**: canta o silba junto con la canción, y tus notas se escriben en una parte (ver [Tomas](takes.md)) |
-| **Seguir el cursor de reproducción** | mantiene a la vista el compás que suena en la lista de reproducción, la hoja de acordes y el piano roll. Apagado, puedes desplazarte libremente mientras suena la canción. |
+| **Seguir el cursor de reproducción** | mantiene a la vista el compás que suena en la lista de reproducción, la hoja de acordes, el piano roll y la partitura guía. Apagado, puedes desplazarte libremente mientras suena la canción. |
 | **Cuenta de entrada** | un compás de clics antes de que empiece la música |
 | **Metrónomo** | un clic en cada pulso |
 | **TEMPO** | el tempo en pulsos por minuto: arrastra hacia arriba o abajo para cambiarlo, doble clic para escribirlo |

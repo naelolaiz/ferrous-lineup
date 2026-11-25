@@ -27,7 +27,7 @@ had to be shortened.
 ## The piano
 
 - *Für Elise*, by Beethoven, the whole rondo: the theme rocks between E
-  and D♯, the leading tone of A minor; the stormy second episode reaches
+  and D♯, the chromatic lower neighbour of the dominant E; the stormy second episode reaches
   B♭ major, the **Neapolitan** chord of A minor (see [Chords from
   outside the key](outside-the-key.md#the-neapolitan-sixth)).
 - *Moonlight Sonata*, the opening of the Adagio, in C♯ minor: D major,

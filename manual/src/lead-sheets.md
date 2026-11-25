@@ -12,7 +12,8 @@ channel, and the chords are those of the chord sheet.
 ## The Lead sheet window
 
 **View > Lead sheet** opens it. The sheet is laid out on pages as it
-will print, and the bar that plays lights up while the song plays.
+will print, and the bar that plays lights up while the song plays (and
+scrolls into view when **Follow playhead** is on).
 
 ![The Lead sheet window on the demo I Got Rhythm, written for B♭ instruments: "B♭ instruments" at the top left of the page, the treble clef with no key signature, ♩ = 176, and the chords Am, E7, Am, Dm, then Am6, F7, Am, F, Am6, Fm6 over the tune; the bar numbers 5, 9, 13 and 17 start the lines](images/lead-sheet.png)
 

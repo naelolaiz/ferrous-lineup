@@ -5,9 +5,9 @@ Files: the `mod tests` at the end of most files in `crates/*/src`,
 [`crates/lineup-listen/tests/`](https://github.com/naelolaiz/ferrous-lineup/tree/main/crates/lineup-listen/tests)
 and [`crates/lineup-app/src/app/ux_tests.rs`](https://github.com/naelolaiz/ferrous-lineup/blob/main/crates/lineup-app/src/app/ux_tests.rs)
 
-Ferrous Lineup has more than 1,300 tests: about 900 in `lineup-core`,
-150 in `lineup-audio`, 260 in `lineup-app` and a few dozen in the other
-two crates. Every chapter of this book ends with the tests of what it
+Ferrous Lineup has more than 1,500 tests: over 1,000 in `lineup-core`,
+about 150 in `lineup-audio`, over 300 in `lineup-app` and a couple of
+dozen in the other two crates. Every chapter of this book ends with the
 describes. This one is about the kinds of test, why each exists, and
 how to run them.
 

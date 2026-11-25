@@ -40,7 +40,7 @@ Debajo:
 | compás | su métrica |
 | **Compases** | cuánto dura el patrón, de 1 a 16 compases |
 | **Swing** | su swing (ver [Swing y soltura](swing.md)) |
-| **Progresión** | una progresión de acordes que trae, en números romanos o nombres de acordes, con los compases separados por `|`: `I | vi | ii7 | V7`. Déjala vacía para un estilo que toque tus acordes |
+| **Progresión** | una progresión de acordes que trae, en números romanos o nombres de acordes, con los compases separados por `\|`: `I \| vi \| ii7 \| V7` (en tonalidades menores, escribe los grados desde la escala mayor: `i bVI bIII bVII`). Déjala vacía para un estilo que toque tus acordes |
 | **Descripción** | una frase, que aparece al señalar el estilo en la Biblioteca |
 | **Asignación de partes** | qué músico es cada canal: batería, piano, bajo, guitarra, etc. |
 

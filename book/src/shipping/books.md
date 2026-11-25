@@ -75,6 +75,7 @@ pull_request:
     - "manual/**"
     - "manual-es/**"
     - ".github/workflows/book.yml"
+    - ".gitattributes"
 ```
 
 `paths` is why a change to the app's code doesn't build the books, and a

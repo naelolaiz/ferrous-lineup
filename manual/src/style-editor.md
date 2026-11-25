@@ -36,7 +36,7 @@ Along the top: **Start from…**, **Save style**, **Save as…**, **Undo**,
 | time signature | its meter |
 | **Bars** | how long the pattern is, 1 to 16 bars |
 | **Swing** | its swing (see [Swing and loose timing](swing.md)) |
-| **Progression** | a chord progression it brings, as Roman numerals or chord names, bars separated by `|`: `I | vi | ii7 | V7`. Leave it empty for a style that plays your chords |
+| **Progression** | a chord progression it brings, as Roman numerals or chord names, bars separated by `\|`: `I \| vi \| ii7 \| V7` (in minor keys, write numerals from the major scale: `i bVI bIII bVII`). Leave it empty for a style that plays your chords |
 | **Description** | a sentence, shown when you point at the style in the Library |
 | **Part assignments** | which player each lane is: drums, piano, bass, guitar and so on |
 

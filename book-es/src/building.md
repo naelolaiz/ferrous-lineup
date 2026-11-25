@@ -113,9 +113,9 @@ El programa acepta algunos argumentos propios. Después de `cargo run`,
 `--` dice que lo que sigue es para el programa, no para Cargo:
 
 ```sh
-cargo run --release -- my-song.lineup                       # open a project
-cargo run --release -- --demos                              # list the demos
-cargo run --release -- --trace "Frère Jacques" --out round.tsv   # play a demo headless, note by note
+cargo run --release -- my-song.lineup                       # abrir un proyecto
+cargo run --release -- --demos                              # listar las demostraciones
+cargo run --release -- --trace "Frère Jacques" --out round.tsv   # tocar una demo sin ventana, nota a nota
 cargo run --release -- --help
 ```
 

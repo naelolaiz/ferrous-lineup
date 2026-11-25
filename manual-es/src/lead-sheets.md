@@ -14,7 +14,8 @@ notas de un canal, y los acordes son los de la hoja de acordes.
 
 **Ver > Partitura guía** la abre. La partitura se arma en páginas tal
 como se va a imprimir, y el compás que suena se enciende mientras suena
-la canción.
+la canción (y se mantiene a la vista cuando **Seguir el cursor de
+reproducción** está encendido).
 
 ![La ventana Partitura guía con la demostración I Got Rhythm, escrita para instrumentos en Si♭: «Instrumentos en Si♭» arriba a la izquierda de la página, la clave de sol sin armadura, ♩ = 176, y los acordes Am, E7, Am, Dm, luego Am6, F7, Am, F, Am6, Fm6 sobre la melodía; los números de compás 5, 9, 13 y 17 empiezan las líneas](images/lead-sheet.png)
 

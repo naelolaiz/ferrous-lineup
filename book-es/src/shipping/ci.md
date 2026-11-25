@@ -6,7 +6,7 @@ Archivos: [`.github/workflows/ci.yml`](https://github.com/naelolaiz/ferrous-line
 y [`Cargo.toml`](https://github.com/naelolaiz/ferrous-lineup/blob/main/Cargo.toml)
 
 Ferrous Lineup funciona en Linux, macOS y Windows con un solo código.
-Casi nada de ese código sabe en qué sistema está, y tres flujos de
+Casi nada de ese código sabe en qué sistema está, y cuatro flujos de
 trabajo en GitHub comprueban cada cambio en los tres. Este capítulo
 trata de cómo un programa en Rust se mantiene portable, y de cómo se
 ejecutan esas comprobaciones.
@@ -30,12 +30,14 @@ nada de eso nombra un sistema. Cada biblioteca se eligió por eso: algo
 que funcionara en un solo sistema habría que reemplazarlo para llegar a
 los demás.
 
-El código propio del workspace nombra un sistema en cuatro lugares:
+El código propio del workspace nombra un sistema en cinco lugares:
 
 - `main.rs` esconde la ventana de consola en Windows (más abajo);
 - `build.rs` pone el icono y la versión dentro del `.exe` de Windows;
-- la partitura guía elige `cmd`, `open` o `xdg-open` para mostrar un PDF
-  en el visor del sistema;
+- `open_files.rs` recoge los Apple Events de «abrir archivo» del Finder
+  en macOS;
+- la partitura guía elige `rundll32.exe`, `open` o `xdg-open` para
+  mostrar un PDF en el visor del sistema;
 - la ventana de sonidos muestra una carpeta dentro de la carpeta
   personal como `~/...` solo en Linux y macOS, donde la gente escribe
   así las rutas.
@@ -191,16 +193,17 @@ versión](releases.md)).
 - **Sonido:** cpal le da a la función de audio de cada sistema el mismo
   `&mut [f32]`, así el hilo de audio nunca sabe dónde se ejecuta.
 
-## Tres flujos de trabajo
+## Cuatro flujos de trabajo
 
 Un **flujo de trabajo** (workflow) es un archivo en
 `.github/workflows/` que le dice a GitHub qué ejecutar, en qué máquinas
-y cuándo. Ferrous Lineup tiene tres:
+y cuándo. Ferrous Lineup tiene cuatro:
 
 | Flujo de trabajo | Se ejecuta en | Hace |
 |---|---|---|
 | **CI** (`ci.yml`) | cada pull request y cada push a main | revisa el formato y los lints, prueba y compila en Linux, macOS y Windows |
-| **Release** (`release.yml`) | cada pull request, push a main y etiqueta `v`, y a mano | compila las descargas para cada sistema, y las publica para una etiqueta, subida con push o escrita en una ejecución a mano (ver [Paquetes de cada versión](releases.md)) |
+| **Release** (`release.yml`) | cada pull request, push a main y etiqueta `v`, y a mano | valida etiquetas, compila las descargas para cada sistema y las publica para una etiqueta, subida con push o escrita en una ejecución a mano (ver [Paquetes de cada versión](releases.md)) |
+| **Release validation** (`release-validation.yml`) | a mano (`workflow_dispatch`) | prueba rápida de los paquetes de una versión en las distintas plataformas |
 | **Book** (`book.yml`) | los cambios en los libros y los manuales | compila los sitios web y los PDF, y los publica desde main (ver [Cómo se construyen los libros](books.md)) |
 
 Un pull request muestra una marca para cada trabajo, verde si pasó y
@@ -254,10 +257,10 @@ Cada copia ejecuta después los mismos pasos:
    que cambió.
 4. **Revisar el formato**, solo en Linux: el formato es igual en todas
    partes.
-5. **Lint**: `cargo clippy --workspace --all-targets -- -D warnings`.
-6. **Tests**: `cargo test --workspace`, en una compilación de depuración
+5. **Lint**: `cargo clippy --locked --workspace --all-targets -- -D warnings`.
+6. **Tests**: `cargo test --locked --workspace`, en una compilación de depuración
    (ver [Ejecutarlos](testing.md#ejecutarlos)).
-7. **Compilar en release**, y subir el programa como artefacto de la
+7. **Compilar en release** (`--locked`), y subir el programa como artefacto de la
    ejecución.
 
 Los pasos que solo tienen sentido en un sistema lo dicen:

@@ -390,11 +390,12 @@ thread works it out when the note starts, and calls it the **gate**:
 ```rust
 let tick = timing.step_frames / TICKS_PER_STEP as f64;
 let held = if note.length <= room {
-    note.length as f64 * timing.step_frames - f64::from(note.nudge + note.trim) * tick
+    note.length as f64 * timing.step_frames
+        - f64::from(u16::from(note.nudge) + u16::from(note.trim)) * tick
 } else {
     room as f64 * timing.step_frames - f64::from(note.nudge) * tick
 };
-let gate = held as u32;
+let gate = (held.clamp(0.0, f64::from(HELD - 1))) as u32;
 ```
 
 A note that runs past the end of its pattern, or of the piece of the

@@ -188,6 +188,7 @@ pulsos, con notas cromáticas entre ellas.
 | Latina | trompeta | Si♭3 a La5 |
 | Tango | acordeón de tango | Sol3 a Do6 |
 | Folclore latinoamericano | flauta de pan | Mi4 a Mi6 |
+| Balcánica y turca | clarinete | Re3 a Si♭5 |
 | Flamenco | guitarra de nailon | Mi3 a La5 |
 | Reggae y ska | trompeta | Si♭3 a La5 |
 | Country y folk | violín folk | Sol3 a Mi6 |

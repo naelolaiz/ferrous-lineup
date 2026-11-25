@@ -14,7 +14,7 @@ Look at the left of the status bar, at the bottom of the window:
 - **Audio: Default Audio Device · 48000 Hz · 2 channels**, or the name
   of your sound card: the app has a sound card, so the silence is
   somewhere in the song. Check the toolbar's **VOL** slider and the
-  mixer's **Main** level (**F9**), a **Mute** or a **Solo** in the
+  mixer's **Master** level (**F9**), a **Mute** or a **Solo** in the
   mixer, a channel's light in the channel rack and a track's light in
   the playlist: a light that is not green is muted.
 - **Audio unavailable**, and a reason: the app could not open a sound
@@ -98,8 +98,9 @@ apart from what you hear, note by note, so the file never stutters (see
 - **The app closed without saving.** Start it again: it offers to
   recover the unsaved work (see [Recovering unsaved
   work](saving.md#recovering-unsaved-work)).
-- **On a Mac, double-clicking a .lineup file doesn't open it.** Use
-  **File > Open…** in the app.
+- **On a Mac, double-clicking a .lineup file doesn't open it.** Make
+  sure Ferrous Lineup has been dragged into **Applications** (not run
+  from the `.dmg` disk image), or use **File > Open…** in the app.
 
 ## The band and the chords
 
@@ -144,4 +145,7 @@ it) and on which system, and what you did, step by step, so someone
 else can see the same thing. For a problem with what the app plays,
 turn on **Edit > Settings… > Playback > Write a trace while playing**,
 play the passage, and attach the trace file: it lists every note the
-app played, and the setting says where it writes it.
+app played, and the setting says where it writes it. You can also
+produce a trace from the command line without opening a window:
+`ferrous-lineup --trace song.lineup --out trace.txt` (or pass a demo
+name; `--demos` lists them).

@@ -944,8 +944,7 @@ pub fn rename(self, harmony: HarmonyName, key: Scale) -> Vec<HarmonyName> {
         }
         (_, HarmonyName::Polychord(upper, lower)) => {
             // The lower chord with its bass, then the upper chord.
-            let lower = notes_of(lower);
-            vec![group(lower), group(upper.chord().pitch_set())]
+            vec![group(notes_of(lower)), group(notes_of(upper))]
         }
         (_, HarmonyName::Chord(symbol)) => vec![group(notes_of(symbol))],
         (_, HarmonyName::Set(set) | HarmonyName::Micromode(set)) => vec![group(set)],

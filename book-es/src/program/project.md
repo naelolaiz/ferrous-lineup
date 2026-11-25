@@ -837,9 +837,8 @@ Comparte su código con **Duplicar**: `make_room` mueve todo lo que hay
 después de la sección más tarde, y luego los clips que empiezan dentro de
 la sección se copian en el hueco. Una cosa que hay que vigilar: los clips
 se copian enteros. El relleno de la imagen empieza dentro del estribillo
-y sigue más allá de su final, así que el original y su copia se solapan.
-Ferrous Lineup no puede cortar un clip en dos (un clip no tiene «empieza
-a esta distancia dentro del patrón»); uno de los
-[ejercicios](exercises.md) de esta parte lo añade.
+y sigue más allá de su final, así que el original y su copia se solapan
+(puedes recortar cualquiera de sus bordes después, como se vio en
+[Recortar un clip](#recortar-un-clip)).
 
 ![Arrastrar por los números de compás hace loop de los compases 3 a 6.](../images/step-8-loop.png)

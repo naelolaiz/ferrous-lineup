@@ -325,6 +325,14 @@ fn kind_of_move(x: Hop, y: Hop) -> Option<SlipKind> {
         (from.pitch != to.pitch && !rested).then(|| to.pitch > from.pitch)
     };
     let (up_x, up_y) = (moves(x)?, moves(y)?);
+    let (x0_pc, x1_pc) = (x.0.pitch.pitch_class(), x.1.pitch.pitch_class());
+    let (y0_pc, y1_pc) = (y.0.pitch.pitch_class(), y.1.pitch.pitch_class());
+    // Moving the same two pitch classes into another octave, or swapping
+    // them in a voice exchange, prolongs the same interval rather than
+    // moving in parallel or contrary fifths or octaves.
+    if (x0_pc == x1_pc && y0_pc == y1_pc) || (x0_pc == y1_pc && y0_pc == x1_pc) {
+        return None;
+    }
     let first = perfect(x.0.pitch.midi().abs_diff(y.0.pitch.midi()))?;
     let second = perfect(x.1.pitch.midi().abs_diff(y.1.pitch.midi()))?;
     let same_way = up_x == up_y;
@@ -453,12 +461,19 @@ pub fn motion(upper: &Move, lower: &Move, key: Scale) -> Motion {
         (0, _) | (_, 0) => Motion::Oblique,
         (x, y) if x != y => Motion::Contrary,
         _ => {
-            let number = |upper: Note, lower: Note| {
-                let (upper, lower) = (
-                    key.spell(upper.pitch_class()),
-                    key.spell(lower.pitch_class()),
-                );
-                lower.letter.steps_up_to(upper.letter)
+            let crossed = (upper.from.pitch < lower.from.pitch && upper.to.pitch > lower.to.pitch)
+                || (upper.from.pitch > lower.from.pitch && upper.to.pitch < lower.to.pitch);
+            if crossed {
+                return Motion::Similar;
+            }
+            let number = |first: Note, second: Note| {
+                let (low, high) = if first <= second {
+                    (first, second)
+                } else {
+                    (second, first)
+                };
+                let (low, high) = (key.spell(low.pitch_class()), key.spell(high.pitch_class()));
+                low.letter.steps_up_to(high.letter)
             };
             if number(upper.from.pitch, lower.from.pitch) == number(upper.to.pitch, lower.to.pitch)
             {

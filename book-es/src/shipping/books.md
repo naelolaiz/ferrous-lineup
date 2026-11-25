@@ -79,6 +79,7 @@ pull_request:
     - "manual/**"
     - "manual-es/**"
     - ".github/workflows/book.yml"
+    - ".gitattributes"
 ```
 
 `paths` es la razón por la que un cambio en el código de la aplicación

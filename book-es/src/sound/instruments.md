@@ -270,7 +270,8 @@ fn next_sample(&mut self, frames: &[f32]) -> f32 {
     let index = position as usize;
     if index + 1 >= frames.len() {
         self.position = None;
-        return frames.get(index).copied().unwrap_or(0.0) * self.gain;
+        let fade = self.fading.unwrap_or(1.0);
+        return frames.get(index).copied().unwrap_or(0.0) * self.gain * fade;
     }
     // Linear interpolation between the two nearest frames.
     let fraction = (position - index as f64) as f32;

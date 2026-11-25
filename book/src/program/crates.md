@@ -370,19 +370,28 @@ this map is made of their first lines. `lineup-core`:
 | `chord_sheet/`, `band/`, `bars.rs` | the chord sheet and the band that plays it |
 | `library/` | styles, rhythms, songs and demos, written as data |
 | `lead_sheet/` | the tune in notation |
-| `midi.rs`, `midi_file.rs`, `record.rs` | MIDI messages, MIDI files, recording |
+| `midi.rs`, `midi_file.rs`, `record.rs`, `take.rs` | MIDI messages, MIDI files, recording and sung takes |
 | `mixer.rs`, `effects.rs`, `score_order.rs` | the mixer's settings |
+| `ear_training.rs`, `remeter.rs`, `serial.rs`, `micromodal.rs` | ear training, re-metering, twelve-tone rows and micromodes |
 | `i18n/` | the Spanish for every text the app writes |
 
 `lineup-audio`: `engine.rs` (the sound card and the audio thread),
 `instrument.rs`, `drums.rs`, `timbre.rs`, `sample.rs` and
-`soundfont.rs` (the instruments), `effects.rs` and `reverb.rs`,
-`levels.rs`, `metronome.rs`, `render.rs` (playing without a sound card)
-and `trace.rs`.
+`soundfont.rs` (the instruments), `dsp.rs`, `effects.rs` and
+`reverb.rs`, `input.rs` (microphone recording), `levels.rs`,
+`metronome.rs`, `render.rs` (playing without a sound card) and
+`trace.rs`.
+
+`lineup-listen`: `decode.rs` (audio files), `voice.rs` (pYIN pitch
+tracking) and `wav.rs`.
+
+`lineup-video`: `canvas.rs` (painting egui triangles on the CPU),
+`h264.rs`, `mp3.rs` and `mp4.rs`.
 
 `lineup-app`: `app.rs` and the modules in `app/` (menus, files, editing,
-export, MIDI, settings), one module per window (`channel_rack.rs`,
-`piano_roll.rs`, `playlist.rs`, `chord_sheet.rs`, `harmony_keys.rs`,
-`library_browser.rs`, `lead_sheet.rs`, `twelve_tone.rs`,
-`micromodes.rs`, `style_editor.rs`, `ear_training.rs`), and the shared
-pieces: `theme.rs`, `widgets.rs`, `icons.rs` and `i18n.rs`.
+export, video, MIDI, voice, settings), one module per window
+(`channel_rack.rs`, `piano_roll.rs`, `playlist.rs`, `chord_sheet.rs`,
+`harmony_keys.rs`, `library_browser.rs`, `lead_sheet.rs`,
+`twelve_tone.rs`, `micromodes.rs`, `style_editor.rs`, `ear_training.rs`),
+platform file opening (`open_files.rs`), and the shared pieces:
+`theme.rs`, `widgets.rs`, `time_picker.rs`, `icons.rs` and `i18n.rs`.
